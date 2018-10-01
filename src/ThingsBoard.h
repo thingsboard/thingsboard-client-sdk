@@ -12,20 +12,28 @@
 class ThingsBoard
 {
 public:
+  // 
   ThingsBoard(Client &client);
 
+  // 
   bool connect(const String &host, const String &access_token, int port = 1883);
 
+  // 
   bool connected();
 
+  // 
   bool sendInt(const String &key, int value);
 
+  // 
   bool sendFloat(const String &key, float value);
 
+  //
   bool sendString(const String &key, const String &value);
 
+  //
   bool sendJson(const String &json);
 
+  //
   void loop();
 
 private:

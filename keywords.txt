@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map For ThingsBoard
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PubSubClient	ThingsBoard
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+connect 	KEYWORD2
+connected 	KEYWORD2
+sendInt 	KEYWORD2
+sendFloat 	KEYWORD2
+sendString 	KEYWORD2
+sendJson 	KEYWORD2
+loop	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
