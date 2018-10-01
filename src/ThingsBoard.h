@@ -12,19 +12,19 @@
 class ThingsBoard
 {
 public:
-  // 
+  //
   ThingsBoard(Client &client);
 
-  // 
+  //
   bool connect(const String &host, const String &access_token, int port = 1883);
 
-  // 
+  //
   bool connected();
 
-  // 
+  //
   bool sendInt(const String &key, int value);
 
-  // 
+  //
   bool sendFloat(const String &key, float value);
 
   //
@@ -38,7 +38,7 @@ public:
 
 private:
   template<typename T>
-  bool send_keyval(const String &key, T value);
+  bool send_keyval(const String &key, T value, bool quote_value = false);
 
   PubSubClient m_client;
 };
