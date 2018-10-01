@@ -3,6 +3,7 @@
   Based on PubSub MQTT library.
   Created by Olender M. Oct 2018.
   Released into the public domain.
+  https://thingsboard.io/
 */
 
 #include "ThingsBoard.h"

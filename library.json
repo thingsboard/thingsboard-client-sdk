@@ -1,0 +1,12 @@
+{
+    "name": "ThingsBoard",
+    "keywords": "mqtt, m2m, iot, thingsboard",
+    "description": "A library for connecting to the ThingsBoard IoT platform. Thin wrapper on PubSubClient",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/forGGe/ThingsBoardArduino"
+    },
+    "version": "0.1",
+    "examples": "examples/*/*.ino",
+    "frameworks": "arduino"
+}
