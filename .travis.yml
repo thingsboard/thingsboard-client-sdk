@@ -6,5 +6,12 @@ addons:
   apt:
     packages:
     - arduino
+before_script:
+  - wget https://downloads.arduino.cc/arduino-cli/0.1.0-alpha.preview/arduino-cli-0.1.0-alpha.preview-linux64.tar.bz2
+  - tar xvf arduino-cli-0.1.0-alpha.preview-linux64.tar.bz2
+  - chmod +x arduino-cli-linux64
+  - mkdir ~/.arduino15
+  - ./arduino-cli-linux64 core update-index
+  - ./arduino-cli-linux64 core install arduino:avr
 script:
-  - test.sh
+  - ./test.sh

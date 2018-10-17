@@ -140,6 +140,7 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
     StaticJsonDocument<64> respBuffer;
     JsonObject resp_obj = respBuffer.to<JsonObject>();
 #else
+    StaticJsonBuffer<64> respBuffer;
     JsonObject &resp_obj = respBuffer.createObject();
 #endif
     r.serializeKeyval(resp_obj);
