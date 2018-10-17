@@ -1,4 +1,6 @@
-# Arduino ThingsBoard SDK
+# Arduino ThingsBoard SDK 
+
+[![Build Status](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK.svg?branch=master)](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK)
 
 This library provides access to ThingsBoard platform over MQTT protocol.
 
