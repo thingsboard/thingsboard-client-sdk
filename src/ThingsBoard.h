@@ -9,7 +9,11 @@
 
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#if ARDUINOJSON_VERSION_MAJOR == 6
 #include "ArduinoJson/Polyfills/type_traits.hpp"
+#else 
+#include "ArduinoJson/TypeTraits/IsIntegral.hpp"
+#endif
 
 // Forward declaration
 class ThingsBoard;
@@ -23,10 +27,17 @@ public:
 
   // Constructs telemetry record from integer value.
   // EnableIf trick is required to overcome ambiguous float/integer conversion
+#if ARDUINOJSON_VERSION_MAJOR == 6
   template<
       typename T,
-      typename = ArduinoJson::Internals::enable_if<ArduinoJson::Internals::is_integral<T>::value>
+      typename = ARDUINOJSON_NAMESPACE::enable_if<ARDUINOJSON_NAMESPACE::is_integral<T>::value>
   >
+#else 
+  template<
+      typename T,
+      typename = ArduinoJson::Internals::EnableIf<ArduinoJson::Internals::IsIntegral<T>::value>
+  >
+#endif
   inline Telemetry(const char *key, T val)
   :m_type(TYPE_INT), m_key(key), m_value()   { m_value.integer = val; }
 
