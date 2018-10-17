@@ -12,20 +12,20 @@ else
 fi
 
 do_test() {
-    $ARDUINO_CLI compile -b arduino:avr:uno examples/process_rpc_esp8266/
-    $ARDUINO_CLI compile -b arduino:avr:uno examples/send_batch_esp8266/
-    $ARDUINO_CLI compile -b arduino:avr:uno examples/send_esp8266/
+    $ARDUINO_CLI compile -b arduino:avr:uno examples/0000-arduino_send_telemetry/
+    $ARDUINO_CLI compile -b arduino:avr:uno examples/0001-arduino_send_batch/
+    $ARDUINO_CLI compile -b arduino:avr:uno examples/0002-arduino_rpc/
 }
 
 # Create symlinks to library under test
 
-ln -sf "$(pwd)/src/ThingsBoard.h" "examples/process_rpc_esp8266/ThingsBoard.h"
-ln -sf "$(pwd)/src/ThingsBoard.h" "examples/send_batch_esp8266/ThingsBoard.h"
-ln -sf "$(pwd)/src/ThingsBoard.h" "examples/send_esp8266/ThingsBoard.h"
+ln -sf "$(pwd)/src/ThingsBoard.h" "examples/0000-arduino_send_telemetry/ThingsBoard.h"
+ln -sf "$(pwd)/src/ThingsBoard.h" "examples/0001-arduino_send_batch/ThingsBoard.h"
+ln -sf "$(pwd)/src/ThingsBoard.h" "examples/0002-arduino_rpc/ThingsBoard.h"
 
-ln -sf "$(pwd)/src/ThingsBoard.cpp" "examples/process_rpc_esp8266/ThingsBoard.cpp"
-ln -sf "$(pwd)/src/ThingsBoard.cpp" "examples/send_batch_esp8266/ThingsBoard.cpp"
-ln -sf "$(pwd)/src/ThingsBoard.cpp" "examples/send_esp8266/ThingsBoard.cpp"
+ln -sf "$(pwd)/src/ThingsBoard.cpp" "examples/0000-arduino_send_telemetry/ThingsBoard.cpp"
+ln -sf "$(pwd)/src/ThingsBoard.cpp" "examples/0001-arduino_send_batch/ThingsBoard.cpp"
+ln -sf "$(pwd)/src/ThingsBoard.cpp" "examples/0002-arduino_rpc/ThingsBoard.cpp"
 
 # Dependencies
 

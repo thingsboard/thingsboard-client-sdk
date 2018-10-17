@@ -1,3 +1,10 @@
+// This sketch demonstrates connecting and sending telemetry 
+// using ThingsBoard SDK
+//
+// Hardware:
+//  - Arduino Uno
+//  - ESP8266 connected to Arduino Uno
+
 #include "ThingsBoard.h"
 
 #include <WiFiEspClient.h>
