@@ -102,9 +102,10 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
   RPC_Response r;
   {
 #if ARDUINOJSON_VERSION_MAJOR == 6
-    StaticJsonDocument<64> jsonBuffer;
+    StaticJsonDocument<100> jsonBuffer;
     DeserializationError error = deserializeJson(jsonBuffer, payload, length);
     if (error) {
+      Serial.print("[SDK] unable to de-serialize RPC ");
       return;
     }
     const JsonObject &data = jsonBuffer.as<JsonObject>();
@@ -112,13 +113,21 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
     char json[length + 1];
     memcpy(json, payload, length);
     json[length] = '\0';
+    Serial.println(json);
 
-    StaticJsonBuffer<64> jsonBuffer;
+    StaticJsonBuffer<100> jsonBuffer;
     const JsonObject &data = jsonBuffer.parseObject(json);
 #endif
 
     const char *methodName = data["method"];
-    Serial.println(methodName);
+
+    if (methodName) {
+      Serial.print("[SDK] received RPC ");
+      Serial.println(methodName);
+    } else {
+      Serial.println("[SDK] RPC method is NULL");
+      return;
+    }
 
     for (size_t i = 0; i < sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks); ++i) {
       if (m_rpcCallbacks[i].m_cb && !strcmp(m_rpcCallbacks[i].m_name, methodName)) {
@@ -128,6 +137,8 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
           continue;
         }
 
+        Serial.print("[SDK] calling RPC ");
+        Serial.println(methodName);
         r = m_rpcCallbacks[i].m_cb(data["params"]);
         break;
       }
@@ -135,7 +146,7 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
   }
   {
     // Fill in response
-    char payload[64];
+    char payload[64] = {0};
 #if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<64> respBuffer;
     JsonObject resp_obj = respBuffer.to<JsonObject>();
@@ -149,11 +160,11 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
 #else
     resp_obj.printTo(payload, sizeof(payload));
 #endif
-    Serial.println(payload);
 
     String responseTopic = String(topic);
     responseTopic.replace("request", "response");
-    Serial.println(responseTopic);
+    Serial.print("[SDK] response ");
+    Serial.println(payload);
     m_client.publish(responseTopic.c_str(), payload);
   }
 }
