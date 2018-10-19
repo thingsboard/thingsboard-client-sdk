@@ -84,7 +84,7 @@ private:
 typedef Telemetry Attribute;
 typedef Telemetry RPC_Response;
 // JSON object is used to communicate RPC parameters to the client
-typedef JsonObject RPC_Data;
+typedef JsonVariant RPC_Data;
 
 // RPC callback wrapper
 class RPC_Callback {
