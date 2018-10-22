@@ -10,24 +10,62 @@
 
 /*----------------------------------------------------------------------------*/
 
-bool Telemetry::serializeKeyval(JsonObject &jsonObj) const {
-  switch (m_type) {
-    case TYPE_BOOL:
-      jsonObj[m_key] = m_value.boolean;
-    break;
-    case TYPE_INT:
-      jsonObj[m_key] = m_value.integer;
-    break;
-    case TYPE_REAL:
-      jsonObj[m_key] = m_value.real;
-    break;
-    case TYPE_STR:
-      jsonObj[m_key] = m_value.str;
-    break;
-      default:
-    break;
+bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
+  if (m_key) {
+    switch (m_type) {
+      case TYPE_BOOL:
+        jsonObj[m_key] = m_value.boolean;
+      break;
+      case TYPE_INT:
+        jsonObj[m_key] = m_value.integer;
+      break;
+      case TYPE_REAL:
+        jsonObj[m_key] = m_value.real;
+      break;
+      case TYPE_STR:
+        jsonObj[m_key] = m_value.str;
+      break;
+        default:
+      break;
+    }
+  } else {
+#if ARDUINOJSON_VERSION_MAJOR == 6
+    switch (m_type) {
+      case TYPE_BOOL:
+        jsonObj.set(m_value.boolean);
+      break;
+      case TYPE_INT:
+        jsonObj.set(m_value.integer);
+      break;
+      case TYPE_REAL:
+        jsonObj.set(m_value.real);
+      break;
+      case TYPE_STR:
+        jsonObj.set(m_value.str);
+      break;
+        default:
+      break;
+    }
   }
-
+#else
+    switch (m_type) {
+      case TYPE_BOOL:
+        jsonObj = m_value.boolean;
+      break;
+      case TYPE_INT:
+        jsonObj = m_value.integer;
+      break;
+      case TYPE_REAL:
+        jsonObj = m_value.real;
+      break;
+      case TYPE_STR:
+        jsonObj = m_value.str;
+      break;
+        default:
+      break;
+    }
+  }
+#endif
   return true;
 }
 
@@ -77,10 +115,11 @@ bool ThingsBoard::sendDataArray(const Telemetry *data, size_t data_count, bool t
   {
 #if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<64> jsonBuffer;
-    JsonObject object = jsonBuffer.to<JsonObject>();
+    JsonVariant object = jsonBuffer.to<JsonVariant>();
 #else
     StaticJsonBuffer<64> jsonBuffer;
-    JsonObject& object = jsonBuffer.createObject();
+    JsonObject& obj = jsonBuffer.createObject();
+    JsonVariant object(obj);
 #endif
 
     for (size_t i = 0; i < data_count; ++i) {
@@ -149,10 +188,11 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
     char payload[64] = {0};
 #if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<64> respBuffer;
-    JsonObject resp_obj = respBuffer.to<JsonObject>();
+    JsonVariant resp_obj = respBuffer.to<JsonVariant>();
 #else
     StaticJsonBuffer<64> respBuffer;
-    JsonObject &resp_obj = respBuffer.createObject();
+    JsonObject &obj = respBuffer.createObject();
+    JsonVariant resp_obj(obj);
 #endif
     r.serializeKeyval(resp_obj);
 #if ARDUINOJSON_VERSION_MAJOR == 6
