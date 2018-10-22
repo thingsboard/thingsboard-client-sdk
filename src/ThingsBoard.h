@@ -76,7 +76,7 @@ private:
   data         m_value; // Data value
 
   // Serializes key-value pair in a generic way.
-  bool serializeKeyval(JsonObject &jsonObj) const;
+  bool serializeKeyval(JsonVariant &jsonObj) const;
 };
 
 // Convenient aliases
@@ -226,10 +226,11 @@ private:
       Telemetry t(key, value);
 #if ARDUINOJSON_VERSION_MAJOR == 6
       StaticJsonDocument<64> jsonBuffer;
-      JsonObject object = jsonBuffer.to<JsonObject>();
+      JsonVariant object = jsonBuffer.to<JsonVariant>();
 #else
       StaticJsonBuffer<64> jsonBuffer;
-      JsonObject &object = jsonBuffer.createObject();
+      JsonObject &obj = jsonBuffer.createObject();
+      JsonVariant object(obj);
 #endif
       t.serializeKeyval(object);
 #if ARDUINOJSON_VERSION_MAJOR == 6
