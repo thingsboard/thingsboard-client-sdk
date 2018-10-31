@@ -6,8 +6,8 @@ This library provides access to ThingsBoard platform over MQTT protocol.
 
 ## Examples
 
-The SDK comes with a number of example sketches. See File > Examples > ThingsBoard
-within the Arduino application.
+The SDK comes with a number of example sketches. See File > Examples > ThingsBoard within the Arduino application.
+Please review the complete guide for ESP32 Pico Kit GPIO control and DHT22 sensor monitoring available [here](  https://thingsboard.io/docs/samples/esp32/gpio-control-pico-kit-dht22-sensor/).
 
 ## Installation
 
