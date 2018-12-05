@@ -3,9 +3,9 @@
 set -e
 
 # Test if arduino command line interface is downloaded locally
-if [ -f "$(pwd)"/arduino-cli-linux64 ]
+if [ -f "$(pwd)"/arduino-cli-0.3.2-alpha.preview-linux64 ]
 then
-    ARDUINO_CLI="$(pwd)/arduino-cli-linux64"
+    ARDUINO_CLI="$(pwd)/arduino-cli-0.3.2-alpha.preview-linux64"
     echo "Found arduino CLI in $ARDUINO_CLI"
 else
     ARDUINO_CLI="arduino-cli"

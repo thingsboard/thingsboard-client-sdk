@@ -1,4 +1,4 @@
-# Arduino ThingsBoard SDK 
+# Arduino ThingsBoard SDK
 
 [![Build Status](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK.svg?branch=master)](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK)
 
@@ -11,7 +11,7 @@ Please review the complete guide for ESP32 Pico Kit GPIO control and DHT22 senso
 
 ## Installation
 
-ThingsBoard SDK can be installed directly from the Arduino Library manager. 
+ThingsBoard SDK can be installed directly from the Arduino Library manager.
 Following dependencies must be installed, too:
 
  - [MQTT PubSub Client](https://github.com/knolleary/pubsubclient) - for interacting with MQTT.
@@ -22,10 +22,6 @@ Following dependencies must be installed, too:
  - [Telemetry data upload](https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api)
  - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server)
  - [Server-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#server-side-rpc)
-
-
-The library uses the PubSub Client for interacting with MQTT and ArduinoJSON library for 
-dealing with JSON files.
 
 ## License
 
