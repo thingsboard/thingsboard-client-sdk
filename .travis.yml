@@ -13,5 +13,6 @@ before_script:
   - mkdir ~/.arduino15
   - ./arduino-cli-0.3.2-alpha.preview-linux64 core update-index
   - ./arduino-cli-0.3.2-alpha.preview-linux64 core install arduino:avr
+  - ./arduino-cli-0.3.2-alpha.preview-linux64 core install esp8266:esp8266 --config-file ./.cli-config.yml
 script:
   - ./test.sh

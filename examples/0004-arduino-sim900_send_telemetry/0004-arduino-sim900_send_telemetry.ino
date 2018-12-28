@@ -20,8 +20,6 @@
 #include <SoftwareSerial.h>
 #include "ThingsBoard.h"
 
-#include <StreamDebugger.h>
-
 // Your GPRS credentials
 // Leave empty, if missing user or pass
 const char apn[]  = "internet";
@@ -39,10 +37,8 @@ const char pass[] = "";
 // Serial port for GSM shield
 SoftwareSerial serialGsm(7, 8); // RX, TX pins for communicating with modem
 
-StreamDebugger debugger(serialGsm, Serial);
-
 // Initialize GSM modem
-TinyGsm modem(debugger);
+TinyGsm modem(serialGsm);
 
 // Initialize GSM client
 TinyGsmClient client(modem);
