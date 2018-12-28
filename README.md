@@ -7,7 +7,7 @@ This library provides access to ThingsBoard platform over MQTT protocol.
 ## Examples
 
 The SDK comes with a number of example sketches. See File > Examples > ThingsBoard within the Arduino application.
-Please review the complete guide for ESP32 Pico Kit GPIO control and DHT22 sensor monitoring available [here](  https://thingsboard.io/docs/samples/esp32/gpio-control-pico-kit-dht22-sensor/).
+Please review the complete guide for ESP32 Pico Kit GPIO control and DHT22 sensor monitoring available [here](https://thingsboard.io/docs/samples/esp32/gpio-control-pico-kit-dht22-sensor/).
 
 ## Installation
 
@@ -22,6 +22,10 @@ Following dependencies must be installed, too:
  - [Telemetry data upload](https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api)
  - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server)
  - [Server-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#server-side-rpc)
+
+## Have a question or proposal?
+
+You are welcomed in our [issues](https://github.com/thingsboard/ThingsBoard-Arduino-MQTT-SDK/issues) and [Q&A forum](https://groups.google.com/forum/#!forum/thingsboard).
 
 ## License
 
