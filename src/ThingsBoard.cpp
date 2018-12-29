@@ -12,20 +12,28 @@
 
 bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
   if (m_key) {
+
+#if ARDUINOJSON_VERSION_MAJOR == 6
+    // Little trick to make sure all key assignment will work as expected
+    JsonObject obj = jsonObj.to<JsonObject>();
+#else
+    JsonObject &obj = jsonObj;
+#endif
+
     switch (m_type) {
       case TYPE_BOOL:
-        jsonObj[m_key] = m_value.boolean;
+        obj[m_key] = m_value.boolean;
       break;
       case TYPE_INT:
-        jsonObj[m_key] = m_value.integer;
+        obj[m_key] = m_value.integer;
       break;
       case TYPE_REAL:
-        jsonObj[m_key] = m_value.real;
+        obj[m_key] = m_value.real;
       break;
       case TYPE_STR:
-        jsonObj[m_key] = m_value.str;
+        obj[m_key] = m_value.str;
       break;
-        default:
+      default:
       break;
     }
   } else {
@@ -43,7 +51,7 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
       case TYPE_STR:
         jsonObj.set(m_value.str);
       break;
-        default:
+      default:
       break;
     }
   }
@@ -61,7 +69,7 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
       case TYPE_STR:
         jsonObj = m_value.str;
       break;
-        default:
+      default:
       break;
     }
   }
@@ -216,3 +224,33 @@ void ThingsBoard::on_message(char* topic, uint8_t* payload, unsigned int length)
 
   ThingsBoard::m_subscribedInstance->process_message(topic, payload, length);
 }
+
+#ifndef ESP8266
+
+bool ThingsBoardHttp::sendDataArray(const Telemetry *data, size_t data_count, bool telemetry) {
+  char payload[64];
+  {
+#if ARDUINOJSON_VERSION_MAJOR == 6
+    StaticJsonDocument<64> jsonBuffer;
+    JsonVariant object = jsonBuffer.to<JsonVariant>();
+#else
+    StaticJsonBuffer<64> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+    JsonVariant object(obj);
+#endif
+
+    for (size_t i = 0; i < data_count; ++i) {
+      data[i].serializeKeyval(object);
+    }
+
+#if ARDUINOJSON_VERSION_MAJOR == 6
+    serializeJson(object, payload, sizeof(payload));
+#else
+    object.printTo(payload, sizeof(payload));
+#endif
+  }
+
+  return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
+}
+
+#endif // ESP8266

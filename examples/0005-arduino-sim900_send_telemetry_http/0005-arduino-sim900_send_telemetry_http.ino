@@ -30,6 +30,7 @@ const char pass[] = "";
 // to understand how to obtain an access token
 #define TOKEN               "YOUR_ACCESS_TOKEN"
 #define THINGSBOARD_SERVER  "demo.thingsboard.io"
+#define THINGSBOARD_PORT    80
 
 // Baud rate for debug serial
 #define SERIAL_DEBUG_BAUD   115200
@@ -37,14 +38,20 @@ const char pass[] = "";
 // Serial port for GSM shield
 SoftwareSerial serialGsm(7, 8); // RX, TX pins for communicating with modem
 
-// Initialize GSM modem
-TinyGsm modem(serialGsm);
+#ifdef DUMP_AT_COMMANDS
+  #include <StreamDebugger.h>
+  StreamDebugger debugger(serialGsm, Serial);
+  TinyGsm modem(debugger);
+#else
+  // Initialize GSM modem
+  TinyGsm modem(serialGsm);
+#endif
 
 // Initialize GSM client
 TinyGsmClient client(modem);
 
 // Initialize ThingsBoard instance
-ThingsBoard tb(client);
+ThingsBoardHttp tb(client, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
@@ -101,26 +108,13 @@ void loop() {
     Serial.println(" OK");
   }
 
-  if (!tb.connected()) {
-    // Connect to the ThingsBoard
-    Serial.print("Connecting to: ");
-    Serial.print(THINGSBOARD_SERVER);
-    Serial.print(" with token ");
-    Serial.println(TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
-      Serial.println("Failed to connect");
-      return;
-    }
-  }
-
-  Serial.println("Sending data...");
-
-  // Uploads new telemetry to ThingsBoard using MQTT.
-  // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api
+  // Uploads new telemetry to ThingsBoard using HTTP.
+  // See https://thingsboard.io/docs/reference/http-api/#telemetry-upload-api
   // for more details
 
-  tb.sendTelemetryInt("temperature", 22);
-  tb.sendTelemetryFloat("humidity", 42.5);
+  Serial.println("Sending temperature data...");
+  tb.sendTelemetryInt("temperature", 18);
 
-  tb.loop();
+  Serial.println("Sending humidity data...");
+  tb.sendTelemetryFloat("humidity", 22.23);
 }

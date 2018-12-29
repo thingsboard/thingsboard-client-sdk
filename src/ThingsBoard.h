@@ -267,7 +267,6 @@ private:
   static void on_message(char* topic, uint8_t* payload, unsigned int length);
 };
 
-
 #ifndef ESP8266
 
 // ThingsBoard HTTP client class
@@ -276,8 +275,12 @@ class ThingsBoardHttp
 public:
   // Initializes ThingsBoard class with network client.
   inline ThingsBoardHttp(Client &client, const char *access_token,
-    const char *host, int port = 8080)
-      :m_client(client, host, port), m_token(access_token) { }
+    const char *host, int port = 80)
+      :m_client(client, host, port)
+      ,m_host(host)
+      ,m_token(access_token)
+      ,m_port(port)
+       { }
 
   // Destroys ThingsBoard class with network client.
   inline ~ThingsBoardHttp() { }
@@ -310,14 +313,29 @@ public:
     return sendDataArray(data, data_count);
   }
 
-  // Sends custom JSON telemetry string to the ThingsBoard.
+  // Sends custom JSON telemetry string to the ThingsBoard, using HTTP.
   inline bool sendTelemetryJson(const char *json) {
     if (!json || !m_token) {
       return  false;
     }
 
-    String path = String("/api/v1/") + m_token + "telemetry";
-    return m_client.post(path, "application/json", json);
+    if (!m_client.connected()) {
+      if (!m_client.connect(m_host, m_port)) {
+        Serial.println("connect to server failed");
+        return false;
+      }
+    }
+
+    bool rc = true;
+
+    String path = String("/api/v1/") + m_token + "/telemetry";
+    if (!m_client.post(path, "application/json", json) ||
+        (m_client.responseStatusCode() != HTTP_SUCCESS)) {
+      rc = false;
+    }
+
+    m_client.stop();
+    return rc;
   }
 
   //----------------------------------------------------------------------------
@@ -348,14 +366,29 @@ public:
     return sendDataArray(data, data_count, false);
   }
 
-  // Sends custom JSON with attributes to the ThingsBoard.
+  // Sends custom JSON with attributes to the ThingsBoard, using HTTP.
   inline bool sendAttributeJSON(const char *json) {
     if (!json || !m_token) {
       return  false;
     }
 
-    String path = String("/api/v1/") + m_token + "attributes";
-    return m_client.post(path, "application/json", json);
+    if (!m_client.connected()) {
+      if (!m_client.connect(m_host, m_port)) {
+        Serial.println("connect to server failed");
+        return false;
+      }
+    }
+
+    bool rc = true;
+
+    String path = String("/api/v1/") + m_token + "/attributes";
+    if (!m_client.post(path, "application/json", json)
+          || (m_client.responseStatusCode() != HTTP_SUCCESS)) {
+      rc = false;
+    }
+
+    m_client.stop();
+    return rc;
   }
 
 private:
@@ -389,6 +422,8 @@ private:
   }
 
   HttpClient m_client;
+  const char *m_host;
+  int m_port;
   const char *m_token;
 };
 
