@@ -7,6 +7,7 @@ EXAMPLES_ARDUINO_UNO=(
     "examples/0001-arduino_send_batch"
     "examples/0002-arduino_rpc"
     "examples/0004-arduino-sim900_send_telemetry"
+    "examples/0005-arduino-sim900_send_telemetry_http"
 )
 
 EXAMPLES_ESP8266=(
