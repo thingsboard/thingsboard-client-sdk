@@ -12,13 +12,8 @@
 
 bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
   if (m_key) {
-
-#if ARDUINOJSON_VERSION_MAJOR == 6
     // Little trick to make sure all key assignment will work as expected
     JsonObject obj = jsonObj.to<JsonObject>();
-#else
-    JsonObject &obj = jsonObj;
-#endif
 
     switch (m_type) {
       case TYPE_BOOL:
@@ -37,7 +32,6 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
       break;
     }
   } else {
-#if ARDUINOJSON_VERSION_MAJOR == 6
     switch (m_type) {
       case TYPE_BOOL:
         jsonObj.set(m_value.boolean);
@@ -55,25 +49,6 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
       break;
     }
   }
-#else
-    switch (m_type) {
-      case TYPE_BOOL:
-        jsonObj = m_value.boolean;
-      break;
-      case TYPE_INT:
-        jsonObj = m_value.integer;
-      break;
-      case TYPE_REAL:
-        jsonObj = m_value.real;
-      break;
-      case TYPE_STR:
-        jsonObj = m_value.str;
-      break;
-      default:
-      break;
-    }
-  }
-#endif
   return true;
 }
 
@@ -121,24 +96,14 @@ bool ThingsBoard::RPC_Subscribe(const RPC_Callback *callbacks, size_t callbacks_
 bool ThingsBoard::sendDataArray(const Telemetry *data, size_t data_count, bool telemetry) {
   char payload[64];
   {
-#if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<64> jsonBuffer;
     JsonVariant object = jsonBuffer.to<JsonVariant>();
-#else
-    StaticJsonBuffer<64> jsonBuffer;
-    JsonObject& obj = jsonBuffer.createObject();
-    JsonVariant object(obj);
-#endif
 
     for (size_t i = 0; i < data_count; ++i) {
       data[i].serializeKeyval(object);
     }
 
-#if ARDUINOJSON_VERSION_MAJOR == 6
     serializeJson(object, payload, sizeof(payload));
-#else
-    object.printTo(payload, sizeof(payload));
-#endif
   }
 
   return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
@@ -148,7 +113,6 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
   // Decode JSON request
   RPC_Response r;
   {
-#if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<100> jsonBuffer;
     DeserializationError error = deserializeJson(jsonBuffer, payload, length);
     if (error) {
@@ -156,15 +120,6 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
       return;
     }
     const JsonObject &data = jsonBuffer.as<JsonObject>();
-#else
-    char json[length + 1];
-    memcpy(json, payload, length);
-    json[length] = '\0';
-    Serial.println(json);
-
-    StaticJsonBuffer<100> jsonBuffer;
-    const JsonObject &data = jsonBuffer.parseObject(json);
-#endif
 
     const char *methodName = data["method"];
 
@@ -179,13 +134,15 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
     for (size_t i = 0; i < sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks); ++i) {
       if (m_rpcCallbacks[i].m_cb && !strcmp(m_rpcCallbacks[i].m_name, methodName)) {
 
-        // Do not inform client, if parameter field is missing for some reason
-        if (!data.containsKey("params")) {
-          continue;
-        }
-
         Serial.print("[SDK] calling RPC ");
         Serial.println(methodName);
+
+        // Do not inform client, if parameter field is missing for some reason
+        if (!data.containsKey("params")) {
+          Serial.println("[SDK] no parameters passed with RPC, passing null JSON");
+        }
+        // Getting non-existing field from JSON should automatically
+        // set JSONVariant to null
         r = m_rpcCallbacks[i].m_cb(data["params"]);
         break;
       }
@@ -194,20 +151,11 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
   {
     // Fill in response
     char payload[64] = {0};
-#if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<64> respBuffer;
     JsonVariant resp_obj = respBuffer.to<JsonVariant>();
-#else
-    StaticJsonBuffer<64> respBuffer;
-    JsonObject &obj = respBuffer.createObject();
-    JsonVariant resp_obj(obj);
-#endif
+
     r.serializeKeyval(resp_obj);
-#if ARDUINOJSON_VERSION_MAJOR == 6
     serializeJson(resp_obj, payload, sizeof(payload));
-#else
-    resp_obj.printTo(payload, sizeof(payload));
-#endif
 
     String responseTopic = String(topic);
     responseTopic.replace("request", "response");
@@ -230,24 +178,14 @@ void ThingsBoard::on_message(char* topic, uint8_t* payload, unsigned int length)
 bool ThingsBoardHttp::sendDataArray(const Telemetry *data, size_t data_count, bool telemetry) {
   char payload[64];
   {
-#if ARDUINOJSON_VERSION_MAJOR == 6
     StaticJsonDocument<64> jsonBuffer;
     JsonVariant object = jsonBuffer.to<JsonVariant>();
-#else
-    StaticJsonBuffer<64> jsonBuffer;
-    JsonObject& obj = jsonBuffer.createObject();
-    JsonVariant object(obj);
-#endif
 
     for (size_t i = 0; i < data_count; ++i) {
       data[i].serializeKeyval(object);
     }
 
-#if ARDUINOJSON_VERSION_MAJOR == 6
     serializeJson(object, payload, sizeof(payload));
-#else
-    object.printTo(payload, sizeof(payload));
-#endif
   }
 
   return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
