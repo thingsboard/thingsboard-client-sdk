@@ -59,8 +59,3 @@ do_link
 "${ARDUINO_CLI}" lib install ArduinoHttpClient || true
 
 do_test
-
-# Install old library version. Ignore if already installed
-$ARDUINO_CLI lib install ArduinoJson@5.13.3 || true
-
-do_test
