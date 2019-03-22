@@ -179,13 +179,15 @@ void ThingsBoard::process_message(char* topic, uint8_t* payload, unsigned int le
     for (size_t i = 0; i < sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks); ++i) {
       if (m_rpcCallbacks[i].m_cb && !strcmp(m_rpcCallbacks[i].m_name, methodName)) {
 
-        // Do not inform client, if parameter field is missing for some reason
-        if (!data.containsKey("params")) {
-          continue;
-        }
-
         Serial.print("[SDK] calling RPC ");
         Serial.println(methodName);
+
+        // Do not inform client, if parameter field is missing for some reason
+        if (!data.containsKey("params")) {
+          Serial.println("[SDK] no parameters passed with RPC, passing null JSON");
+        }
+        // Getting non-existing field from JSON should automatically
+        // set JSONVariant to null
         r = m_rpcCallbacks[i].m_cb(data["params"]);
         break;
       }
