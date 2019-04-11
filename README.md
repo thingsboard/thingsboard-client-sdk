@@ -14,8 +14,9 @@ Please review the complete guide for ESP32 Pico Kit GPIO control and DHT22 senso
 ThingsBoard SDK can be installed directly from the Arduino Library manager.
 Following dependencies must be installed, too:
 
- - [MQTT PubSub Client](https://github.com/knolleary/pubsubclient) - for interacting with MQTT.
- - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) - for dealing with JSON files.
+ - [MQTT PubSub Client](https://github.com/knolleary/pubsubclient) — for interacting with MQTT.
+ - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — for dealing with JSON files.
+ - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with ThingsBoard using HTTP.
 
 ## Supported ThingsBoard Features
 
