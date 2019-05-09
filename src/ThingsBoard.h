@@ -326,12 +326,12 @@ private:
 
       if (r.serializeKeyval(resp_obj) == false) {
         Logger::log("unable to serialize data");
-        return false;
+        return;
       }
 
       if (measureJson(respBuffer) > PayloadSize - 1) {
         Logger::log("too small buffer for JSON data");
-        return false;
+        return;
       }
       serializeJson(resp_obj, payload, sizeof(payload));
 
