@@ -6,7 +6,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-PubSubClient	ThingsBoard
+PubSubClient	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
