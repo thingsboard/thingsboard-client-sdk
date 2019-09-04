@@ -307,7 +307,7 @@ private:
           Logger::log("calling RPC:");
           Logger::log(methodName);
 
-          // Do not inform client, if parameter field is missing for some reason
+          // Inform client if parameter field is missing for some reason
           if (!data.containsKey("params")) {
             Logger::log("no parameters passed with RPC, passing null JSON");
           }
