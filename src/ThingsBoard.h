@@ -373,7 +373,7 @@ private:
   }
 
   PubSubClient m_client;              // PubSub MQTT client instance.
-  RPC_Callback m_rpcCallbacks[Default_NumRPCCallbacks];     // RPC callbacks array
+  RPC_Callback m_rpcCallbacks[NumRPCCallbacks];     // RPC callbacks array, using template param for size
 
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
