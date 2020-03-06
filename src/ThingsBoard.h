@@ -56,6 +56,10 @@ public:
   // Constructs telemetry record from string value.
   inline Telemetry(const char *key, const char *val)
   :m_type(TYPE_STR), m_key(key), m_value()   { m_value.str = val; }
+  
+  // Constructs telemetry record from long value.
+  inline Telemetry(const char *key, uint64_t val)
+  :m_type(TYPE_LONG), m_key(key), m_value()   { m_value.lng = val; }
 
 private:
   // Data container
@@ -64,6 +68,7 @@ private:
     bool        boolean;
     int         integer;
     float       real;
+	uint64_t	lng;
   };
 
   // Data type inside a container
@@ -73,6 +78,7 @@ private:
     TYPE_INT,
     TYPE_REAL,
     TYPE_STR,
+	TYPE_LONG
   };
 
   dataType     m_type;  // Data type flag
@@ -179,10 +185,15 @@ public:
   inline bool sendTelemetryString(const char *key, const char *value) {
     return sendKeyval(key, value);
   }
+  
+  // Sends long telemetry data to the ThingsBoard, returns true on success.
+  inline bool sendTelemetryLong(const char *key, uint64_t value) {
+    return sendKeyval(key, value);
+  }
 
   // Sends aggregated telemetry to the ThingsBoard.
-  inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
-    return sendDataArray(data, data_count);
+  inline bool sendTelemetry(const Telemetry *data, size_t data_count, uint64_t ts = 0) {
+    return sendDataArray(data, data_count, ts);
   }
 
   // Sends custom JSON telemetry string to the ThingsBoard.
@@ -212,10 +223,15 @@ public:
   inline bool sendAttributeString(const char *attrName, const char *value) {
     return sendKeyval(attrName, value, false);
   }
+  
+  // Sends string attribute with given name and value.
+  inline bool sendAttributeLong(const char *attrName, uint64_t value) {
+    return sendKeyval(attrName, value, false);
+  }
 
   // Sends aggregated attributes to the ThingsBoard.
-  inline bool sendAttributes(const Attribute *data, size_t data_count) {
-    return sendDataArray(data, data_count, false);
+  inline bool sendAttributes(const Attribute *data, size_t data_count, uint64_t ts = 0) {
+    return sendDataArray(data, data_count, ts, false);
   }
 
   // Sends custom JSON with attributes to the ThingsBoard.
@@ -289,7 +305,7 @@ private:
         Logger::log("unable to de-serialize RPC");
         return;
       }
-      const JsonObject &data = jsonBuffer.template as<JsonObject>();
+      const JsonVariant &data = jsonBuffer.template as<JsonVariant>();
 
       const char *methodName = data["method"];
 
@@ -312,7 +328,7 @@ private:
             Logger::log("no parameters passed with RPC, passing null JSON");
           }
           // Getting non-existing field from JSON should automatically
-          // set JSONVariant to null
+          // set JsonVariant to null
           r = m_rpcCallbacks[i].m_cb(data["params"]);
           break;
         }
@@ -344,7 +360,7 @@ private:
   }
 
   // Sends array of attributes or telemetry to ThingsBoard
-  bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
+  bool sendDataArray(const Telemetry *data, size_t data_count, uint64_t ts = 0, bool telemetry = true) {
     if (MaxFieldsAmt < data_count) {
       Logger::log("too much JSON fields passed");
       return false;
@@ -353,9 +369,16 @@ private:
     {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
+	  JsonVariant values;
+	  
+	  if (ts > 0)
+	  {
+		object["ts"] = ts;
+		values = object.createNestedObject("values");
+	  }
 
       for (size_t i = 0; i < data_count; ++i) {
-        if (data[i].serializeKeyval(object) == false) {
+        if (data[i].serializeKeyval(ts ? values : object) == false) {
           Logger::log("unable to serialize data");
           return false;
         }
@@ -432,10 +455,15 @@ public:
   inline bool sendTelemetryString(const char *key, const char *value) {
     return sendKeyval(key, value);
   }
+  
+  // Sends long telemetry data to the ThingsBoard, returns true on success.
+  inline bool sendTelemetryString(const char *key, uint64_t value) {
+    return sendKeyval(key, value);
+  }
 
   // Sends aggregated telemetry to the ThingsBoard.
-  inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
-    return sendDataArray(data, data_count);
+  inline bool sendTelemetry(const Telemetry *data, size_t data_count, uint64_t ts = 0) {
+    return sendDataArray(data, data_count, ts);
   }
 
   // Sends custom JSON telemetry string to the ThingsBoard, using HTTP.
@@ -485,10 +513,15 @@ public:
   inline bool sendAttributeString(const char *attrName, const char *value) {
     return sendKeyval(attrName, value, false);
   }
+  
+  // Sends long attribute with given name and value.
+  inline bool sendAttributeString(const char *attrName, uint64_t value) {
+    return sendKeyval(attrName, value, false);
+  }
 
   // Sends aggregated attributes to the ThingsBoard.
-  inline bool sendAttributes(const Attribute *data, size_t data_count) {
-    return sendDataArray(data, data_count, false);
+  inline bool sendAttributes(const Attribute *data, size_t data_count, uint64_t ts = 0) {
+    return sendDataArray(data, data_count, ts, false);
   }
 
   // Sends custom JSON with attributes to the ThingsBoard, using HTTP.
@@ -518,18 +551,26 @@ public:
 
 private:
   // Sends array of attributes or telemetry to ThingsBoard
-  bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
+  bool sendDataArray(const Telemetry *data, size_t data_count, uint64_t ts = 0, bool telemetry = true) {
     if (MaxFieldsAmt < data_count) {
       Logger::log("too much JSON fields passed");
       return false;
     }
+	
     char payload[PayloadSize];
     {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
+	  JsonVariant values;
+	  
+	  if (ts > 0)
+	  {
+		object["ts"] = ts;
+		values = object.createNestedObject("values");
+	  }
 
       for (size_t i = 0; i < data_count; ++i) {
-        if (data[i].serializeKeyval(object) == false) {
+        if (data[i].serializeKeyval(ts ? values : object) == false) {
           Logger::log("unable to serialize data");
           return false;
         }

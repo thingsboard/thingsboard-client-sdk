@@ -25,6 +25,9 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
       case TYPE_STR:
         jsonObj[m_key] = m_value.str;
       break;
+	  case TYPE_LONG:
+        jsonObj[m_key] = m_value.lng;
+      break;
       default:
       break;
     }
@@ -41,6 +44,9 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
       break;
       case TYPE_STR:
         return jsonObj.set(m_value.str);
+      break;
+	  case TYPE_LONG:
+        return jsonObj.set(m_value.lng);
       break;
       default:
       break;
