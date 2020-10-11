@@ -280,14 +280,14 @@ private:
   }
 
   // Processes RPC message
-  void process_message(char* topic, uint8_t* payload, unsigned int length) {
+  bool process_message(char* topic, uint8_t* payload, unsigned int length) {
     RPC_Response r;
     {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         Logger::log("unable to de-serialize RPC");
-        return;
+        return false;
       }
       const JsonObject &data = jsonBuffer.template as<JsonObject>();
 
@@ -298,7 +298,7 @@ private:
         Logger::log(methodName);
       } else {
         Logger::log("RPC method is NULL");
-        return;
+        return false;
       }
 
       for (size_t i = 0; i < sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks); ++i) {
@@ -326,12 +326,12 @@ private:
 
       if (r.serializeKeyval(resp_obj) == false) {
         Logger::log("unable to serialize data");
-        return;
+        return false;
       }
 
       if (measureJson(respBuffer) > PayloadSize - 1) {
         Logger::log("too small buffer for JSON data");
-        return;
+        return false;
       }
       serializeJson(resp_obj, payload, sizeof(payload));
 
@@ -341,6 +341,8 @@ private:
       Logger::log(payload);
       m_client.publish(responseTopic.c_str(), payload);
     }
+	  
+	  return true;
   }
 
   // Sends array of attributes or telemetry to ThingsBoard
