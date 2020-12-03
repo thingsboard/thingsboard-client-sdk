@@ -91,7 +91,7 @@ using RPC_Data = JsonVariant;
 using RPC_Response  = JsonVariant;
 
 //Attributes callback signature
-using Attr_Callback = void (*)(const RPC_Data &data);
+using Attr_Callback = void (&)(const RPC_Data &data);
 
 // RPC callback wrapper
 class RPC_Callback {
@@ -127,6 +127,9 @@ template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
 class ThingsBoardSized
 {
 public:
+  // For internal usage
+  using tbs_Attr_Callback = void (*)(const RPC_Data &data);
+
   // Initializes ThingsBoardSized class with network client.
   inline ThingsBoardSized(Client &client) :m_client(client) { }
 
@@ -365,7 +368,7 @@ private:
   }
   
   // Processes Attr message
-  void process_attr_message(char* topic, uint8_t* payload, unsigned int length)
+  void process_attr_message(uint8_t* payload, unsigned int length)
   {
     StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
     DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -407,9 +410,9 @@ private:
     return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
   }
 
-  PubSubClient  m_client;              // PubSub MQTT client instance.
-  RPC_Callback  m_rpcCallbacks[8];     // RPC callbacks array
-  Attr_Callback m_attrCalBack;         // Attr callback
+  PubSubClient      m_client;              // PubSub MQTT client instance.
+  RPC_Callback      m_rpcCallbacks[8];     // RPC callbacks array
+  tbs_Attr_Callback m_attrCalBack;         // Attr callback
 
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
@@ -429,7 +432,7 @@ private:
     if (0 == strcmp(topic, "v1/devices/me/attributes"))
     {
       if (ThingsBoardSized::m_subscribedAttrInstance) {
-        ThingsBoardSized::m_subscribedAttrInstance->process_attr_message(topic, payload, length);
+        ThingsBoardSized::m_subscribedAttrInstance->process_attr_message(payload, length);
       }
     } else {
       if (ThingsBoardSized::m_subscribedRPCInstance) {
