@@ -86,9 +86,12 @@ private:
 // Convenient aliases
 
 using Attribute = Telemetry;
-using RPC_Response = Telemetry;
 // JSON object is used to communicate RPC parameters to the client
 using RPC_Data = JsonVariant;
+using RPC_Response  = JsonVariant;
+
+//Attributes callback signature
+using Attr_Callback = void (*)(const RPC_Data &data);
 
 // RPC callback wrapper
 class RPC_Callback {
@@ -97,7 +100,7 @@ class RPC_Callback {
 public:
 
   // RPC callback signature
-  using processFn = RPC_Response (*)(const RPC_Data &data);
+  using processFn = void (*)(const RPC_Data &data, RPC_Response &responce);
 
   // Constructs empty callback
   inline RPC_Callback()
@@ -222,7 +225,31 @@ public:
   inline bool sendAttributeJSON(const char *json) {
     return m_client.publish("v1/devices/me/attributes", json);
   }
+  
+  // Subscribes Attributes callback
+  bool Attr_Subscribe(const Attr_Callback callback)
+  {
+    if (ThingsBoardSized::m_subscribedAttrInstance) {
+      return false;
+    }
 
+    if (!m_client.subscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+
+    ThingsBoardSized::m_subscribedAttrInstance = this;
+    m_attrCalBack = callback;
+
+    m_client.setCallback(ThingsBoardSized::on_message);
+
+    return true;
+  }
+
+  inline bool Attr_Unsubscribe()
+  {
+    ThingsBoardSized::m_subscribedAttrInstance = NULL;
+    return m_client.unsubscribe("v1/devices/me/attributes");
+  }
   //----------------------------------------------------------------------------
   // Server-side RPC API
 
@@ -231,7 +258,7 @@ public:
     if (callbacks_size > sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks)) {
       return false;
     }
-    if (ThingsBoardSized::m_subscribedInstance) {
+    if (ThingsBoardSized::m_subscribedRPCInstance) {
       return false;
     }
 
@@ -239,7 +266,7 @@ public:
       return false;
     }
 
-    ThingsBoardSized::m_subscribedInstance = this;
+    ThingsBoardSized::m_subscribedRPCInstance = this;
     for (size_t i = 0; i < callbacks_size; ++i) {
       m_rpcCallbacks[i] = callbacks[i];
     }
@@ -250,7 +277,7 @@ public:
 }
 
   inline bool RPC_Unsubscribe() {
-    ThingsBoardSized::m_subscribedInstance = NULL;
+    ThingsBoardSized::m_subscribedRPCInstance = NULL;
     return m_client.unsubscribe("v1/devices/me/rpc/request/+");
   }
 
@@ -280,8 +307,9 @@ private:
   }
 
   // Processes RPC message
-  void process_message(char* topic, uint8_t* payload, unsigned int length) {
-    RPC_Response r;
+  void process_rpc_message(char* topic, uint8_t* payload, unsigned int length) {
+    StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> respBuffer;
+    RPC_Response r = respBuffer.template to<JsonVariant>();
     {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -313,7 +341,7 @@ private:
           }
           // Getting non-existing field from JSON should automatically
           // set JSONVariant to null
-          r = m_rpcCallbacks[i].m_cb(data["params"]);
+          m_rpcCallbacks[i].m_cb(data["params"], r);
           break;
         }
       }
@@ -321,25 +349,34 @@ private:
     {
       // Fill in response
       char payload[PayloadSize] = {0};
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
-      JsonVariant resp_obj = respBuffer.template to<JsonVariant>();
 
-      if (r.serializeKeyval(resp_obj) == false) {
-        Logger::log("unable to serialize data");
-        return;
-      }
-
-      if (measureJson(respBuffer) > PayloadSize - 1) {
+      if (measureJson(r) > PayloadSize - 1) {
         Logger::log("too small buffer for JSON data");
         return;
       }
-      serializeJson(resp_obj, payload, sizeof(payload));
+      serializeJson(r, payload, sizeof(payload));
 
       String responseTopic = String(topic);
       responseTopic.replace("request", "response");
       Logger::log("response:");
       Logger::log(payload);
       m_client.publish(responseTopic.c_str(), payload);
+    }
+  }
+  
+  // Processes Attr message
+  void process_attr_message(char* topic, uint8_t* payload, unsigned int length)
+  {
+    StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+    DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+    if (error) {
+      Logger::log("unable to de-serialize Atttributes");
+      return;
+    }
+    const JsonObject &data = jsonBuffer.template as<JsonObject>();
+
+    if (m_attrCalBack) {
+      m_attrCalBack(data);
     }
   }
 
@@ -370,26 +407,43 @@ private:
     return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
   }
 
-  PubSubClient m_client;              // PubSub MQTT client instance.
-  RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
+  PubSubClient  m_client;              // PubSub MQTT client instance.
+  RPC_Callback  m_rpcCallbacks[8];     // RPC callbacks array
+  Attr_Callback m_attrCalBack;         // Attr callback
 
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
   // To be able to forward event to an instance, rather than to a function, this pointer exists.
-  static ThingsBoardSized *m_subscribedInstance;
+  static ThingsBoardSized *m_subscribedRPCInstance;
+  static ThingsBoardSized *m_subscribedAttrInstance;
 
   // The callback for when a PUBLISH message is received from the server.
   static void on_message(char* topic, uint8_t* payload, unsigned int length) {
-    if (!ThingsBoardSized::m_subscribedInstance) {
+    if ((!ThingsBoardSized::m_subscribedRPCInstance) && (!ThingsBoardSized::m_subscribedAttrInstance)) {
       return;
     }
 
-    ThingsBoardSized::m_subscribedInstance->process_message(topic, payload, length);
+    Logger::log("Got message from:");
+    Logger::log(topic);
+    Logger::log("processing...");
+    if (0 == strcmp(topic, "v1/devices/me/attributes"))
+    {
+      if (ThingsBoardSized::m_subscribedAttrInstance) {
+        ThingsBoardSized::m_subscribedAttrInstance->process_attr_message(topic, payload, length);
+      }
+    } else {
+      if (ThingsBoardSized::m_subscribedRPCInstance) {
+        ThingsBoardSized::m_subscribedRPCInstance->process_rpc_message(topic, payload, length);
+      }
+    }
   }
 };
 
 template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance;
+ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedRPCInstance;
+
+template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedAttrInstance;
 
 #ifndef ESP8266
 
