@@ -45,7 +45,7 @@ void setup() {
 // Processes function for RPC call "example_set_temperature"
 // RPC_Data is a JSON variant, that can be queried using operator[]
 // See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
-RPC_Response processTemperatureChange(const RPC_Data &data)
+void processTemperatureChange(const RPC_Data &data, RPC_Response &resp)
 {
   Serial.println("Received the set temperature RPC method");
 
@@ -57,13 +57,14 @@ RPC_Response processTemperatureChange(const RPC_Data &data)
   Serial.println(example_temperature);
 
   // Just an response example
-  return RPC_Response("example_response", 42);
+  JsonObject r  = resp.to<JsonObject>();
+  r["example_response"] = 42;
 }
 
 // Processes function for RPC call "example_set_switch"
 // RPC_Data is a JSON variant, that can be queried using operator[]
 // See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
-RPC_Response processSwitchChange(const RPC_Data &data)
+void processSwitchChange(const RPC_Data &data, RPC_Response &resp)
 {
   Serial.println("Received the set switch method");
 
@@ -75,7 +76,8 @@ RPC_Response processSwitchChange(const RPC_Data &data)
   Serial.println(switch_state);
 
   // Just an response example
-  return RPC_Response("example_response", 22.02);
+  JsonObject r  = resp.to<JsonObject>();
+  r["example_response"] = 22.02;
 }
 
 const size_t callbacks_size = 2;
