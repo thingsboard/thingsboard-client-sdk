@@ -22,14 +22,10 @@ class ThingsBoardDefaultLogger;
 
 // Telemetry record class, allows to store different data using common interface.
 class Telemetry {
-  template <size_t PayloadSize = Default_Payload,
-            size_t MaxFieldsAmt = Default_Fields_Amt,
-            typename Logger = ThingsBoardDefaultLogger>
+  template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
   friend class ThingsBoardSized;
 #ifndef ESP8266
-  template <size_t PayloadSize = Default_Payload,
-            size_t MaxFieldsAmt = Default_Fields_Amt,
-            typename Logger = ThingsBoardDefaultLogger>
+  template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
   friend class ThingsBoardHttpSized;
 #endif
 public:
@@ -120,7 +116,9 @@ public:
 };
 
 // ThingsBoardSized client class
-template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+template<size_t PayloadSize = Default_Payload,
+         size_t MaxFieldsAmt = Default_Fields_Amt,
+         typename Logger = ThingsBoardDefaultLogger>
 class ThingsBoardSized
 {
 public:
