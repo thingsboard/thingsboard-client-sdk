@@ -158,6 +158,13 @@ public:
   //----------------------------------------------------------------------------
   // Telemetry API
 
+  // Sends telemetry data to the ThingsBoard, returns true on success.
+  template<class T>
+  inline bool sendTelemetryData(const char *key, T value)
+  {
+    return sendKeyval(key, value);
+  }
+
   // Sends integer telemetry data to the ThingsBoard, returns true on success.
   inline bool sendTelemetryInt(const char *key, int value) {
     return sendKeyval(key, value);
@@ -190,6 +197,12 @@ public:
 
   //----------------------------------------------------------------------------
   // Attribute API
+
+  // Sends an attribute with given name and value.
+  template<class T>
+  inline bool sendAttributeData(const char *attrName, T value) {
+    return sendKeyval(attrName, value, false);
+  }
 
   // Sends integer attribute with given name and value.
   inline bool sendAttributeInt(const char *attrName, int value) {
