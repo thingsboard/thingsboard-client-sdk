@@ -182,6 +182,27 @@ public:
   }
 
   //----------------------------------------------------------------------------
+  // Claiming API
+
+  bool sendClaimingRequest(const char *secretKey, unsigned int durationMs) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
+      JsonObject resp_obj = respBuffer.to<JsonObject>();
+
+      resp_obj["secretKey"] = secretKey;
+      resp_obj["durationMs"] = durationMs;
+
+      if (measureJson(respBuffer) > PayloadSize - 1) {
+        Logger::log("too small buffer for JSON data");
+        return;
+      }
+
+      char responsePayload = char[measureJson(respBuffer)];
+      serializeJson(resp_obj, responsePayload);
+
+      m_client.publish("v1/devices/me/claim", responsePayload);
+  }
+
+  //----------------------------------------------------------------------------
   // Telemetry API
 
   // Sends integer telemetry data to the ThingsBoard, returns true on success.
