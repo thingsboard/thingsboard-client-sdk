@@ -146,6 +146,9 @@ public:
 template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
 class ThingsBoardSized
 {
+
+  bool provision_mode = false;
+
 public:
   // Initializes ThingsBoardSized class with network client.
   inline ThingsBoardSized(Client &client) :m_client(client) { }
@@ -156,14 +159,21 @@ public:
   // Connects to the specified ThingsBoard server and port.
   // Access token is used to authenticate a client.
   // Returns true on success, false otherwise.
-  bool connect(const char *host, const char *access_token, int port = 1883) {
-    if (!host || !access_token) {
+  bool connect(const char *host, const char *access_token, int port = 1883, const char *client_id = "TbDev", const char *password = NULL) {
+    if (!host) {
       return false;
     }
     this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
     this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+    this->Provision_Unsubscribe()
+    if (!access_token) {
+      char[] username = 'provision';
+      this.provision_mode = true;
+    } else {
+      char[] username = access_token;
+    }
     m_client.setServer(host, port);
-    return m_client.connect("TbDev", access_token, NULL);
+    return m_client.connect(client_id, access_token, password);
   }
 
   // Disconnects from ThingsBoard. Returns true on success.
@@ -196,7 +206,7 @@ public:
         return;
       }
 
-      char responsePayload = char[measureJson(respBuffer)];
+      char responsePayload[measureJson(respBuffer)];
       serializeJson(resp_obj, responsePayload);
 
       m_client.publish("v1/devices/me/claim", responsePayload);
@@ -334,6 +344,34 @@ public:
       return false;
     }
     if (!m_client.unsubscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+    return true;
+  }
+
+// -------------------------------------------------------------------------------
+// Provisioning API
+
+// Subscribes to get provision response
+
+  bool Provision_Subscribe() {
+
+    if (ThingsBoardSized::m_subscribedInstance) {
+      return false;
+    }
+
+    if (!m_client.subscribe("/provision/response")) {
+      return false;
+    }
+
+    m_client.setCallback(ThingsBoardSized::on_message);
+
+    return true;
+}
+
+  inline bool Provision_Unsubscribe() {
+    ThingsBoardSized::m_subscribedInstance = NULL;
+    if (!m_client.unsubscribe("/provision/response")) {
       return false;
     }
     return true;
@@ -506,6 +544,8 @@ private:
       ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
     } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
       ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
+    } else if ("/provision/response" == topic) {
+      ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
     }
   }
 };
