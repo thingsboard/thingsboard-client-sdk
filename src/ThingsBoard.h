@@ -89,6 +89,7 @@ using Attribute = Telemetry;
 using RPC_Response = Telemetry;
 // JSON object is used to communicate RPC parameters to the client
 using RPC_Data = JsonVariant;
+using Shared_Attribute_Data = JsonVariant;
 
 // RPC callback wrapper
 class RPC_Callback {
@@ -110,6 +111,28 @@ public:
 
 private:
   const char  *m_name;    // Method name
+  processFn   m_cb;       // Callback to call
+};
+
+// Shared attributes callback wrapper
+class Shared_Attribute_Callback {
+  template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+  friend class ThingsBoardSized;
+public:
+
+  // Shared attributes callback signature
+  using processFn = void (*)(const Shared_Attribute_Data &data);
+
+  // Constructs empty callback
+  inline Shared_Attribute_Callback()
+    :m_cb(NULL)                {  }
+
+  // Constructs callback that will be fired upon a Shared attribute request arrival with
+  // given attribute key
+  inline Shared_Attribute_Callback(processFn cb)
+    :m_cb(cb)        {  }
+
+private:
   processFn   m_cb;       // Callback to call
 };
 
@@ -137,7 +160,8 @@ public:
     if (!host || !access_token) {
       return false;
     }
-    this->RPC_Unsubscribe(); // Cleanup any subscriptions
+    this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
+    this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
     m_client.setServer(host, port);
     return m_client.connect("TbDev", access_token, NULL);
   }
@@ -254,6 +278,46 @@ public:
     return m_client.unsubscribe("v1/devices/me/rpc/request/+");
   }
 
+  //----------------------------------------------------------------------------
+  // Shared attributes API
+
+  // Subscribes multiple Shared attributes callbacks with given size
+  bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, size_t callbacks_size) {
+    if (callbacks_size > sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks)) {
+      return false;
+    }
+    if (ThingsBoardSized::m_subscribedInstance) {
+      return false;
+    }
+
+    if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+      return false;
+    }
+    if (!m_client.subscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+
+    ThingsBoardSized::m_subscribedInstance = this;
+    for (size_t i = 0; i < callbacks_size; ++i) {
+      m_sharedAttributeUpdateCallbacks[i] = callbacks[i];
+    }
+
+    m_client.setCallback(ThingsBoardSized::on_message);
+
+    return true;
+}
+
+  inline bool Shared_Attributes_Unsubscribe() {
+    ThingsBoardSized::m_subscribedInstance = NULL;
+    if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
+      return false;
+    }
+    if (!m_client.unsubscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+    return true;
+  }
+
 private:
   // Sends single key-value in a generic way.
   template<typename T>
@@ -280,7 +344,7 @@ private:
   }
 
   // Processes RPC message
-  void process_message(char* topic, uint8_t* payload, unsigned int length) {
+  void process_rpc_message(char* topic, uint8_t* payload, unsigned int length) {
     RPC_Response r;
     {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -318,9 +382,8 @@ private:
         }
       }
     }
-    {
       // Fill in response
-      char payload[PayloadSize] = {0};
+      char responsePayload[PayloadSize] = {0};
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
       JsonVariant resp_obj = respBuffer.template to<JsonVariant>();
 
@@ -333,14 +396,48 @@ private:
         Logger::log("too small buffer for JSON data");
         return;
       }
-      serializeJson(resp_obj, payload, sizeof(payload));
+      serializeJson(resp_obj, responsePayload, sizeof(responsePayload));
 
       String responseTopic = String(topic);
       responseTopic.replace("request", "response");
       Logger::log("response:");
       Logger::log(payload);
-      m_client.publish(responseTopic.c_str(), payload);
+      m_client.publish(responseTopic.c_str(), responsePayload);
     }
+
+  // Processes shared attribute update message
+
+  void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
+
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      if (error) {
+        Logger::log("Unable to de-serialize Shared attribute update request");
+        return;
+      }
+      const JsonObject &data = jsonBuffer.template as<JsonObject>();
+
+      const char *attributeKey = data.begin()->key;
+
+      if (attributeKey) {
+        Logger::log("Received shared attribute update request:");
+        Logger::log(attributeKey);
+      } else {
+        Logger::log("Shared attribute update key not found.");
+        return;
+      }
+
+      for (size_t i = 0; i < sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks); ++i) {
+        if (m_sharedAttributeUpdateCallbacks[i].m_cb) {
+
+          Logger::log("Calling callbacks for updated attribute:");
+          Logger::log(attributeKey);
+
+          // Getting non-existing field from JSON should automatically
+          // set JSONVariant to null
+          m_sharedAttributeUpdateCallbacks[i].m_cb(data);
+        }
+      }
   }
 
   // Sends array of attributes or telemetry to ThingsBoard
@@ -372,6 +469,7 @@ private:
 
   PubSubClient m_client;              // PubSub MQTT client instance.
   RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
+  Shared_Attribute_Callback m_sharedAttributeUpdateCallbacks[8];     // Shared attribute update callbacks array
 
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
@@ -383,8 +481,11 @@ private:
     if (!ThingsBoardSized::m_subscribedInstance) {
       return;
     }
-
-    ThingsBoardSized::m_subscribedInstance->process_message(topic, payload, length);
+    if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
+      ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
+    } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
+      ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
+    }
   }
 };
 
