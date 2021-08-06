@@ -234,7 +234,7 @@ public:
       char responsePayload[measureJson(respBuffer)];
       serializeJson(resp_obj, responsePayload);
 
-      m_client.publish("v1/devices/me/claim", responsePayload);
+      return m_client.publish("v1/devices/me/claim", responsePayload);
   }
 
   //----------------------------------------------------------------------------
