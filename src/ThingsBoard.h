@@ -89,7 +89,7 @@ using Attribute = Telemetry;
 using RPC_Response = Telemetry;
 // JSON object is used to communicate RPC parameters to the client
 using RPC_Data = JsonVariant;
-using Shared_Attribute_Data = JsonVariant;
+using Shared_Attribute_Data = JsonObject;
 using Provision_Data = JsonObject;
 
 // RPC callback wrapper
@@ -220,19 +220,15 @@ public:
   // Claiming API
 
   bool sendClaimingRequest(const char *secretKey, unsigned int durationMs) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
-      JsonObject resp_obj = respBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
+      JsonObject resp_obj = requestBuffer.to<JsonObject>();
 
       resp_obj["secretKey"] = secretKey;
       resp_obj["durationMs"] = durationMs;
 
-      if (measureJson(respBuffer) > PayloadSize - 1) {
-        Logger::log("too small buffer for JSON data");
-        return;
-      }
-
-      char responsePayload[measureJson(respBuffer)];
-      serializeJson(resp_obj, responsePayload);
+      uint8_t objectSize = measureJson(requestBuffer) + 1;
+      char responsePayload[objectSize];
+      serializeJson(resp_obj, responsePayload, objectSize);
 
       return m_client.publish("v1/devices/me/claim", responsePayload);
   }
