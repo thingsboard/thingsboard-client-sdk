@@ -558,14 +558,14 @@ private:
 
       const JsonObject &data = jsonBuffer.template as<JsonObject>();
 
-      if (!data["provisionDeviceStatus"] == "SUCCESS") {
+      if (data["provisionDeviceStatus"] != "SUCCESS") {
         Logger::log("Provision response contains error: ");
         Logger::log(data["provisionDeviceStatus"]);
         return;
       }
 
       if (data["credentialsType"] == "X509_CERTIFICATE") {
-        Logger::log("Provision response contains X509_CERTIFICATE credentials, it is not supported yet.")
+        Logger::log("Provision response contains X509_CERTIFICATE credentials, it is not supported yet.");
         return;
       }
 
