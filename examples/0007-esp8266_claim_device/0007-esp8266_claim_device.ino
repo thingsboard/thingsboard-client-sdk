@@ -3,13 +3,13 @@
 #include <ESP8266WiFi.h>
 
 
-#define WIFI_AP             "ThingsBoardTN"
-#define WIFI_PASSWORD       "4Friends123!"
+#define WIFI_AP             "YOUR_WIFI_AP"
+#define WIFI_PASSWORD       "YOUR_WIFI_PASSWORD"
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
-#define TOKEN               "qweqwe"
-#define THINGSBOARD_SERVER  "192.168.0.2"
+#define TOKEN               "YOUR_ACCESS_TOKEN"
+#define THINGSBOARD_SERVER  "thingsboard.cloud"
 
 
 // Baud rate for debug serial
@@ -23,7 +23,7 @@ ThingsBoard tb(espClient);
 int status = WL_IDLE_STATUS;
 bool claimingRequestSent = false;
 
-const char* claimingRequestSecretKey = "VERY_SECRET_KEY";
+const char* claimingRequestSecretKey = "YOUR_VERY_SECRET_KEY";
 unsigned int claimingRequestDurationMs = 180000;
 
 void setup() {
