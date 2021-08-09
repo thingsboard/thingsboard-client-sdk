@@ -47,7 +47,7 @@ void loop() {
     Serial.print(THINGSBOARD_SERVER);
     Serial.print(" with token ");
     Serial.println(TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, 1884)) {
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, 1883)) {
       Serial.println("Failed to connect");
       return;
     }
