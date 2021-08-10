@@ -150,7 +150,7 @@ public:
   inline Provision_Callback()
     :m_cb(NULL)                {  }
 
-  // Constructs callback that will be fired upon a Shared attribute request arrival with
+  // Constructs callback that will be fired upon a Provision request arrival with
   // given attribute key
   inline Provision_Callback(processFn cb)
     :m_cb(cb)        {  }
@@ -182,19 +182,15 @@ public:
   // Connects to the specified ThingsBoard server and port.
   // Access token is used to authenticate a client.
   // Returns true on success, false otherwise.
-  bool connect(const char *host, const char *access_token, int port = 1883, const char *client_id = "TbDev", const char *password = NULL) {
+  bool connect(const char *host, const char *access_token = "provision", int port = 1883, const char *client_id = "TbDev", const char *password = NULL) {
     if (!host) {
       return false;
     }
     this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
     this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
     this->Provision_Unsubscribe();
-    char *username;
-    if (!access_token) {
-      username = "provision";
+    if (*access_token == 'provision') {
       provision_mode = true;
-    } else {
-      username = (char*)access_token;
     }
     m_client.setServer(host, port);
     bool connection_result = m_client.connect(client_id, access_token, password);
@@ -231,6 +227,25 @@ public:
       serializeJson(resp_obj, responsePayload, objectSize);
 
       return m_client.publish("v1/devices/me/claim", responsePayload);
+  }
+
+  // Provisioning API
+  bool sendProvisionRequest(const char* deviceName, const char* provisionDeviceKey, const char* provisionDeviceSecret) {
+    // TODO Add ability to provide specific credentials from client side.
+      StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
+      JsonObject requestObject = requestBuffer.to<JsonObject>();
+
+      requestObject["deviceName"] = deviceName;
+      requestObject["provisionDeviceKey"] = provisionDeviceKey;
+      requestObject["provisionDeviceSecret"] = provisionDeviceSecret;
+
+      uint8_t objectSize = measureJson(requestBuffer) + 1;
+      char requestPayload[objectSize];
+      serializeJson(requestObject, requestPayload, objectSize);
+
+      Logger::log("Provision request:");
+      Logger::log(requestPayload);
+      return m_client.publish("/provision/request", requestPayload);
   }
 
   //----------------------------------------------------------------------------
@@ -375,7 +390,7 @@ public:
 
 // Subscribes to get provision response
 
-  bool Provision_Subscribe(const Shared_Attribute_Callback *callback) {
+  bool Provision_Subscribe(const Provision_Callback callback) {
 
     if (ThingsBoardSized::m_subscribedInstance) {
       return false;
@@ -387,7 +402,6 @@ public:
 
     ThingsBoardSized::m_subscribedInstance = this;
     m_provisionCallback = callback;
-
     m_client.setCallback(ThingsBoardSized::on_message);
 
     return true;
@@ -424,24 +438,6 @@ private:
       serializeJson(object, payload, sizeof(payload));
     }
     return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
-  }
-
-  // Send provision request
-  bool send_provision_request(const char* deviceName, const char* provisionDeviceKey, const char* provisionDeviceSecret) {
-    // TODO Add ability to provide specific credentials from client side.
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
-      JsonObject requestObject = requestBuffer.to<JsonObject>();
-
-      requestObject["deviceName"] = deviceName;
-      requestObject["provisionDeviceKey"] = provisionDeviceKey;
-      requestObject["provisionDeviceSecret"] = provisionDeviceSecret;
-
-      char requestPayload[measureJson(requestBuffer)];
-      serializeJson(requestObject, requestPayload, sizeof(requestPayload));
-
-      Logger::log("Provision request:");
-      Logger::log(requestPayload);
-      return m_client.publish("/provision/request", requestPayload);
   }
 
   // Processes RPC message
@@ -544,6 +540,7 @@ private:
   // Processes provisioning response
 
   void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
+    Serial.println("Process provisioning response");
 
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -554,13 +551,9 @@ private:
 
       const JsonObject &data = jsonBuffer.template as<JsonObject>();
 
-      if (data["provisionDeviceStatus"] != "SUCCESS") {
-        Logger::log("Provision response contains error: ");
-        Logger::log(data["provisionDeviceStatus"]);
-        return;
-      }
+      Logger::log("Received provision response");
 
-      if (data["credentialsType"] == "X509_CERTIFICATE") {
+      if (data["status"] == "SUCCESS" && data["credentialsType"] == "X509_CERTIFICATE") {
         Logger::log("Provision response contains X509_CERTIFICATE credentials, it is not supported yet.");
         return;
       }
@@ -609,6 +602,7 @@ private:
 
   // The callback for when a PUBLISH message is received from the server.
   static void on_message(char* topic, uint8_t* payload, unsigned int length) {
+    Serial.println("Callback on_message");
     if (!ThingsBoardSized::m_subscribedInstance) {
       return;
     }
@@ -616,7 +610,7 @@ private:
       ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
     } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
       ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
-    } else if ("/provision/response" == topic) {
+    } else if (strncmp("/provision/response", topic, strlen("/provision/response")) == 0) {
       ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
     }
   }
