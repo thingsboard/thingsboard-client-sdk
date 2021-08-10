@@ -12,14 +12,17 @@ EXAMPLES_ARDUINO_UNO=(
 
 EXAMPLES_ESP8266=(
     "examples/0003-esp8266_send_data"
+    "examples/0006-esp8266_process_shared_attribute_update"
+    "examples/0007-esp8266_claim_device"
+    "examples/0008-esp8266_provision_device"
 )
 
 EXAMPLES=( "${EXAMPLES_ESP8266[@]}" "${EXAMPLES_ARDUINO_UNO[@]}")
 
 # Test if arduino command line interface is downloaded locally
-if [ -f "$(pwd)/arduino-cli-0.3.2-alpha.preview-linux64" ]
+if [ -f "$(pwd)/arduino-cli" ]
 then
-    ARDUINO_CLI="$(pwd)/arduino-cli-0.3.2-alpha.preview-linux64"
+    ARDUINO_CLI="$(pwd)/arduino-cli"
     echo "Found arduino CLI in $ARDUINO_CLI"
 else
     ARDUINO_CLI="arduino-cli"
@@ -33,6 +36,7 @@ do_test() {
 
     for path in "${EXAMPLES_ESP8266[@]}"
     do
+        echo "Processing ESP8266 example with path: ${path}"
         "${ARDUINO_CLI}" compile -b esp8266:esp8266:generic "${path}"
     done
 }
