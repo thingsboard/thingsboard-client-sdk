@@ -89,6 +89,8 @@ using Attribute = Telemetry;
 using RPC_Response = Telemetry;
 // JSON object is used to communicate RPC parameters to the client
 using RPC_Data = JsonVariant;
+using Shared_Attribute_Data = JsonObject;
+using Provision_Data = JsonObject;
 
 // RPC callback wrapper
 class RPC_Callback {
@@ -113,6 +115,50 @@ private:
   processFn   m_cb;       // Callback to call
 };
 
+// Shared attributes callback wrapper
+class Shared_Attribute_Callback {
+  template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+  friend class ThingsBoardSized;
+public:
+
+  // Shared attributes callback signature
+  using processFn = void (*)(const Shared_Attribute_Data &data);
+
+  // Constructs empty callback
+  inline Shared_Attribute_Callback()
+    :m_cb(NULL)                {  }
+
+  // Constructs callback that will be fired upon a Shared attribute request arrival with
+  // given attribute key
+  inline Shared_Attribute_Callback(processFn cb)
+    :m_cb(cb)        {  }
+
+private:
+  processFn   m_cb;       // Callback to call
+};
+
+// Provisioning callback wrapper
+class Provision_Callback {
+  template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+  friend class ThingsBoardSized;
+public:
+
+  // Provisioning callback signature
+  using processFn = void (*)(const Provision_Data &data);
+
+  // Constructs empty callback
+  inline Provision_Callback()
+    :m_cb(NULL)                {  }
+
+  // Constructs callback that will be fired upon a Provision request arrival with
+  // given attribute key
+  inline Provision_Callback(processFn cb)
+    :m_cb(cb)        {  }
+
+private:
+  processFn   m_cb;       // Callback to call
+};
+
 class ThingsBoardDefaultLogger
 {
 public:
@@ -123,6 +169,9 @@ public:
 template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
 class ThingsBoardSized
 {
+
+  bool provision_mode = false;
+
 public:
   // Initializes ThingsBoardSized class with network client.
   inline ThingsBoardSized(Client &client) :m_client(client) { }
@@ -133,13 +182,19 @@ public:
   // Connects to the specified ThingsBoard server and port.
   // Access token is used to authenticate a client.
   // Returns true on success, false otherwise.
-  bool connect(const char *host, const char *access_token, int port = 1883) {
-    if (!host || !access_token) {
+  bool connect(const char *host, const char *access_token = "provision", int port = 1883, const char *client_id = "TbDev", const char *password = NULL) {
+    if (!host) {
       return false;
     }
-    this->RPC_Unsubscribe(); // Cleanup any subscriptions
+    this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
+    this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+    this->Provision_Unsubscribe();
+    if (*access_token == 'provision') {
+      provision_mode = true;
+    }
     m_client.setServer(host, port);
-    return m_client.connect("TbDev", access_token, NULL);
+    bool connection_result = m_client.connect(client_id, access_token, password);
+    return connection_result;
   }
 
   // Disconnects from ThingsBoard. Returns true on success.
@@ -155,6 +210,42 @@ public:
   // Executes an event loop for PubSub client.
   inline void loop() {
     m_client.loop();
+  }
+
+  //----------------------------------------------------------------------------
+  // Claiming API
+
+  bool sendClaimingRequest(const char *secretKey, unsigned int durationMs) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
+      JsonObject resp_obj = requestBuffer.to<JsonObject>();
+
+      resp_obj["secretKey"] = secretKey;
+      resp_obj["durationMs"] = durationMs;
+
+      uint8_t objectSize = measureJson(requestBuffer) + 1;
+      char responsePayload[objectSize];
+      serializeJson(resp_obj, responsePayload, objectSize);
+
+      return m_client.publish("v1/devices/me/claim", responsePayload);
+  }
+
+  // Provisioning API
+  bool sendProvisionRequest(const char* deviceName, const char* provisionDeviceKey, const char* provisionDeviceSecret) {
+    // TODO Add ability to provide specific credentials from client side.
+      StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
+      JsonObject requestObject = requestBuffer.to<JsonObject>();
+
+      requestObject["deviceName"] = deviceName;
+      requestObject["provisionDeviceKey"] = provisionDeviceKey;
+      requestObject["provisionDeviceSecret"] = provisionDeviceSecret;
+
+      uint8_t objectSize = measureJson(requestBuffer) + 1;
+      char requestPayload[objectSize];
+      serializeJson(requestObject, requestPayload, objectSize);
+
+      Logger::log("Provision request:");
+      Logger::log(requestPayload);
+      return m_client.publish("/provision/request", requestPayload);
   }
 
   //----------------------------------------------------------------------------
@@ -254,6 +345,76 @@ public:
     return m_client.unsubscribe("v1/devices/me/rpc/request/+");
   }
 
+  //----------------------------------------------------------------------------
+  // Shared attributes API
+
+  // Subscribes multiple Shared attributes callbacks with given size
+  bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, size_t callbacks_size) {
+    if (callbacks_size > sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks)) {
+      return false;
+    }
+    if (ThingsBoardSized::m_subscribedInstance) {
+      return false;
+    }
+
+    if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+      return false;
+    }
+    if (!m_client.subscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+
+    ThingsBoardSized::m_subscribedInstance = this;
+    for (size_t i = 0; i < callbacks_size; ++i) {
+      m_sharedAttributeUpdateCallbacks[i] = callbacks[i];
+    }
+
+    m_client.setCallback(ThingsBoardSized::on_message);
+
+    return true;
+}
+
+  inline bool Shared_Attributes_Unsubscribe() {
+    ThingsBoardSized::m_subscribedInstance = NULL;
+    if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
+      return false;
+    }
+    if (!m_client.unsubscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+    return true;
+  }
+
+// -------------------------------------------------------------------------------
+// Provisioning API
+
+// Subscribes to get provision response
+
+  bool Provision_Subscribe(const Provision_Callback callback) {
+
+    if (ThingsBoardSized::m_subscribedInstance) {
+      return false;
+    }
+
+    if (!m_client.subscribe("/provision/response")) {
+      return false;
+    }
+
+    ThingsBoardSized::m_subscribedInstance = this;
+    m_provisionCallback = callback;
+    m_client.setCallback(ThingsBoardSized::on_message);
+
+    return true;
+}
+
+  bool Provision_Unsubscribe() {
+    ThingsBoardSized::m_subscribedInstance = NULL;
+    if (!m_client.unsubscribe("/provision/response")) {
+      return false;
+    }
+    return true;
+  }
+
 private:
   // Sends single key-value in a generic way.
   template<typename T>
@@ -280,7 +441,7 @@ private:
   }
 
   // Processes RPC message
-  void process_message(char* topic, uint8_t* payload, unsigned int length) {
+  void process_rpc_message(char* topic, uint8_t* payload, unsigned int length) {
     RPC_Response r;
     {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -332,9 +493,8 @@ private:
         }
       }
     }
-    {
       // Fill in response
-      char payload[PayloadSize] = {0};
+      char responsePayload[PayloadSize] = {0};
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
       JsonVariant resp_obj = respBuffer.template to<JsonVariant>();
 
@@ -347,14 +507,74 @@ private:
         Logger::log("too small buffer for JSON data");
         return;
       }
-      serializeJson(resp_obj, payload, sizeof(payload));
+      serializeJson(resp_obj, responsePayload, sizeof(responsePayload));
 
       String responseTopic = String(topic);
       responseTopic.replace("request", "response");
       Logger::log("response:");
-      Logger::log(payload);
-      m_client.publish(responseTopic.c_str(), payload);
+      Logger::log(responsePayload);
+      m_client.publish(responseTopic.c_str(), responsePayload);
     }
+
+  // Processes shared attribute update message
+
+  void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
+
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      if (error) {
+        Logger::log("Unable to de-serialize Shared attribute update request");
+        return;
+      }
+      const JsonObject &data = jsonBuffer.template as<JsonObject>();
+
+      const char *attributeKey = data.begin()->key().c_str();
+
+      if (attributeKey) {
+        Logger::log("Received shared attribute update request:");
+        Logger::log(attributeKey);
+      } else {
+        Logger::log("Shared attribute update key not found.");
+        return;
+      }
+
+      for (size_t i = 0; i < sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks); ++i) {
+        if (m_sharedAttributeUpdateCallbacks[i].m_cb) {
+
+          Logger::log("Calling callbacks for updated attribute:");
+          Logger::log(attributeKey);
+
+          // Getting non-existing field from JSON should automatically
+          // set JSONVariant to null
+          m_sharedAttributeUpdateCallbacks[i].m_cb(data);
+        }
+      }
+  }
+
+  // Processes provisioning response
+
+  void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
+    Serial.println("Process provisioning response");
+
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      if (error) {
+        Logger::log("Unable to de-serialize provision response");
+        return;
+      }
+
+      const JsonObject &data = jsonBuffer.template as<JsonObject>();
+
+      Logger::log("Received provision response");
+
+      if (data["status"] == "SUCCESS" && data["credentialsType"] == "X509_CERTIFICATE") {
+        Logger::log("Provision response contains X509_CERTIFICATE credentials, it is not supported yet.");
+        return;
+      }
+
+      if (m_provisionCallback.m_cb) {
+        m_provisionCallback.m_cb(data);
+      }
   }
 
   // Sends array of attributes or telemetry to ThingsBoard
@@ -386,6 +606,8 @@ private:
 
   PubSubClient m_client;              // PubSub MQTT client instance.
   RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
+  Shared_Attribute_Callback m_sharedAttributeUpdateCallbacks[8];     // Shared attribute update callbacks array
+  Provision_Callback m_provisionCallback; // Provision response callback
 
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
@@ -394,11 +616,17 @@ private:
 
   // The callback for when a PUBLISH message is received from the server.
   static void on_message(char* topic, uint8_t* payload, unsigned int length) {
+    Serial.println("Callback on_message");
     if (!ThingsBoardSized::m_subscribedInstance) {
       return;
     }
-
-    ThingsBoardSized::m_subscribedInstance->process_message(topic, payload, length);
+    if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
+      ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
+    } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
+      ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
+    } else if (strncmp("/provision/response", topic, strlen("/provision/response")) == 0) {
+      ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
+    }
   }
 };
 
