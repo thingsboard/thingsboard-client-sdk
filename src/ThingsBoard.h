@@ -189,7 +189,7 @@ public:
     this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
     this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
     this->Provision_Unsubscribe();
-    if (*access_token == 'provision') {
+    if (!strcmp(access_token, "provision")) {
       provision_mode = true;
     }
     m_client.setServer(host, port);
@@ -482,7 +482,7 @@ private:
           DeserializationError err_param = deserializeJson(doc, params);
           if (err_param) {
             Logger::log("unable to de-serialize params: ");
-            Logger::log(err_param.f_str());
+            Logger::log(err_param.c_str());
           }
           const JsonObject &param = doc.template as<JsonObject>();
 
