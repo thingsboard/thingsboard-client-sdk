@@ -554,7 +554,7 @@ private:
   // Processes provisioning response
 
   void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
-    Serial.println("Process provisioning response");
+    Logger::log("Process provisioning response");
 
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -616,7 +616,7 @@ private:
 
   // The callback for when a PUBLISH message is received from the server.
   static void on_message(char* topic, uint8_t* payload, unsigned int length) {
-    Serial.println("Callback on_message");
+    Logger::log("Callback on_message");
     if (!ThingsBoardSized::m_subscribedInstance) {
       return;
     }
