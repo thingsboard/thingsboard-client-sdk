@@ -348,6 +348,19 @@ public:
   //----------------------------------------------------------------------------
   // Shared attributes API
 
+  bool Shared_Attributes_Request(const char* attributes) {
+    StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
+    JsonObject requestObject = requestBuffer.to<JsonObject>();
+
+    requestObject["sharedKeys"] = attributes;
+
+    int objectSize = measureJson(requestBuffer) + 1;
+    char buffer[objectSize];
+    serializeJson(requestObject, buffer, objectSize);
+
+    return m_client.publish("v1/devices/me/attributes/request/1", buffer);
+  }
+
   // Subscribes multiple Shared attributes callbacks with given size
   bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, size_t callbacks_size) {
     if (callbacks_size > sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks)) {
