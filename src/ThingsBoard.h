@@ -338,7 +338,7 @@ public:
     m_client.setCallback(ThingsBoardSized::on_message);
 
     return true;
-}
+  }
 
   inline bool RPC_Unsubscribe() {
     ThingsBoardSized::m_subscribedInstance = NULL;
@@ -385,7 +385,7 @@ public:
     m_client.setCallback(ThingsBoardSized::on_message);
 
     return true;
-}
+  }
 
   inline bool Shared_Attributes_Unsubscribe() {
     ThingsBoardSized::m_subscribedInstance = NULL;
@@ -418,7 +418,7 @@ public:
     m_client.setCallback(ThingsBoardSized::on_message);
 
     return true;
-}
+  }
 
   bool Provision_Unsubscribe() {
     ThingsBoardSized::m_subscribedInstance = NULL;
@@ -641,6 +641,7 @@ private:
       ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
     }
   }
+
 };
 
 template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
@@ -660,7 +661,7 @@ public:
       ,m_host(host)
       ,m_token(access_token)
       ,m_port(port)
-       { }
+      { }
 
   // Destroys ThingsBoardHttpSized class with network client.
   inline ~ThingsBoardHttpSized() { }
@@ -798,7 +799,7 @@ private:
     }
 
     return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
-}
+  }
 
   // Sends single key-value in a generic way.
   template<typename T>
