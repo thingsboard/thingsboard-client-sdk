@@ -11,6 +11,7 @@
 #include <ArduinoHttpClient.h>
 #endif
 
+#include <Update.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "ArduinoJson/Polyfills/type_traits.hpp"
@@ -177,6 +178,13 @@ public:
   inline ThingsBoardSized(Client &client)
     :m_client(client)
     ,m_requestId(0)
+    ,m_fwVersion("")
+    ,m_fwTitle("")
+    ,m_fwChecksum("")
+    ,m_fwChecksumAlgorithm("")
+    ,m_fwState("")
+    ,m_fwSize(0)
+    ,m_fwChunkReceive(-1)
     { }
 
   // Destroys ThingsBoardSized class with network client.
@@ -346,6 +354,183 @@ public:
   inline bool RPC_Unsubscribe() {
     ThingsBoardSized::m_subscribedInstance = NULL;
     return m_client.unsubscribe("v1/devices/me/rpc/request/+");
+  }
+
+  //----------------------------------------------------------------------------
+  // Firmware OTA API
+
+  bool Firmware_Update(const char* currFwTitle, const char* currFwVersion) {
+    m_fwState.clear();
+    m_fwTitle.clear();
+    m_fwVersion.clear();
+
+    // Send current firmware version
+    if (!Firmware_Send_FW_Info(currFwTitle, currFwVersion)) {
+      return false;
+    }
+
+    // Update state
+    Firmware_Send_State("CHECKING FIRMWARE");
+
+    // Request the firmware informations
+    if (!Shared_Attributes_Request("fw_checksum,fw_checksum_algorithm,fw_size,fw_title,fw_version")) {
+      return false;
+    }
+
+    // Wait receive m_fwVersion and m_fwTitle
+    int timeout = millis() + 3000;
+    do {
+      delay(5);
+      loop();
+    } while (m_fwVersion.isEmpty() && m_fwTitle.isEmpty() && (timeout >= millis()));
+
+    // Check if firmware is available for our device
+    if (m_fwVersion.isEmpty() || m_fwTitle.isEmpty()) {
+      Logger::log("No firmware found !");
+      Firmware_Send_State("NO FIRMWARE FOUND");
+      return false;
+    }
+
+    // If firmware is the same, we do not update it
+    if ((String(currFwTitle) == m_fwTitle) and (String(currFwVersion) == m_fwVersion)) {
+      Logger::log("Firmware is already up to date !");
+      Firmware_Send_State("UP TO DATE");
+      return false;
+    }
+
+    // If firmware title is not the same, we quit now
+    if (String(currFwTitle) != m_fwTitle) {
+      Logger::log("Firmware is not for us (title is different) !");
+      Firmware_Send_State("NO FIRMWARE FOUND");
+      return false;
+    }
+
+    if (m_fwChecksumAlgorithm != "MD5") {
+      Logger::log("Checksum algorithm is not supported, please use MD5 only");
+      Firmware_Send_State("CHKS IS NOT MD5");
+      return false;
+    }
+
+    Logger::log("=================================");
+    Logger::log("A new Firmware is available :");
+    Logger::log(String(String(currFwVersion) + " => " + m_fwVersion).c_str());
+    Logger::log("Try to download it...");
+
+    // Update state
+    Firmware_Send_State("DOWNLOADING");
+
+    int chunkSize = 4096;   // max 256 if default MQTT_MAX_PACKET_SIZE value
+    int numberOfChunk = int(m_fwSize / chunkSize) + 1;
+    int currChunk = 0;
+    int nbRetry = 3;
+
+    // Download the firmware
+    do {
+      m_client.publish(String("v2/fw/request/0/chunk/" + String(currChunk)).c_str(), String(chunkSize).c_str());
+
+      timeout = millis() + 3000;
+      do {
+        delay(5);
+        loop();
+      } while ((m_fwChunkReceive != currChunk) && (timeout >= millis()));
+
+      if (m_fwChunkReceive == currChunk) {
+        // Check if state is OK
+        if ((m_fwState == "DOWNLOADING") || (m_fwState == "SUCCESS")) {
+          currChunk++;
+        }
+        else {
+          nbRetry--;
+          if (nbRetry == 0) {
+            return false;
+          }
+        }
+      }
+
+      // Timeout
+      else {
+        nbRetry--;
+        if (nbRetry == 0) {
+          return false;
+        }
+      }
+
+    } while (numberOfChunk != currChunk);
+
+    // Update state
+    Firmware_Send_State(m_fwState.c_str());
+
+    return m_fwState == "SUCCESS" ? true : false;
+  }
+
+  bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
+    // Send our firmware title and version
+    StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
+    JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
+
+    currentFirmwareInfoObject["current_fw_title"] = currFwTitle;
+    currentFirmwareInfoObject["current_fw_version"] = currFwVersion;
+
+    int objectSize = measureJson(currentFirmwareInfo) + 1;
+    char buffer[objectSize];
+    serializeJson(currentFirmwareInfoObject, buffer, objectSize);
+
+    return sendTelemetryJson(buffer);
+  }
+
+  bool Firmware_Send_State(const char* currFwState) {
+    // Send our firmware title and version
+    StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
+    JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
+
+    currentFirmwareStateObject["current_fw_state"] = currFwState;
+
+    int objectSize = measureJson(currentFirmwareState) + 1;
+    char buffer[objectSize];
+    serializeJson(currentFirmwareStateObject, buffer, objectSize);
+
+    return sendTelemetryJson(buffer);
+  }
+
+  bool Firmware_OTA_Subscribe() {
+    if (ThingsBoardSized::m_subscribedInstance) {
+      return false;
+    }
+
+    // Subscribe at 3 topics
+    if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+      return false;
+    }
+    if (!m_client.subscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+    if (!m_client.subscribe("v2/fw/response/#")) {
+      return false;
+    }
+
+    ThingsBoardSized::m_subscribedInstance = this;
+
+    // Set callback for receive message
+    m_client.setCallback(ThingsBoardSized::on_message);
+
+    return true;
+  }
+
+  bool Firmware_OTA_Unsubscribe() {
+    ThingsBoardSized::m_subscribedInstance = NULL;
+
+    // Unsubscribe at 3 topics
+    if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
+      return false;
+    }
+    if (!m_client.unsubscribe("v1/devices/me/attributes")) {
+      return false;
+    }
+    if (!m_client.unsubscribe("v2/fw/response/#")) {
+      return false;
+    }
+
+    return true;
   }
 
   //----------------------------------------------------------------------------
@@ -534,6 +719,67 @@ private:
       m_client.publish(responseTopic.c_str(), responsePayload);
     }
 
+  // Processes firmware response
+
+  void process_firmware_response(char* topic, uint8_t* payload, unsigned int length) {
+    static unsigned int sizeReceive = 0;
+    static MD5Builder md5;
+
+    m_fwChunkReceive = atoi(strrchr(topic, '/') + 1);
+    Logger::log(String("Receive chunk " + String(m_fwChunkReceive) + ", size " + String(length) + " bytes").c_str());
+
+    m_fwState = "DOWNLOADING";
+
+    if (m_fwChunkReceive == 0) {
+      sizeReceive = 0;
+      md5 = MD5Builder();
+      md5.begin();
+
+      // Initialize Flash
+      if (!Update.begin()) {
+        Logger::log("Error during Update.begin");
+        m_fwState = "UPDATE ERROR";
+        return;
+      }
+    }
+
+    // Write data to Flash
+    if (Update.write(payload, length) != length) {
+      Logger::log("Error during Update.write");
+      m_fwState = "UPDATE ERROR";
+      return;
+    }
+
+    // Update value only if write flash success
+    md5.add(payload, length);
+    sizeReceive += length;
+
+    // Receive Full Firmware
+    if (m_fwSize == sizeReceive) {
+      md5.calculate();
+      String md5Str = md5.toString();
+      Logger::log(String("md5 compute:  " + md5Str).c_str());
+      Logger::log(String("md5 firmware: " + m_fwChecksum).c_str());
+      // Check MD5
+      if (md5Str != m_fwChecksum) {
+        Logger::log("Checksum verification failed !");
+        Update.abort();
+        m_fwState = "CHECKSUM ERROR";
+      }
+      else {
+        Logger::log("Checksum is OK !");
+        if (Update.end(true)) {
+          Logger::log("Update Success !");
+          m_fwState = "SUCCESS";
+        }
+        else {
+          Logger::log("Update Fail !");
+          m_fwState = "FAILED";
+        }
+      }
+    }
+  }
+
   // Processes shared attribute update message
 
   void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
@@ -555,6 +801,22 @@ private:
         Logger::log("Shared attribute update key not found.");
         return;
       }
+
+      // Save data for firmware update
+      if (data["fw_title"])
+        m_fwTitle = data["fw_title"].as<String>();
+
+      if (data["fw_version"])
+        m_fwVersion = data["fw_version"].as<String>();
+
+      if (data["fw_checksum"])
+        m_fwChecksum = data["fw_checksum"].as<String>();
+
+      if (data["fw_checksum_algorithm"])
+        m_fwChecksumAlgorithm = data["fw_checksum_algorithm"].as<String>();
+
+      if (data["fw_size"])
+        m_fwSize = data["fw_size"].as<int>();
 
       for (size_t i = 0; i < sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks); ++i) {
         if (m_sharedAttributeUpdateCallbacks[i].m_cb) {
@@ -627,6 +889,11 @@ private:
   Provision_Callback m_provisionCallback; // Provision response callback
   unsigned int m_requestId;
 
+  // For Firmware Update
+  String m_fwVersion, m_fwTitle, m_fwChecksum, m_fwChecksumAlgorithm, m_fwState;
+  unsigned int m_fwSize;
+  int m_fwChunkReceive;
+
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
   // To be able to forward event to an instance, rather than to a function, this pointer exists.
@@ -634,7 +901,7 @@ private:
 
   // The callback for when a PUBLISH message is received from the server.
   static void on_message(char* topic, uint8_t* payload, unsigned int length) {
-    Logger::log("Callback on_message");
+    Logger::log(String("Callback on_message from topic: " + String(topic)).c_str());
     if (!ThingsBoardSized::m_subscribedInstance) {
       return;
     }
@@ -644,6 +911,8 @@ private:
       ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
     } else if (strncmp("/provision/response", topic, strlen("/provision/response")) == 0) {
       ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
+    } else if (strncmp("v2/fw/response/", topic, strlen("v2/fw/response/")) == 0) {
+      ThingsBoardSized::m_subscribedInstance->process_firmware_response(topic, payload, length);
     }
   }
 
