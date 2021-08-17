@@ -544,13 +544,13 @@ private:
         Logger::log("Unable to de-serialize Shared attribute update request");
         return;
       }
-      const JsonObject &data = jsonBuffer.template as<JsonObject>();
+      JsonObject data = jsonBuffer.template as<JsonObject>();
 
-      const char *attributeKey = data.begin()->key().c_str();
-
-      if (attributeKey) {
-        Logger::log("Received shared attribute update request:");
-        Logger::log(attributeKey);
+      if (data && (data.size() >= 1)) {
+        Logger::log("Received shared attribute update request");
+        if (data["shared"]) {
+          data = data["shared"];
+        }
       } else {
         Logger::log("Shared attribute update key not found.");
         return;
@@ -559,8 +559,7 @@ private:
       for (size_t i = 0; i < sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks); ++i) {
         if (m_sharedAttributeUpdateCallbacks[i].m_cb) {
 
-          Logger::log("Calling callbacks for updated attribute:");
-          Logger::log(attributeKey);
+          Logger::log("Calling callbacks for updated attribute");
 
           // Getting non-existing field from JSON should automatically
           // set JSONVariant to null
