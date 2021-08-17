@@ -188,9 +188,9 @@ class ThingsBoardSized
 
   public:
     // Initializes ThingsBoardSized class with network client.
-    inline ThingsBoardSized(Client &client) : m_client(client) { 
-      #ifdef ESP8266 
-      w_client = WiFiClient(); 
+    inline ThingsBoardSized(Client &client) : m_client(client) {
+      #ifdef ESP8266
+      w_client = WiFiClient();
       #endif
       }
 
@@ -543,7 +543,8 @@ class ThingsBoardSized
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
 
-        const char *methodName = data["method"];
+      const char *methodName = data["method"];
+      const char *params = data["params"];
 
         if (methodName) {
           Logger::log("received RPC:");
@@ -559,17 +560,30 @@ class ThingsBoardSized
             Logger::log("calling RPC:");
             Logger::log(methodName);
 
-            // Do not inform client, if parameter field is missing for some reason
-            if (!data.containsKey("params")) {
-              Logger::log("no parameters passed with RPC, passing null JSON");
-            }
-            // Getting non-existing field from JSON should automatically
-            // set JSONVariant to null
-            r = m_rpcCallbacks[i].m_cb(data["params"]);
-            break;
+          // Do not inform client, if parameter field is missing for some reason
+          if (!data.containsKey("params")) {
+            Logger::log("no parameters passed with RPC, passing null JSON");
+          } else {
+            Logger::log("params:");
+            Logger::log(params);
           }
+
+          // deserialize params
+          StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
+          DeserializationError err_param = deserializeJson(doc, params);
+          if (err_param) {
+            Logger::log("unable to de-serialize params: ");
+            Logger::log(err_param.f_str());
+          }
+          const JsonObject &param = doc.template as<JsonObject>();
+
+          // Getting non-existing field from JSON should automatically
+          // set JSONVariant to null
+          r = m_rpcCallbacks[i].m_cb(param);
+          break;
         }
       }
+    }
       // Fill in response
       char responsePayload[PayloadSize] = {0};
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
@@ -629,12 +643,12 @@ class ThingsBoardSized
     }
 
     // Send get request
-    
+
     JsonObject send_get_request(const char* request_link) {
       DynamicJsonDocument jsonBuffer(1024);
       // #ifdef ESP8266
       HttpClient http = HttpClient(ThingsBoardSized::w_client, thingsboardHost.c_str(), updatesPort);
-      // #else 
+      // #else
       // HttpClient http = m_client;
       // #endif
       if (!http.connected()) {
