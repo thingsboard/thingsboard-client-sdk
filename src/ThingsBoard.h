@@ -7,11 +7,16 @@
 #ifndef ThingsBoard_h
 #define ThingsBoard_h
 
-#ifndef ESP8266
+#if !defined(ESP8266) && !defined(ESP32)
 #include <ArduinoHttpClient.h>
 #endif
 
+#if defined(ESP8266)
+#include <Updater.h>
+#elif defined(ESP32)
 #include <Update.h>
+#endif
+
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "ArduinoJson/Polyfills/type_traits.hpp"
@@ -378,7 +383,7 @@ public:
     }
 
     // Wait receive m_fwVersion and m_fwTitle
-    int timeout = millis() + 3000;
+    unsigned long timeout = millis() + 3000;
     do {
       delay(5);
       loop();
@@ -416,13 +421,19 @@ public:
     Logger::log(String(String(currFwVersion) + " => " + m_fwVersion).c_str());
     Logger::log("Try to download it...");
 
-    // Update state
-    Firmware_Send_State("DOWNLOADING");
-
-    int chunkSize = 4096;   // max 256 if default MQTT_MAX_PACKET_SIZE value
+    int chunkSize = 4096;   // maybe less if we don't have enough RAM
     int numberOfChunk = int(m_fwSize / chunkSize) + 1;
     int currChunk = 0;
     int nbRetry = 3;
+
+    // Increase size of receive buffer
+    if (!m_client.setBufferSize(chunkSize + 50)) {
+      Logger::log("Not enough RAM");
+      return false;
+    }
+
+    // Update state
+    Firmware_Send_State("DOWNLOADING");
 
     // Download the firmware
     do {
@@ -736,7 +747,7 @@ private:
       md5.begin();
 
       // Initialize Flash
-      if (!Update.begin()) {
+      if (!Update.begin(m_fwSize)) {
         Logger::log("Error during Update.begin");
         m_fwState = "UPDATE ERROR";
         return;
@@ -763,7 +774,9 @@ private:
       // Check MD5
       if (md5Str != m_fwChecksum) {
         Logger::log("Checksum verification failed !");
+#if defined(ESP32)
         Update.abort();
+#endif
         m_fwState = "CHECKSUM ERROR";
       }
       else {
@@ -921,7 +934,7 @@ private:
 template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
 ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance;
 
-#ifndef ESP8266
+#if !defined(ESP8266) && !defined(ESP32)
 
 // ThingsBoard HTTP client class
 template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
