@@ -174,7 +174,10 @@ class ThingsBoardSized
 
 public:
   // Initializes ThingsBoardSized class with network client.
-  inline ThingsBoardSized(Client &client) :m_client(client) { }
+  inline ThingsBoardSized(Client &client)
+    :m_client(client)
+    ,m_requestId(0)
+    { }
 
   // Destroys ThingsBoardSized class with network client.
   inline ~ThingsBoardSized() { }
@@ -358,7 +361,9 @@ public:
     char buffer[objectSize];
     serializeJson(requestObject, buffer, objectSize);
 
-    return m_client.publish("v1/devices/me/attributes/request/1", buffer);
+    m_requestId++;
+
+    return m_client.publish(String("v1/devices/me/attributes/request/" + String(m_requestId)).c_str(), buffer);
   }
 
   // Subscribes multiple Shared attributes callbacks with given size
@@ -621,6 +626,7 @@ private:
   RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
   Shared_Attribute_Callback m_sharedAttributeUpdateCallbacks[8];     // Shared attribute update callbacks array
   Provision_Callback m_provisionCallback; // Provision response callback
+  unsigned int m_requestId;
 
   // PubSub client cannot call a method when message arrives on subscribed topic.
   // Only free-standing function is allowed.
