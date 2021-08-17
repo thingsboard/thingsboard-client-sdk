@@ -446,15 +446,24 @@ public:
       } while ((m_fwChunkReceive != currChunk) && (timeout >= millis()));
 
       if (m_fwChunkReceive == currChunk) {
-        // Check if state is OK
-        if ((m_fwState == "DOWNLOADING") || (m_fwState == "SUCCESS")) {
-          currChunk++;
-        }
-        else {
-          nbRetry--;
-          if (nbRetry == 0) {
-            return false;
+        // Check if chunk is not the last
+        if (numberOfChunk != (currChunk + 1))
+        {
+          // Check if state is OK
+          if ((m_fwState == "DOWNLOADING")) {
+            currChunk++;
           }
+          else {
+            nbRetry--;
+            if (nbRetry == 0) {
+              Logger::log("Unable to write firmware");
+              return false;
+            }
+          }
+        }
+        // The last chunk
+        else {
+          currChunk++;
         }
       }
 
@@ -462,6 +471,7 @@ public:
       else {
         nbRetry--;
         if (nbRetry == 0) {
+          Logger::log("Unable to download firmware");
           return false;
         }
       }
