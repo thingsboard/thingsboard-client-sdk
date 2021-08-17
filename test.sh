@@ -15,6 +15,7 @@ EXAMPLES_ESP8266=(
     "examples/0006-esp8266_process_shared_attribute_update"
     "examples/0007-esp8266_claim_device"
     "examples/0008-esp8266_provision_device"
+    "examples/0009-esp8266_process_ota_update"
 )
 
 EXAMPLES=( "${EXAMPLES_ESP8266[@]}" "${EXAMPLES_ARDUINO_UNO[@]}")

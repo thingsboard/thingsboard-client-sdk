@@ -53,3 +53,8 @@ void ThingsBoardDefaultLogger::log(const char *msg) {
   Serial.print(F("[TB] "));
   Serial.println(msg);
 }
+
+void ThingsBoardDefaultLogger::log(String msg) {
+  Serial.print(F("[TB] "));
+  Serial.println(msg);
+}
