@@ -104,7 +104,9 @@ using RPC_Response = Telemetry;
 // JSON object is used to communicate RPC parameters to the client
 using RPC_Data = JsonVariant;
 using Shared_Attribute_Data = JsonObject;
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 using Provision_Data = JsonObject;
+#endif
 
 // RPC callback wrapper
 class RPC_Callback {
@@ -151,6 +153,7 @@ class Shared_Attribute_Callback {
     processFn   m_cb;       // Callback to call
 };
 
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 // Provisioning callback wrapper
 class Provision_Callback {
     template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
@@ -172,6 +175,7 @@ class Provision_Callback {
   private:
     processFn   m_cb;       // Callback to call
 };
+#endif
 
 class ThingsBoardDefaultLogger
 {
@@ -219,7 +223,9 @@ class ThingsBoardSized
       }
       this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
       this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
       this->Provision_Unsubscribe();
+#endif
       if (!strcmp(access_token, "provision")) {
         provision_mode = true;
       }
@@ -245,6 +251,8 @@ class ThingsBoardSized
 
     //----------------------------------------------------------------------------
     // Claiming API
+
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
     bool sendClaimingRequest(const char *secretKey, unsigned int durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
@@ -279,6 +287,7 @@ class ThingsBoardSized
       return m_client.publish("/provision/request", requestPayload);
     }
 
+#endif
     //----------------------------------------------------------------------------
     // Telemetry API
 
@@ -631,6 +640,7 @@ class ThingsBoardSized
 
     // Subscribes to get provision response
 
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     bool Provision_Subscribe(const Provision_Callback callback) {
 
       if (ThingsBoardSized::m_subscribedInstance) {
@@ -655,6 +665,7 @@ class ThingsBoardSized
       }
       return true;
     }
+#endif
 
   private:
     // Sends single key-value in a generic way.
@@ -876,6 +887,7 @@ class ThingsBoardSized
 
     // Processes provisioning response
 
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
       Logger::log("Process provisioning response");
 
@@ -899,6 +911,7 @@ class ThingsBoardSized
         m_provisionCallback.m_cb(data);
       }
     }
+#endif
 
     // Sends array of attributes or telemetry to ThingsBoard
     bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
@@ -930,7 +943,10 @@ class ThingsBoardSized
     PubSubClient m_client;              // PubSub MQTT client instance.
     RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
     Shared_Attribute_Callback m_sharedAttributeUpdateCallbacks[8];     // Shared attribute update callbacks array
+
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     Provision_Callback m_provisionCallback; // Provision response callback
+#endif
     unsigned int m_requestId;
 
 #if defined(ESP8266) || defined(ESP32)
@@ -954,13 +970,17 @@ class ThingsBoardSized
       if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
         ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
       } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
-          ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
-        } else if (strncmp("/provision/response", topic, strlen("/provision/response")) == 0) {
+        ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
+      } else {
+        if (strncmp("/provision/response", topic, strlen("/provision/response")) == 0) {
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
           ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
+#endif
         } else if (strncmp("v2/fw/response/", topic, strlen("v2/fw/response/")) == 0) {
 #if defined(ESP8266) || defined(ESP32)
           ThingsBoardSized::m_subscribedInstance->process_firmware_response(topic, payload, length);
 #endif
+    }
     }
     }
 
