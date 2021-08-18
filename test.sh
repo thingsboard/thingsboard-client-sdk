@@ -15,6 +15,7 @@ EXAMPLES_ESP8266=(
     "examples/0006-esp8266_process_shared_attribute_update"
     "examples/0007-esp8266_claim_device"
     "examples/0008-esp8266_provision_device"
+    "examples/0009-esp8266_esp32_process_OTA_MQTT"
 )
 
 EXAMPLES=( "${EXAMPLES_ESP8266[@]}" "${EXAMPLES_ARDUINO_UNO[@]}")
@@ -31,7 +32,7 @@ fi
 do_test() {
     for path in "${EXAMPLES_ARDUINO_UNO[@]}"
     do
-        "${ARDUINO_CLI}" compile --warnings all -v -b arduino:avr:uno "${path}"
+        "${ARDUINO_CLI}" compile --warnings all -v -b arduino:avr:mega "${path}"
     done
 
     for path in "${EXAMPLES_ESP8266[@]}"
