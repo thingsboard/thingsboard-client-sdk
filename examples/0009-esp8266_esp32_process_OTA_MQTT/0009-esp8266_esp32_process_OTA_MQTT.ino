@@ -91,7 +91,7 @@ void loop() {
 #endif
     }
     else {
-      Serial.println("No new firmware")
+      Serial.println("No new firmware");
     }
     tb.Firmware_OTA_Unsubscribe();
   }
