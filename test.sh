@@ -2,7 +2,7 @@
 
 set -e
 
-EXAMPLES_ARDUINO_UNO=(
+EXAMPLES_ARDUINO=(
     "examples/0000-arduino_send_telemetry"
     "examples/0001-arduino_send_batch"
     "examples/0002-arduino_rpc"
@@ -18,7 +18,9 @@ EXAMPLES_ESP8266=(
     "examples/0009-esp8266_esp32_process_OTA_MQTT"
 )
 
-EXAMPLES=( "${EXAMPLES_ESP8266[@]}" "${EXAMPLES_ARDUINO_UNO[@]}")
+ARDUINOS=( "nano" "uno" "mega" )
+
+EXAMPLES=( "${EXAMPLES_ESP8266[@]}" "${EXAMPLES_ARDUINO[@]}")
 
 # Test if arduino command line interface is downloaded locally
 if [ -f "$(pwd)/arduino-cli" ]
@@ -30,9 +32,13 @@ else
 fi
 
 do_test() {
-    for path in "${EXAMPLES_ARDUINO_UNO[@]}"
+    for path in "${EXAMPLES_ARDUINO[@]}"
     do
-        "${ARDUINO_CLI}" compile --warnings all -v -b arduino:avr:mega "${path}"
+        for arduino_board in "${ARDUINOS[@]}"
+        do
+            echo "Building for ${arduino_board}"
+            "${ARDUINO_CLI}" compile --warnings all -b arduino:avr:${arduino_board} "${path}"
+        done
     done
 
     for path in "${EXAMPLES_ESP8266[@]}"
