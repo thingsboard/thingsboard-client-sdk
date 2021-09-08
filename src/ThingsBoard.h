@@ -703,9 +703,7 @@ class ThingsBoardSized
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
-
         const char *methodName = data["method"];
-        const char *params = data["params"];
 
         if (methodName) {
           Logger::log("received RPC:");
@@ -726,21 +724,12 @@ class ThingsBoardSized
               Logger::log("no parameters passed with RPC, passing null JSON");
             } else {
               Logger::log("params:");
-              Logger::log(params);
+              Logger::log(data["params"].as<String>().c_str());
             }
-
-            // deserialize params
-            StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
-            DeserializationError err_param = deserializeJson(doc, params);
-            if (err_param) {
-              Logger::log("unable to de-serialize params: ");
-              Logger::log(err_param.c_str());
-            }
-            const JsonObject &param = doc.template as<JsonObject>();
 
             // Getting non-existing field from JSON should automatically
             // set JSONVariant to null
-            r = m_rpcCallbacks[i].m_cb(param);
+            r = m_rpcCallbacks[i].m_cb(data["params"]);
             break;
           }
         }
