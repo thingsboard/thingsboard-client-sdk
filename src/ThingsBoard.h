@@ -28,14 +28,10 @@ class ThingsBoardDefaultLogger;
 
 // Telemetry record class, allows to store different data using common interface.
 class Telemetry {
-    template <size_t PayloadSize = Default_Payload,
-              size_t MaxFieldsAmt = Default_Fields_Amt,
-              typename Logger = ThingsBoardDefaultLogger>
+    template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
     friend class ThingsBoardSized;
 #ifndef ESP8266
-    template <size_t PayloadSize = Default_Payload,
-              size_t MaxFieldsAmt = Default_Fields_Amt,
-              typename Logger = ThingsBoardDefaultLogger>
+    template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
     friend class ThingsBoardHttpSized;
 #endif
   public:
@@ -184,7 +180,9 @@ class ThingsBoardDefaultLogger
 };
 
 // ThingsBoardSized client class
-template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+template<size_t PayloadSize = Default_Payload,
+         size_t MaxFieldsAmt = Default_Fields_Amt,
+         typename Logger = ThingsBoardDefaultLogger>
 class ThingsBoardSized
 {
 
@@ -291,6 +289,13 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Telemetry API
 
+    // Sends telemetry data to the ThingsBoard, returns true on success.
+    template<class T>
+    inline bool sendTelemetryData(const char *key, T value)
+    {
+      return sendKeyval(key, value);
+    }
+
     // Sends integer telemetry data to the ThingsBoard, returns true on success.
     inline bool sendTelemetryInt(const char *key, int value) {
       return sendKeyval(key, value);
@@ -323,6 +328,12 @@ class ThingsBoardSized
 
     //----------------------------------------------------------------------------
     // Attribute API
+
+    // Sends an attribute with given name and value.
+    template<class T>
+    inline bool sendAttributeData(const char *attrName, T value) {
+      return sendKeyval(attrName, value, false);
+    }
 
     // Sends integer attribute with given name and value.
     inline bool sendAttributeInt(const char *attrName, int value) {
@@ -993,7 +1004,9 @@ ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSiz
 #if !defined(ESP8266) && !defined(ESP32)
 
 // ThingsBoard HTTP client class
-template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+template<size_t PayloadSize = Default_Payload,
+         size_t MaxFieldsAmt = Default_Fields_Amt,
+         typename Logger = ThingsBoardDefaultLogger>
 class ThingsBoardHttpSized
 {
   public:
