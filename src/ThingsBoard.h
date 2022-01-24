@@ -201,16 +201,34 @@ class ThingsBoardSized
       , m_fwState("")
       , m_fwSize(0)
       , m_fwChunkReceive(-1)
-    { }
+    {
+      m_subscribedInstance = this;
+      // Set callback for receive message
+      m_client.setCallback(ThingsBoardSized::on_message);
+      m_client.setBufferSize(PayloadSize);
+    }
 #else
     inline ThingsBoardSized(Client &client)
       : m_client(client)
       , m_requestId(0)
-    { }
+    {
+      m_subscribedInstance = this;
+      // Set callback for receive message
+      m_client.setCallback(ThingsBoardSized::on_message);
+      m_client.setBufferSize(PayloadSize);
+    }
 #endif
 
     // Destroys ThingsBoardSized class with network client.
-    inline ~ThingsBoardSized() { }
+    inline ~ThingsBoardSized() {
+      m_subscribedInstance = nullptr;
+      delete m_subscribedInstance;
+    }
+
+  	// Returns a reference to the PubSubClient.
+    inline PubSubClient& getClient() {
+      return m_client;
+    }
 
     // Connects to the specified ThingsBoard server and port.
     // Access token is used to authenticate a client.
@@ -373,26 +391,18 @@ class ThingsBoardSized
       if (callbacks_size > sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks)) {
         return false;
       }
-      if (ThingsBoardSized::m_subscribedInstance) {
-        return false;
-      }
 
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
         return false;
       }
 
-      ThingsBoardSized::m_subscribedInstance = this;
       for (size_t i = 0; i < callbacks_size; ++i) {
         m_rpcCallbacks[i] = callbacks[i];
       }
-
-      m_client.setCallback(ThingsBoardSized::on_message);
-
       return true;
     }
 
     inline bool RPC_Unsubscribe() {
-      ThingsBoardSized::m_subscribedInstance = NULL;
       return m_client.unsubscribe("v1/devices/me/rpc/request/+");
     }
 
@@ -457,8 +467,8 @@ class ThingsBoardSized
       Logger::log(String(String(currFwVersion) + " => " + m_fwVersion).c_str());
       Logger::log("Try to download it...");
 
-      int chunkSize = 4096;   // maybe less if we don't have enough RAM
-      int numberOfChunk = int(m_fwSize / chunkSize) + 1;
+      int chunkSize = 4096; // maybe less if we don't have enough RAM
+      int numberOfChunk = static_cast<int>(m_fwSize/chunkSize) + 1;
       int currChunk = 0;
       int nbRetry = 3;
 
@@ -475,7 +485,7 @@ class ThingsBoardSized
       do {
         m_client.publish(String("v2/fw/request/0/chunk/" + String(currChunk)).c_str(), String(chunkSize).c_str());
 
-        timeout = millis() + 3000;
+        timeout = millis() + 3000; // Amount of time we wait until we declare the download as failed in milliseconds.
         do {
           delay(5);
           loop();
@@ -493,7 +503,7 @@ class ThingsBoardSized
               nbRetry--;
               if (nbRetry == 0) {
                 Logger::log("Unable to write firmware");
-                return false;
+                break;
               }
             }
           }
@@ -508,16 +518,22 @@ class ThingsBoardSized
           nbRetry--;
           if (nbRetry == 0) {
             Logger::log("Unable to download firmware");
-            return false;
+            break;
           }
         }
 
       } while (numberOfChunk != currChunk);
 
-      // Update state
-      Firmware_Send_State(m_fwState.c_str());
-
-      return m_fwState == "SUCCESS" ? true : false;
+      // Update current_fw_title and current_fw_version if updating was a success.
+      if (m_fwState == "SUCCESS") {
+        Firmware_Send_FW_Info(m_fwTitle.c_str(), m_fwVersion.c_str());
+        Firmware_Send_State(m_fwState.c_str());
+        return true;
+      }
+      else {
+        Firmware_Send_State("FAILED");
+      }
+      return false;
     }
 
     bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
@@ -550,10 +566,6 @@ class ThingsBoardSized
     }
 
     bool Firmware_OTA_Subscribe() {
-      if (ThingsBoardSized::m_subscribedInstance) {
-        return false;
-      }
-
       // Subscribe at 3 topics
       if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
         return false;
@@ -565,17 +577,10 @@ class ThingsBoardSized
         return false;
       }
 
-      ThingsBoardSized::m_subscribedInstance = this;
-
-      // Set callback for receive message
-      m_client.setCallback(ThingsBoardSized::on_message);
-
       return true;
     }
 
     bool Firmware_OTA_Unsubscribe() {
-      ThingsBoardSized::m_subscribedInstance = NULL;
-
       // Unsubscribe at 3 topics
       if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
         return false;
@@ -614,9 +619,6 @@ class ThingsBoardSized
       if (callbacks_size > sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks)) {
         return false;
       }
-      if (ThingsBoardSized::m_subscribedInstance) {
-        return false;
-      }
 
       if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
         return false;
@@ -625,18 +627,13 @@ class ThingsBoardSized
         return false;
       }
 
-      ThingsBoardSized::m_subscribedInstance = this;
       for (size_t i = 0; i < callbacks_size; ++i) {
         m_sharedAttributeUpdateCallbacks[i] = callbacks[i];
       }
-
-      m_client.setCallback(ThingsBoardSized::on_message);
-
       return true;
     }
 
     inline bool Shared_Attributes_Unsubscribe() {
-      ThingsBoardSized::m_subscribedInstance = NULL;
       if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
         return false;
       }
@@ -653,24 +650,14 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     bool Provision_Subscribe(const Provision_Callback callback) {
-
-      if (ThingsBoardSized::m_subscribedInstance) {
-        return false;
-      }
-
       if (!m_client.subscribe("/provision/response")) {
         return false;
       }
-
-      ThingsBoardSized::m_subscribedInstance = this;
       m_provisionCallback = callback;
-      m_client.setCallback(ThingsBoardSized::on_message);
-
       return true;
     }
 
     bool Provision_Unsubscribe() {
-      ThingsBoardSized::m_subscribedInstance = NULL;
       if (!m_client.unsubscribe("/provision/response")) {
         return false;
       }
@@ -790,7 +777,7 @@ class ThingsBoardSized
       m_fwChunkReceive = atoi(strrchr(topic, '/') + 1);
       Logger::log(String("Receive chunk " + String(m_fwChunkReceive) + ", size " + String(length) + " bytes").c_str());
 
-      m_fwState = "DOWNLOADING";
+      m_fwState = "FAILED";
 
       if (m_fwChunkReceive == 0) {
         sizeReceive = 0;
@@ -836,10 +823,6 @@ class ThingsBoardSized
             Logger::log("Update Success !");
             m_fwState = "SUCCESS";
           }
-          else {
-            Logger::log("Update Fail !");
-            m_fwState = "FAILED";
-          }
         }
       }
     }
@@ -848,7 +831,6 @@ class ThingsBoardSized
     // Processes shared attribute update message
 
     void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
-
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
@@ -869,25 +851,25 @@ class ThingsBoardSized
 
       // Save data for firmware update
 #if defined(ESP8266) || defined(ESP32)
-      if (data["fw_title"])
+      if (data["fw_title"]) {
         m_fwTitle = data["fw_title"].as<String>();
-
-      if (data["fw_version"])
+      }
+      if (data["fw_version"]) {
         m_fwVersion = data["fw_version"].as<String>();
-
-      if (data["fw_checksum"])
+      }
+      if (data["fw_checksum"]) {
         m_fwChecksum = data["fw_checksum"].as<String>();
-
-      if (data["fw_checksum_algorithm"])
+      }
+      if (data["fw_checksum_algorithm"]) {
         m_fwChecksumAlgorithm = data["fw_checksum_algorithm"].as<String>();
-
-      if (data["fw_size"])
+      }
+      if (data["fw_size"]) {
         m_fwSize = data["fw_size"].as<int>();
+      }
 #endif
 
       for (size_t i = 0; i < sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks); ++i) {
         if (m_sharedAttributeUpdateCallbacks[i].m_cb) {
-
           Logger::log("Calling callbacks for updated attribute");
 
           // Getting non-existing field from JSON should automatically
@@ -971,7 +953,7 @@ class ThingsBoardSized
     // PubSub client cannot call a method when message arrives on subscribed topic.
     // Only free-standing function is allowed.
     // To be able to forward event to an instance, rather than to a function, this pointer exists.
-    static ThingsBoardSized *m_subscribedInstance;
+    static ThingsBoardSized* m_subscribedInstance;
 
     // The callback for when a PUBLISH message is received from the server.
     static void on_message(char* topic, uint8_t* payload, unsigned int length) {
@@ -999,7 +981,7 @@ class ThingsBoardSized
 };
 
 template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance;
+ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>* ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance;
 
 #if !defined(ESP8266) && !defined(ESP32)
 
