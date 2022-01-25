@@ -4,22 +4,24 @@
   Created by Olender M. Oct 2018.
   Released into the public domain.
 */
-#ifndef ThingsBoard_h
-#define ThingsBoard_h
 
+#ifndef THINGS_BOARD
+#define THINGS_BOARD
+
+// Extern includes.
 #if !defined(ESP8266) && !defined(ESP32)
 #include <ArduinoHttpClient.h>
 #endif
-
 #if defined(ESP8266)
 #include <Updater.h>
 #elif defined(ESP32)
 #include <Update.h>
 #endif
-
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include "ArduinoJson/Polyfills/type_traits.hpp"
+
+// Local includes.
+#include "ThingsBoardDefaultLogger.h"
 
 #define Default_Payload 64
 #define Default_Fields_Amt 8
@@ -173,21 +175,12 @@ class Provision_Callback {
 };
 #endif
 
-class ThingsBoardDefaultLogger
-{
-  public:
-    static void log(const char *msg);
-};
-
 // ThingsBoardSized client class
 template<size_t PayloadSize = Default_Payload,
          size_t MaxFieldsAmt = Default_Fields_Amt,
          typename Logger = ThingsBoardDefaultLogger>
 class ThingsBoardSized
 {
-
-    bool provision_mode = false;
-
   public:
     // Initializes ThingsBoardSized class with network client.
 #if defined(ESP8266) || defined(ESP32)
@@ -230,6 +223,12 @@ class ThingsBoardSized
       return m_client;
     }
 
+    // Returns a reference to the PubSubClient.
+    inline void setBufferSize(const size_t& new_payload_size) {
+      PayloadSize = new_payload_size;
+      m_client.setBufferSize(PayloadSize);
+    }
+
     // Connects to the specified ThingsBoard server and port.
     // Access token is used to authenticate a client.
     // Returns true on success, false otherwise.
@@ -242,9 +241,6 @@ class ThingsBoardSized
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
       this->Provision_Unsubscribe();
 #endif
-      if (!strcmp(access_token, "provision")) {
-        provision_mode = true;
-      }
       m_client.setServer(host, port);
       bool connection_result = m_client.connect(client_id, access_token, password);
       return connection_result;
@@ -999,7 +995,9 @@ class ThingsBoardHttpSized
       , m_host(host)
       , m_token(access_token)
       , m_port(port)
-    { }
+    {
+      // Nothing to do.
+    }
 
     // Destroys ThingsBoardHttpSized class with network client.
     inline ~ThingsBoardHttpSized() { }
@@ -1100,7 +1098,7 @@ class ThingsBoardHttpSized
 
       bool rc = true;
 
-      String path = String("/api/v1/") + m_token + "/attributes";
+      const String path = String("/api/v1/") + m_token + "/attributes";
       if (!m_client.post(path, "application/json", json)
           || (m_client.responseStatusCode() != HTTP_SUCCESS)) {
         rc = false;
@@ -1175,4 +1173,4 @@ using ThingsBoardHttp = ThingsBoardHttpSized<>;
 
 using ThingsBoard = ThingsBoardSized<>;
 
-#endif // ThingsBoard_h
+#endif // THINGS_BOARD

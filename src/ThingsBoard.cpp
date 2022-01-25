@@ -48,8 +48,3 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
   }
   return true;
 }
-
-void ThingsBoardDefaultLogger::log(const char *msg) {
-  Serial.print(F("[TB] "));
-  Serial.println(msg);
-}
