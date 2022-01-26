@@ -42,9 +42,7 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-Shared_Attribute_Callback callbacks[1] = {
-  processSharedAttributeUpdate
-};
+const Shared_Attribute_Callback callback(processSharedAttributeUpdate);
 
 
 void loop() {
@@ -69,8 +67,8 @@ void loop() {
 
   if (!subscribed) {
     Serial.println("Subscribing for shared attribute updates...");
-
-    if (!tb.Shared_Attributes_Subscribe(callbacks, 1)) {
+    tb.setup_callback();
+    if (!tb.Shared_Attributes_Subscribe(callback)) {
       Serial.println("Failed to subscribe for shared attribute updates");
       return;
     }
