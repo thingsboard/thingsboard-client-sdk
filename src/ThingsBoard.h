@@ -188,10 +188,10 @@ class ThingsBoardSized
       : m_client(client)
       , m_requestId(0)
       , m_fwVersion("")
+      , m_fwState("")
       , m_fwTitle("")
       , m_fwChecksum("")
       , m_fwChecksumAlgorithm("")
-      , m_fwState("")
       , m_fwSize(0)
       , m_fwChunkReceive(-1)
     {
@@ -830,7 +830,6 @@ class ThingsBoardSized
 #endif
 
     // Processes shared attribute update message
-
     void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -946,10 +945,10 @@ class ThingsBoardSized
 #if defined(ESP8266) || defined(ESP32)
     // For Firmware Update
     String m_fwVersion;
+    String m_fwState;
     String m_fwTitle;
     String m_fwChecksum;
     String m_fwChecksumAlgorithm;
-    String m_fwState;
     unsigned int m_fwSize;
     int m_fwChunkReceive;
 #endif
