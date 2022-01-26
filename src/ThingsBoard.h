@@ -186,6 +186,9 @@ class ThingsBoardSized
 #if defined(ESP8266) || defined(ESP32)
     inline ThingsBoardSized(Client &client)
       : m_client(client)
+      , m_rpcCallbacks()
+      , m_sharedAttributeUpdateCallbacks()
+      , m_provisionCallback()
       , m_requestId(0)
       , m_fwVersion("")
       , m_fwState("")
@@ -199,16 +202,25 @@ class ThingsBoardSized
       // Set callback for receive message
       m_client.setCallback(ThingsBoardSized::on_message);
       m_client.setBufferSize(PayloadSize);
+      // Reserve size of both m_sharedAttributeUpdateCallbacks and rpcCallbacks beforehand for performance reasons.
+      m_rpcCallbacks.reserve(MaxFieldsAmt);
+      m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
     }
 #else
     inline ThingsBoardSized(Client &client)
       : m_client(client)
+      , m_rpcCallbacks()
+      , m_sharedAttributeUpdateCallbacks()
+      , m_provisionCallback()
       , m_requestId(0)
     {
       m_subscribedInstance = this;
       // Set callback for receive message
       m_client.setCallback(ThingsBoardSized::on_message);
       m_client.setBufferSize(PayloadSize);
+      // Reserve size of both m_sharedAttributeUpdateCallbacks and rpcCallbacks beforehand for performance reasons.
+      m_rpcCallbacks.reserve(MaxFieldsAmt);
+      m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
     }
 #endif
 
@@ -378,6 +390,10 @@ class ThingsBoardSized
 
     // Subscribes multiple RPC callbacks.
     bool RPC_Subscribe(const std::vector<RPC_Callback>& callbacks) {
+      if (m_rpcCallbacks.size() + callbacks.size() > m_rpcCallbacks.capacity()) {
+        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        return false;
+      }
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
         return false;
       }
@@ -389,6 +405,10 @@ class ThingsBoardSized
 
     // Subscribe one RPC callback.
     bool RPC_Subscribe(const RPC_Callback& callback) {
+      if (m_rpcCallbacks.size() + 1 > m_rpcCallbacks.capacity()) {
+        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        return false;
+      }
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
         return false;
       }
@@ -612,6 +632,10 @@ class ThingsBoardSized
 
     // Subscribes multiple Shared attributes callbacks.
     bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
+      if (m_sharedAttributeUpdateCallbacks.size() + callbacks.size() > m_sharedAttributeUpdateCallbacks.capacity()) {
+        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        return false;
+      }
       if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
         return false;
       }
@@ -626,7 +650,14 @@ class ThingsBoardSized
 
     // Subscribe one RPC callback.
     bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+      if (m_sharedAttributeUpdateCallbacks.size() + 1 > m_sharedAttributeUpdateCallbacks.capacity()) {
+        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        return false;
+      }
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
+        return false;
+      }
+      if (!m_client.unsubscribe("v1/devices/me/attributes")) {
         return false;
       }
 
@@ -714,36 +745,36 @@ class ThingsBoardSized
           return;
         }
 
-        for (size_t i = 0; i < m_rpcCallbacks.size(); ++i) {
-          if (m_rpcCallbacks.at(i).m_cb && !strcmp(m_rpcCallbacks.at(i).m_name, methodName)) {
-            Logger::log("calling RPC:");
-            Logger::log(methodName);
-
-            // Do not inform client, if parameter field is missing for some reason
-            if (!data.containsKey("params")) {
-              Logger::log("no parameters passed with RPC, passing null JSON");
-            }
-
-            // try to de-serialize params
-            StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
-            DeserializationError err_param = deserializeJson(doc, params);
-            //if failed to de-serialize params then send JsonObject instead
-            if (err_param) {
-              Logger::log("params:");
-              Logger::log(data["params"].as<String>().c_str());
-              r = m_rpcCallbacks.at(i).m_cb(data["params"]);
-            } else {
-              Logger::log("params:");
-              Logger::log(params);
-              const JsonObject &param = doc.template as<JsonObject>();
-              // Getting non-existing field from JSON should automatically
-              // set JSONVariant to null
-              r = m_rpcCallbacks.at(i).m_cb(param);
-            }
-            break;
+        for (const RPC_Callback& callback : m_rpcCallbacks) {
+          if (callback.m_cb == nullptr || static_cast<bool>(strcmp(callback.m_name, methodName))) {
+            continue;
           }
-        }
 
+          Logger::log("calling RPC:");
+          Logger::log(methodName);
+          // Do not inform client, if parameter field is missing for some rea
+          if (!data.containsKey("params")) {
+            Logger::log("no parameters passed with RPC, passing null JSON");
+          }
+
+          // try to de-serialize params
+          StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
+          DeserializationError err_param = deserializeJson(doc, params);
+          //if failed to de-serialize params then send JsonObject instead
+          if (err_param) {
+            Logger::log("params:");
+            Logger::log(data["params"].as<String>().c_str());
+            r = callback.m_cb(data["params"]);
+          } else {
+            Logger::log("params:");
+            Logger::log(params);
+            const JsonObject &param = doc.template as<JsonObject>();
+            // Getting non-existing field from JSON should automatically
+            // set JSONVariant to null
+            r = callback.m_cb(param);
+          }
+          break;
+        }
       }
       // Fill in response
       char responsePayload[PayloadSize] = {0};
@@ -868,14 +899,15 @@ class ThingsBoardSized
       }
 #endif
 
-      for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); ++i) {
-        if (m_sharedAttributeUpdateCallbacks.at(i).m_cb) {
-          Logger::log("Calling callbacks for updated attribute");
-
-          // Getting non-existing field from JSON should automatically
-          // set JSONVariant to null
-          m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
+      for (const Shared_Attribute_Callback& callback : m_sharedAttributeUpdateCallbacks) {
+        if (callback.m_cb == nullptr) {
+          continue;
         }
+
+        Logger::log("Calling callbacks for updated attribute");
+        // Getting non-existing field from JSON should automatically
+        // set JSONVariant to null
+        callback.m_cb(data);
       }
     }
 
