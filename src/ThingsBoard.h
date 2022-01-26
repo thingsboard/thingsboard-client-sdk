@@ -184,18 +184,12 @@ class ThingsBoardSized
   public:
     // Initializes ThingsBoardSized class with network client.
 #if defined(ESP8266) || defined(ESP32)
+    // Certain private members can not be set in the constructor initalizor list,
+    // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
+    // will result in the variables being reset betwenn method calls. Resulting in weird behaviour.
     inline ThingsBoardSized(Client &client)
       : m_client(client)
-      , m_rpcCallbacks()
-      , m_sharedAttributeUpdateCallbacks()
-      , m_provisionCallback()
       , m_requestId(0)
-      , m_fwVersion("")
-      , m_fwState("")
-      , m_fwTitle("")
-      , m_fwChecksum("")
-      , m_fwChecksumAlgorithm("")
-      , m_fwSize(0)
       , m_fwChunkReceive(-1)
     {
       m_subscribedInstance = this;
@@ -209,9 +203,6 @@ class ThingsBoardSized
 #else
     inline ThingsBoardSized(Client &client)
       : m_client(client)
-      , m_rpcCallbacks()
-      , m_sharedAttributeUpdateCallbacks()
-      , m_provisionCallback()
       , m_requestId(0)
     {
       m_subscribedInstance = this;
@@ -419,6 +410,8 @@ class ThingsBoardSized
     }
 
     inline bool RPC_Unsubscribe() {
+      // Empty all callbacks.
+      m_rpcCallbacks.clear();
       return m_client.unsubscribe("v1/devices/me/rpc/request/+");
     }
 
@@ -667,6 +660,8 @@ class ThingsBoardSized
     }
 
     inline bool Shared_Attributes_Unsubscribe() {
+      // Empty all callbacks.
+      m_sharedAttributeUpdateCallbacks.clear();
       if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
         return false;
       }
@@ -734,8 +729,8 @@ class ThingsBoardSized
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
-        const char *methodName = data["method"].as<String>().c_str();
-        const char *params = data["params"].as<String>().c_str();
+        const char *methodName = data["method"];
+        const char *params = data["params"];
 
         if (methodName) {
           Logger::log("received RPC:");
@@ -746,13 +741,15 @@ class ThingsBoardSized
         }
 
         for (const RPC_Callback& callback : m_rpcCallbacks) {
-          if (callback.m_cb == nullptr || static_cast<bool>(strcmp(callback.m_name, methodName))) {
+          // Strcmp returns the ascis value difference of the ascii characters that are different,
+          // meaning 0 is the same string and less and more than 0 is the difference in ascci values between the 2 chararacters.
+          if (callback.m_cb == nullptr || strcmp(callback.m_name, methodName) != 0) {
             continue;
           }
 
           Logger::log("calling RPC:");
           Logger::log(methodName);
-          // Do not inform client, if parameter field is missing for some rea
+          // Do not inform client, if parameter field is missing for some reason
           if (!data.containsKey("params")) {
             Logger::log("no parameters passed with RPC, passing null JSON");
           }
