@@ -183,47 +183,34 @@ class ThingsBoardSized
 {
   public:
     // Initializes ThingsBoardSized class with network client.
-#if defined(ESP8266) || defined(ESP32)
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
     // will result in the variables being reset betwenn method calls. Resulting in weird behaviour.
     inline ThingsBoardSized(Client &client)
       : m_client(client)
       , m_requestId(0)
-      , m_fwChunkReceive(-1)
     {
-      m_subscribedInstance = this;
-      // Set callback for receive message
-      m_client.setCallback(ThingsBoardSized::on_message);
-      m_client.setBufferSize(PayloadSize);
       // Reserve size of both m_sharedAttributeUpdateCallbacks and rpcCallbacks beforehand for performance reasons.
       m_rpcCallbacks.reserve(MaxFieldsAmt);
       m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
     }
-#else
-    inline ThingsBoardSized(Client &client)
-      : m_client(client)
-      , m_requestId(0)
-    {
-      m_subscribedInstance = this;
-      // Set callback for receive message
-      m_client.setCallback(ThingsBoardSized::on_message);
-      m_client.setBufferSize(PayloadSize);
-      // Reserve size of both m_sharedAttributeUpdateCallbacks and rpcCallbacks beforehand for performance reasons.
-      m_rpcCallbacks.reserve(MaxFieldsAmt);
-      m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
-    }
-#endif
 
     // Destroys ThingsBoardSized class with network client.
     inline ~ThingsBoardSized() {
-      m_subscribedInstance = nullptr;
-      delete m_subscribedInstance;
+      // Nothing to do.
     }
 
-  	// Returns a reference to the PubSubClient.
-    inline PubSubClient& getClient() {
+    // Returns a reference to the PubSubClient.
+    inline PubSubClient& getClient(void) {
       return m_client;
+    }
+
+    // Sets both subscribed instance and callback, this is out of the same reason as not initalizing certain,
+    // private members in the constructor initalizor list and that would be because if multiple instances are used,
+    // one will overwrite the other and cause server respones to not be registered and forwarded anymore.
+    inline void setup_callback(void) {
+      ThingsBoardSized::m_subscribedInstance = this;
+      m_client.setCallback(ThingsBoardSized::on_message);
     }
 
     // Connects to the specified ThingsBoard server and port.
@@ -641,16 +628,16 @@ class ThingsBoardSized
       return true;
     }
 
-    // Subscribe one RPC callback.
+    // Subscribe one  Shared attributes callback.
     bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
       if (m_sharedAttributeUpdateCallbacks.size() + 1 > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
         return false;
       }
-      if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
+      if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
         return false;
       }
-      if (!m_client.unsubscribe("v1/devices/me/attributes")) {
+      if (!m_client.subscribe("v1/devices/me/attributes")) {
         return false;
       }
 
@@ -1035,7 +1022,9 @@ class ThingsBoardHttpSized
     }
 
     // Destroys ThingsBoardHttpSized class with network client.
-    inline ~ThingsBoardHttpSized() { }
+    inline ~ThingsBoardHttpSized() {
+      // Nothing to do.
+    }
 
     //----------------------------------------------------------------------------
     // Telemetry API
