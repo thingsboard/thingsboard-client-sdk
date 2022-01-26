@@ -4,19 +4,19 @@
   Created by Olender M. Oct 2018.
   Released into the public domain.
 */
+#ifndef ThingsBoard_h
+#define ThingsBoard_h
 
-#ifndef THINGS_BOARD
-#define THINGS_BOARD
-
-// Extern includes.
 #if !defined(ESP8266) && !defined(ESP32)
 #include <ArduinoHttpClient.h>
 #endif
+
 #if defined(ESP8266)
 #include <Updater.h>
 #elif defined(ESP32)
 #include <Update.h>
 #endif
+
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
@@ -113,16 +113,16 @@ class RPC_Callback {
   public:
 
     // RPC callback signature
-    using processFn = RPC_Response (*)(const RPC_Data &data);
+    using processFn = std::function<RPC_Response(const RPC_Data &data)>;
 
     // Constructs empty callback
     inline RPC_Callback()
-      : m_name(), m_cb(NULL)                {  }
+      : m_name(), m_cb(nullptr) {  }
 
     // Constructs callback that will be fired upon a RPC request arrival with
     // given method name
     inline RPC_Callback(const char *methodName, processFn cb)
-      : m_name(methodName), m_cb(cb)        {  }
+      : m_name(methodName), m_cb(cb) {  }
 
   private:
     const char  *m_name;    // Method name
@@ -136,16 +136,16 @@ class Shared_Attribute_Callback {
   public:
 
     // Shared attributes callback signature
-    using processFn = void (*)(const Shared_Attribute_Data &data);
+    using processFn = std::function<void(const Shared_Attribute_Data &data)>;
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
-      : m_cb(NULL)                {  }
+      : m_cb(nullptr) {  }
 
     // Constructs callback that will be fired upon a Shared attribute request arrival with
     // given attribute key
     inline Shared_Attribute_Callback(processFn cb)
-      : m_cb(cb)        {  }
+      : m_cb(cb) {  }
 
   private:
     processFn   m_cb;       // Callback to call
@@ -159,16 +159,16 @@ class Provision_Callback {
   public:
 
     // Provisioning callback signature
-    using processFn = void (*)(const Provision_Data &data);
+    using processFn = std::function<void(const Provision_Data& data)>;
 
     // Constructs empty callback
     inline Provision_Callback()
-      : m_cb(NULL)                {  }
+      : m_cb(nullptr) {  }
 
     // Constructs callback that will be fired upon a Provision request arrival with
     // given attribute key
     inline Provision_Callback(processFn cb)
-      : m_cb(cb)        {  }
+      : m_cb(cb) {  }
 
   private:
     processFn   m_cb;       // Callback to call
@@ -221,12 +221,6 @@ class ThingsBoardSized
   	// Returns a reference to the PubSubClient.
     inline PubSubClient& getClient() {
       return m_client;
-    }
-
-    // Returns a reference to the PubSubClient.
-    inline void setBufferSize(const size_t& new_payload_size) {
-      PayloadSize = new_payload_size;
-      m_client.setBufferSize(PayloadSize);
     }
 
     // Connects to the specified ThingsBoard server and port.
@@ -382,19 +376,25 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Server-side RPC API
 
-    // Subscribes multiple RPC callbacks with given size
-    bool RPC_Subscribe(const RPC_Callback *callbacks, size_t callbacks_size) {
-      if (callbacks_size > sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks)) {
-        return false;
-      }
-
+    // Subscribes multiple RPC callbacks.
+    bool RPC_Subscribe(const std::vector<RPC_Callback>& callbacks) {
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
         return false;
       }
 
-      for (size_t i = 0; i < callbacks_size; ++i) {
-        m_rpcCallbacks[i] = callbacks[i];
+      // Push back complete vector into our local m_rpcCallbacks vector.
+      m_rpcCallbacks.insert(m_rpcCallbacks.end(), callbacks.begin(), callbacks.end());
+      return true;
+    }
+
+    // Subscribe one RPC callback.
+    bool RPC_Subscribe(const RPC_Callback& callback) {
+      if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
+        return false;
       }
+
+      // Push back given callback into our local m_rpcCallbacks vector.
+      m_rpcCallbacks.push_back(callback);
       return true;
     }
 
@@ -610,12 +610,8 @@ class ThingsBoardSized
       return m_client.publish(String("v1/devices/me/attributes/request/" + String(m_requestId)).c_str(), buffer);
     }
 
-    // Subscribes multiple Shared attributes callbacks with given size
-    bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, size_t callbacks_size) {
-      if (callbacks_size > sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks)) {
-        return false;
-      }
-
+    // Subscribes multiple Shared attributes callbacks.
+    bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
       if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
         return false;
       }
@@ -623,9 +619,19 @@ class ThingsBoardSized
         return false;
       }
 
-      for (size_t i = 0; i < callbacks_size; ++i) {
-        m_sharedAttributeUpdateCallbacks[i] = callbacks[i];
+      // Push back complete vector into our local m_sharedAttributeUpdateCallbacks vector.
+      m_sharedAttributeUpdateCallbacks.insert(m_sharedAttributeUpdateCallbacks.end(), callbacks.begin(), callbacks.end());
+      return true;
+    }
+
+    // Subscribe one RPC callback.
+    bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+      if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
+        return false;
       }
+
+      // Push back given callback into our local m_sharedAttributeUpdateCallbacks vector.
+      m_sharedAttributeUpdateCallbacks.push_back(callback);
       return true;
     }
 
@@ -697,8 +703,8 @@ class ThingsBoardSized
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
-        const char *methodName = data["method"];
-        const char *params = data["params"];
+        const char *methodName = data["method"].as<String>().c_str();
+        const char *params = data["params"].as<String>().c_str();
 
         if (methodName) {
           Logger::log("received RPC:");
@@ -708,9 +714,8 @@ class ThingsBoardSized
           return;
         }
 
-        for (size_t i = 0; i < sizeof(m_rpcCallbacks) / sizeof(*m_rpcCallbacks); ++i) {
-          if (m_rpcCallbacks[i].m_cb && !strcmp(m_rpcCallbacks[i].m_name, methodName)) {
-
+        for (size_t i = 0; i < m_rpcCallbacks.size(); ++i) {
+          if (m_rpcCallbacks.at(i).m_cb && !strcmp(m_rpcCallbacks.at(i).m_name, methodName)) {
             Logger::log("calling RPC:");
             Logger::log(methodName);
 
@@ -726,14 +731,14 @@ class ThingsBoardSized
             if (err_param) {
               Logger::log("params:");
               Logger::log(data["params"].as<String>().c_str());
-              r = m_rpcCallbacks[i].m_cb(data["params"]);
+              r = m_rpcCallbacks.at(i).m_cb(data["params"]);
             } else {
               Logger::log("params:");
               Logger::log(params);
               const JsonObject &param = doc.template as<JsonObject>();
               // Getting non-existing field from JSON should automatically
               // set JSONVariant to null
-              r = m_rpcCallbacks[i].m_cb(param);
+              r = m_rpcCallbacks.at(i).m_cb(param);
             }
             break;
           }
@@ -864,19 +869,18 @@ class ThingsBoardSized
       }
 #endif
 
-      for (size_t i = 0; i < sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks); ++i) {
-        if (m_sharedAttributeUpdateCallbacks[i].m_cb) {
+      for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); ++i) {
+        if (m_sharedAttributeUpdateCallbacks.at(i).m_cb) {
           Logger::log("Calling callbacks for updated attribute");
 
           // Getting non-existing field from JSON should automatically
           // set JSONVariant to null
-          m_sharedAttributeUpdateCallbacks[i].m_cb(data);
+          m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
         }
       }
     }
 
     // Processes provisioning response
-
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
       Logger::log("Process provisioning response");
@@ -930,9 +934,9 @@ class ThingsBoardSized
       return telemetry ? sendTelemetryJson(payload) : sendAttributeJSON(payload);
     }
 
-    PubSubClient m_client;              // PubSub MQTT client instance.
-    RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
-    Shared_Attribute_Callback m_sharedAttributeUpdateCallbacks[8];     // Shared attribute update callbacks array
+    PubSubClient m_client; // PubSub MQTT client instance.
+    std::vector<RPC_Callback> m_rpcCallbacks; // RPC callbacks array
+    std::vector<Shared_Attribute_Callback> m_sharedAttributeUpdateCallbacks; // Shared attribute update callbacks array
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     Provision_Callback m_provisionCallback; // Provision response callback
@@ -941,7 +945,11 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32)
     // For Firmware Update
-    String m_fwVersion, m_fwTitle, m_fwChecksum, m_fwChecksumAlgorithm, m_fwState;
+    String m_fwVersion;
+    String m_fwTitle;
+    String m_fwChecksum;
+    String m_fwChecksumAlgorithm;
+    String m_fwState;
     unsigned int m_fwSize;
     int m_fwChunkReceive;
 #endif
@@ -970,10 +978,9 @@ class ThingsBoardSized
 #if defined(ESP8266) || defined(ESP32)
           ThingsBoardSized::m_subscribedInstance->process_firmware_response(topic, payload, length);
 #endif
+        }
+      }
     }
-    }
-    }
-
 };
 
 template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
@@ -1045,7 +1052,7 @@ class ThingsBoardHttpSized
 
       bool rc = true;
 
-      String path = String("/api/v1/") + m_token + "/telemetry";
+      const String path = String("/api/v1/") + m_token + "/telemetry";
       if (!m_client.post(path, "application/json", json) ||
           (m_client.responseStatusCode() != HTTP_SUCCESS)) {
         rc = false;
@@ -1173,4 +1180,4 @@ using ThingsBoardHttp = ThingsBoardHttpSized<>;
 
 using ThingsBoard = ThingsBoardSized<>;
 
-#endif // THINGS_BOARD
+#endif // ThingsBoard_h
