@@ -544,7 +544,7 @@ class ThingsBoardSized
       char buffer[objectSize];
       serializeJson(currentFirmwareInfoObject, buffer, objectSize);
 
-      return sendTelemetryJson(buffer);
+      return sendAttributeJson(buffer);
     }
 
     bool Firmware_Send_State(const char* currFwState) {
@@ -558,7 +558,7 @@ class ThingsBoardSized
       char buffer[objectSize];
       serializeJson(currentFirmwareStateObject, buffer, objectSize);
 
-      return sendTelemetryJson(buffer);
+      return sendAttributeJson(buffer);
     }
 
     bool Firmware_OTA_Subscribe() {
