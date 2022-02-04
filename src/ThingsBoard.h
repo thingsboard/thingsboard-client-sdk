@@ -140,14 +140,15 @@ class Shared_Attribute_Callback {
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
-      : m_cb(nullptr) {  }
+      : m_request(true), m_cb(nullptr) {  }
 
     // Constructs callback that will be fired upon a Shared attribute request arrival with
     // given attribute key
-    inline Shared_Attribute_Callback(processFn cb)
-      : m_cb(cb) {  }
+    inline Shared_Attribute_Callback(bool request, processFn cb)
+      : m_request(request), m_cb(cb) {  }
 
   private:
+    bool   m_request;       // Shows wheter the given Shared Attribute callback originated from a request or not, if it did it get's delete once it has been called.
     processFn   m_cb;       // Callback to call
 };
 
@@ -420,7 +421,8 @@ class ThingsBoardSized
       Firmware_Send_State("CHECKING FIRMWARE");
 
       // Request the firmware informations
-      if (!Shared_Attributes_Request("fw_checksum,fw_checksum_algorithm,fw_size,fw_title,fw_version")) {
+      const std::vector<const char*> sharedKeys {"fw_checksum", "fw_checksum_algorithm", "fw_size", "fw_title", "fw_version"};
+      if (!Shared_Attributes_Request(sharedKeys, Shared_Attribute_Callback())) {
         return false;
       }
 
@@ -562,13 +564,6 @@ class ThingsBoardSized
     }
 
     bool Firmware_OTA_Subscribe() {
-      // Subscribe at 3 topics
-      if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
-        return false;
-      }
-      if (!m_client.subscribe("v1/devices/me/attributes")) {
-        return false;
-      }
       if (!m_client.subscribe("v2/fw/response/#")) {
         return false;
       }
@@ -577,13 +572,6 @@ class ThingsBoardSized
     }
 
     bool Firmware_OTA_Unsubscribe() {
-      // Unsubscribe at 3 topics
-      if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
-        return false;
-      }
-      if (!m_client.unsubscribe("v1/devices/me/attributes")) {
-        return false;
-      }
       if (!m_client.unsubscribe("v2/fw/response/#")) {
         return false;
       }
@@ -595,18 +583,28 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    bool Shared_Attributes_Request(const char* attributes) {
+    bool Shared_Attributes_Request(const std::vector<const char*>& attributes, const Shared_Attribute_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
-      requestObject["sharedKeys"] = attributes;
+      std::string sharedKeys = "";
+      for (const char* attribute : attributes) {
+        sharedKeys.append(attribute);
+        sharedKeys.append(",");
+      }
 
+      // Check if any sharedKeys were requested.
+      if (sharedKeys.empty()) {
+        return false;
+      }
+
+      requestObject["sharedKeys"] = sharedKeys;
       int objectSize = measureJson(requestBuffer) + 1;
       char buffer[objectSize];
       serializeJson(requestObject, buffer, objectSize);
 
       m_requestId++;
-
+      Shared_Attributes_Subscribe(callback);
       return m_client.publish(String("v1/devices/me/attributes/request/" + String(m_requestId)).c_str(), buffer);
     }
 
@@ -883,15 +881,21 @@ class ThingsBoardSized
       }
 #endif
 
-      for (const Shared_Attribute_Callback& callback : m_sharedAttributeUpdateCallbacks) {
-        if (callback.m_cb == nullptr) {
-          continue;
+      for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
+        if (m_sharedAttributeUpdateCallbacks[i].m_cb == nullptr) {
+          // Nothing to do.
         }
-
-        Logger::log("Calling callbacks for updated attribute");
-        // Getting non-existing field from JSON should automatically
-        // set JSONVariant to null
-        callback.m_cb(data);
+        else {
+          Logger::log("Calling callbacks for updated attribute");
+          // Getting non-existing field from JSON should automatically
+          // set JSONVariant to null
+          m_sharedAttributeUpdateCallbacks[i].m_cb(data);
+        }
+        // Check if the shared attribute callback was a request for the current value of some given keys,
+        // if yes the callback can be delted to free up space for permanent shared attribute callbacks deceting all changes.
+        if (m_sharedAttributeUpdateCallbacks[i].m_request) {
+          m_sharedAttributeUpdateCallbacks.erase(std::next(m_sharedAttributeUpdateCallbacks.begin(), i));
+        }
       }
     }
 
