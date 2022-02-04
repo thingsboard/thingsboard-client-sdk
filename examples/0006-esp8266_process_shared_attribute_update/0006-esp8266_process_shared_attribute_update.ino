@@ -42,7 +42,9 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-const Shared_Attribute_Callback callback(processSharedAttributeUpdate);
+// Boolean shows wheter the shared attribute callback is used for a sharedKey request or not.
+// If it is it will be removed from the callback vector to increase size as soon as it has been called.
+const Shared_Attribute_Callback callback(false, processSharedAttributeUpdate);
 
 
 void loop() {
