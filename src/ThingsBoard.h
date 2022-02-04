@@ -602,7 +602,7 @@ class ThingsBoardSized
         return false;
       }
 
-      requestObject["sharedKeys"] = sharedKeys;
+      requestObject["sharedKeys"] = sharedKeys.c_str();
       int objectSize = measureJson(requestBuffer) + 1;
       char buffer[objectSize];
       serializeJson(requestObject, buffer, objectSize);
