@@ -589,6 +589,10 @@ class ThingsBoardSized
 
       std::string sharedKeys = "";
       for (const char* attribute : attributes) {
+        // Check if the given attribute is null, if it is skip it.
+        if (attribute == nullptr) {
+          continue;
+        }
         sharedKeys.append(attribute);
         sharedKeys.append(",");
       }
