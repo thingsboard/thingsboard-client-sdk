@@ -99,11 +99,12 @@ class Telemetry {
 
 using Attribute = Telemetry;
 using RPC_Response = Telemetry;
-// JSON object is used to communicate RPC parameters to the client
-using RPC_Data = JsonVariant;
-using Shared_Attribute_Data = JsonObject;
+// JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
+using RPC_Data = JsonVariantConst;
+// JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
+using Shared_Attribute_Data = JsonObjectConst;
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-using Provision_Data = JsonObject;
+using Provision_Data = JsonObjectConst;
 #endif
 
 // RPC callback wrapper
