@@ -256,8 +256,8 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject resp_obj = requestBuffer.to<JsonObject>();
 
-      resp_obj["secretKey"] = secretKey;
-      resp_obj["durationMs"] = durationMs;
+      resp_obj[F("secretKey")] = secretKey;
+      resp_obj[F("durationMs")] = durationMs;
 
       uint8_t objectSize = measureJson(requestBuffer) + 1;
       char responsePayload[objectSize];
@@ -272,9 +272,9 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
-      requestObject["deviceName"] = deviceName;
-      requestObject["provisionDeviceKey"] = provisionDeviceKey;
-      requestObject["provisionDeviceSecret"] = provisionDeviceSecret;
+      requestObject[F("deviceName")] = deviceName;
+      requestObject[F("provisionDeviceKey")] = provisionDeviceKey;
+      requestObject[F("provisionDeviceSecret")] = provisionDeviceSecret;
 
       uint8_t objectSize = measureJson(requestBuffer) + 1;
       char requestPayload[objectSize];
@@ -540,8 +540,8 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
 
-      currentFirmwareInfoObject["current_fw_title"] = currFwTitle;
-      currentFirmwareInfoObject["current_fw_version"] = currFwVersion;
+      currentFirmwareInfoObject[F("current_fw_title")] = currFwTitle;
+      currentFirmwareInfoObject[F("current_fw_version")] = currFwVersion;
 
       int objectSize = measureJson(currentFirmwareInfo) + 1;
       char buffer[objectSize];
@@ -555,7 +555,7 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
-      currentFirmwareStateObject["current_fw_state"] = currFwState;
+      currentFirmwareStateObject[F("current_fw_state")] = currFwState;
 
       int objectSize = measureJson(currentFirmwareState) + 1;
       char buffer[objectSize];
@@ -603,7 +603,7 @@ class ThingsBoardSized
         return false;
       }
 
-      requestObject["sharedKeys"] = sharedKeys.c_str();
+      requestObject[F("sharedKeys")] = sharedKeys.c_str();
       int objectSize = measureJson(requestBuffer) + 1;
       char buffer[objectSize];
       serializeJson(requestObject, buffer, objectSize);
@@ -719,8 +719,8 @@ class ThingsBoardSized
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
-        const char *methodName = data["method"];
-        const char *params = data["params"];
+        const char *methodName = data[F("method")];
+        const char *params = data[F("params")];
 
         if (methodName) {
           Logger::log("received RPC:");
@@ -750,8 +750,8 @@ class ThingsBoardSized
           //if failed to de-serialize params then send JsonObject instead
           if (err_param) {
             Logger::log("params:");
-            Logger::log(data["params"].as<String>().c_str());
-            r = callback.m_cb(data["params"]);
+            Logger::log(data[F("params")].as<String>().c_str());
+            r = callback.m_cb(data[F("params")]);
           } else {
             Logger::log("params:");
             Logger::log(params);
@@ -859,8 +859,8 @@ class ThingsBoardSized
 
       if (data && (data.size() >= 1)) {
         Logger::log("Received shared attribute update request");
-        if (data["shared"]) {
-          data = data["shared"];
+        if (data[F("shared")]) {
+          data = data[F("shared")];
         }
       } else {
         Logger::log("Shared attribute update key not found.");
@@ -869,20 +869,20 @@ class ThingsBoardSized
 
       // Save data for firmware update
 #if defined(ESP8266) || defined(ESP32)
-      if (data["fw_title"]) {
-        m_fwTitle = data["fw_title"].as<String>();
+      if (data[F("fw_title")]) {
+        m_fwTitle = data[F("fw_title")].as<String>();
       }
-      if (data["fw_version"]) {
-        m_fwVersion = data["fw_version"].as<String>();
+      if (data[F("fw_version")]) {
+        m_fwVersion = data[F("fw_version")].as<String>();
       }
-      if (data["fw_checksum"]) {
-        m_fwChecksum = data["fw_checksum"].as<String>();
+      if (data[F("fw_checksum")]) {
+        m_fwChecksum = data[F("fw_checksum")].as<String>();
       }
-      if (data["fw_checksum_algorithm"]) {
-        m_fwChecksumAlgorithm = data["fw_checksum_algorithm"].as<String>();
+      if (data[F("fw_checksum_algorithm")]) {
+        m_fwChecksumAlgorithm = data[F("fw_checksum_algorithm")].as<String>();
       }
-      if (data["fw_size"]) {
-        m_fwSize = data["fw_size"].as<int>();
+      if (data[F("fw_size")]) {
+        m_fwSize = data[F("fw_size")].as<int>();
       }
 #endif
 
@@ -920,7 +920,7 @@ class ThingsBoardSized
 
       Logger::log("Received provision response");
 
-      if (data["status"] == "SUCCESS" && data["credentialsType"] == "X509_CERTIFICATE") {
+      if (data[F("status")] == "SUCCESS" && data[F("credentialsType")] == "X509_CERTIFICATE") {
         Logger::log("Provision response contains X509_CERTIFICATE credentials, it is not supported yet.");
         return;
       }
