@@ -516,6 +516,7 @@ class ThingsBoardSized
 
       // Update state
       Firmware_Send_State(m_fwState.c_str());
+      Firmware_Send_State("DOWNLOADED");
 
       return m_fwState == "SUCCESS" ? true : false;
     }
@@ -540,7 +541,7 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
-      currentFirmwareStateObject["current_fw_state"] = currFwState;
+      currentFirmwareStateObject["fw_state"] = currFwState;
 
       int objectSize = measureJson(currentFirmwareState) + 1;
       char buffer[objectSize];
@@ -832,13 +833,17 @@ class ThingsBoardSized
         }
         else {
           Logger::log("Checksum is OK !");
+          Firmware_Send_State("VERIFIED");
+          Firmware_Send_State("UPDATING");
           if (Update.end(true)) {
             Logger::log("Update Success !");
             m_fwState = "SUCCESS";
+            Firmware_Send_State("UPDATED");
           }
           else {
             Logger::log("Update Fail !");
             m_fwState = "FAILED";
+            Firmware_Send_State("FAILED");
           }
         }
       }
