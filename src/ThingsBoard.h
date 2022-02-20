@@ -516,7 +516,6 @@ class ThingsBoardSized
 
       // Update state
       Firmware_Send_State(m_fwState.c_str());
-      Firmware_Send_State("DOWNLOADED");
 
       return m_fwState == "SUCCESS" ? true : false;
     }
@@ -819,6 +818,7 @@ class ThingsBoardSized
 
       // Receive Full Firmware
       if (m_fwSize == sizeReceive) {
+        Firmware_Send_State("DOWNLOADED");
         md5.calculate();
         String md5Str = md5.toString();
         Logger::log(String("md5 compute:  " + md5Str).c_str());
