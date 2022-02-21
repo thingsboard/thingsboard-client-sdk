@@ -141,15 +141,36 @@ class Shared_Attribute_Callback {
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
-      : m_request(true), m_cb(nullptr) {  }
+      : m_cb(nullptr) {  }
+
+    // Constructs callback that will be fired upon a Shared attribute subscribe arrival with
+    // given attribute key
+    inline Shared_Attribute_Callback(processFn cb)
+      : m_cb(cb) {  }
+
+  private:
+    processFn   m_cb;       // Callback to call
+};
+
+// Shared attributes request callback wrapper
+class Shared_Attribute_Request_Callback {
+    template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
+    friend class ThingsBoardSized;
+  public:
+
+    // Shared attributes callback signature
+    using processFn = std::function<void(const Shared_Attribute_Data &data)>;
+
+    // Constructs empty callback
+    inline Shared_Attribute_Request_Callback()
+      : m_cb(nullptr) {  }
 
     // Constructs callback that will be fired upon a Shared attribute request arrival with
     // given attribute key
-    inline Shared_Attribute_Callback(bool request, processFn cb)
-      : m_request(request), m_cb(cb) {  }
+    inline Shared_Attribute_Request_Callback(processFn cb)
+      : m_cb(cb) {  }
 
   private:
-    bool   m_request;       // Shows wheter the given Shared Attribute callback originated from a request or not, if it did it get's delete once it has been called.
     processFn   m_cb;       // Callback to call
 };
 
@@ -192,9 +213,10 @@ class ThingsBoardSized
       : m_client(client)
       , m_requestId(0)
     {
-      // Reserve size of both m_sharedAttributeUpdateCallbacks and rpcCallbacks beforehand for performance reasons.
+      // Reserve size of both m_sharedAttributeUpdateCallbacks, rpcCallbacks and m_sharedAttributeRequestCallbacks beforehand for performance reasons.
       m_rpcCallbacks.reserve(MaxFieldsAmt);
       m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
+      m_sharedAttributeRequestCallbacks.reserve(MaxFieldsAmt);
     }
 
     // Destroys ThingsBoardSized class with network client.
@@ -584,7 +606,7 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    bool Shared_Attributes_Request(const std::vector<const char*>& attributes, const Shared_Attribute_Callback& callback) {
+    bool Shared_Attributes_Request(const std::vector<const char*>& attributes, const Shared_Attribute_Request_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
@@ -609,17 +631,14 @@ class ThingsBoardSized
       serializeJson(requestObject, buffer, objectSize);
 
       m_requestId++;
-      Shared_Attributes_Subscribe(callback);
+      Shared_Attribute_Request_Subscribe(callback);
       return m_client.publish(String("v1/devices/me/attributes/request/" + String(m_requestId)).c_str(), buffer);
     }
 
     // Subscribes multiple Shared attributes callbacks.
     bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
       if (m_sharedAttributeUpdateCallbacks.size() + callbacks.size() > m_sharedAttributeUpdateCallbacks.capacity()) {
-        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
-        return false;
-      }
-      if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+        Logger::log("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe.");
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/attributes")) {
@@ -631,13 +650,10 @@ class ThingsBoardSized
       return true;
     }
 
-    // Subscribe one  Shared attributes callback.
+    // Subscribe one Shared attributes callback.
     bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
       if (m_sharedAttributeUpdateCallbacks.size() + 1 > m_sharedAttributeUpdateCallbacks.capacity()) {
-        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
-        return false;
-      }
-      if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+        Logger::log("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe.");
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/attributes")) {
@@ -652,9 +668,6 @@ class ThingsBoardSized
     inline bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks.
       m_sharedAttributeUpdateCallbacks.clear();
-      if (!m_client.unsubscribe("v1/devices/me/attributes/response/+")) {
-        return false;
-      }
       if (!m_client.unsubscribe("v1/devices/me/attributes")) {
         return false;
       }
@@ -684,6 +697,22 @@ class ThingsBoardSized
 #endif
 
   private:
+
+    // Subscribe one Shared attributes request callback.
+    bool Shared_Attribute_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
+      if (m_sharedAttributeRequestCallbacks.size() + 1 > m_sharedAttributeRequestCallbacks.capacity()) {
+        Logger::log("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt.");
+        return false;
+      }
+      if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+        return false;
+      }
+
+      // Push back given callback into our local m_sharedAttributeRequestCallbacks vector.
+      m_sharedAttributeRequestCallbacks.push_back(callback);
+      return true;
+    }
+
     // Sends single key-value in a generic way.
     template<typename T>
     bool sendKeyval(const char *key, T value, bool telemetry = true) {
@@ -867,6 +896,39 @@ class ThingsBoardSized
         return;
       }
 
+      for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
+        if (m_sharedAttributeUpdateCallbacks.at(i).m_cb == nullptr) {
+          // Nothing to do.
+        }
+        else {
+          Logger::log("Calling callbacks for updated attribute");
+          // Getting non-existing field from JSON should automatically
+          // set JSONVariant to null
+          m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
+        }
+      }
+    }
+
+    // Processes shared attribute request message
+    void process_shared_attribute_request_message(char* topic, uint8_t* payload, unsigned int length) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      if (error) {
+        Logger::log("Unable to de-serialize Shared attribute request");
+        return;
+      }
+      JsonObject data = jsonBuffer.template as<JsonObject>();
+
+      if (data && (data.size() >= 1)) {
+        Logger::log("Received shared attribute request");
+        if (data["shared"]) {
+          data = data["shared"];
+        }
+      } else {
+        Logger::log("Shared attribute key not found.");
+        return;
+      }
+
       // Save data for firmware update
 #if defined(ESP8266) || defined(ESP32)
       if (data["fw_title"]) {
@@ -886,22 +948,22 @@ class ThingsBoardSized
       }
 #endif
 
-      for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
-        if (m_sharedAttributeUpdateCallbacks[i].m_cb == nullptr) {
+      for (size_t i = 0; i < m_sharedAttributeRequestCallbacks.size(); i++) {
+        if (m_sharedAttributeRequestCallbacks.at(i).m_cb == nullptr) {
           // Nothing to do.
         }
         else {
-          Logger::log("Calling callbacks for updated attribute");
+          Logger::log("Calling callbacks for requested attribute");
           // Getting non-existing field from JSON should automatically
           // set JSONVariant to null
-          m_sharedAttributeUpdateCallbacks[i].m_cb(data);
-        }
-        // Check if the shared attribute callback was a request for the current value of some given keys,
-        // if yes the callback can be delted to free up space for permanent shared attribute callbacks deceting all changes.
-        if (m_sharedAttributeUpdateCallbacks[i].m_request) {
-          m_sharedAttributeUpdateCallbacks.erase(std::next(m_sharedAttributeUpdateCallbacks.begin(), i));
+          m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
+          // Delte callback because the changes have been requested and the callback is no longer needed.
+          m_sharedAttributeRequestCallbacks.erase(std::next(m_sharedAttributeRequestCallbacks.begin(), i));
         }
       }
+
+      // All request have been handled unsubscribe from not needed topic.
+      m_client.unsubscribe("v1/devices/me/attributes/response/+");
     }
 
     // Processes provisioning response
@@ -961,6 +1023,7 @@ class ThingsBoardSized
     PubSubClient m_client; // PubSub MQTT client instance.
     std::vector<RPC_Callback> m_rpcCallbacks; // RPC callbacks array
     std::vector<Shared_Attribute_Callback> m_sharedAttributeUpdateCallbacks; // Shared attribute update callbacks array
+    std::vector<Shared_Attribute_Request_Callback> m_sharedAttributeRequestCallbacks; // Shared attribute request callbacks array
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     Provision_Callback m_provisionCallback; // Provision response callback
@@ -991,6 +1054,8 @@ class ThingsBoardSized
       }
       if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
         ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
+      } else if (strncmp("v1/devices/me/attributes/response", topic, strlen("v1/devices/me/attributes/response")) == 0) {
+        ThingsBoardSized::m_subscribedInstance->process_shared_attribute_request_message(topic, payload, length);
       } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
         ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
       } else {
@@ -998,7 +1063,7 @@ class ThingsBoardSized
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
           ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
 #endif
-        } else if (strncmp("v2/fw/response/", topic, strlen("v2/fw/response/")) == 0) {
+        } else if (strncmp("v2/fw/response", topic, strlen("v2/fw/response")) == 0) {
 #if defined(ESP8266) || defined(ESP32)
           ThingsBoardSized::m_subscribedInstance->process_firmware_response(topic, payload, length);
 #endif
