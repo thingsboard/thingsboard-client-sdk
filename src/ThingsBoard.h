@@ -143,8 +143,7 @@ class Shared_Attribute_Callback {
     inline Shared_Attribute_Callback()
       : m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute subscribe arrival with
-    // given attribute key
+    // Constructs callback that will be fired upon a Shared attribute update arrival
     inline Shared_Attribute_Callback(processFn cb)
       : m_cb(cb) {  }
 
@@ -163,15 +162,15 @@ class Shared_Attribute_Request_Callback {
 
     // Constructs empty callback
     inline Shared_Attribute_Request_Callback()
-      : m_cb(nullptr) {  }
+      : m_att(), m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute request arrival with
-    // given attribute key
-    inline Shared_Attribute_Request_Callback(processFn cb)
-      : m_cb(cb) {  }
+    // Constructs callback that will be fired upon a Shared attribute request arrival with given attribute keys
+    inline Shared_Attribute_Request_Callback(const std::vector<const char*>& att, processFn cb)
+      :  m_att(att), m_cb(cb) {  }
 
   private:
-    processFn   m_cb;       // Callback to call
+    std::vector<const char*> m_att;   // Attribute we want to request
+    processFn                m_cb;    // Callback to call
 };
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
@@ -606,12 +605,12 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    bool Shared_Attributes_Request(const std::vector<const char*>& attributes, const Shared_Attribute_Request_Callback& callback) {
+    bool Shared_Attributes_Request(const Shared_Attribute_Request_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
       std::string sharedKeys = "";
-      for (const char* attribute : attributes) {
+      for (const char* attribute : callback.m_att) {
         // Check if the given attribute is null, if it is skip it.
         if (attribute == nullptr) {
           continue;
@@ -949,21 +948,41 @@ class ThingsBoardSized
 #endif
 
       for (size_t i = 0; i < m_sharedAttributeRequestCallbacks.size(); i++) {
-        if (m_sharedAttributeRequestCallbacks.at(i).m_cb == nullptr) {
-          // Nothing to do.
+        if (m_sharedAttributeRequestCallbacks.at(i).m_att.empty()) {
+          continue;
         }
-        else {
-          Logger::log("Calling callbacks for requested attribute");
-          // Getting non-existing field from JSON should automatically
-          // set JSONVariant to null
-          m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
-          // Delte callback because the changes have been requested and the callback is no longer needed.
-          m_sharedAttributeRequestCallbacks.erase(std::next(m_sharedAttributeRequestCallbacks.begin(), i));
+        else if (m_sharedAttributeRequestCallbacks.at(i).m_cb == nullptr) {
+          continue;
         }
-      }
 
-      // All request have been handled unsubscribe from not needed topic.
-      m_client.unsubscribe("v1/devices/me/attributes/response/+");
+        bool containsKey = false;
+        String requested_att;
+        for (const char* att : m_sharedAttributeRequestCallbacks.at(i).m_att) {
+          if (att == nullptr) {
+            continue;
+          }
+          // Check if the request contained any of our requested keys.
+          containsKey = containsKey || data.containsKey(att);
+          // Break early if the key was requested from this callback..
+          if (containsKey) {
+            requested_att = att;
+            break;
+          }
+        }
+
+        // This callback did not request any keys that were in this response,
+        // therefore we continue with the next element in the loop.
+        if (!containsKey) {
+          continue;
+        }
+
+        Logger::log(String("Calling callbacks for requested attribute " + requested_att).c_str());
+        // Getting non-existing field from JSON should automatically
+        // set JSONVariant to null
+        m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
+        // Delete callback because the changes have been requested and the callback is no longer needed.
+        m_sharedAttributeRequestCallbacks.erase(std::next(m_sharedAttributeRequestCallbacks.begin(), i));
+      }
     }
 
     // Processes provisioning response
