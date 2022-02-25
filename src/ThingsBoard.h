@@ -355,7 +355,6 @@ class ThingsBoardSized
       uint32_t json_size = measureJson(jsonObject) + 1U;
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
-      Logger::log(json);
       return m_client.publish("v1/devices/me/telemetry", json);
     }
 
