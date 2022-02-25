@@ -347,6 +347,16 @@ class ThingsBoardSized
       return m_client.publish("v1/devices/me/telemetry", json);
     }
 
+    // Sends custom JSON telemetry JsonObject to the ThingsBoard.
+    inline bool sendTelemetryJson(const JsonObject& jsonObject) {
+      // Serialize the given jsonObject into a char[].
+      // Measure size returns the actual size without null terminator, therefore we add 1.
+      uint32_t json_size = measureJson(jsonObject) + 1U;
+      char json[json_size];
+      serializeJson(jsonObject, json, json_size);
+      return m_client.publish("v1/devices/me/telemetry", json);
+    }
+
     //----------------------------------------------------------------------------
     // Attribute API
 
@@ -383,6 +393,16 @@ class ThingsBoardSized
 
     // Sends custom JSON with attributes to the ThingsBoard.
     inline bool sendAttributeJSON(const char *json) {
+      return m_client.publish("v1/devices/me/attributes", json);
+    }
+
+    // Sends custom JsonObject with attributes to the ThingsBoard.
+    inline bool sendAttributeJSON(const JsonObject& jsonObject) {
+      // Serialize the given jsonObject into a char[].
+      // Measure size returns the actual size without null terminator, therefore we add 1.
+      uint32_t json_size = measureJson(jsonObject) + 1U;
+      char json[json_size];
+      serializeJson(jsonObject, json, json_size);
       return m_client.publish("v1/devices/me/attributes", json);
     }
 
