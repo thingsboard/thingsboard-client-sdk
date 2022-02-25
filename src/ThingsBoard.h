@@ -207,11 +207,12 @@ class ThingsBoardSized
     // Initializes ThingsBoardSized class with network client.
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
-    // will result in the variables being reset betwenn method calls. Resulting in weird behaviour.
+    // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
     inline ThingsBoardSized(Client &client)
       : m_client(client)
       , m_requestId(0)
     {
+      m_client.setBufferSize(PayloadSize);
       // Reserve size of both m_sharedAttributeUpdateCallbacks, rpcCallbacks and m_sharedAttributeRequestCallbacks beforehand for performance reasons.
       m_rpcCallbacks.reserve(MaxFieldsAmt);
       m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
@@ -354,6 +355,7 @@ class ThingsBoardSized
       uint32_t json_size = measureJson(jsonObject) + 1U;
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
+      Logger::log(json);
       return m_client.publish("v1/devices/me/telemetry", json);
     }
 
