@@ -141,14 +141,21 @@ class Shared_Attribute_Callback {
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
-      : m_cb(nullptr) {  }
+      : m_att(), m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute update arrival
+    // Constructs callback that will be fired upon a Shared attribute update arrival,
+    // where one of the given keys was changed.
+    inline Shared_Attribute_Callback(const std::vector<const char*>& att, processFn cb)
+      : m_att(att), m_cb(cb) {  }
+
+    // Constructs callback that will be fired upon a Shared attribute update arrival,
+    // no matter which key was changed.
     inline Shared_Attribute_Callback(processFn cb)
-      : m_cb(cb) {  }
+      : m_att(), m_cb(cb) {  }
 
   private:
-    processFn   m_cb;       // Callback to call
+    std::vector<const char*> m_att;   // Attribute we want to request
+    processFn                m_cb;    // Callback to call
 };
 
 // Shared attributes request callback wrapper
@@ -162,15 +169,15 @@ class Shared_Attribute_Request_Callback {
 
     // Constructs empty callback
     inline Shared_Attribute_Request_Callback()
-      : m_att(), m_cb(nullptr) {  }
+      : m_request_id(0U), m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute request arrival with given attribute keys
-    inline Shared_Attribute_Request_Callback(const std::vector<const char*>& att, processFn cb)
-      :  m_att(att), m_cb(cb) {  }
+    // Constructs callback that will be fired upon a Shared attribute request arrival
+    inline Shared_Attribute_Request_Callback(processFn cb)
+      : m_request_id(0U), m_cb(cb) {  }
 
   private:
-    std::vector<const char*> m_att;   // Attribute we want to request
-    processFn                m_cb;    // Callback to call
+    uint32_t        m_request_id;   // Id the request was called with
+    processFn       m_cb;           // Callback to call
 };
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
@@ -281,7 +288,7 @@ class ThingsBoardSized
       resp_obj["secretKey"] = secretKey;
       resp_obj["durationMs"] = durationMs;
 
-      uint8_t objectSize = measureJson(requestBuffer) + 1;
+      uint8_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char responsePayload[objectSize];
       serializeJson(resp_obj, responsePayload, objectSize);
 
@@ -298,7 +305,7 @@ class ThingsBoardSized
       requestObject["provisionDeviceKey"] = provisionDeviceKey;
       requestObject["provisionDeviceSecret"] = provisionDeviceSecret;
 
-      uint8_t objectSize = measureJson(requestBuffer) + 1;
+      uint8_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char requestPayload[objectSize];
       serializeJson(requestObject, requestPayload, objectSize);
 
@@ -350,9 +357,7 @@ class ThingsBoardSized
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
     inline bool sendTelemetryJson(const JsonObject& jsonObject) {
-      // Serialize the given jsonObject into a char[].
-      // Measure size returns the actual size without null terminator, therefore we add 1.
-      uint32_t json_size = measureJson(jsonObject) + 1U;
+      uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
       return m_client.publish("v1/devices/me/telemetry", json);
@@ -399,9 +404,7 @@ class ThingsBoardSized
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
     inline bool sendAttributeJSON(const JsonObject& jsonObject) {
-      // Serialize the given jsonObject into a char[].
-      // Measure size returns the actual size without null terminator, therefore we add 1.
-      uint32_t json_size = measureJson(jsonObject) + 1U;
+      uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
       return m_client.publish("v1/devices/me/attributes", json);
@@ -584,12 +587,7 @@ class ThingsBoardSized
 
       currentFirmwareInfoObject["current_fw_title"] = currFwTitle;
       currentFirmwareInfoObject["current_fw_version"] = currFwVersion;
-
-      int objectSize = measureJson(currentFirmwareInfo) + 1;
-      char buffer[objectSize];
-      serializeJson(currentFirmwareInfoObject, buffer, objectSize);
-
-      return sendTelemetryJson(buffer);
+      return sendTelemetryJson(currentFirmwareInfoObject);
     }
 
     bool Firmware_Send_State(const char* currFwState) {
@@ -598,12 +596,7 @@ class ThingsBoardSized
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
       currentFirmwareStateObject["current_fw_state"] = currFwState;
-
-      int objectSize = measureJson(currentFirmwareState) + 1;
-      char buffer[objectSize];
-      serializeJson(currentFirmwareStateObject, buffer, objectSize);
-
-      return sendTelemetryJson(buffer);
+      return sendTelemetryJson(currentFirmwareStateObject);
     }
 
     bool Firmware_OTA_Subscribe() {
@@ -626,12 +619,12 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    bool Shared_Attributes_Request(const Shared_Attribute_Request_Callback& callback) {
+    bool Shared_Attributes_Request(const std::vector<const char*>& att, Shared_Attribute_Request_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
       std::string sharedKeys = "";
-      for (const char* attribute : callback.m_att) {
+      for (const char* attribute : att) {
         // Check if the given attribute is null, if it is skip it.
         if (attribute == nullptr) {
           continue;
@@ -642,8 +635,12 @@ class ThingsBoardSized
 
       // Check if any sharedKeys were requested.
       if (sharedKeys.empty()) {
+        Logger::log("No keys to request were given.");
         return false;
       }
+
+      // Remove latest not needed ,
+      sharedKeys.pop_back();
 
       requestObject["sharedKeys"] = sharedKeys.c_str();
       int objectSize = measureJson(requestBuffer) + 1;
@@ -651,7 +648,8 @@ class ThingsBoardSized
       serializeJson(requestObject, buffer, objectSize);
 
       m_requestId++;
-      Shared_Attribute_Request_Subscribe(callback);
+      callback.m_request_id = m_requestId;
+      Shared_Attributes_Request_Subscribe(callback);
       return m_client.publish(String("v1/devices/me/attributes/request/" + String(m_requestId)).c_str(), buffer);
     }
 
@@ -719,7 +717,7 @@ class ThingsBoardSized
   private:
 
     // Subscribe one Shared attributes request callback.
-    bool Shared_Attribute_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
+    bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
       if (m_sharedAttributeRequestCallbacks.size() + 1 > m_sharedAttributeRequestCallbacks.capacity()) {
         Logger::log("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt.");
         return false;
@@ -748,7 +746,7 @@ class ThingsBoardSized
           return false;
         }
 
-        if (measureJson(jsonBuffer) > PayloadSize - 1) {
+        if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
           Logger::log("too small buffer for JSON data");
           return false;
         }
@@ -822,7 +820,7 @@ class ThingsBoardSized
         return;
       }
 
-      if (measureJson(respBuffer) > PayloadSize - 1) {
+      if (JSON_STRING_SIZE(measureJson(respBuffer)) > PayloadSize) {
         Logger::log("too small buffer for JSON data");
         return;
       }
@@ -918,14 +916,39 @@ class ThingsBoardSized
 
       for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
         if (m_sharedAttributeUpdateCallbacks.at(i).m_cb == nullptr) {
-          // Nothing to do.
+          continue;
         }
-        else {
-          Logger::log("Calling callbacks for updated attribute");
-          // Getting non-existing field from JSON should automatically
-          // set JSONVariant to null
+        else if (m_sharedAttributeUpdateCallbacks.at(i).m_att.empty()) {
+          // No specifc keys were subscribed so we call the callback anyway.
           m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
+          continue;
         }
+
+        bool containsKey = false;
+        String requested_att;
+        for (const char* att : m_sharedAttributeUpdateCallbacks.at(i).m_att) {
+          if (att == nullptr) {
+            continue;
+          }
+          // Check if the request contained any of our requested keys.
+          containsKey = containsKey || data.containsKey(att);
+          // Break early if the key was requested from this callback.
+          if (containsKey) {
+            requested_att = att;
+            break;
+          }
+        }
+
+        // This callback did not request any keys that were in this response,
+        // therefore we continue with the next element in the loop.
+        if (!containsKey) {
+          continue;
+        }
+
+        Logger::log(String("Calling callback for updated attribute " + requested_att).c_str());
+        // Getting non-existing field from JSON should automatically
+        // set JSONVariant to null
+        m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
       }
     }
 
@@ -968,36 +991,22 @@ class ThingsBoardSized
       }
 #endif
 
+      std::string response = topic;
+      // Remove the not needed part of the topic.
+      size_t index = strlen("v1/devices/me/attributes/response/");
+      response = response.substr(index, response.length() - index);
+      // convert the remaining text to an integer
+      uint32_t response_id = atoi(response.c_str());
+
       for (size_t i = 0; i < m_sharedAttributeRequestCallbacks.size(); i++) {
-        if (m_sharedAttributeRequestCallbacks.at(i).m_att.empty()) {
+        if (m_sharedAttributeRequestCallbacks.at(i).m_cb == nullptr) {
           continue;
         }
-        else if (m_sharedAttributeRequestCallbacks.at(i).m_cb == nullptr) {
-          continue;
-        }
-
-        bool containsKey = false;
-        String requested_att;
-        for (const char* att : m_sharedAttributeRequestCallbacks.at(i).m_att) {
-          if (att == nullptr) {
-            continue;
-          }
-          // Check if the request contained any of our requested keys.
-          containsKey = containsKey || data.containsKey(att);
-          // Break early if the key was requested from this callback..
-          if (containsKey) {
-            requested_att = att;
-            break;
-          }
-        }
-
-        // This callback did not request any keys that were in this response,
-        // therefore we continue with the next element in the loop.
-        if (!containsKey) {
+        else if (m_sharedAttributeRequestCallbacks.at(i).m_request_id != response_id) {
           continue;
         }
 
-        Logger::log(String("Calling callbacks for requested attribute " + requested_att).c_str());
+        Logger::log((String("Calling callback for reponse id ") + String(response_id)).c_str());
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
@@ -1050,7 +1059,7 @@ class ThingsBoardSized
             return false;
           }
         }
-        if (measureJson(jsonBuffer) > PayloadSize - 1) {
+        if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
           Logger::log("too small buffer for JSON data");
           return false;
         }
@@ -1265,7 +1274,7 @@ class ThingsBoardHttpSized
           }
         }
 
-        if (measureJson(jsonBuffer) > PayloadSize - 1) {
+        if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
           Logger::log("too small buffer for JSON data");
           return false;
         }
@@ -1290,7 +1299,7 @@ class ThingsBoardHttpSized
           return false;
         }
 
-        if (measureJson(jsonBuffer) > PayloadSize - 1) {
+        if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
           Logger::log("too small buffer for JSON data");
           return false;
         }
