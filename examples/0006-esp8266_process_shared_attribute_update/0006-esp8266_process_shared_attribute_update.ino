@@ -36,7 +36,7 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
     Serial.println(it->value().as<char*>()); // We have to parse data by it's type in the current example we will show here only char data
   }
 
-  int jsonSize = measureJson(data) + 1;
+  int jsonSize = JSON_STRING_SIZE(measureJson(data));
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
   Serial.println(buffer);
