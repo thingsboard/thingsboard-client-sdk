@@ -81,7 +81,6 @@ void loop() {
     }
 
     Serial.println("Firwmare Update...");
-    tb.setup_callback();
     tb.Firmware_OTA_Subscribe();
     if (tb.Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION)) {
       Serial.println("Done, Reboot now");

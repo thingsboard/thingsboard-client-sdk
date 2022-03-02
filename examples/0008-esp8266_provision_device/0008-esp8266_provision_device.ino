@@ -97,7 +97,6 @@ void loop() {
           Serial.println("Failed to connect");
           return;
         }
-        tb_provision.setup_callback();
         if (tb_provision.Provision_Subscribe(provisionCallback)) {
           if (tb_provision.sendProvisionRequest(deviceName, provisionDeviceKey, provisionDeviceSecret)) {
             provisionRequestSent = true;

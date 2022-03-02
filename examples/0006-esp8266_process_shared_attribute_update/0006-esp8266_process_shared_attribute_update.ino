@@ -66,7 +66,6 @@ void loop() {
 
   if (!subscribed) {
     Serial.println("Subscribing for shared attribute updates...");
-    tb.setup_callback();
     if (!tb.Shared_Attributes_Subscribe(callback)) {
       Serial.println("Failed to subscribe for shared attribute updates");
       return;
