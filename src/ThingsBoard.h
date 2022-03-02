@@ -224,6 +224,8 @@ class ThingsBoardSized
       m_rpcCallbacks.reserve(MaxFieldsAmt);
       m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
       m_sharedAttributeRequestCallbacks.reserve(MaxFieldsAmt);
+      // Initalize callback.
+      m_client.setCallback(std::bind(&ThingsBoardSized::on_message, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     }
 
     // Destroys ThingsBoardSized class with network client.
@@ -234,14 +236,6 @@ class ThingsBoardSized
     // Returns a reference to the PubSubClient.
     inline PubSubClient& getClient(void) {
       return m_client;
-    }
-
-    // Sets both subscribed instance and callback, this is out of the same reason as not initalizing certain,
-    // private members in the constructor initalizor list and that would be because if multiple instances are used,
-    // one will overwrite the other and cause server respones to not be registered and forwarded anymore.
-    inline void setup_callback(void) {
-      ThingsBoardSized::m_subscribedInstance = this;
-      m_client.setCallback(ThingsBoardSized::on_message);
     }
 
     // Connects to the specified ThingsBoard server and port.
@@ -468,7 +462,7 @@ class ThingsBoardSized
 
       // Request the firmware informations
       const std::vector<const char*> sharedKeys {"fw_checksum", "fw_checksum_algorithm", "fw_size", "fw_title", "fw_version"};
-      if (!Shared_Attributes_Request(sharedKeys, Shared_Attribute_Callback())) {
+      if (!Shared_Attributes_Request(sharedKeys, Shared_Attribute_Request_Callback())) {
         return false;
       }
 
@@ -1090,39 +1084,29 @@ class ThingsBoardSized
     int m_fwChunkReceive;
 #endif
 
-    // PubSub client cannot call a method when message arrives on subscribed topic.
-    // Only free-standing function is allowed.
-    // To be able to forward event to an instance, rather than to a function, this pointer exists.
-    static ThingsBoardSized* m_subscribedInstance;
-
     // The callback for when a PUBLISH message is received from the server.
-    static void on_message(char* topic, uint8_t* payload, unsigned int length) {
+    void on_message(char* topic, uint8_t* payload, unsigned int length) {
       Logger::log(String("Callback on_message from topic: " + String(topic)).c_str());
-      if (!ThingsBoardSized::m_subscribedInstance) {
-        return;
-      }
+
       if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
-        ThingsBoardSized::m_subscribedInstance->process_rpc_message(topic, payload, length);
+        process_rpc_message(topic, payload, length);
       } else if (strncmp("v1/devices/me/attributes/response", topic, strlen("v1/devices/me/attributes/response")) == 0) {
-        ThingsBoardSized::m_subscribedInstance->process_shared_attribute_request_message(topic, payload, length);
+        process_shared_attribute_request_message(topic, payload, length);
       } else if (strncmp("v1/devices/me/attributes", topic, strlen("v1/devices/me/attributes")) == 0) {
-        ThingsBoardSized::m_subscribedInstance->process_shared_attribute_update_message(topic, payload, length);
+        process_shared_attribute_update_message(topic, payload, length);
       } else {
         if (strncmp("/provision/response", topic, strlen("/provision/response")) == 0) {
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-          ThingsBoardSized::m_subscribedInstance->process_provisioning_response(topic, payload, length);
+          process_provisioning_response(topic, payload, length);
 #endif
         } else if (strncmp("v2/fw/response", topic, strlen("v2/fw/response")) == 0) {
 #if defined(ESP8266) || defined(ESP32)
-          ThingsBoardSized::m_subscribedInstance->process_firmware_response(topic, payload, length);
+          process_firmware_response(topic, payload, length);
 #endif
         }
       }
     }
 };
-
-template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>* ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance;
 
 #if !defined(ESP8266) && !defined(ESP32)
 
