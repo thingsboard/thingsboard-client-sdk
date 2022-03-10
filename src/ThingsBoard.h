@@ -92,7 +92,7 @@ class Telemetry {
     data         m_value; // Data value
 
     // Serializes key-value pair in a generic way.
-    bool serializeKeyval(JsonVariant &jsonObj) const;
+    const bool serializeKeyval(JsonVariant &jsonObj) const;
 };
 
 // Convenient aliases
@@ -100,11 +100,11 @@ class Telemetry {
 using Attribute = Telemetry;
 using RPC_Response = Telemetry;
 // JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
-using RPC_Data = JsonVariantConst;
+using RPC_Data = const JsonVariantConst;
 // JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
-using Shared_Attribute_Data = JsonObjectConst;
+using Shared_Attribute_Data = const JsonObjectConst;
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-using Provision_Data = JsonObjectConst;
+using Provision_Data = const JsonObjectConst;
 #endif
 
 // RPC callback wrapper
@@ -241,14 +241,18 @@ class ThingsBoardSized
     // Connects to the specified ThingsBoard server and port.
     // Access token is used to authenticate a client.
     // Returns true on success, false otherwise.
-    bool connect(const char *host, const char *access_token = "provision", int port = 1883, const char *client_id = "TbDev", const char *password = NULL) {
+    inline const bool connect(const char *host, const char *access_token = "provision", int port = 1883, const char *client_id = "TbDev", const char *password = NULL) {
       if (!host) {
         return false;
       }
       this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
       this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+      this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
       this->Provision_Unsubscribe();
+#endif
+#if defined(ESP8266) || defined(ESP32)
+      this->Firmware_OTA_Unsubscribe();
 #endif
       m_client.setServer(host, port);
       bool connection_result = m_client.connect(client_id, access_token, password);
@@ -261,7 +265,7 @@ class ThingsBoardSized
     }
 
     // Returns true if connected, false otherwise.
-    inline bool connected() {
+    inline const bool connected() {
       return m_client.connected();
     }
 
@@ -275,7 +279,7 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
-    bool sendClaimingRequest(const char *secretKey, unsigned int durationMs) {
+    inline const bool sendClaimingRequest(const char *secretKey, unsigned int durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject resp_obj = requestBuffer.to<JsonObject>();
 
@@ -290,7 +294,7 @@ class ThingsBoardSized
     }
 
     // Provisioning API
-    bool sendProvisionRequest(const char* deviceName, const char* provisionDeviceKey, const char* provisionDeviceSecret) {
+    inline const bool sendProvisionRequest(const char* deviceName, const char* provisionDeviceKey, const char* provisionDeviceSecret) {
       // TODO Add ability to provide specific credentials from client side.
       StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
@@ -314,43 +318,43 @@ class ThingsBoardSized
 
     // Sends telemetry data to the ThingsBoard, returns true on success.
     template<class T>
-    inline bool sendTelemetryData(const char *key, T value)
+    inline const bool sendTelemetryData(const char *key, T value)
     {
       return sendKeyval(key, value);
     }
 
     // Sends integer telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryInt(const char *key, int value) {
+    inline const bool sendTelemetryInt(const char *key, int value) {
       return sendKeyval(key, value);
     }
 
     // Sends boolean telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryBool(const char *key, bool value) {
+    inline const bool sendTelemetryBool(const char *key, bool value) {
       return sendKeyval(key, value);
     }
 
     // Sends float telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryFloat(const char *key, float value) {
+    inline const bool sendTelemetryFloat(const char *key, float value) {
       return sendKeyval(key, value);
     }
 
     // Sends string telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryString(const char *key, const char *value) {
+    inline const bool sendTelemetryString(const char *key, const char *value) {
       return sendKeyval(key, value);
     }
 
     // Sends aggregated telemetry to the ThingsBoard.
-    inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
+    inline const bool sendTelemetry(const Telemetry *data, size_t data_count) {
       return sendDataArray(data, data_count);
     }
 
     // Sends custom JSON telemetry string to the ThingsBoard.
-    inline bool sendTelemetryJson(const char *json) {
+    inline const bool sendTelemetryJson(const char *json) {
       return m_client.publish("v1/devices/me/telemetry", json);
     }
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
-    inline bool sendTelemetryJson(const JsonObject& jsonObject) {
+    inline const bool sendTelemetryJson(const JsonObject& jsonObject) {
       uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
@@ -362,42 +366,42 @@ class ThingsBoardSized
 
     // Sends an attribute with given name and value.
     template<class T>
-    inline bool sendAttributeData(const char *attrName, T value) {
+    inline const bool sendAttributeData(const char *attrName, T value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends integer attribute with given name and value.
-    inline bool sendAttributeInt(const char *attrName, int value) {
+    inline const bool sendAttributeInt(const char *attrName, int value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends boolean attribute with given name and value.
-    inline bool sendAttributeBool(const char *attrName, bool value) {
+    inline const bool sendAttributeBool(const char *attrName, bool value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends float attribute with given name and value.
-    inline bool sendAttributeFloat(const char *attrName, float value) {
+    inline const bool sendAttributeFloat(const char *attrName, float value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends string attribute with given name and value.
-    inline bool sendAttributeString(const char *attrName, const char *value) {
+    inline const bool sendAttributeString(const char *attrName, const char *value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends aggregated attributes to the ThingsBoard.
-    inline bool sendAttributes(const Attribute *data, size_t data_count) {
+    inline const bool sendAttributes(const Attribute *data, size_t data_count) {
       return sendDataArray(data, data_count, false);
     }
 
     // Sends custom JSON with attributes to the ThingsBoard.
-    inline bool sendAttributeJSON(const char *json) {
+    inline const bool sendAttributeJSON(const char *json) {
       return m_client.publish("v1/devices/me/attributes", json);
     }
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
-    inline bool sendAttributeJSON(const JsonObject& jsonObject) {
+    inline const bool sendAttributeJSON(const JsonObject& jsonObject) {
       uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
@@ -408,7 +412,7 @@ class ThingsBoardSized
     // Server-side RPC API
 
     // Subscribes multiple RPC callbacks.
-    bool RPC_Subscribe(const std::vector<RPC_Callback>& callbacks) {
+    inline const bool RPC_Subscribe(const std::vector<RPC_Callback>& callbacks) {
       if (m_rpcCallbacks.size() + callbacks.size() > m_rpcCallbacks.capacity()) {
         Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
         return false;
@@ -423,7 +427,7 @@ class ThingsBoardSized
     }
 
     // Subscribe one RPC callback.
-    bool RPC_Subscribe(const RPC_Callback& callback) {
+    inline const bool RPC_Subscribe(const RPC_Callback& callback) {
       if (m_rpcCallbacks.size() + 1 > m_rpcCallbacks.capacity()) {
         Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
         return false;
@@ -437,7 +441,7 @@ class ThingsBoardSized
       return true;
     }
 
-    inline bool RPC_Unsubscribe() {
+    inline const bool RPC_Unsubscribe() {
       // Empty all callbacks.
       m_rpcCallbacks.clear();
       return m_client.unsubscribe("v1/devices/me/rpc/request/+");
@@ -447,7 +451,7 @@ class ThingsBoardSized
     // Firmware OTA API
 
 #if defined(ESP8266) || defined(ESP32)
-    bool Firmware_Update(const char* currFwTitle, const char* currFwVersion) {
+    inline const bool Firmware_Update(const char* currFwTitle, const char* currFwVersion) {
       m_fwState.clear();
       m_fwTitle.clear();
       m_fwVersion.clear();
@@ -574,7 +578,7 @@ class ThingsBoardSized
       return false;
     }
 
-    bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
+    inline const bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
       // Send our firmware title and version
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
@@ -584,7 +588,7 @@ class ThingsBoardSized
       return sendTelemetryJson(currentFirmwareInfoObject);
     }
 
-    bool Firmware_Send_State(const char* currFwState) {
+    inline const bool Firmware_Send_State(const char* currFwState) {
       // Send our firmware title and version
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
@@ -593,7 +597,7 @@ class ThingsBoardSized
       return sendTelemetryJson(currentFirmwareStateObject);
     }
 
-    bool Firmware_OTA_Subscribe() {
+    inline const bool Firmware_OTA_Subscribe() {
       if (!m_client.subscribe("v2/fw/response/#")) {
         return false;
       }
@@ -601,7 +605,7 @@ class ThingsBoardSized
       return true;
     }
 
-    bool Firmware_OTA_Unsubscribe() {
+    inline const bool Firmware_OTA_Unsubscribe() {
       if (!m_client.unsubscribe("v2/fw/response/#")) {
         return false;
       }
@@ -613,7 +617,7 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    bool Shared_Attributes_Request(const std::vector<const char*>& att, Shared_Attribute_Request_Callback& callback) {
+    inline const bool Shared_Attributes_Request(const std::vector<const char*>& att, Shared_Attribute_Request_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
@@ -648,7 +652,7 @@ class ThingsBoardSized
     }
 
     // Subscribes multiple Shared attributes callbacks.
-    bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
+    inline const bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
       if (m_sharedAttributeUpdateCallbacks.size() + callbacks.size() > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe.");
         return false;
@@ -677,7 +681,7 @@ class ThingsBoardSized
       return true;
     }
 
-    inline bool Shared_Attributes_Unsubscribe() {
+    inline const bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks.
       m_sharedAttributeUpdateCallbacks.clear();
       if (!m_client.unsubscribe("v1/devices/me/attributes")) {
@@ -692,7 +696,7 @@ class ThingsBoardSized
     // Subscribes to get provision response
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-    bool Provision_Subscribe(const Provision_Callback callback) {
+    inline const bool Provision_Subscribe(const Provision_Callback callback) {
       if (!m_client.subscribe("/provision/response")) {
         return false;
       }
@@ -700,7 +704,7 @@ class ThingsBoardSized
       return true;
     }
 
-    bool Provision_Unsubscribe() {
+    inline const bool Provision_Unsubscribe() {
       if (!m_client.unsubscribe("/provision/response")) {
         return false;
       }
@@ -711,7 +715,7 @@ class ThingsBoardSized
   private:
 
     // Subscribe one Shared attributes request callback.
-    bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
+    inline const bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
       if (m_sharedAttributeRequestCallbacks.size() + 1 > m_sharedAttributeRequestCallbacks.capacity()) {
         Logger::log("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt.");
         return false;
@@ -725,9 +729,18 @@ class ThingsBoardSized
       return true;
     }
 
+    inline const bool Shared_Attributes_Request_Unsubscribe() {
+      // Empty all callbacks.
+      m_sharedAttributeRequestCallbacks.clear();
+      if (!m_client.unsubscribe("v1/devices/attributes/response/+")) {
+        return false;
+      }
+      return true;
+    }
+
     // Sends single key-value in a generic way.
     template<typename T>
-    bool sendKeyval(const char *key, T value, bool telemetry = true) {
+    inline const bool sendKeyval(const char *key, T value, bool telemetry = true) {
       Telemetry t(key, value);
 
       char payload[PayloadSize];
@@ -750,7 +763,7 @@ class ThingsBoardSized
     }
 
     // Processes RPC message
-    void process_rpc_message(char* topic, uint8_t* payload, unsigned int length) {
+    inline void process_rpc_message(char* topic, uint8_t* payload, unsigned int length) {
       RPC_Response r;
       {
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -830,7 +843,7 @@ class ThingsBoardSized
 #if defined(ESP8266) || defined(ESP32)
 
     // Processes firmware response
-    void process_firmware_response(char* topic, uint8_t* payload, unsigned int length) {
+    inline void process_firmware_response(char* topic, uint8_t* payload, unsigned int length) {
       static unsigned int sizeReceive = 0;
       static MD5Builder md5;
 
@@ -889,7 +902,7 @@ class ThingsBoardSized
 #endif
 
     // Processes shared attribute update message
-    void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
+    inline void process_shared_attribute_update_message(char* topic, uint8_t* payload, unsigned int length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
@@ -947,7 +960,7 @@ class ThingsBoardSized
     }
 
     // Processes shared attribute request message
-    void process_shared_attribute_request_message(char* topic, uint8_t* payload, unsigned int length) {
+    inline void process_shared_attribute_request_message(char* topic, uint8_t* payload, unsigned int length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
@@ -1000,7 +1013,7 @@ class ThingsBoardSized
           continue;
         }
 
-        Logger::log((String("Calling callback for reponse id ") + String(response_id)).c_str());
+        Logger::log((String("Calling callback for response id ") + String(response_id)).c_str());
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
@@ -1011,7 +1024,7 @@ class ThingsBoardSized
 
     // Processes provisioning response
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-    void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
+    inline void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
       Logger::log("Process provisioning response");
 
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -1037,7 +1050,7 @@ class ThingsBoardSized
 #endif
 
     // Sends array of attributes or telemetry to ThingsBoard
-    bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
+    inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
       if (MaxFieldsAmt < data_count) {
         Logger::log("too much JSON fields passed");
         return false;
@@ -1085,7 +1098,7 @@ class ThingsBoardSized
 #endif
 
     // The callback for when a PUBLISH message is received from the server.
-    void on_message(char* topic, uint8_t* payload, unsigned int length) {
+    inline void on_message(char* topic, uint8_t* payload, unsigned int length) {
       Logger::log(String("Callback on_message from topic: " + String(topic)).c_str());
 
       if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
@@ -1137,32 +1150,32 @@ class ThingsBoardHttpSized
     // Telemetry API
 
     // Sends integer telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryInt(const char *key, int value) {
+    inline const bool sendTelemetryInt(const char *key, int value) {
       return sendKeyval(key, value);
     }
 
     // Sends boolean telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryBool(const char *key, bool value) {
+    inline const bool sendTelemetryBool(const char *key, bool value) {
       return sendKeyval(key, value);
     }
 
     // Sends float telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryFloat(const char *key, float value) {
+    inline const bool sendTelemetryFloat(const char *key, float value) {
       return sendKeyval(key, value);
     }
 
     // Sends string telemetry data to the ThingsBoard, returns true on success.
-    inline bool sendTelemetryString(const char *key, const char *value) {
+    inline const bool sendTelemetryString(const char *key, const char *value) {
       return sendKeyval(key, value);
     }
 
     // Sends aggregated telemetry to the ThingsBoard.
-    inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
+    inline const bool sendTelemetry(const Telemetry *data, size_t data_count) {
       return sendDataArray(data, data_count);
     }
 
     // Sends custom JSON telemetry string to the ThingsBoard, using HTTP.
-    inline bool sendTelemetryJson(const char *json) {
+    inline const bool sendTelemetryJson(const char *json) {
       if (!json || !m_token) {
         return  false;
       }
@@ -1190,32 +1203,32 @@ class ThingsBoardHttpSized
     // Attribute API
 
     // Sends integer attribute with given name and value.
-    inline bool sendAttributeInt(const char *attrName, int value) {
+    inline const bool sendAttributeInt(const char *attrName, int value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends boolean attribute with given name and value.
-    inline bool sendAttributeBool(const char *attrName, bool value) {
+    inline const bool sendAttributeBool(const char *attrName, bool value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends float attribute with given name and value.
-    inline bool sendAttributeFloat(const char *attrName, float value) {
+    inline const bool sendAttributeFloat(const char *attrName, float value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends string attribute with given name and value.
-    inline bool sendAttributeString(const char *attrName, const char *value) {
+    inline const bool sendAttributeString(const char *attrName, const char *value) {
       return sendKeyval(attrName, value, false);
     }
 
     // Sends aggregated attributes to the ThingsBoard.
-    inline bool sendAttributes(const Attribute *data, size_t data_count) {
+    inline const bool sendAttributes(const Attribute *data, size_t data_count) {
       return sendDataArray(data, data_count, false);
     }
 
     // Sends custom JSON with attributes to the ThingsBoard, using HTTP.
-    inline bool sendAttributeJSON(const char *json) {
+    inline const bool sendAttributeJSON(const char *json) {
       if (!json || !m_token) {
         return  false;
       }
@@ -1241,7 +1254,7 @@ class ThingsBoardHttpSized
 
   private:
     // Sends array of attributes or telemetry to ThingsBoard
-    bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
+    inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
       if (MaxFieldsAmt < data_count) {
         Logger::log("too much JSON fields passed");
         return false;
@@ -1270,7 +1283,7 @@ class ThingsBoardHttpSized
 
     // Sends single key-value in a generic way.
     template<typename T>
-    bool sendKeyval(const char *key, T value, bool telemetry = true) {
+    inline const bool sendKeyval(const char *key, T value, bool telemetry = true) {
       Telemetry t(key, value);
 
       char payload[PayloadSize];

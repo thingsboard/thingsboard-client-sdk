@@ -10,7 +10,7 @@
 
 /*----------------------------------------------------------------------------*/
 
-bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
+const bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
   if (m_key) {
     switch (m_type) {
       case TYPE_BOOL:
