@@ -215,17 +215,20 @@ class ThingsBoardSized
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
     // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
-    inline ThingsBoardSized(Client &client)
-      : m_client(client)
+    inline ThingsBoardSized(Client& client)
+      : m_client()
       , m_requestId(0)
     {
-      m_client.setBufferSize(PayloadSize);
-      // Reserve size of both m_sharedAttributeUpdateCallbacks, rpcCallbacks and m_sharedAttributeRequestCallbacks beforehand for performance reasons.
-      m_rpcCallbacks.reserve(MaxFieldsAmt);
-      m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
-      m_sharedAttributeRequestCallbacks.reserve(MaxFieldsAmt);
-      // Initalize callback.
-      m_client.setCallback(std::bind(&ThingsBoardSized::on_message, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+      reserve_callback_size();
+      setClient(&client);
+    }
+
+    // Initializes ThingsBoardSized class without network client. Ensure it is set via. setClient() before using the connect method.
+    inline ThingsBoardSized()
+      : m_client()
+      , m_requestId(0)
+    {
+      reserve_callback_size();
     }
 
     // Destroys ThingsBoardSized class with network client.
@@ -236,6 +239,19 @@ class ThingsBoardSized
     // Returns a reference to the PubSubClient.
     inline PubSubClient& getClient(void) {
       return m_client;
+    }
+
+    // Sets the underlying Client of the PubSubClient.
+    inline const bool setClient(Client* client) {
+      bool success = false;
+      if (client == nullptr) {
+        return success;
+      }
+      m_client.setClient(*client);
+      success = m_client.setBufferSize(PayloadSize);
+      // Initalize callback.
+      m_client.setCallback(std::bind(&ThingsBoardSized::on_message, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+      return success;
     }
 
     // Connects to the specified ThingsBoard server and port.
@@ -713,6 +729,14 @@ class ThingsBoardSized
 #endif
 
   private:
+
+    // Reserves size of callback vectors to improve performance
+    inline void reserve_callback_size(void) {
+      // Reserve size of both m_sharedAttributeUpdateCallbacks, rpcCallbacks and m_sharedAttributeRequestCallbacks beforehand for performance reasons.
+      m_rpcCallbacks.reserve(MaxFieldsAmt);
+      m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
+      m_sharedAttributeRequestCallbacks.reserve(MaxFieldsAmt);
+    }
 
     // Subscribe one Shared attributes request callback.
     inline const bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
