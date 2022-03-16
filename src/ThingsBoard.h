@@ -215,12 +215,12 @@ class ThingsBoardSized
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
     // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
-    inline ThingsBoardSized(Client& client)
+    inline ThingsBoardSized(Client* client)
       : m_client()
       , m_requestId(0)
     {
       reserve_callback_size();
-      setClient(&client);
+      setClient(client);
     }
 
     // Initializes ThingsBoardSized class without network client. Ensure it is set via. setClient() before using the connect method.
@@ -275,7 +275,7 @@ class ThingsBoardSized
       return connection_result;
     }
 
-    // Disconnects from ThingsBoard. Returns true on success.
+    // Disconnects from ThingsBoard.
     inline void disconnect() {
       m_client.disconnect();
     }
