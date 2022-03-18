@@ -215,7 +215,7 @@ class ThingsBoardSized
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
     // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
-    inline ThingsBoardSized(Client* client)
+    inline ThingsBoardSized(Client& client)
       : m_client()
       , m_requestId(0)
     {
@@ -242,16 +242,11 @@ class ThingsBoardSized
     }
 
     // Sets the underlying Client of the PubSubClient.
-    inline const bool setClient(Client* client) {
-      bool success = false;
-      if (client == nullptr) {
-        return success;
-      }
-      m_client.setClient(*client);
-      success = m_client.setBufferSize(PayloadSize);
+    inline void setClient(Client& client) {
+      m_client.setClient(client);
+      m_client.setBufferSize(PayloadSize);
       // Initalize callback.
       m_client.setCallback(std::bind(&ThingsBoardSized::on_message, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-      return success;
     }
 
     // Connects to the specified ThingsBoard server and port.
