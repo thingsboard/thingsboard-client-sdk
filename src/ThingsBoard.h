@@ -318,7 +318,7 @@ class ThingsBoardSized
       char requestPayload[objectSize];
       serializeJson(requestObject, requestPayload, objectSize);
 
-      Logger::log("Provision request:");
+      Logger::log(PSTR("Provision request:"));
       Logger::log(requestPayload);
       return m_client.publish("/provision/request", requestPayload);
     }
@@ -425,7 +425,7 @@ class ThingsBoardSized
     // Subscribes multiple RPC callbacks.
     inline const bool RPC_Subscribe(const std::vector<RPC_Callback>& callbacks) {
       if (m_rpcCallbacks.size() + callbacks.size() > m_rpcCallbacks.capacity()) {
-        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        Logger::log(PSTR("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
@@ -440,7 +440,7 @@ class ThingsBoardSized
     // Subscribe one RPC callback.
     inline const bool RPC_Subscribe(const RPC_Callback& callback) {
       if (m_rpcCallbacks.size() + 1 > m_rpcCallbacks.capacity()) {
-        Logger::log("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        Logger::log(PSTR("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
@@ -490,35 +490,35 @@ class ThingsBoardSized
 
       // Check if firmware is available for our device
       if (m_fwVersion.isEmpty() || m_fwTitle.isEmpty()) {
-        Logger::log("No firmware found !");
+        Logger::log(PSTR("No firmware found !"));
         Firmware_Send_State("NO FIRMWARE FOUND");
         return false;
       }
 
       // If firmware is the same, we do not update it
       if ((String(currFwTitle) == m_fwTitle) and (String(currFwVersion) == m_fwVersion)) {
-        Logger::log("Firmware is already up to date !");
+        Logger::log(PSTR("Firmware is already up to date !"));
         Firmware_Send_State("UP TO DATE");
         return false;
       }
 
       // If firmware title is not the same, we quit now
       if (String(currFwTitle) != m_fwTitle) {
-        Logger::log("Firmware is not for us (title is different) !");
+        Logger::log(PSTR("Firmware is not for us (title is different) !"));
         Firmware_Send_State("NO FIRMWARE FOUND");
         return false;
       }
 
       if (m_fwChecksumAlgorithm != "MD5") {
-        Logger::log("Checksum algorithm is not supported, please use MD5 only");
+        Logger::log(PSTR("Checksum algorithm is not supported, please use MD5 only"));
         Firmware_Send_State("CHKS IS NOT MD5");
         return false;
       }
 
-      Logger::log("=================================");
-      Logger::log("A new Firmware is available :");
+      Logger::log(PSTR("================================="));
+      Logger::log(PSTR("A new Firmware is available :"));
       Logger::log(String(String(currFwVersion) + " => " + m_fwVersion).c_str());
-      Logger::log("Try to download it...");
+      Logger::log(PSTR("Try to download it..."));
 
       int chunkSize = 4096; // maybe less if we don't have enough RAM
       int numberOfChunk = static_cast<int>(m_fwSize/chunkSize) + 1;
@@ -527,7 +527,7 @@ class ThingsBoardSized
 
       // Increase size of receive buffer
       if (!m_client.setBufferSize(chunkSize + 50)) {
-        Logger::log("Not enough RAM");
+        Logger::log(PSTR("Not enough RAM"));
         return false;
       }
 
@@ -555,7 +555,7 @@ class ThingsBoardSized
             else {
               nbRetry--;
               if (nbRetry == 0) {
-                Logger::log("Unable to write firmware");
+                Logger::log(PSTR("Unable to write firmware"));
                 break;
               }
             }
@@ -570,7 +570,7 @@ class ThingsBoardSized
         else {
           nbRetry--;
           if (nbRetry == 0) {
-            Logger::log("Unable to download firmware");
+            Logger::log(PSTR("Unable to download firmware"));
             break;
           }
         }
@@ -644,7 +644,7 @@ class ThingsBoardSized
 
       // Check if any sharedKeys were requested.
       if (sharedKeys.empty()) {
-        Logger::log("No keys to request were given.");
+        Logger::log(PSTR("No keys to request were given."));
         return false;
       }
 
@@ -665,7 +665,7 @@ class ThingsBoardSized
     // Subscribes multiple Shared attributes callbacks.
     inline const bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
       if (m_sharedAttributeUpdateCallbacks.size() + callbacks.size() > m_sharedAttributeUpdateCallbacks.capacity()) {
-        Logger::log("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        Logger::log(PSTR("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/attributes")) {
@@ -680,7 +680,7 @@ class ThingsBoardSized
     // Subscribe one Shared attributes callback.
     bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
       if (m_sharedAttributeUpdateCallbacks.size() + 1 > m_sharedAttributeUpdateCallbacks.capacity()) {
-        Logger::log("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe.");
+        Logger::log(PSTR("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/attributes")) {
@@ -736,7 +736,7 @@ class ThingsBoardSized
     // Subscribe one Shared attributes request callback.
     inline const bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback) {
       if (m_sharedAttributeRequestCallbacks.size() + 1 > m_sharedAttributeRequestCallbacks.capacity()) {
-        Logger::log("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt.");
+        Logger::log(PSTR("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt."));
         return false;
       }
       if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
@@ -768,12 +768,12 @@ class ThingsBoardSized
         StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
         JsonVariant object = jsonBuffer.template to<JsonVariant>();
         if (t.serializeKeyval(object) == false) {
-          Logger::log("unable to serialize data");
+          Logger::log(PSTR("unable to serialize data"));
           return false;
         }
 
         if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
-          Logger::log("too small buffer for JSON data");
+          Logger::log(PSTR("too small buffer for JSON data"));
           return false;
         }
         serializeJson(object, payload, sizeof(payload));
@@ -788,7 +788,7 @@ class ThingsBoardSized
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
         DeserializationError error = deserializeJson(jsonBuffer, payload, length);
         if (error) {
-          Logger::log("unable to de-serialize RPC");
+          Logger::log(PSTR("unable to de-serialize RPC"));
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
@@ -796,10 +796,10 @@ class ThingsBoardSized
         const char *params = data["params"];
 
         if (methodName) {
-          Logger::log("received RPC:");
+          Logger::log(PSTR("received RPC:"));
           Logger::log(methodName);
         } else {
-          Logger::log("RPC method is NULL");
+          Logger::log(PSTR("RPC method is NULL"));
           return;
         }
 
@@ -810,23 +810,22 @@ class ThingsBoardSized
             continue;
           }
 
-          Logger::log("calling RPC:");
+          Logger::log(PSTR("calling RPC:"));
           Logger::log(methodName);
           // Do not inform client, if parameter field is missing for some reason
           if (!data.containsKey("params")) {
-            Logger::log("no parameters passed with RPC, passing null JSON");
+            Logger::log(PSTR("no parameters passed with RPC, passing null JSON"));
           }
 
           // try to de-serialize params
           StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
           DeserializationError err_param = deserializeJson(doc, params);
           //if failed to de-serialize params then send JsonObject instead
+          Logger::log(PSTR("params:"));
           if (err_param) {
-            Logger::log("params:");
             Logger::log(data["params"].as<String>().c_str());
             r = callback.m_cb(data["params"]);
           } else {
-            Logger::log("params:");
             Logger::log(params);
             const JsonObject &param = doc.template as<JsonObject>();
             // Getting non-existing field from JSON should automatically
@@ -842,19 +841,19 @@ class ThingsBoardSized
       JsonVariant resp_obj = respBuffer.template to<JsonVariant>();
 
       if (r.serializeKeyval(resp_obj) == false) {
-        Logger::log("unable to serialize data");
+        Logger::log(PSTR("unable to serialize data"));
         return;
       }
 
       if (JSON_STRING_SIZE(measureJson(respBuffer)) > PayloadSize) {
-        Logger::log("too small buffer for JSON data");
+        Logger::log(PSTR("too small buffer for JSON data"));
         return;
       }
       serializeJson(resp_obj, responsePayload, sizeof(responsePayload));
 
       String responseTopic = String(topic);
       responseTopic.replace("request", "response");
-      Logger::log("response:");
+      Logger::log(PSTR("response:"));
       Logger::log(responsePayload);
       m_client.publish(responseTopic.c_str(), responsePayload);
     }
@@ -878,7 +877,7 @@ class ThingsBoardSized
 
         // Initialize Flash
         if (!Update.begin(m_fwSize)) {
-          Logger::log("Error during Update.begin");
+          Logger::log(PSTR("Error during Update.begin"));
           m_fwState = "UPDATE ERROR";
           return;
         }
@@ -886,7 +885,7 @@ class ThingsBoardSized
 
       // Write data to Flash
       if (Update.write(payload, length) != length) {
-        Logger::log("Error during Update.write");
+        Logger::log(PSTR("Error during Update.write"));
         m_fwState = "UPDATE ERROR";
         return;
       }
@@ -903,16 +902,16 @@ class ThingsBoardSized
         Logger::log(String("md5 firmware: " + m_fwChecksum).c_str());
         // Check MD5
         if (md5Str != m_fwChecksum) {
-          Logger::log("Checksum verification failed !");
+          Logger::log(PSTR("Checksum verification failed !"));
 #if defined(ESP32)
           Update.abort();
 #endif
           m_fwState = "CHECKSUM ERROR";
         }
         else {
-          Logger::log("Checksum is OK !");
+          Logger::log(PSTR("Checksum is OK !"));
           if (Update.end(true)) {
-            Logger::log("Update Success !");
+            Logger::log(PSTR("Update Success !"));
             m_fwState = "SUCCESS";
           }
         }
@@ -925,18 +924,18 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
-        Logger::log("Unable to de-serialize Shared attribute update request");
+        Logger::log(PSTR("Unable to de-serialize Shared attribute update request"));
         return;
       }
       JsonObject data = jsonBuffer.template as<JsonObject>();
 
       if (data && (data.size() >= 1)) {
-        Logger::log("Received shared attribute update request");
+        Logger::log(PSTR("Received shared attribute update request"));
         if (data["shared"]) {
           data = data["shared"];
         }
       } else {
-        Logger::log("Shared attribute update key not found.");
+        Logger::log(PSTR("Shared attribute update key not found."));
         return;
       }
 
@@ -983,18 +982,18 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
-        Logger::log("Unable to de-serialize Shared attribute request");
+        Logger::log(PSTR("Unable to de-serialize Shared attribute request"));
         return;
       }
       JsonObject data = jsonBuffer.template as<JsonObject>();
 
       if (data && (data.size() >= 1)) {
-        Logger::log("Received shared attribute request");
+        Logger::log(PSTR("Received shared attribute request"));
         if (data["shared"]) {
           data = data["shared"];
         }
       } else {
-        Logger::log("Shared attribute key not found.");
+        Logger::log(PSTR("Shared attribute key not found."));
         return;
       }
 
@@ -1044,21 +1043,21 @@ class ThingsBoardSized
     // Processes provisioning response
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     inline void process_provisioning_response(char* topic, uint8_t* payload, unsigned int length) {
-      Logger::log("Process provisioning response");
+      Logger::log(PSTR("Process provisioning response"));
 
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
-        Logger::log("Unable to de-serialize provision response");
+        Logger::log(PSTR("Unable to de-serialize provision response"));
         return;
       }
 
       const JsonObject &data = jsonBuffer.template as<JsonObject>();
 
-      Logger::log("Received provision response");
+      Logger::log(PSTR("Received provision response"));
 
       if (data["status"] == "SUCCESS" && data["credentialsType"] == "X509_CERTIFICATE") {
-        Logger::log("Provision response contains X509_CERTIFICATE credentials, it is not supported yet.");
+        Logger::log(PSTR("Provision response contains X509_CERTIFICATE credentials, it is not supported yet."));
         return;
       }
 
@@ -1071,7 +1070,7 @@ class ThingsBoardSized
     // Sends array of attributes or telemetry to ThingsBoard
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
       if (MaxFieldsAmt < data_count) {
-        Logger::log("too much JSON fields passed");
+        Logger::log(PSTR("too much JSON fields passed"));
         return false;
       }
       char payload[PayloadSize];
@@ -1081,12 +1080,12 @@ class ThingsBoardSized
 
         for (size_t i = 0; i < data_count; ++i) {
           if (data[i].serializeKeyval(object) == false) {
-            Logger::log("unable to serialize data");
+            Logger::log(PSTR("unable to serialize data"));
             return false;
           }
         }
         if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
-          Logger::log("too small buffer for JSON data");
+          Logger::log(PSTR("too small buffer for JSON data"));
           return false;
         }
         serializeJson(object, payload, sizeof(payload));
@@ -1201,7 +1200,7 @@ class ThingsBoardHttpSized
 
       if (!m_client.connected()) {
         if (!m_client.connect(m_host, m_port)) {
-          Logger::log("connect to server failed");
+          Logger::log(PSTR("connect to server failed"));
           return false;
         }
       }
@@ -1254,7 +1253,7 @@ class ThingsBoardHttpSized
 
       if (!m_client.connected()) {
         if (!m_client.connect(m_host, m_port)) {
-          Logger::log("connect to server failed");
+          Logger::log(PSTR("connect to server failed"));
           return false;
         }
       }
@@ -1275,7 +1274,7 @@ class ThingsBoardHttpSized
     // Sends array of attributes or telemetry to ThingsBoard
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
       if (MaxFieldsAmt < data_count) {
-        Logger::log("too much JSON fields passed");
+        Logger::log(PSTR("too much JSON fields passed"));
         return false;
       }
       char payload[PayloadSize];
@@ -1285,13 +1284,13 @@ class ThingsBoardHttpSized
 
         for (size_t i = 0; i < data_count; ++i) {
           if (data[i].serializeKeyval(object) == false) {
-            Logger::log("unable to serialize data");
+            Logger::log(PSTR("unable to serialize data"));
             return false;
           }
         }
 
         if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
-          Logger::log("too small buffer for JSON data");
+          Logger::log(PSTR("too small buffer for JSON data"));
           return false;
         }
         serializeJson(object, payload, sizeof(payload));
@@ -1311,12 +1310,12 @@ class ThingsBoardHttpSized
         StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
         JsonVariant object = jsonBuffer.template to<JsonVariant>();
         if (t.serializeKeyval(object) == false) {
-          Logger::log("unable to serialize data");
+          Logger::log(PSTR("unable to serialize data"));
           return false;
         }
 
         if (JSON_STRING_SIZE(measureJson(jsonBuffer)) > PayloadSize) {
-          Logger::log("too small buffer for JSON data");
+          Logger::log(PSTR("too small buffer for JSON data"));
           return false;
         }
         serializeJson(object, payload, sizeof(payload));
