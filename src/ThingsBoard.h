@@ -518,7 +518,7 @@ class ThingsBoardSized
 
       Logger::log(PSTR("================================="));
       Logger::log(PSTR("A new Firmware is available :"));
-      char firmware[9U];
+      char firmware[5U + strlen(currFwVersion) + m_fwVersion.length()];
       snprintf_P(firmware, sizeof(firmware), PSTR("%s => %s"), currFwVersion, m_fwVersion.c_str());
       Logger::log(firmware);
       Logger::log(PSTR("Try to download it..."));
@@ -537,10 +537,10 @@ class ThingsBoardSized
       // Update state
       Firmware_Send_State("DOWNLOADING");
 
-      char topic[25U];
-      char size[3U];
+      char size[1U + detect_size(chunkSize)];
       // Download the firmware
       do {
+        char topic[23U + detect_size(currChunk)]; // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         snprintf_P(topic, sizeof(topic), PSTR("v2/fw/request/0/chunk/%i"), currChunk);
         snprintf_P(size, sizeof(size), PSTR("%i"), chunkSize);
         m_client.publish(topic, size);
@@ -666,7 +666,7 @@ class ThingsBoardSized
       callback.m_request_id = m_requestId;
       Shared_Attributes_Request_Subscribe(callback);
 
-      char topic[36U];
+      char topic[34U + detect_size(m_requestId)];
       snprintf_P(topic, sizeof(topic), PSTR("v1/devices/me/attributes/request/%u"), m_requestId);
       return m_client.publish(topic, buffer);
     }
@@ -733,6 +733,11 @@ class ThingsBoardSized
 #endif
 
   private:
+
+    // Returns the length in character places of a given signed number.
+    inline const uint8_t detect_size(const int32_t number) {
+      return snprintf(nullptr, 0, "%i", number);
+    }
 
     // Reserves size of callback vectors to improve performance
     inline void reserve_callback_size(void) {
@@ -876,7 +881,7 @@ class ThingsBoardSized
 
       m_fwChunkReceive = atoi(strrchr(topic, '/') + 1);
 
-      char message[41U];
+      char message[33U + detect_size(m_fwChunkReceive) + detect_size(length)];
       snprintf_P(message, sizeof(message), PSTR("Receive chunk (%i), with size (%u) bytes"), m_fwChunkReceive, length);
       Logger::log(message);
 
@@ -910,10 +915,10 @@ class ThingsBoardSized
       if (m_fwSize == sizeReceive) {
         md5.calculate();
         String md5Str = md5.toString();
-        char actual[26U];
+        char actual[22U + md5Str.length()];
         snprintf_P(actual, sizeof(actual), PSTR("MD5 actual checksum: (%s)"), md5Str.c_str());
         Logger::log(actual);
-        char expected[28U];
+        char expected[24U + m_fwChecksum.length()];
         snprintf_P(expected, sizeof(expected), PSTR("MD5 expected checksum: (%s)"), m_fwChecksum.c_str());
         Logger::log(expected);
         // Check MD5
@@ -986,7 +991,7 @@ class ThingsBoardSized
           continue;
         }
 
-        char message[55U];
+        char message[51U + sizeof(requested_att)];
         snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for updated attribute (%s)"), requested_att);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
@@ -1049,7 +1054,7 @@ class ThingsBoardSized
           continue;
         }
 
-        char message[49U];
+        char message[45U + detect_size(response_id)];
         snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for response id (%u)"), response_id);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
@@ -1137,7 +1142,7 @@ class ThingsBoardSized
 
     // The callback for when a PUBLISH message is received from the server.
     inline void on_message(char* topic, uint8_t* payload, unsigned int length) {
-      char message[37U];
+      char message[35U + strlen(topic)];
       snprintf_P(message, sizeof(message), PSTR("Callback on_message from topic: (%s)"), topic);
       Logger::log(message);
 
@@ -1229,7 +1234,7 @@ class ThingsBoardHttpSized
 
       bool rc = true;
 
-      char path[21U];
+      char path[19U + strlen(m_token)];
       snprintf_P(path, sizeof(path), PSTR("/api/v1/%s/telemetry"), m_token);
       if (!m_client.post(path, "application/json", json) ||
           (m_client.responseStatusCode() != HTTP_SUCCESS)) {
@@ -1283,7 +1288,7 @@ class ThingsBoardHttpSized
 
       bool rc = true;
 
-      char path[21U];
+      char path[19U + strlen(m_token)];
       snprintf_P(path, sizeof(path), PSTR("/api/v1/%s/attributes"), m_token);
       if (!m_client.post(path, "application/json", json)
           || (m_client.responseStatusCode() != HTTP_SUCCESS)) {
