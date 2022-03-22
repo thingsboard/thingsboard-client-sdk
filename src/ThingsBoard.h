@@ -496,20 +496,21 @@ class ThingsBoardSized
       }
 
       // If firmware is the same, we do not update it
-      if ((String(currFwTitle) == m_fwTitle) and (String(currFwVersion) == m_fwVersion)) {
+      if (strncmp(currFwTitle, m_fwTitle.c_str(), m_fwTitle.length()) == 0 &&
+          strncmp(currFwVersion, m_fwVersion.c_str(), m_fwVersion.length()) == 0) {
         Logger::log(PSTR("Firmware is already up to date !"));
         Firmware_Send_State("UP TO DATE");
         return false;
       }
 
       // If firmware title is not the same, we quit now
-      if (String(currFwTitle) != m_fwTitle) {
+      if (strncmp(currFwTitle, m_fwTitle.c_str(), m_fwTitle.length()) != 0) {
         Logger::log(PSTR("Firmware is not for us (title is different) !"));
         Firmware_Send_State("NO FIRMWARE FOUND");
         return false;
       }
 
-      if (m_fwChecksumAlgorithm != "MD5") {
+      if (!m_fwChecksumAlgorithm.equals("MD5")) {
         Logger::log(PSTR("Checksum algorithm is not supported, please use MD5 only"));
         Firmware_Send_State("CHKS IS NOT MD5");
         return false;
@@ -517,7 +518,9 @@ class ThingsBoardSized
 
       Logger::log(PSTR("================================="));
       Logger::log(PSTR("A new Firmware is available :"));
-      Logger::log(String(String(currFwVersion) + " => " + m_fwVersion).c_str());
+      char firmware[9U];
+      snprintf_P(firmware, sizeof(firmware), PSTR("%s => %s"), currFwVersion, m_fwVersion.c_str());
+      Logger::log(firmware);
       Logger::log(PSTR("Try to download it..."));
 
       int chunkSize = 4096; // maybe less if we don't have enough RAM
@@ -534,11 +537,15 @@ class ThingsBoardSized
       // Update state
       Firmware_Send_State("DOWNLOADING");
 
+      char topic[25U];
+      char size[3U];
       // Download the firmware
       do {
-        m_client.publish(String("v2/fw/request/0/chunk/" + String(currChunk)).c_str(), String(chunkSize).c_str());
+        snprintf_P(topic, sizeof(topic), PSTR("v2/fw/request/0/chunk/%i"), currChunk);
+        snprintf_P(size, sizeof(size), PSTR("%i"), chunkSize);
+        m_client.publish(topic, size);
 
-        timeout = millis() + 3000; // Amount of time we wait until we declare the download as failed in milliseconds.
+        timeout = millis() + 3000U; // Amount of time we wait until we declare the download as failed in milliseconds.
         do {
           delay(5);
           loop();
@@ -546,8 +553,7 @@ class ThingsBoardSized
 
         if (m_fwChunkReceive == currChunk) {
           // Check if chunk is not the last
-          if (numberOfChunk != (currChunk + 1))
-          {
+          if (numberOfChunk != (currChunk + 1)) {
             // Check if state is OK
             if ((m_fwState == "DOWNLOADING")) {
               currChunk++;
@@ -659,7 +665,10 @@ class ThingsBoardSized
       m_requestId++;
       callback.m_request_id = m_requestId;
       Shared_Attributes_Request_Subscribe(callback);
-      return m_client.publish(String("v1/devices/me/attributes/request/" + String(m_requestId)).c_str(), buffer);
+
+      char topic[36U];
+      snprintf_P(topic, sizeof(topic), PSTR("v1/devices/me/attributes/request/%u"), m_requestId);
+      return m_client.publish(topic, buffer);
     }
 
     // Subscribes multiple Shared attributes callbacks.
@@ -851,7 +860,7 @@ class ThingsBoardSized
       }
       serializeJson(resp_obj, responsePayload, sizeof(responsePayload));
 
-      String responseTopic = String(topic);
+      String responseTopic = topic;
       responseTopic.replace("request", "response");
       Logger::log(PSTR("response:"));
       Logger::log(responsePayload);
@@ -866,7 +875,10 @@ class ThingsBoardSized
       static MD5Builder md5;
 
       m_fwChunkReceive = atoi(strrchr(topic, '/') + 1);
-      Logger::log(String("Receive chunk " + String(m_fwChunkReceive) + ", size " + String(length) + " bytes").c_str());
+
+      char message[41U];
+      snprintf_P(message, sizeof(message), PSTR("Receive chunk (%i), with size (%u) bytes"), m_fwChunkReceive, length);
+      Logger::log(message);
 
       m_fwState = "FAILED";
 
@@ -898,8 +910,12 @@ class ThingsBoardSized
       if (m_fwSize == sizeReceive) {
         md5.calculate();
         String md5Str = md5.toString();
-        Logger::log(String("md5 compute:  " + md5Str).c_str());
-        Logger::log(String("md5 firmware: " + m_fwChecksum).c_str());
+        char actual[26U];
+        snprintf_P(actual, sizeof(actual), PSTR("MD5 actual checksum: (%s)"), md5Str.c_str());
+        Logger::log(actual);
+        char expected[28U];
+        snprintf_P(expected, sizeof(expected), PSTR("MD5 expected checksum: (%s)"), m_fwChecksum.c_str());
+        Logger::log(expected);
         // Check MD5
         if (md5Str != m_fwChecksum) {
           Logger::log(PSTR("Checksum verification failed !"));
@@ -950,7 +966,7 @@ class ThingsBoardSized
         }
 
         bool containsKey = false;
-        String requested_att;
+        const char* requested_att;
         for (const char* att : m_sharedAttributeUpdateCallbacks.at(i).m_att) {
           if (att == nullptr) {
             continue;
@@ -966,11 +982,13 @@ class ThingsBoardSized
 
         // This callback did not request any keys that were in this response,
         // therefore we continue with the next element in the loop.
-        if (!containsKey) {
+        if (!containsKey || requested_att == nullptr) {
           continue;
         }
 
-        Logger::log(String("Calling callback for updated attribute " + requested_att).c_str());
+        char message[55U];
+        snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for updated attribute (%s)"), requested_att);
+        Logger::log(message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
@@ -1031,7 +1049,9 @@ class ThingsBoardSized
           continue;
         }
 
-        Logger::log((String("Calling callback for response id ") + String(response_id)).c_str());
+        char message[49U];
+        snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for response id (%u)"), response_id);
+        Logger::log(message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
@@ -1117,7 +1137,9 @@ class ThingsBoardSized
 
     // The callback for when a PUBLISH message is received from the server.
     inline void on_message(char* topic, uint8_t* payload, unsigned int length) {
-      Logger::log(String("Callback on_message from topic: " + String(topic)).c_str());
+      char message[37U];
+      snprintf_P(message, sizeof(message), PSTR("Callback on_message from topic: (%s)"), topic);
+      Logger::log(message);
 
       if (strncmp("v1/devices/me/rpc", topic, strlen("v1/devices/me/rpc")) == 0) {
         process_rpc_message(topic, payload, length);
@@ -1207,7 +1229,8 @@ class ThingsBoardHttpSized
 
       bool rc = true;
 
-      const String path = String("/api/v1/") + m_token + "/telemetry";
+      char path[21U];
+      snprintf_P(path, sizeof(path), PSTR("/api/v1/%s/telemetry"), m_token);
       if (!m_client.post(path, "application/json", json) ||
           (m_client.responseStatusCode() != HTTP_SUCCESS)) {
         rc = false;
@@ -1260,7 +1283,8 @@ class ThingsBoardHttpSized
 
       bool rc = true;
 
-      const String path = String("/api/v1/") + m_token + "/attributes";
+      char path[21U];
+      snprintf_P(path, sizeof(path), PSTR("/api/v1/%s/attributes"), m_token);
       if (!m_client.post(path, "application/json", json)
           || (m_client.responseStatusCode() != HTTP_SUCCESS)) {
         rc = false;
