@@ -881,7 +881,7 @@ class ThingsBoardSized
 
       m_fwChunkReceive = atoi(strrchr(topic, '/') + 1);
 
-      char message[33U + detect_size(m_fwChunkReceive) + detect_size(length)];
+      char message[37U + detect_size(m_fwChunkReceive) + detect_size(length)];
       snprintf_P(message, sizeof(message), PSTR("Receive chunk (%i), with size (%u) bytes"), m_fwChunkReceive, length);
       Logger::log(message);
 
@@ -915,10 +915,10 @@ class ThingsBoardSized
       if (m_fwSize == sizeReceive) {
         md5.calculate();
         String md5Str = md5.toString();
-        char actual[22U + md5Str.length()];
+        char actual[24U + md5Str.length()];
         snprintf_P(actual, sizeof(actual), PSTR("MD5 actual checksum: (%s)"), md5Str.c_str());
         Logger::log(actual);
-        char expected[24U + m_fwChecksum.length()];
+        char expected[26U + m_fwChecksum.length()];
         snprintf_P(expected, sizeof(expected), PSTR("MD5 expected checksum: (%s)"), m_fwChecksum.c_str());
         Logger::log(expected);
         // Check MD5
@@ -991,7 +991,7 @@ class ThingsBoardSized
           continue;
         }
 
-        char message[51U + sizeof(requested_att)];
+        char message[53U + sizeof(requested_att)];
         snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for updated attribute (%s)"), requested_att);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
@@ -1054,7 +1054,7 @@ class ThingsBoardSized
           continue;
         }
 
-        char message[45U + detect_size(response_id)];
+        char message[47U + detect_size(response_id)];
         snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for response id (%u)"), response_id);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
