@@ -294,14 +294,14 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject resp_obj = requestBuffer.to<JsonObject>();
 
-      resp_obj["secretKey"] = secretKey;
-      resp_obj["durationMs"] = durationMs;
+      resp_obj[PSTR("secretKey")] = secretKey;
+      resp_obj[PSTR("durationMs")] = durationMs;
 
       uint8_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char responsePayload[objectSize];
       serializeJson(resp_obj, responsePayload, objectSize);
 
-      return m_client.publish("v1/devices/me/claim", responsePayload);
+      return m_client.publish(PSTR("v1/devices/me/claim"), responsePayload);
     }
 
     // Provisioning API
@@ -310,9 +310,9 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
-      requestObject["deviceName"] = deviceName;
-      requestObject["provisionDeviceKey"] = provisionDeviceKey;
-      requestObject["provisionDeviceSecret"] = provisionDeviceSecret;
+      requestObject[PSTR("deviceName")] = deviceName;
+      requestObject[PSTR("provisionDeviceKey")] = provisionDeviceKey;
+      requestObject[PSTR("provisionDeviceSecret")] = provisionDeviceSecret;
 
       uint8_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char requestPayload[objectSize];
@@ -320,7 +320,7 @@ class ThingsBoardSized
 
       Logger::log(PSTR("Provision request:"));
       Logger::log(requestPayload);
-      return m_client.publish("/provision/request", requestPayload);
+      return m_client.publish(PSTR("/provision/request"), requestPayload);
     }
 
 #endif
@@ -361,7 +361,7 @@ class ThingsBoardSized
 
     // Sends custom JSON telemetry string to the ThingsBoard.
     inline const bool sendTelemetryJson(const char *json) {
-      return m_client.publish("v1/devices/me/telemetry", json);
+      return m_client.publish(PSTR("v1/devices/me/telemetry"), json);
     }
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
@@ -369,7 +369,7 @@ class ThingsBoardSized
       uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
       char json[json_size];
       serializeJson(jsonObject, json, json_size);
-      return m_client.publish("v1/devices/me/telemetry", json);
+      return m_client.publish(PSTR("v1/devices/me/telemetry"), json);
     }
 
     //----------------------------------------------------------------------------
@@ -428,7 +428,7 @@ class ThingsBoardSized
         Logger::log(PSTR("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
-      if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
+      if (!m_client.subscribe(PSTR("v1/devices/me/rpc/request/+"))) {
         return false;
       }
 
@@ -443,7 +443,7 @@ class ThingsBoardSized
         Logger::log(PSTR("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
-      if (!m_client.subscribe("v1/devices/me/rpc/request/+")) {
+      if (!m_client.subscribe(PSTR("v1/devices/me/rpc/request/+"))) {
         return false;
       }
 
@@ -455,7 +455,7 @@ class ThingsBoardSized
     inline const bool RPC_Unsubscribe() {
       // Empty all callbacks.
       m_rpcCallbacks.clear();
-      return m_client.unsubscribe("v1/devices/me/rpc/request/+");
+      return m_client.unsubscribe(PSTR("v1/devices/me/rpc/request/+"));
     }
 
     //----------------------------------------------------------------------------
@@ -600,8 +600,8 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
 
-      currentFirmwareInfoObject["current_fw_title"] = currFwTitle;
-      currentFirmwareInfoObject["current_fw_version"] = currFwVersion;
+      currentFirmwareInfoObject[PSTR("current_fw_title")] = currFwTitle;
+      currentFirmwareInfoObject[PSTR("current_fw_version")] = currFwVersion;
       return sendTelemetryJson(currentFirmwareInfoObject);
     }
 
@@ -610,12 +610,12 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
-      currentFirmwareStateObject["current_fw_state"] = currFwState;
+      currentFirmwareStateObject[PSTR("current_fw_state")] = currFwState;
       return sendTelemetryJson(currentFirmwareStateObject);
     }
 
     inline const bool Firmware_OTA_Subscribe() {
-      if (!m_client.subscribe("v2/fw/response/#")) {
+      if (!m_client.subscribe(PSTR("v2/fw/response/#"))) {
         return false;
       }
 
@@ -623,7 +623,7 @@ class ThingsBoardSized
     }
 
     inline const bool Firmware_OTA_Unsubscribe() {
-      if (!m_client.unsubscribe("v2/fw/response/#")) {
+      if (!m_client.unsubscribe(PSTR("v2/fw/response/#"))) {
         return false;
       }
 
@@ -657,7 +657,7 @@ class ThingsBoardSized
       // Remove latest not needed ,
       sharedKeys.pop_back();
 
-      requestObject["sharedKeys"] = sharedKeys.c_str();
+      requestObject[PSTR("sharedKeys")] = sharedKeys.c_str();
       int objectSize = measureJson(requestBuffer) + 1;
       char buffer[objectSize];
       serializeJson(requestObject, buffer, objectSize);
@@ -677,7 +677,7 @@ class ThingsBoardSized
         Logger::log(PSTR("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
-      if (!m_client.subscribe("v1/devices/me/attributes")) {
+      if (!m_client.subscribe(PSTR("v1/devices/me/attributes"))) {
         return false;
       }
 
@@ -692,7 +692,7 @@ class ThingsBoardSized
         Logger::log(PSTR("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe."));
         return false;
       }
-      if (!m_client.subscribe("v1/devices/me/attributes")) {
+      if (!m_client.subscribe(PSTR("v1/devices/me/attributes"))) {
         return false;
       }
 
@@ -704,7 +704,7 @@ class ThingsBoardSized
     inline const bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks.
       m_sharedAttributeUpdateCallbacks.clear();
-      if (!m_client.unsubscribe("v1/devices/me/attributes")) {
+      if (!m_client.unsubscribe(PSTR("v1/devices/me/attributes"))) {
         return false;
       }
       return true;
@@ -717,7 +717,7 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     inline const bool Provision_Subscribe(const Provision_Callback callback) {
-      if (!m_client.subscribe("/provision/response")) {
+      if (!m_client.subscribe(PSTR("/provision/response"))) {
         return false;
       }
       m_provisionCallback = callback;
@@ -725,7 +725,7 @@ class ThingsBoardSized
     }
 
     inline const bool Provision_Unsubscribe() {
-      if (!m_client.unsubscribe("/provision/response")) {
+      if (!m_client.unsubscribe(PSTR("/provision/response"))) {
         return false;
       }
       return true;
@@ -753,7 +753,7 @@ class ThingsBoardSized
         Logger::log(PSTR("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt."));
         return false;
       }
-      if (!m_client.subscribe("v1/devices/me/attributes/response/+")) {
+      if (!m_client.subscribe(PSTR("v1/devices/me/attributes/response/+"))) {
         return false;
       }
 
@@ -765,7 +765,7 @@ class ThingsBoardSized
     inline const bool Shared_Attributes_Request_Unsubscribe() {
       // Empty all callbacks.
       m_sharedAttributeRequestCallbacks.clear();
-      if (!m_client.unsubscribe("v1/devices/attributes/response/+")) {
+      if (!m_client.unsubscribe(PSTR("v1/devices/attributes/response/+"))) {
         return false;
       }
       return true;
@@ -806,8 +806,8 @@ class ThingsBoardSized
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
-        const char *methodName = data["method"];
-        const char *params = data["params"];
+        const char *methodName = data[PSTR("method")];
+        const char *params = data[PSTR("params")];
 
         if (methodName) {
           Logger::log(PSTR("received RPC:"));
@@ -837,8 +837,8 @@ class ThingsBoardSized
           //if failed to de-serialize params then send JsonObject instead
           Logger::log(PSTR("params:"));
           if (err_param) {
-            Logger::log(data["params"].as<String>().c_str());
-            r = callback.m_cb(data["params"]);
+            Logger::log(data[PSTR("params")].as<String>().c_str());
+            r = callback.m_cb(data[PSTR("params")]);
           } else {
             Logger::log(params);
             const JsonObject &param = doc.template as<JsonObject>();
@@ -952,8 +952,8 @@ class ThingsBoardSized
 
       if (data && (data.size() >= 1)) {
         Logger::log(PSTR("Received shared attribute update request"));
-        if (data["shared"]) {
-          data = data["shared"];
+        if (data[PSTR("shared")]) {
+          data = data[PSTR("shared")];
         }
       } else {
         Logger::log(PSTR("Shared attribute update key not found."));
@@ -1012,8 +1012,8 @@ class ThingsBoardSized
 
       if (data && (data.size() >= 1)) {
         Logger::log(PSTR("Received shared attribute request"));
-        if (data["shared"]) {
-          data = data["shared"];
+        if (data[PSTR("shared")]) {
+          data = data[PSTR("shared")];
         }
       } else {
         Logger::log(PSTR("Shared attribute key not found."));
@@ -1022,20 +1022,20 @@ class ThingsBoardSized
 
       // Save data for firmware update
 #if defined(ESP8266) || defined(ESP32)
-      if (data["fw_title"]) {
-        m_fwTitle = data["fw_title"].as<String>();
+      if (data[PSTR("fw_title")]) {
+        m_fwTitle = data[PSTR("fw_title")].as<String>();
       }
-      if (data["fw_version"]) {
-        m_fwVersion = data["fw_version"].as<String>();
+      if (data[PSTR("fw_version")]) {
+        m_fwVersion = data[PSTR("fw_version")].as<String>();
       }
-      if (data["fw_checksum"]) {
-        m_fwChecksum = data["fw_checksum"].as<String>();
+      if (data[PSTR("fw_checksum")]) {
+        m_fwChecksum = data[PSTR("fw_checksum")].as<String>();
       }
-      if (data["fw_checksum_algorithm"]) {
-        m_fwChecksumAlgorithm = data["fw_checksum_algorithm"].as<String>();
+      if (data[PSTR("fw_checksum_algorithm")]) {
+        m_fwChecksumAlgorithm = data[PSTR("fw_checksum_algorithm")].as<String>();
       }
-      if (data["fw_size"]) {
-        m_fwSize = data["fw_size"].as<int>();
+      if (data[PSTR("fw_size")]) {
+        m_fwSize = data[PSTR("fw_size")].as<int>();
       }
 #endif
 
@@ -1081,7 +1081,7 @@ class ThingsBoardSized
 
       Logger::log(PSTR("Received provision response"));
 
-      if (data["status"] == "SUCCESS" && data["credentialsType"] == "X509_CERTIFICATE") {
+      if (data[PSTR("status")] == "SUCCESS" && data[PSTR("credentialsType")] == "X509_CERTIFICATE") {
         Logger::log(PSTR("Provision response contains X509_CERTIFICATE credentials, it is not supported yet."));
         return;
       }
