@@ -991,7 +991,7 @@ class ThingsBoardSized
           continue;
         }
 
-        char message[53U + sizeof(requested_att)];
+        char message[53U + strlen(requested_att) + 1U];
         snprintf_P(message, sizeof(message), PSTR("Calling subscribed callback for updated attribute (%s)"), requested_att);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
