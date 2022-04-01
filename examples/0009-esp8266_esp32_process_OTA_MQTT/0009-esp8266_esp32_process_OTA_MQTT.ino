@@ -55,6 +55,20 @@ void reconnect() {
   }
 }
 
+void UpdatedCallback(const bool& success) {
+  if (success) {
+    Serial.println("Done, Reboot now");
+#if defined(ESP8266)
+    ESP.restart();
+#elif defined(ESP32)
+    esp_restart();
+#endif
+  }
+  else {
+    Serial.println("No new firmware");
+  }
+}
+
 void setup() {
   // initialize serial for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -81,19 +95,7 @@ void loop() {
     }
 
     Serial.println("Firwmare Update...");
-    tb.Firmware_OTA_Subscribe();
-    if (tb.Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION)) {
-      Serial.println("Done, Reboot now");
-#if defined(ESP8266)
-      ESP.restart();
-#elif defined(ESP32)
-      esp_restart();
-#endif
-    }
-    else {
-      Serial.println("No new firmware");
-    }
-    tb.Firmware_OTA_Unsubscribe();
+    tb.Start_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, UpdatedCallback);
   }
 
   tb.loop();
