@@ -521,7 +521,7 @@ class ThingsBoardSized
 
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
       if (json_size > PayloadSize) {
-        char message[JSON_STRING_SIZE(strlen(INVALID_BUFFER_SIZE)) + detect_size(PayloadSize) + detect_size(json_size)];
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
         return false;
@@ -533,7 +533,7 @@ class ThingsBoardSized
     inline const bool sendTelemetryJson(const JsonObject& jsonObject) {
       const uint32_t json_object_size = jsonObject.size();
       if (MaxFieldsAmt < json_object_size) {
-        char message[JSON_STRING_SIZE(strlen(TOO_MANY_JSON_FIELDS)) + detect_size(json_object_size) + detect_size(MaxFieldsAmt)];
+        char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt);
         Logger::log(message);
         return false;
@@ -586,7 +586,7 @@ class ThingsBoardSized
 
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
       if (json_size > PayloadSize) {
-        char message[JSON_STRING_SIZE(strlen(INVALID_BUFFER_SIZE)) + detect_size(PayloadSize) + detect_size(json_size)];
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
         return false;
@@ -598,7 +598,7 @@ class ThingsBoardSized
     inline const bool sendAttributeJSON(const JsonObject& jsonObject) {
       const uint32_t json_object_size = jsonObject.size();
       if (MaxFieldsAmt < json_object_size) {
-        char message[JSON_STRING_SIZE(strlen(TOO_MANY_JSON_FIELDS)) + detect_size(json_object_size) + detect_size(MaxFieldsAmt)];
+        char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt);
         Logger::log(message);
         return false;
@@ -779,10 +779,10 @@ class ThingsBoardSized
       // Update state
       Firmware_Send_State(FW_STATE_DOWNLOADING);
 
-      char size[JSON_STRING_SIZE(strlen(NUMBER_PRINTF)) + detect_size(chunkSize)];
+      char size[detect_size(NUMBER_PRINTF, chunkSize)];
       // Download the firmware
       do {
-        char topic[JSON_STRING_SIZE(strlen(FIRMWARE_REQUEST_TOPIC)) + detect_size(currChunk)]; // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
+        char topic[detect_size(FIRMWARE_REQUEST_TOPIC, currChunk)]; // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
         snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunkSize);
         m_client.publish(topic, size);
@@ -888,7 +888,7 @@ class ThingsBoardSized
       callback.m_request_id = m_requestId;
       Shared_Attributes_Request_Subscribe(callback);
 
-      char topic[JSON_STRING_SIZE(strlen(ATTRIBUTE_REQUEST_TOPIC)) + detect_size(m_requestId)];
+      char topic[detect_size(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
       return m_client.publish(topic, buffer);
     }
@@ -956,9 +956,17 @@ class ThingsBoardSized
 
   private:
 
-    // Returns the length in character places of a given signed number.
-    inline const uint8_t detect_size(const uint32_t number) {
-      return snprintf_P(nullptr, 0U, NUMBER_PRINTF, number);
+    // Returns the length in chars needed for a given value with the given argument string to be displayed completly.
+    inline const uint8_t detect_size(const char* msg, ...) {
+      va_list args;
+      va_start(args, msg);
+      // Result is what would have been written if the passed buffer would have been large enough not counting null character,
+      // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
+      // when creating an array with negative size we assert beforehand with a clear error message.
+      const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
+      assert(result >= 0);
+      va_end(args);
+      return result;
     }
 
     // Reserves size of callback vectors to improve performance
@@ -1077,7 +1085,7 @@ class ThingsBoardSized
 
       const uint32_t json_size = JSON_STRING_SIZE(measureJson(respBuffer));
       if (json_size > PayloadSize) {
-        char message[JSON_STRING_SIZE(strlen(INVALID_BUFFER_SIZE)) + detect_size(PayloadSize) + detect_size(json_size)];
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
         return;
@@ -1101,7 +1109,7 @@ class ThingsBoardSized
 
       m_fwChunkReceive = atoi(strrchr(topic, SLASH) + 1U);
 
-      char message[JSON_STRING_SIZE(strlen(FW_CHUNK)) + detect_size(m_fwChunkReceive) + detect_size(length)];
+      char message[detect_size(FW_CHUNK, m_fwChunkReceive, length)];
       snprintf_P(message, sizeof(message), FW_CHUNK, m_fwChunkReceive, length);
       Logger::log(message);
 
@@ -1182,7 +1190,7 @@ class ThingsBoardSized
       }
 
       for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
-        char id_message[JSON_STRING_SIZE(strlen(ATT_CB_ID)) + detect_size(i)];
+        char id_message[detect_size(ATT_CB_ID, i)];
         snprintf_P(id_message, sizeof(id_message), ATT_CB_ID, i);
         Logger::log(id_message);
 
@@ -1268,7 +1276,7 @@ class ThingsBoardSized
           continue;
         }
 
-        char message[JSON_STRING_SIZE(strlen(CALLING_REQUEST_ATT_CB)) + detect_size(response_id)];
+        char message[detect_size(CALLING_REQUEST_ATT_CB, response_id)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_ATT_CB, response_id);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
