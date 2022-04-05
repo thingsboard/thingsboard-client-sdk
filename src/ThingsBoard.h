@@ -366,9 +366,10 @@ class ThingsBoardSized
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
     // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
-    inline ThingsBoardSized(Client& client)
+    inline ThingsBoardSized(Client& client, const bool& enableQoS)
       : m_client()
       , m_requestId(0)
+      , m_qos(enableQoS)
     {
       reserve_callback_size();
       setClient(client);
@@ -378,6 +379,7 @@ class ThingsBoardSized
     inline ThingsBoardSized()
       : m_client()
       , m_requestId(0)
+      , m_qos(false)
     {
       reserve_callback_size();
     }
@@ -390,6 +392,10 @@ class ThingsBoardSized
     // Returns a reference to the PubSubClient.
     inline PubSubClient& getClient(void) {
       return m_client;
+    }
+
+    inline void enableMQTTQoS(const bool& enableQoS) {
+      m_qos = enableQoS;
     }
 
     // Sets the underlying Client of the PubSubClient.
@@ -455,7 +461,7 @@ class ThingsBoardSized
       char responsePayload[objectSize];
       serializeJson(resp_obj, responsePayload, objectSize);
 
-      return m_client.publish(CLAIM_TOPIC, responsePayload);
+      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos);
     }
 
     // Provisioning API
@@ -474,7 +480,7 @@ class ThingsBoardSized
 
       Logger::log(PROV_REQUEST);
       Logger::log(requestPayload);
-      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload);
+      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos);
     }
 
 #endif
@@ -526,7 +532,7 @@ class ThingsBoardSized
         Logger::log(message);
         return false;
       }
-      return m_client.publish(TELEMETRY_TOPIC, json);
+      return m_client.publish(TELEMETRY_TOPIC, json, m_qos);
     }
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
@@ -591,7 +597,7 @@ class ThingsBoardSized
         Logger::log(message);
         return false;
       }
-      return m_client.publish(ATTRIBUTE_TOPIC, json);
+      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos);
     }
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
@@ -618,7 +624,7 @@ class ThingsBoardSized
         Logger::log(MAX_RPC_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
+      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
 
@@ -633,7 +639,7 @@ class ThingsBoardSized
         Logger::log(MAX_RPC_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
+      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
 
@@ -702,7 +708,7 @@ class ThingsBoardSized
     }
 
     inline const bool Firmware_OTA_Subscribe() {
-      if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
+      if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
 
@@ -785,7 +791,7 @@ class ThingsBoardSized
         char topic[detect_size(FIRMWARE_REQUEST_TOPIC, currChunk)]; // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
         snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunkSize);
-        m_client.publish(topic, size);
+        m_client.publish(topic, size, m_qos);
 
         const uint64_t timeout = millis() + 3000U; // Amount of time we wait until we declare the download as failed in milliseconds.
         do {
@@ -890,7 +896,7 @@ class ThingsBoardSized
 
       char topic[detect_size(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      return m_client.publish(topic, buffer);
+      return m_client.publish(topic, buffer, m_qos);
     }
 
     // Subscribes multiple Shared attributes callbacks.
@@ -899,7 +905,7 @@ class ThingsBoardSized
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC)) {
+      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
 
@@ -914,7 +920,7 @@ class ThingsBoardSized
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC)) {
+      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
 
@@ -939,7 +945,7 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
     inline const bool Provision_Subscribe(const Provision_Callback callback) {
-      if (!m_client.subscribe(PROV_RESPONSE_TOPIC)) {
+      if (!m_client.subscribe(PROV_RESPONSE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
       m_provisionCallback = callback;
@@ -983,7 +989,7 @@ class ThingsBoardSized
         Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC)) {
+      if (!m_client.subscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         return false;
       }
 
@@ -1097,7 +1103,7 @@ class ThingsBoardSized
       Logger::log(RPC_RESPONSE_KEY);
       Logger::log(responseTopic.c_str());
       Logger::log(responsePayload);
-      m_client.publish(responseTopic.c_str(), responsePayload);
+      m_client.publish(responseTopic.c_str(), responsePayload, m_qos);
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1338,6 +1344,7 @@ class ThingsBoardSized
     Provision_Callback m_provisionCallback; // Provision response callback
 #endif
     uint32_t m_requestId; // Allows nearly 4.3 million requests before wrapping back to 0.
+    bool m_qos; // Wheter QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
 #if defined(ESP8266) || defined(ESP32)
     // For Firmware Update
