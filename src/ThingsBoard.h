@@ -19,6 +19,7 @@
 
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <vector>
 
 // Local includes.
 #include "ThingsBoardDefaultLogger.h"
