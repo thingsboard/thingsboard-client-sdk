@@ -123,7 +123,7 @@ const char PROV_DEVICE_SECRET_KEY[] = PSTR("provisionDeviceSecret");
 // Provision data keys.
 const char PROV_STATUS_KEY[] = PSTR("status");
 const char PROV_CRED_TYPE_KEY[] = PSTR("credentialsType");
-const char SUCCESS[] = PSTR("SUCCESS");
+const char STATUS_SUCCESS[] = PSTR("SUCCESS");
 const char PROV_CRED_TYPE_VALUE[] = PSTR("X509_CERTIFICATE");
 
 // Log messages.
@@ -840,9 +840,9 @@ class ThingsBoardSized
 
       bool success = false;
       // Update current_fw_title and current_fw_version if updating was a success.
-      if (strncmp_P(SUCCESS, m_fwState, strlen(SUCCESS)) == 0) {
+      if (strncmp_P(STATUS_SUCCESS, m_fwState, strlen(STATUS_SUCCESS)) == 0) {
         Firmware_Send_FW_Info(fw_title, fw_version);
-        Firmware_Send_State(SUCCESS);
+        Firmware_Send_State(STATUS_SUCCESS);
         success = true;
       }
       else {
@@ -1168,7 +1168,7 @@ class ThingsBoardSized
           Logger::log(CHKS_VER_SUCCESS);
           if (Update.end(true)) {
             Logger::log(FW_UPDATE_SUCCESS);
-            m_fwState = SUCCESS;
+            m_fwState = STATUS_SUCCESS;
           }
         }
       }
@@ -1310,7 +1310,7 @@ class ThingsBoardSized
 
       Logger::log(RECEIVED_PROV_RESPONSE);
 
-      if (strncmp_P(SUCCESS, data[PROV_STATUS_KEY], strlen(SUCCESS)) == 0 && strncmp_P(PROV_CRED_TYPE_VALUE, data[PROV_CRED_TYPE_KEY], strlen(PROV_CRED_TYPE_VALUE)) == 0) {
+      if (strncmp_P(STATUS_SUCCESS, data[PROV_STATUS_KEY], strlen(STATUS_SUCCESS)) == 0 && strncmp_P(PROV_CRED_TYPE_VALUE, data[PROV_CRED_TYPE_KEY], strlen(PROV_CRED_TYPE_VALUE)) == 0) {
         Logger::log(X509_NOT_SUPPORTED);
         return;
       }
