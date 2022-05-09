@@ -414,15 +414,6 @@ class ThingsBoardSized
       if (!host) {
         return false;
       }
-      this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
-      this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
-      this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-      this->Provision_Unsubscribe();
-#endif
-#if defined(ESP8266) || defined(ESP32)
-      this->Firmware_OTA_Unsubscribe();
-#endif
       m_client.setServer(host, port);
       const bool connection_result = m_client.connect(client_id, access_token, password);
       if (!connection_result) {
@@ -433,6 +424,15 @@ class ThingsBoardSized
 
     // Disconnects from ThingsBoard.
     inline void disconnect() {
+      this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
+      this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+      this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+      this->Provision_Unsubscribe();
+#endif
+#if defined(ESP8266) || defined(ESP32)
+      this->Firmware_OTA_Unsubscribe();
+#endif
       m_client.disconnect();
     }
 
