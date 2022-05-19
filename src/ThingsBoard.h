@@ -367,7 +367,7 @@ class ThingsBoardSized
     // Certain private members can not be set in the constructor initalizor list,
     // because using 2 instances of the ThingsBoard class (for example. provision and connected client)
     // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
-    inline ThingsBoardSized(Client& client, const bool& enableQoS)
+    inline ThingsBoardSized(Client& client, const bool& enableQoS = false)
       : m_client()
       , m_requestId(0)
       , m_qos(enableQoS)
@@ -395,6 +395,8 @@ class ThingsBoardSized
       return m_client;
     }
 
+    // Enables mqtt quality of service for the given underlying MQTT connection.
+    // See https://assetwolf.com/learn/mqtt-qos-understanding-quality-of-service for more information, on quality of service.
     inline void enableMQTTQoS(const bool& enableQoS) {
       m_qos = enableQoS;
     }
