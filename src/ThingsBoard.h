@@ -1070,8 +1070,14 @@ class ThingsBoardSized
           StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
           DeserializationError err_param = deserializeJson(doc, params);
           //if failed to de-serialize params then send JsonObject instead
+          Logger::log(RPC_PARAMS_KEY);
           if (err_param) {
-            r = callback.m_cb(data[RPC_PARAMS_KEY]);
+            const JsonVariant &param = data[RPC_PARAMS_KEY].as<JsonVariant>();
+            const uint32_t json_size = JSON_STRING_SIZE(measureJson(param));
+            char json[json_size];
+            serializeJson(param, json, json_size);
+          	Logger::log(json);
+            r = callback.m_cb(param);
           } else {
             Logger::log(params);
             const JsonObject &param = doc.template as<JsonObject>();
