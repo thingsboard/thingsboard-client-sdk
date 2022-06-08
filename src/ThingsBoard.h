@@ -274,7 +274,7 @@ class RPC_Callback {
 
     // Constructs callback that will be fired upon a RPC request arrival with
     // given method name
-    inline RPC_Callback(const char *methodName, processFn cb)
+    inline RPC_Callback(const char* methodName, processFn cb)
       : m_name(methodName), m_cb(cb) {  }
 
   private:
@@ -289,7 +289,7 @@ class Shared_Attribute_Callback {
   public:
 
     // Shared attributes callback signature
-    using processFn = std::function<void(const Shared_Attribute_Data &data)>;
+    using processFn = const std::function<void(const Shared_Attribute_Data &data)>;
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
@@ -297,8 +297,9 @@ class Shared_Attribute_Callback {
 
     // Constructs callback that will be fired upon a Shared attribute update arrival,
     // where one of the given keys was changed.
-    inline Shared_Attribute_Callback(const std::vector<const char*>& att, processFn cb)
-      : m_att(att), m_cb(cb) {  }
+    template<class InputIterator>
+    inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
+      : m_att(first_itr, last_itr), m_cb(cb) {  }
 
     // Constructs callback that will be fired upon a Shared attribute update arrival,
     // no matter which key was changed.
@@ -306,8 +307,8 @@ class Shared_Attribute_Callback {
       : m_att(), m_cb(cb) {  }
 
   private:
-    std::vector<const char*> m_att;   // Attribute we want to request
-    processFn                m_cb;    // Callback to call
+    const std::vector<const char*> m_att;   // Attribute we want to request
+    processFn                      m_cb;    // Callback to call
 };
 
 // Shared attributes request callback wrapper
@@ -624,8 +625,10 @@ class ThingsBoardSized
     // Server-side RPC API
 
     // Subscribes multiple RPC callbacks.
-    inline const bool RPC_Subscribe(const std::vector<RPC_Callback>& callbacks) {
-      if (m_rpcCallbacks.size() + callbacks.size() > m_rpcCallbacks.capacity()) {
+    template<class InputIterator>
+    inline const bool RPC_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
+      const uint32_t size = std::distance(first_itr, last_itr);
+      if (m_rpcCallbacks.size() + size > m_rpcCallbacks.capacity()) {
         Logger::log(MAX_RPC_EXCEEDED);
         return false;
       }
@@ -634,7 +637,7 @@ class ThingsBoardSized
       }
 
       // Push back complete vector into our local m_rpcCallbacks vector.
-      m_rpcCallbacks.insert(m_rpcCallbacks.end(), callbacks.begin(), callbacks.end());
+      m_rpcCallbacks.insert(m_rpcCallbacks.end(), first_itr, last_itr);
       return true;
     }
 
@@ -681,8 +684,8 @@ class ThingsBoardSized
       }
 
       // Request the firmware informations
-      const std::vector<const char*> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      if (!Shared_Attributes_Request(fwSharedKeys, Shared_Attribute_Request_Callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1)))) {
+      const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+      if (!Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), Shared_Attribute_Request_Callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1)))) {
         return false;
       }
 
@@ -862,17 +865,18 @@ class ThingsBoardSized
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    inline const bool Shared_Attributes_Request(const std::vector<const char*>& attributes, Shared_Attribute_Request_Callback& callback) {
+    template<class InputIterator>
+    inline const bool Shared_Attributes_Request(const InputIterator& first_itr, const InputIterator& last_itr, Shared_Attribute_Request_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
       std::string sharedKeys;
-      for (const char* attribute : attributes) {
+      for (auto itr = first_itr; itr != last_itr; ++itr) {
         // Check if the given attribute is null, if it is skip it.
-        if (attribute == nullptr) {
+        if (*itr == nullptr) {
           continue;
         }
-        sharedKeys.append(attribute);
+        sharedKeys.append(*itr);
         sharedKeys.push_back(COMMA);
       }
 
@@ -905,8 +909,10 @@ class ThingsBoardSized
     }
 
     // Subscribes multiple Shared attributes callbacks.
-    inline const bool Shared_Attributes_Subscribe(const std::vector<Shared_Attribute_Callback>& callbacks) {
-      if (m_sharedAttributeUpdateCallbacks.size() + callbacks.size() > m_sharedAttributeUpdateCallbacks.capacity()) {
+    template<class InputIterator>
+    inline const bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
+      const uint32_t size = std::distance(first_itr, last_itr);
+      if (m_sharedAttributeUpdateCallbacks.size() + size > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
@@ -915,12 +921,12 @@ class ThingsBoardSized
       }
 
       // Push back complete vector into our local m_sharedAttributeUpdateCallbacks vector.
-      m_sharedAttributeUpdateCallbacks.insert(m_sharedAttributeUpdateCallbacks.end(), callbacks.begin(), callbacks.end());
+      m_sharedAttributeUpdateCallbacks.insert(m_sharedAttributeUpdateCallbacks.end(), first_itr, last_itr);
       return true;
     }
 
     // Subscribe one Shared attributes callback.
-    bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+    inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
       if (m_sharedAttributeUpdateCallbacks.size() + 1U > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
