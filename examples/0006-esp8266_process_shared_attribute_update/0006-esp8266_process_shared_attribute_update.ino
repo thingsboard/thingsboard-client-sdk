@@ -36,16 +36,13 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
     Serial.println(it->value().as<char*>()); // We have to parse data by it's type in the current example we will show here only char data
   }
 
-  int jsonSize = measureJson(data) + 1;
+  int jsonSize = JSON_STRING_SIZE(measureJson(data));
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
   Serial.println(buffer);
 }
 
-Shared_Attribute_Callback callbacks[1] = {
-  processSharedAttributeUpdate
-};
-
+const Shared_Attribute_Callback callback(processSharedAttributeUpdate);
 
 void loop() {
   delay(1000);
@@ -69,8 +66,7 @@ void loop() {
 
   if (!subscribed) {
     Serial.println("Subscribing for shared attribute updates...");
-
-    if (!tb.Shared_Attributes_Subscribe(callbacks, 1)) {
+    if (!tb.Shared_Attributes_Subscribe(callback)) {
       Serial.println("Failed to subscribe for shared attribute updates");
       return;
     }
