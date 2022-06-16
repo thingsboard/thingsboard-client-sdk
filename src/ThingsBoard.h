@@ -103,6 +103,7 @@ constexpr char ATT_KEY_NOT_FOUND[] = PSTR("Shared attribute key not found");
 constexpr char ATT_REQUEST_CB_IS_NULL[] = PSTR("Shared attribute request callback is NULL");
 constexpr char CALLING_REQUEST_ATT_CB[] = PSTR("Calling subscribed callback for response id (%u)");
 constexpr char TOO_MANY_JSON_FIELDS[] = PSTR("Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly");
+constexpr char TOO_BIG_JSON_TEXT[] = PSTR("Too big of a JSON passed (%u), increase PayloadSize (%u) accordingly");
 constexpr char CB_ON_MESSAGE[] = PSTR("Callback on_message from topic: (%s)");
 constexpr char CONNECT_FAILED[] = PSTR("Connecting to server failed");
 
@@ -542,7 +543,7 @@ class ThingsBoardSized
     }
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
-    inline const bool sendTelemetryJson(const JsonObject& jsonObject) {
+    inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       const uint32_t json_object_size = jsonObject.size();
       if (MaxFieldsAmt < json_object_size) {
         char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
@@ -550,9 +551,14 @@ class ThingsBoardSized
         Logger::log(message);
         return false;
       }
-      const uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
-      char json[json_size];
-      serializeJson(jsonObject, json, json_size);
+      else if (PayloadSize < jsonSize) {
+        char message[detect_size(TOO_BIG_JSON_TEXT, jsonSize, PayloadSize)];
+        snprintf_P(message, sizeof(message), TOO_BIG_JSON_TEXT, jsonSize, PayloadSize);
+        Logger::log(message);
+        return false;
+      }
+      char json[jsonSize];
+      serializeJson(jsonObject, json, jsonSize);
       return sendTelemetryJson(json);
     }
 
@@ -607,7 +613,7 @@ class ThingsBoardSized
     }
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
-    inline const bool sendAttributeJSON(const JsonObject& jsonObject) {
+    inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       const uint32_t json_object_size = jsonObject.size();
       if (MaxFieldsAmt < json_object_size) {
         char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
@@ -615,9 +621,14 @@ class ThingsBoardSized
         Logger::log(message);
         return false;
       }
-      const uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
-      char json[json_size];
-      serializeJson(jsonObject, json, json_size);
+      else if (PayloadSize < jsonSize) {
+        char message[detect_size(TOO_BIG_JSON_TEXT, jsonSize, PayloadSize)];
+        snprintf_P(message, sizeof(message), TOO_BIG_JSON_TEXT, jsonSize, PayloadSize);
+        Logger::log(message);
+        return false;
+      }
+      char json[jsonSize];
+      serializeJson(jsonObject, json, jsonSize);
       return sendAttributeJSON(json);
     }
 
@@ -703,7 +714,7 @@ class ThingsBoardSized
 
       currentFirmwareInfoObject[CURR_FW_TITLE_KEY] = currFwTitle;
       currentFirmwareInfoObject[CURR_FW_VER_KEY] = currFwVersion;
-      return sendTelemetryJson(currentFirmwareInfoObject);
+      return sendTelemetryJson(currentFirmwareInfoObject, JSON_STRING_SIZE(measureJson(currentFirmwareInfoObject)));
     }
 
     inline const bool Firmware_Send_State(const char* currFwState) {
@@ -712,7 +723,7 @@ class ThingsBoardSized
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
       currentFirmwareStateObject[CURR_FW_STATE_KEY] = currFwState;
-      return sendTelemetryJson(currentFirmwareStateObject);
+      return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
     }
 
     inline const bool Firmware_OTA_Subscribe() {
