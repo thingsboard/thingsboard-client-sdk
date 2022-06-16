@@ -10,7 +10,7 @@
 
 /*----------------------------------------------------------------------------*/
 
-bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
+const bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
   if (m_key) {
     switch (m_type) {
       case TYPE_BOOL:
@@ -47,9 +47,4 @@ bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
     }
   }
   return true;
-}
-
-void ThingsBoardDefaultLogger::log(const char *msg) {
-  Serial.print(F("[TB] "));
-  Serial.println(msg);
 }

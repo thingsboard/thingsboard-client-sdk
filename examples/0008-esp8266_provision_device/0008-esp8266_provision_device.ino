@@ -52,7 +52,7 @@ void setup() {
 
 void processProvisionResponse(const Provision_Data &data) {
   Serial.println("Received device provision response");
-  int jsonSize = measureJson(data) + 1;
+  int jsonSize = JSON_STRING_SIZE(measureJson(data));
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
   Serial.println(buffer);
