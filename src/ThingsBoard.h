@@ -103,7 +103,6 @@ constexpr char ATT_KEY_NOT_FOUND[] = PSTR("Shared attribute key not found");
 constexpr char ATT_REQUEST_CB_IS_NULL[] = PSTR("Shared attribute request callback is NULL");
 constexpr char CALLING_REQUEST_ATT_CB[] = PSTR("Calling subscribed callback for response id (%u)");
 constexpr char TOO_MANY_JSON_FIELDS[] = PSTR("Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly");
-constexpr char TOO_BIG_JSON_TEXT[] = PSTR("Too big of a JSON passed (%u), increase PayloadSize (%u) accordingly");
 constexpr char CB_ON_MESSAGE[] = PSTR("Callback on_message from topic: (%s)");
 constexpr char CONNECT_FAILED[] = PSTR("Connecting to server failed");
 
@@ -533,7 +532,7 @@ class ThingsBoardSized
       }
 
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
-      if (json_size > PayloadSize) {
+      if (PayloadSize < json_size) {
         char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
@@ -544,16 +543,10 @@ class ThingsBoardSized
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
     inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      const uint32_t json_object_size = jsonObject.size();
-      if (MaxFieldsAmt < json_object_size) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-      else if (PayloadSize < jsonSize) {
-        char message[detect_size(TOO_BIG_JSON_TEXT, jsonSize, PayloadSize)];
-        snprintf_P(message, sizeof(message), TOO_BIG_JSON_TEXT, jsonSize, PayloadSize);
+      const uint32_t jsonObjectSize = jsonObject.size();
+      if (MaxFieldsAmt < jsonObjectSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
@@ -603,7 +596,7 @@ class ThingsBoardSized
       }
 
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
-      if (json_size > PayloadSize) {
+      if (PayloadSize < json_size) {
         char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
@@ -614,16 +607,10 @@ class ThingsBoardSized
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
     inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      const uint32_t json_object_size = jsonObject.size();
-      if (MaxFieldsAmt < json_object_size) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-      else if (PayloadSize < jsonSize) {
-        char message[detect_size(TOO_BIG_JSON_TEXT, jsonSize, PayloadSize)];
-        snprintf_P(message, sizeof(message), TOO_BIG_JSON_TEXT, jsonSize, PayloadSize);
+      const uint32_t jsonObjectSize = jsonObject.size();
+      if (MaxFieldsAmt < jsonObjectSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
@@ -1116,7 +1103,7 @@ class ThingsBoardSized
       }
 
       const uint32_t json_size = JSON_STRING_SIZE(measureJson(respBuffer));
-      if (json_size > PayloadSize) {
+      if (PayloadSize < json_size) {
         char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
