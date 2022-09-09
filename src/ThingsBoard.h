@@ -7,6 +7,7 @@
 #ifndef ThingsBoard_h
 #define ThingsBoard_h
 
+// Library includes.
 #if !defined(ESP8266) && !defined(ESP32)
 #include <ArduinoHttpClient.h>
 #endif
@@ -20,6 +21,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <vector>
+#include <array>
 
 // Local includes.
 #include "ThingsBoardDefaultLogger.h"
@@ -682,17 +684,15 @@ class ThingsBoardSized
         return false;
       }
 
-      // Request the firmware informations
-      const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      if (!Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), Shared_Attribute_Request_Callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1)))) {
-        return false;
-      }
-
       // Set private members needed for update.
       m_currFwTitle = currFwTitle;
       m_currFwVersion = currFwVersion;
       m_fwUpdatedCallback = updatedCallback;
-      return true;
+
+      // Request the firmware informations
+      const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+      Shared_Attribute_Request_Callback callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1));
+      return Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), callback);
     }
 
     inline const bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
@@ -1037,7 +1037,7 @@ class ThingsBoardSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     // Processes RPC message
@@ -1355,7 +1355,7 @@ class ThingsBoardSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
@@ -1376,7 +1376,7 @@ class ThingsBoardSized
     const char* m_fwState;
     uint16_t m_fwSize;
     const char* m_fwChecksum;
-    const std::function<void(const bool&)> m_fwUpdatedCallback;
+    std::function<void(const bool&)> m_fwUpdatedCallback;
     uint16_t m_fwChunkReceive;
 #endif
 
@@ -1552,7 +1552,7 @@ class ThingsBoardHttpSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     // Sends single key-value in a generic way.
@@ -1567,7 +1567,7 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     HttpClient m_client;
