@@ -384,6 +384,9 @@ class ThingsBoardSized
       : m_client()
       , m_requestId(0)
       , m_qos(enableQoS)
+#if defined(ESP8266) || defined(ESP32)
+      , m_fwResponseCallback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+#endif
     {
       reserve_callback_size();
       setClient(client);
@@ -394,6 +397,9 @@ class ThingsBoardSized
       : m_client()
       , m_requestId(0)
       , m_qos(false)
+#if defined(ESP8266) || defined(ESP32)
+      , m_fwResponseCallback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+#endif
     {
       reserve_callback_size();
     }
@@ -728,8 +734,7 @@ class ThingsBoardSized
 
       // Request the firmware informations
       const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      Shared_Attribute_Request_Callback callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1));
-      return Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), callback);
+      return Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), m_fwResponseCallback);
     }
 
     inline const bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
@@ -1414,6 +1419,7 @@ class ThingsBoardSized
     uint16_t m_fwSize;
     const char* m_fwChecksum;
     std::function<void(const bool&)> m_fwUpdatedCallback;
+    Shared_Attribute_Request_Callback m_fwResponseCallback;
     uint16_t m_fwChunkReceive;
 #endif
 
