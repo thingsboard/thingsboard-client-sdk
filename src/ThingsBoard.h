@@ -567,6 +567,20 @@ class ThingsBoardSized
       return sendTelemetryJson(json);
     }
 
+    // Sends custom JSON telemetry JsonVariant to the ThingsBoard.
+    inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      const uint32_t jsonVariantSize = jsonVariant.size();
+      if (MaxFieldsAmt < jsonVariantSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+      char json[jsonSize];
+      serializeJson(jsonVariant, json, jsonSize);
+      return sendTelemetryJson(json);
+    }
+
     //----------------------------------------------------------------------------
     // Attribute API
 
@@ -629,6 +643,20 @@ class ThingsBoardSized
       char json[jsonSize];
       serializeJson(jsonObject, json, jsonSize);
       return sendAttributeJSON(json);
+    }
+
+    // Sends custom JsonVariant with attributes to the ThingsBoard.
+    inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      const uint32_t jsonVariantSize = jsonVariant.size();
+      if (MaxFieldsAmt < jsonVariantSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+      char json[jsonSize];
+      serializeJson(jsonVariant, json, jsonSize);
+      return sendTelemetryJson(json);
     }
 
     //----------------------------------------------------------------------------
