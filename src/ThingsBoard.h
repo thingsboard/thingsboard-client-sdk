@@ -159,6 +159,7 @@ constexpr char FW_STATE_CHKS_ERROR[] = PSTR("CHECKSUM ERROR");
 
 // Log messages.
 constexpr char NO_FW[] = PSTR("No new firmware assigned on the given device");
+constexpr char EMPTY_FW[] = PSTR("Given firmware was NULL");
 constexpr char FW_UP_TO_DATE[] = PSTR("Firmware is already up to date");
 constexpr char FW_NOT_FOR_US[] = PSTR("Firmware is not for us (title is different)");
 constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] = PSTR("Checksum algorithm is not supported, please use MD5 only");
@@ -730,6 +731,12 @@ class ThingsBoardSized
     }
 
     inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
+      // Print out firmware shared attributes.
+      int jsonSize = JSON_STRING_SIZE(measureJson(data));
+      char buffer[jsonSize];
+      serializeJson(data, buffer, jsonSize);
+      Logger::log(buffer);
+
       // Check if firmware is available for our device
       if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY)) {
         Logger::log(NO_FW);
@@ -743,21 +750,24 @@ class ThingsBoardSized
       const char* fw_checksum_algorithm = data[FW_CHKS_ALGO_KEY].as<const char*>();
       m_fwSize = data[FW_SIZE_KEY].as<const uint16_t>();
 
+      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum == nullptr || fw_checksum_algorithm == nullptr) {
+        Logger::log(EMPTY_FW);
+        Firmware_Send_State(FW_STATE_NO_FW);
+        return;
+      }
       // If firmware is the same, we do not update it
-      if (strncmp_P(m_currFwTitle, fw_title, strlen(m_currFwTitle)) == 0 && strncmp_P(m_currFwVersion, fw_version, strlen(m_currFwVersion) == 0)) {
+      else if (strncmp_P(m_currFwTitle, fw_title, JSON_STRING_SIZE(strlen(m_currFwTitle))) == 0 && strncmp_P(m_currFwVersion, fw_version, JSON_STRING_SIZE(strlen(m_currFwVersion))) == 0) {
         Logger::log(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_UP_TO_DATE);
         return;
       }
-
       // If firmware title is not the same, we quit now
-      if (strncmp_P(m_currFwTitle, fw_title, strlen(m_currFwTitle)) != 0) {
+      else if (strncmp_P(m_currFwTitle, fw_title, JSON_STRING_SIZE(strlen(m_currFwTitle))) != 0) {
         Logger::log(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
-
-      if (strncmp_P(FW_CHECKSUM_VALUE, fw_checksum_algorithm, strlen(FW_CHECKSUM_VALUE)) != 0) {
+      else if (strncmp_P(FW_CHECKSUM_VALUE, fw_checksum_algorithm, JSON_STRING_SIZE(strlen(FW_CHECKSUM_VALUE))) != 0) {
         Logger::log(FW_CHKS_ALGO_NOT_SUPPORTED);
         Firmware_Send_State(FW_STATE_INVALID_CHKS);
         return;
@@ -1027,7 +1037,7 @@ class ThingsBoardSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
     }
 
     // Processes RPC message
@@ -1345,7 +1355,7 @@ class ThingsBoardSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
@@ -1542,7 +1552,7 @@ class ThingsBoardHttpSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
     }
 
     // Sends single key-value in a generic way.
@@ -1557,7 +1567,7 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object)) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object));
     }
 
     HttpClient m_client;
