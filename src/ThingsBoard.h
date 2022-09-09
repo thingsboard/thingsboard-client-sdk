@@ -12,16 +12,25 @@
 #include <ArduinoHttpClient.h>
 #endif
 
-#if defined(ESP8266)
-#include <Updater.h>
-#elif defined(ESP32)
-#include <Update.h>
-#endif
-
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <vector>
 #include <array>
+#include <functional>
+#include <pgmspace.h>
+
+#if defined(ESP8266)
+#include <Updater.h>
+// Add defines used that or not included in the pgm header.
+#ifndef snprintf_P
+#define snprintf_P    snprintf
+#endif // snprintf_P
+#ifndef vsnprintf_P
+#define vsnprintf_P   vsnprintf
+#endif // vsnprintf_P
+#elif defined(ESP32)
+#include <Update.h>
+#endif
 
 // Local includes.
 #include "ThingsBoardDefaultLogger.h"
