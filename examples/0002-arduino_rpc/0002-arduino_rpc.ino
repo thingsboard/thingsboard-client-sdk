@@ -122,7 +122,7 @@ void loop() {
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks vector.
-    if (!tb.RPC_Subscribe(callbacks)) {
+    if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
       Serial.println("Failed to subscribe for RPC");
       return;
     }

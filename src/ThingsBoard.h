@@ -7,19 +7,30 @@
 #ifndef ThingsBoard_h
 #define ThingsBoard_h
 
+// Library includes.
 #if !defined(ESP8266) && !defined(ESP32)
 #include <ArduinoHttpClient.h>
-#endif
-
-#if defined(ESP8266)
-#include <Updater.h>
-#elif defined(ESP32)
-#include <Update.h>
 #endif
 
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <vector>
+#include <array>
+#include <functional>
+#include <pgmspace.h>
+
+#if defined(ESP8266)
+#include <Updater.h>
+// Add defines used that or not included in the pgm header.
+#ifndef snprintf_P
+#define snprintf_P    snprintf
+#endif // snprintf_P
+#ifndef vsnprintf_P
+#define vsnprintf_P   vsnprintf
+#endif // vsnprintf_P
+#elif defined(ESP32)
+#include <Update.h>
+#endif
 
 // Local includes.
 #include "ThingsBoardDefaultLogger.h"
@@ -159,6 +170,7 @@ constexpr char FW_STATE_CHKS_ERROR[] = PSTR("CHECKSUM ERROR");
 
 // Log messages.
 constexpr char NO_FW[] = PSTR("No new firmware assigned on the given device");
+constexpr char EMPTY_FW[] = PSTR("Given firmware was NULL");
 constexpr char FW_UP_TO_DATE[] = PSTR("Firmware is already up to date");
 constexpr char FW_NOT_FOR_US[] = PSTR("Firmware is not for us (title is different)");
 constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] = PSTR("Checksum algorithm is not supported, please use MD5 only");
@@ -372,6 +384,9 @@ class ThingsBoardSized
       : m_client()
       , m_requestId(0)
       , m_qos(enableQoS)
+#if defined(ESP8266) || defined(ESP32)
+      , m_fwResponseCallback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+#endif
     {
       reserve_callback_size();
       setClient(client);
@@ -382,6 +397,9 @@ class ThingsBoardSized
       : m_client()
       , m_requestId(0)
       , m_qos(false)
+#if defined(ESP8266) || defined(ESP32)
+      , m_fwResponseCallback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+#endif
     {
       reserve_callback_size();
     }
@@ -532,7 +550,7 @@ class ThingsBoardSized
       }
 
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
-      if (json_size > PayloadSize) {
+      if (PayloadSize < json_size) {
         char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
@@ -542,17 +560,30 @@ class ThingsBoardSized
     }
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
-    inline const bool sendTelemetryJson(const JsonObject& jsonObject) {
-      const uint32_t json_object_size = jsonObject.size();
-      if (MaxFieldsAmt < json_object_size) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt);
+    inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+      const uint32_t jsonObjectSize = jsonObject.size();
+      if (MaxFieldsAmt < jsonObjectSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
-      const uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
-      char json[json_size];
-      serializeJson(jsonObject, json, json_size);
+      char json[jsonSize];
+      serializeJson(jsonObject, json, jsonSize);
+      return sendTelemetryJson(json);
+    }
+
+    // Sends custom JSON telemetry JsonVariant to the ThingsBoard.
+    inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      const uint32_t jsonVariantSize = jsonVariant.size();
+      if (MaxFieldsAmt < jsonVariantSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+      char json[jsonSize];
+      serializeJson(jsonVariant, json, jsonSize);
       return sendTelemetryJson(json);
     }
 
@@ -597,7 +628,7 @@ class ThingsBoardSized
       }
 
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
-      if (json_size > PayloadSize) {
+      if (PayloadSize < json_size) {
         char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
@@ -607,18 +638,31 @@ class ThingsBoardSized
     }
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
-    inline const bool sendAttributeJSON(const JsonObject& jsonObject) {
-      const uint32_t json_object_size = jsonObject.size();
-      if (MaxFieldsAmt < json_object_size) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, json_object_size, MaxFieldsAmt);
+    inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+      const uint32_t jsonObjectSize = jsonObject.size();
+      if (MaxFieldsAmt < jsonObjectSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
-      const uint32_t json_size = JSON_STRING_SIZE(measureJson(jsonObject));
-      char json[json_size];
-      serializeJson(jsonObject, json, json_size);
+      char json[jsonSize];
+      serializeJson(jsonObject, json, jsonSize);
       return sendAttributeJSON(json);
+    }
+
+    // Sends custom JsonVariant with attributes to the ThingsBoard.
+    inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      const uint32_t jsonVariantSize = jsonVariant.size();
+      if (MaxFieldsAmt < jsonVariantSize) {
+        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+      char json[jsonSize];
+      serializeJson(jsonVariant, json, jsonSize);
+      return sendTelemetryJson(json);
     }
 
     //----------------------------------------------------------------------------
@@ -683,17 +727,14 @@ class ThingsBoardSized
         return false;
       }
 
-      // Request the firmware informations
-      const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      if (!Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), Shared_Attribute_Request_Callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1)))) {
-        return false;
-      }
-
       // Set private members needed for update.
       m_currFwTitle = currFwTitle;
       m_currFwVersion = currFwVersion;
       m_fwUpdatedCallback = updatedCallback;
-      return true;
+
+      // Request the firmware informations
+      const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+      return Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), m_fwResponseCallback);
     }
 
     inline const bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
@@ -703,7 +744,7 @@ class ThingsBoardSized
 
       currentFirmwareInfoObject[CURR_FW_TITLE_KEY] = currFwTitle;
       currentFirmwareInfoObject[CURR_FW_VER_KEY] = currFwVersion;
-      return sendTelemetryJson(currentFirmwareInfoObject);
+      return sendTelemetryJson(currentFirmwareInfoObject, JSON_STRING_SIZE(measureJson(currentFirmwareInfoObject)));
     }
 
     inline const bool Firmware_Send_State(const char* currFwState) {
@@ -712,7 +753,7 @@ class ThingsBoardSized
       JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
       currentFirmwareStateObject[CURR_FW_STATE_KEY] = currFwState;
-      return sendTelemetryJson(currentFirmwareStateObject);
+      return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
     }
 
     inline const bool Firmware_OTA_Subscribe() {
@@ -732,6 +773,12 @@ class ThingsBoardSized
     }
 
     inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
+      // Print out firmware shared attributes.
+      int jsonSize = JSON_STRING_SIZE(measureJson(data));
+      char buffer[jsonSize];
+      serializeJson(data, buffer, jsonSize);
+      Logger::log(buffer);
+
       // Check if firmware is available for our device
       if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY)) {
         Logger::log(NO_FW);
@@ -745,21 +792,24 @@ class ThingsBoardSized
       const char* fw_checksum_algorithm = data[FW_CHKS_ALGO_KEY].as<const char*>();
       m_fwSize = data[FW_SIZE_KEY].as<const uint16_t>();
 
+      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum == nullptr || fw_checksum_algorithm == nullptr) {
+        Logger::log(EMPTY_FW);
+        Firmware_Send_State(FW_STATE_NO_FW);
+        return;
+      }
       // If firmware is the same, we do not update it
-      if (strncmp_P(m_currFwTitle, fw_title, strlen(m_currFwTitle)) == 0 && strncmp_P(m_currFwVersion, fw_version, strlen(m_currFwVersion) == 0)) {
+      else if (strncmp_P(m_currFwTitle, fw_title, JSON_STRING_SIZE(strlen(m_currFwTitle))) == 0 && strncmp_P(m_currFwVersion, fw_version, JSON_STRING_SIZE(strlen(m_currFwVersion))) == 0) {
         Logger::log(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_UP_TO_DATE);
         return;
       }
-
       // If firmware title is not the same, we quit now
-      if (strncmp_P(m_currFwTitle, fw_title, strlen(m_currFwTitle)) != 0) {
+      else if (strncmp_P(m_currFwTitle, fw_title, JSON_STRING_SIZE(strlen(m_currFwTitle))) != 0) {
         Logger::log(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
-
-      if (strncmp_P(FW_CHECKSUM_VALUE, fw_checksum_algorithm, strlen(FW_CHECKSUM_VALUE)) != 0) {
+      else if (strncmp_P(FW_CHECKSUM_VALUE, fw_checksum_algorithm, JSON_STRING_SIZE(strlen(FW_CHECKSUM_VALUE))) != 0) {
         Logger::log(FW_CHKS_ALGO_NOT_SUPPORTED);
         Firmware_Send_State(FW_STATE_INVALID_CHKS);
         return;
@@ -1029,7 +1079,7 @@ class ThingsBoardSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     // Processes RPC message
@@ -1105,7 +1155,7 @@ class ThingsBoardSized
       }
 
       const uint32_t json_size = JSON_STRING_SIZE(measureJson(respBuffer));
-      if (json_size > PayloadSize) {
+      if (PayloadSize < json_size) {
         char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
         Logger::log(message);
@@ -1347,7 +1397,7 @@ class ThingsBoardSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
@@ -1368,7 +1418,8 @@ class ThingsBoardSized
     const char* m_fwState;
     uint16_t m_fwSize;
     const char* m_fwChecksum;
-    const std::function<void(const bool&)> m_fwUpdatedCallback;
+    std::function<void(const bool&)> m_fwUpdatedCallback;
+    Shared_Attribute_Request_Callback m_fwResponseCallback;
     uint16_t m_fwChunkReceive;
 #endif
 
@@ -1544,7 +1595,7 @@ class ThingsBoardHttpSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     // Sends single key-value in a generic way.
@@ -1559,7 +1610,7 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
+      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
     HttpClient m_client;
