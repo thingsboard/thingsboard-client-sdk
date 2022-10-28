@@ -24,7 +24,9 @@
 // Initialize ThingsBoard client
 WiFiClient espClient;
 // Initialize ThingsBoard instance
-ThingsBoard tb(espClient);
+//ThingsBoard tb(espClient);
+ThingsBoardSized<512> tb(espClient); //increase buffer size
+
 // the Wifi radio's status
 int status = WL_IDLE_STATUS;
 
