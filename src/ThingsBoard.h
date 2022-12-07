@@ -654,7 +654,7 @@ class ThingsBoardSized
       }
       char json[jsonSize];
       serializeJson(jsonVariant, json, jsonSize);
-      return sendTelemetryJson(json);
+      return sendAttributeJSON(json);
     }
 
     //----------------------------------------------------------------------------
