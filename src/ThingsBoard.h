@@ -1366,7 +1366,10 @@ class ThingsBoardSized
 
       Logger::log(RECEIVED_PROV_RESPONSE);
 
-      if (strncmp_P(STATUS_SUCCESS, data[PROV_STATUS_KEY], strlen(STATUS_SUCCESS)) == 0 && strncmp_P(PROV_CRED_TYPE_VALUE, data[PROV_CRED_TYPE_KEY], strlen(PROV_CRED_TYPE_VALUE)) == 0) {
+      const char* provision_status = data[PROV_STATUS_KEY].as<const char*>();
+      const char* provision_credentials = data[PROV_CRED_TYPE_KEY].as<const char*>();
+
+      if (strncmp_P(STATUS_SUCCESS, provision_status, strlen(STATUS_SUCCESS)) == 0 && strncmp_P(PROV_CRED_TYPE_VALUE, provision_credentials, strlen(PROV_CRED_TYPE_VALUE)) == 0) {
         Logger::log(X509_NOT_SUPPORTED);
         return;
       }
