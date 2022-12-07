@@ -31,7 +31,7 @@ void setup() {
 }
 
 void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
-  for (JsonObject::iterator it = data.begin(); it != data.end(); ++it) {
+  for (JsonObjectConst::iterator it = data.begin(); it != data.end(); ++it) {
     Serial.println(it->key().c_str());
     Serial.println(it->value().as<char*>()); // We have to parse data by it's type in the current example we will show here only char data
   }
