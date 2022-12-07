@@ -13,9 +13,12 @@
 #endif
 
 #include <PubSubClient.h>
+// Ensure ArduinoJson supports std::string type.
+#define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 #include <vector>
 #include <array>
+#include <string>
 #include <functional>
 
 #if defined(ESP8266)
@@ -423,7 +426,7 @@ class ThingsBoardSized
     // Connects to the specified ThingsBoard server and port.
     // Access token is used to authenticate a client.
     // Returns true on success, false otherwise.
-    inline const bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, int port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = NULL) {
+    inline const bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t& port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = NULL) {
       if (!host) {
         return false;
       }
@@ -702,9 +705,9 @@ class ThingsBoardSized
     // Firmware OTA API
 
 #if defined(ESP8266) || defined(ESP32)
-    inline const bool Start_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback) {
+    inline const bool Start_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U) {
       m_fwState = nullptr;
-      m_fwChecksum = nullptr;
+      m_fwChecksum.clear();
 
       // Send current firmware version
       if (currFwTitle == nullptr || currFwVersion == nullptr) {
@@ -723,6 +726,7 @@ class ThingsBoardSized
       m_currFwTitle = currFwTitle;
       m_currFwVersion = currFwVersion;
       m_fwUpdatedCallback = updatedCallback;
+      m_fwChunkRetries = chunkRetries;
 
       // Request the firmware informations
       const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
@@ -780,11 +784,11 @@ class ThingsBoardSized
 
       const char* fw_title = data[FW_TITLE_KEY].as<const char*>();
       const char* fw_version = data[FW_VER_KEY].as<const char*>();
-      m_fwChecksum = data[FW_CHKS_KEY].as<const char*>();
+      m_fwChecksum = data[FW_CHKS_KEY].as<std::string>();
       const char* fw_checksum_algorithm = data[FW_CHKS_ALGO_KEY].as<const char*>();
-      m_fwSize = data[FW_SIZE_KEY].as<const uint16_t>();
+      m_fwSize = data[FW_SIZE_KEY].as<const uint32_t>();
 
-      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum == nullptr || fw_checksum_algorithm == nullptr) {
+      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum.empty() || fw_checksum_algorithm == nullptr) {
         Logger::log(EMPTY_FW);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
@@ -818,9 +822,9 @@ class ThingsBoardSized
       Logger::log(DOWNLOADING_FW);
 
       const uint16_t chunkSize = 4096U; // maybe less if we don't have enough RAM
-      const uint16_t numberOfChunk = static_cast<uint16_t>(m_fwSize / chunkSize) + 1U;
-      uint16_t currChunk = 0U;
-      uint8_t nbRetry = 3U;
+      const uint32_t numberOfChunk = (m_fwSize / chunkSize) + 1U;
+      uint32_t currChunk = 0U;
+      uint8_t nbRetry = m_fwChunkRetries;
 
       // Get the previous buffer size and cache it so the previous settings can be restored.
       const uint16_t previousBufferSize = m_client.getBufferSize();
@@ -833,17 +837,20 @@ class ThingsBoardSized
       }
 
       // Update state
-      Firmware_Send_State(FW_STATE_DOWNLOADING);
+      m_fwState = FW_STATE_DOWNLOADING;
+      Firmware_Send_State(m_fwState);
 
       char size[detect_size(NUMBER_PRINTF, chunkSize)];
       // Download the firmware
       do {
-        char topic[detect_size(FIRMWARE_REQUEST_TOPIC, currChunk)]; // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
+        // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
+        char topic[detect_size(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
         snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunkSize);
         m_client.publish(topic, size, m_qos);
 
-        const uint64_t timeout = millis() + 3000U; // Amount of time we wait until we declare the download as failed in milliseconds.
+        // Amount of time we wait until we declare the download as failed in milliseconds.
+        const uint64_t timeout = millis() + 3000U;
         do {
           delay(5);
           loop();
@@ -853,8 +860,10 @@ class ThingsBoardSized
           // Check if the current chunk is not the last one.
           if (numberOfChunk != (currChunk + 1)) {
             // Check if state is still DOWNLOADING and did not fail.
-            if (strncmp_P(FW_STATE_DOWNLOADING, m_fwState, strlen(FW_STATE_DOWNLOADING) == 0)) {
+            if (strncmp_P(FW_STATE_DOWNLOADING, m_fwState, strlen(FW_STATE_DOWNLOADING)) == 0) {
               currChunk++;
+              // Current chunck was downloaded successfully, resetting retries accordingly.
+              nbRetry = m_fwChunkRetries;
             }
             else {
               nbRetry--;
@@ -1187,6 +1196,11 @@ class ThingsBoardSized
         if (!Update.begin(m_fwSize)) {
           Logger::log(ERROR_UPDATE_BEGIN);
           m_fwState = FW_STATE_UPDATE_ERROR;
+          // Ensure to call Update.abort after calling Update.begin even if it failed,
+          // to make sure that any possibly started processes are stopped and freed.
+#if defined(ESP32)
+          Update.abort();
+#endif
           return;
         }
       }
@@ -1209,11 +1223,11 @@ class ThingsBoardSized
         char actual[JSON_STRING_SIZE(strlen(MD5_ACTUAL)) + md5Str.length()];
         snprintf_P(actual, sizeof(actual), MD5_ACTUAL, md5Str.c_str());
         Logger::log(actual);
-        char expected[JSON_STRING_SIZE(strlen(MD5_EXPECTED)) + JSON_STRING_SIZE(strlen(m_fwChecksum))];
-        snprintf_P(expected, sizeof(expected), MD5_EXPECTED, m_fwChecksum);
+        char expected[JSON_STRING_SIZE(strlen(MD5_EXPECTED)) + JSON_STRING_SIZE(m_fwChecksum.size())];
+        snprintf_P(expected, sizeof(expected), MD5_EXPECTED, m_fwChecksum.c_str());
         Logger::log(expected);
         // Check MD5
-        if (strncmp(md5Str.c_str(), m_fwChecksum, md5Str.length()) != 0) {
+        if (m_fwChecksum == md5Str) {
           Logger::log(CHKS_VER_FAILED);
 #if defined(ESP32)
           Update.abort();
@@ -1411,9 +1425,15 @@ class ThingsBoardSized
     const char* m_currFwTitle;
     const char* m_currFwVersion;
     const char* m_fwState;
-    uint16_t m_fwSize;
-    const char* m_fwChecksum;
+    // Allows for a binary size of up to theoretically 4 GB.
+    uint32_t m_fwSize;
+    // Has to be a string so the actual underlying data is kept in memory as long as it is needed.
+    std::string m_fwChecksum;
     std::function<void(const bool&)> m_fwUpdatedCallback;
+    // Number of tries we can request each chunk for,
+    // after successfully getting one chunck the number is reset,
+    // but if getting one chunck fails X amount of times the update process is aborted.
+    uint8_t m_fwChunkRetries;
     Shared_Attribute_Request_Callback m_fwResponseCallback;
     uint16_t m_fwChunkReceive;
 #endif
