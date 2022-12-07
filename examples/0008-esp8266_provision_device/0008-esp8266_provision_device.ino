@@ -68,7 +68,7 @@ void processProvisionResponse(const Provision_Data &data) {
     credentials.password = "";
   }
   if (strncmp(data["credentialsType"], "MQTT_BASIC", strlen("MQTT_BASIC")) == 0) {
-    JsonObject credentials_value = data["credentialsValue"].as<JsonObject>();
+    JsonObjectConst credentials_value = data["credentialsValue"].as<JsonObjectConst>();
     credentials.client_id = credentials_value["clientId"].as<String>();
     credentials.username = credentials_value["userName"].as<String>();
     credentials.password = credentials_value["password"].as<String>();
@@ -79,7 +79,7 @@ void processProvisionResponse(const Provision_Data &data) {
   provisionResponseProcessed = true;
 }
 
-const Provision_Callback provisionCallback = processProvisionResponse;
+const Provision_Callback provisionCallback(processProvisionResponse);
 
 void loop() {
   if (millis() - previous_processing_time >= 1000) {
