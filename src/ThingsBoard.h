@@ -17,17 +17,9 @@
 #include <vector>
 #include <array>
 #include <functional>
-#include <pgmspace.h>
 
 #if defined(ESP8266)
 #include <Updater.h>
-// Add defines used that or not included in the pgm header.
-#ifndef snprintf_P
-#define snprintf_P    snprintf
-#endif // snprintf_P
-#ifndef vsnprintf_P
-#define vsnprintf_P   vsnprintf
-#endif // vsnprintf_P
 #elif defined(ESP32)
 #include <Update.h>
 #endif
@@ -44,151 +36,151 @@ class ThingsBoardDefaultLogger;
 /// Constant strings in flash memory.
 /// ---------------------------------
 #if !defined(ESP8266) && !defined(ESP32)
-constexpr char HTTP_TELEMETRY_TOPIC[] = PSTR("/api/v1/%s/telemetry");
-constexpr char HTTP_ATTRIBUTES_TOPIC[] = PSTR("/api/v1/%s/attributes");
-constexpr char HTTP_POST_PATH[] = PSTR("application/json");
+constexpr char HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";
+constexpr char HTTP_ATTRIBUTES_TOPIC[] PROGMEM = "/api/v1/%s/attributes";
+constexpr char HTTP_POST_PATH[] PROGMEM = "application/json";
 #endif
 
 // Publish data topics.
-constexpr char ATTRIBUTE_TOPIC[] = PSTR("v1/devices/me/attributes");
-constexpr char TELEMETRY_TOPIC[] = PSTR("v1/devices/me/telemetry");
+constexpr char ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";
+constexpr char TELEMETRY_TOPIC[] PROGMEM = "v1/devices/me/telemetry";
 
 // RPC topics.
-constexpr char RPC_SUBSCRIBE_TOPIC[] = PSTR("v1/devices/me/rpc/request/+");
-constexpr char RPC_TOPIC[] = PSTR("v1/devices/me/rpc");
+constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
+constexpr char RPC_TOPIC[] PROGMEM = "v1/devices/me/rpc";
 
 // Firmware topics.
-constexpr char FIRMWARE_RESPONSE_TOPIC[] = PSTR("v2/fw/response");
+constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response";
 
 // Shared attribute topics.
-constexpr char ATTRIBUTE_REQUEST_TOPIC[] = PSTR("v1/devices/me/attributes/request/%u");
-constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = PSTR("v1/devices/me/attributes/response/+");
-constexpr char ATTRIBUTE_RESPONSE_TOPIC[] = PSTR("v1/devices/me/attributes/response");
+constexpr char ATTRIBUTE_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/attributes/request/%u";
+constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response/+";
+constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
 
 // Provision topics.
-constexpr char PROV_RESPONSE_TOPIC[] = PSTR("/provision/response");
+constexpr char PROV_RESPONSE_TOPIC[] PROGMEM = "/provision/response";
 
 // Default login data.
-constexpr char PROV_ACCESS_TOKEN[] = PSTR("provision");
-constexpr char DEFAULT_CLIENT_ID[] = PSTR("TbDev");
+constexpr char PROV_ACCESS_TOKEN[] PROGMEM = "provision";
+constexpr char DEFAULT_CLIENT_ID[] PROGMEM = "TbDev";
 
 // Shared attribute request keys.
-constexpr char SHARED_KEYS[] = PSTR("sharedKeys");
-constexpr char SHARED_KEY[] = PSTR("shared");
+constexpr char SHARED_KEYS[] PROGMEM = "sharedKeys";
+constexpr char SHARED_KEY[] PROGMEM = "shared";
 
 // RPC data keys.
-constexpr char RPC_METHOD_KEY[] = PSTR("method");
-constexpr char RPC_PARAMS_KEY[] = PSTR("params");
-constexpr char RPC_REQUEST_KEY[] = PSTR("request");
-constexpr char RPC_RESPONSE_KEY[] = PSTR("response");
+constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
+constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
+constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
+constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
 
 // Log messages.
-constexpr char INVALID_BUFFER_SIZE[] = PSTR("PayloadSize (%u) to small for the given payloads size (%u)");
-constexpr char MAX_RPC_EXCEEDED[] = PSTR("Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe");
-constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] = PSTR("Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe");
-constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = PSTR("Too many shared attribute request callback subscriptions, increase MaxFieldsAmt");
-constexpr char NUMBER_PRINTF[] = PSTR("%u");
-constexpr char COMMA = PSTR(',');
-constexpr char NO_KEYS_TO_REQUEST[] = PSTR("No keys to request were given");
-constexpr char REQUEST_ATT[] = PSTR("Requesting shared attributes transformed from (%s) into json (%s)");
-constexpr char UNABLE_TO_SERIALIZE[] = PSTR("Unable to serialize data");
-constexpr char UNABLE_TO_DE_SERIALIZE_RPC[] = PSTR("Unable to de-serialize RPC");
-constexpr char UNABLE_TO_DE_SERIALIZE_ATT_REQUEST[] = PSTR("Unable to de-serialize shared attribute request");
-constexpr char UNABLE_TO_DE_SERIALIZE_ATT_UPDATE[] = PSTR("Unable to de-serialize shared attribute update");
-constexpr char RECEIVED_RPC_LOG_MESSAGE[] = PSTR("Received RPC:");
-constexpr char RPC_METHOD_NULL[] = PSTR("RPC method is NULL");
-constexpr char RPC_CB_NULL[] = PSTR("RPC callback or subscribed rpc method name is NULL");
-constexpr char NO_RPC_PARAMS_PASSED[] = PSTR("No parameters passed with RPC, passing null JSON");
-constexpr char CALLING_RPC[] = PSTR("Calling RPC:");
-constexpr char RECEIVED_ATT_UPDATE[] = PSTR("Received shared attribute update");
-constexpr char NOT_FOUND_ATT_UPDATE[] = PSTR("Shared attribute update key not found");
-constexpr char ATT_CB_ID[] = PSTR("Shared attribute update callback id: (%u)");
-constexpr char ATT_CB_IS_NULL[] = PSTR("Shared attribute update callback is NULL");
-constexpr char ATT_CB_NO_KEYS[] = PSTR("No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)");
-constexpr char ATT_IS_NULL[] = PSTR("Subscribed shared attribute update key is NULL");
-constexpr char ATT_IN_ARRAY[] = PSTR("Shared attribute update key: (%s) is subscribed");
-constexpr char ATT_NO_CHANGE[] = PSTR("No keys that we subscribed too were changed, skipping callback");
-constexpr char CALLING_ATT_CB[] = PSTR("Calling subscribed callback for updated shared attribute (%s)");
-constexpr char RECEIVED_ATT[] = PSTR("Received shared attribute request");
-constexpr char ATT_KEY_NOT_FOUND[] = PSTR("Shared attribute key not found");
-constexpr char ATT_REQUEST_CB_IS_NULL[] = PSTR("Shared attribute request callback is NULL");
-constexpr char CALLING_REQUEST_ATT_CB[] = PSTR("Calling subscribed callback for response id (%u)");
-constexpr char TOO_MANY_JSON_FIELDS[] = PSTR("Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly");
-constexpr char CB_ON_MESSAGE[] = PSTR("Callback on_message from topic: (%s)");
-constexpr char CONNECT_FAILED[] = PSTR("Connecting to server failed");
+constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "PayloadSize (%u) to small for the given payloads size (%u)";
+constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
+constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
+constexpr char COMMA PROGMEM = ',';
+constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
+constexpr char REQUEST_ATT[] PROGMEM = "Requesting shared attributes transformed from (%s) into json (%s)";
+constexpr char UNABLE_TO_SERIALIZE[] PROGMEM = "Unable to serialize data";
+constexpr char UNABLE_TO_DE_SERIALIZE_RPC[] PROGMEM = "Unable to de-serialize RPC";
+constexpr char UNABLE_TO_DE_SERIALIZE_ATT_REQUEST[] PROGMEM = "Unable to de-serialize shared attribute request";
+constexpr char UNABLE_TO_DE_SERIALIZE_ATT_UPDATE[] PROGMEM = "Unable to de-serialize shared attribute update";
+constexpr char RECEIVED_RPC_LOG_MESSAGE[] PROGMEM = "Received RPC:";
+constexpr char RPC_METHOD_NULL[] PROGMEM = "RPC method is NULL";
+constexpr char RPC_CB_NULL[] PROGMEM = "RPC callback or subscribed rpc method name is NULL";
+constexpr char NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, passing null JSON";
+constexpr char CALLING_RPC[] PROGMEM = "Calling RPC:";
+constexpr char RECEIVED_ATT_UPDATE[] PROGMEM = "Received shared attribute update";
+constexpr char NOT_FOUND_ATT_UPDATE[] PROGMEM = "Shared attribute update key not found";
+constexpr char ATT_CB_ID[] PROGMEM = "Shared attribute update callback id: (%u)";
+constexpr char ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
+constexpr char ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
+constexpr char ATT_IS_NULL[] PROGMEM = "Subscribed shared attribute update key is NULL";
+constexpr char ATT_IN_ARRAY[] PROGMEM = "Shared attribute update key: (%s) is subscribed";
+constexpr char ATT_NO_CHANGE[] PROGMEM = "No keys that we subscribed too were changed, skipping callback";
+constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
+constexpr char RECEIVED_ATT[] PROGMEM = "Received shared attribute request";
+constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Shared attribute key not found";
+constexpr char ATT_REQUEST_CB_IS_NULL[] PROGMEM = "Shared attribute request callback is NULL";
+constexpr char CALLING_REQUEST_ATT_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
+constexpr char TOO_MANY_JSON_FIELDS[] PROGMEM = "Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly";
+constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback on_message from topic: (%s)";
+constexpr char CONNECT_FAILED[] PROGMEM = "Connecting to server failed";
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 // Claim topics.
-constexpr char CLAIM_TOPIC[] = PSTR("v1/devices/me/claim");
+constexpr char CLAIM_TOPIC[] PROGMEM = "v1/devices/me/claim";
 
 // Provision topics.
-constexpr char PROV_REQUEST_TOPIC[] = PSTR("/provision/request");
+constexpr char PROV_REQUEST_TOPIC[] PROGMEM = "/provision/request";
 
 // Claim data keys.
-constexpr char SECRET_KEY[] = PSTR("secretKey");
-constexpr char DURATION_KEY[] = PSTR("durationMs");
-constexpr char DEVICE_NAME_KEY[] = PSTR("deviceName");
-constexpr char PROV_DEVICE_KEY[] = PSTR("provisionDeviceKey");
-constexpr char PROV_DEVICE_SECRET_KEY[] = PSTR("provisionDeviceSecret");
+constexpr char SECRET_KEY[] PROGMEM = "secretKey";
+constexpr char DURATION_KEY[] PROGMEM = "durationMs";
+constexpr char DEVICE_NAME_KEY[] PROGMEM = "deviceName";
+constexpr char PROV_DEVICE_KEY[] PROGMEM = "provisionDeviceKey";
+constexpr char PROV_DEVICE_SECRET_KEY[] PROGMEM = "provisionDeviceSecret";
 
 // Provision data keys.
-constexpr char PROV_STATUS_KEY[] = PSTR("status");
-constexpr char PROV_CRED_TYPE_KEY[] = PSTR("credentialsType");
-constexpr char STATUS_SUCCESS[] = PSTR("SUCCESS");
-constexpr char PROV_CRED_TYPE_VALUE[] = PSTR("X509_CERTIFICATE");
+constexpr char PROV_STATUS_KEY[] PROGMEM = "status";
+constexpr char PROV_CRED_TYPE_KEY[] PROGMEM = "credentialsType";
+constexpr char STATUS_SUCCESS[] PROGMEM = "SUCCESS";
+constexpr char PROV_CRED_TYPE_VALUE[] PROGMEM = "X509_CERTIFICATE";
 
 // Log messages.
-constexpr char PROV_REQUEST[] = PSTR("Provision request:");
-constexpr char UNABLE_TO_DE_SERIALIZE_PROV_RESPONSE[] = PSTR("Unable to de-serialize provision response");
-constexpr char PROV_RESPONSE[] = PSTR("Process provisioning response");
-constexpr char RECEIVED_PROV_RESPONSE[] = PSTR("Received provision response");
-constexpr char X509_NOT_SUPPORTED[] = PSTR("Provision response contains X509_CERTIFICATE credentials, this is not supported yet");
+constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
+constexpr char UNABLE_TO_DE_SERIALIZE_PROV_RESPONSE[] PROGMEM = "Unable to de-serialize provision response";
+constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
+constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
+constexpr char X509_NOT_SUPPORTED[] PROGMEM = "Provision response contains X509_CERTIFICATE credentials, this is not supported yet";
 
 #if !defined(ARDUINO_AVR_MEGA)
 // Firmware topics.
-constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = PSTR("v2/fw/response/#");
-constexpr char FIRMWARE_REQUEST_TOPIC[] = PSTR("v2/fw/request/0/chunk/%u");
+constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v2/fw/response/#";
+constexpr char FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
 
 // Firmware data keys.
-constexpr char CURR_FW_TITLE_KEY[] = PSTR("current_fw_title");
-constexpr char CURR_FW_VER_KEY[] = PSTR("current_fw_version");
-constexpr char CURR_FW_STATE_KEY[] = PSTR("current_fw_state");
-constexpr char FW_VER_KEY[] = PSTR("fw_version");
-constexpr char FW_TITLE_KEY[] = PSTR("fw_title");
-constexpr char FW_CHKS_KEY[] = PSTR("fw_checksum");
-constexpr char FW_CHKS_ALGO_KEY[] = PSTR("fw_checksum_algorithm");
-constexpr char FW_SIZE_KEY[] = PSTR("fw_size");
-constexpr char FW_CHECKSUM_VALUE[] = PSTR("MD5");
-constexpr char FW_STATE_CHECKING[] = PSTR("CHECKING FIRMWARE");
-constexpr char FW_STATE_NO_FW[] = PSTR("NO FIRMWARE FOUND");
-constexpr char FW_STATE_UP_TO_DATE[] = PSTR("UP TO DATE");
-constexpr char FW_STATE_INVALID_CHKS[] = PSTR("CHKS IS NOT MD5");
-constexpr char FW_STATE_DOWNLOADING[] = PSTR("DOWNLOADING");
-constexpr char FW_STATE_FAILED[] = PSTR("FAILED");
-constexpr char FW_STATE_UPDATE_ERROR[] = PSTR("UPDATE ERROR");
-constexpr char FW_STATE_CHKS_ERROR[] = PSTR("CHECKSUM ERROR");
+constexpr char CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
+constexpr char CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
+constexpr char CURR_FW_STATE_KEY[] PROGMEM = "current_fw_state";
+constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
+constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
+constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
+constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
+constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
+constexpr char FW_CHECKSUM_VALUE[] PROGMEM = "MD5";
+constexpr char FW_STATE_CHECKING[] PROGMEM = "CHECKING FIRMWARE";
+constexpr char FW_STATE_NO_FW[] PROGMEM = "NO FIRMWARE FOUND";
+constexpr char FW_STATE_UP_TO_DATE[] PROGMEM = "UP TO DATE";
+constexpr char FW_STATE_INVALID_CHKS[] PROGMEM = "CHKS IS NOT MD5";
+constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
+constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
+constexpr char FW_STATE_UPDATE_ERROR[] PROGMEM = "UPDATE ERROR";
+constexpr char FW_STATE_CHKS_ERROR[] PROGMEM = "CHECKSUM ERROR";
 
 // Log messages.
-constexpr char NO_FW[] = PSTR("No new firmware assigned on the given device");
-constexpr char EMPTY_FW[] = PSTR("Given firmware was NULL");
-constexpr char FW_UP_TO_DATE[] = PSTR("Firmware is already up to date");
-constexpr char FW_NOT_FOR_US[] = PSTR("Firmware is not for us (title is different)");
-constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] = PSTR("Checksum algorithm is not supported, please use MD5 only");
-constexpr char PAGE_BREAK[] = PSTR("=================================");
-constexpr char NEW_FW[] = PSTR("A new Firmware is available:");
-constexpr char FROM_TOO[] = PSTR("(%s) => (%s)");
-constexpr char DOWNLOADING_FW[] = PSTR("Attempting to download over MQTT...");
-constexpr char NOT_ENOUGH_RAM[] = PSTR("Not enough RAM");
-constexpr char SLASH = PSTR('/');
-constexpr char UNABLE_TO_WRITE[] = PSTR("Unable to write firmware");
-constexpr char UNABLE_TO_DOWNLOAD[] = PSTR("Unable to download firmware");
-constexpr char FW_CHUNK[] = PSTR("Receive chunk (%i), with size (%u) bytes");
-constexpr char ERROR_UPDATE_BEGIN[] = PSTR("Error during Update.begin");
-constexpr char MD5_ACTUAL[] = PSTR("MD5 actual checksum: (%s)");
-constexpr char MD5_EXPECTED[] = PSTR("MD5 expected checksum: (%s)");
-constexpr char CHKS_VER_FAILED[] = PSTR("Checksum verification failed");
-constexpr char CHKS_VER_SUCCESS[] = PSTR("Checksum is the same as expected");
-constexpr char FW_UPDATE_SUCCESS[] = PSTR("Update success");
+constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
+constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
+constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
+constexpr char FW_NOT_FOR_US[] PROGMEM = "Firmware is not for us (title is different)";
+constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm is not supported, please use MD5 only";
+constexpr char PAGE_BREAK[] PROGMEM = "=================================";
+constexpr char NEW_FW[] PROGMEM = "A new Firmware is available:";
+constexpr char FROM_TOO[] PROGMEM = "(%s) => (%s)";
+constexpr char DOWNLOADING_FW[] PROGMEM = "Attempting to download over MQTT...";
+constexpr char NOT_ENOUGH_RAM[] PROGMEM = "Not enough RAM";
+constexpr char SLASH PROGMEM = '/';
+constexpr char UNABLE_TO_WRITE[] PROGMEM = "Unable to write firmware";
+constexpr char UNABLE_TO_DOWNLOAD[] PROGMEM = "Unable to download firmware";
+constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
+constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
+constexpr char MD5_ACTUAL[] PROGMEM = "MD5 actual checksum: (%s)";
+constexpr char MD5_EXPECTED[] PROGMEM = "MD5 expected checksum: (%s)";
+constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
+constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
+constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 #endif
 #endif
 
