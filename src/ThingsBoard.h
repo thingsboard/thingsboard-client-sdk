@@ -431,22 +431,12 @@ class ThingsBoardSized
         return false;
       }
       m_client.setServer(host, port);
-      const bool connection_result = m_client.connect(client_id, access_token, password);
-      if (connection_result) {
-        this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
-        this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
-        this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-        this->Provision_Unsubscribe();
-#endif
-#if defined(ESP8266) || defined(ESP32)
-        this->Firmware_OTA_Unsubscribe();
-#endif
-      }
-      else {
-        Logger::log(CONNECT_FAILED);
-      }
-      return connection_result;
+      return connect_to_host(access_token, client_id, password);
+    }
+
+    inline const bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t& port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = NULL) {
+      m_client.setServer(host, port);
+      return connect_to_host(access_token, client_id, password);
     }
 
     // Disconnects from ThingsBoard.
@@ -1023,6 +1013,26 @@ class ThingsBoardSized
 #endif
 
   private:
+
+    // Connects to the client previously set with m_client.setServer().
+    inline const bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
+      const bool connection_result = m_client.connect(client_id, access_token, password);
+      if (connection_result) {
+        this->RPC_Unsubscribe(); // Cleanup all RPC subscriptions
+        this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+        this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+        this->Provision_Unsubscribe();
+#endif
+#if defined(ESP8266) || defined(ESP32)
+        this->Firmware_OTA_Unsubscribe();
+#endif
+      }
+      else {
+        Logger::log(CONNECT_FAILED);
+      }
+      return connection_result;
+    }
 
     // Returns the length in chars needed for a given value with the given argument string to be displayed completly.
     inline const uint8_t detect_size(const char* msg, ...) {
