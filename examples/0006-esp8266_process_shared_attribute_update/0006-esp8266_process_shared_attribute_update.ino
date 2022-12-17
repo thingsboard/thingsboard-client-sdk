@@ -3,7 +3,7 @@
 #include <ESP8266WiFi.h>
 
 
-#define WIFI_AP             "YOUR_WIFI_SSID"
+#define WIFI_SSID           "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD       "YOUR_WIFI_PASSWORD"
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
@@ -26,14 +26,14 @@ bool subscribed = false;
 void setup() {
   // initialize serial for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
-  WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   InitWiFi();
 }
 
 void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
   for (JsonObjectConst::iterator it = data.begin(); it != data.end(); ++it) {
     Serial.println(it->key().c_str());
-    Serial.println(it->value().as<char*>()); // We have to parse data by it's type in the current example we will show here only char data
+    Serial.println(it->value().as<const char*>()); // We have to parse data by it's type in the current example we will show here only char data
   }
 
   int jsonSize = JSON_STRING_SIZE(measureJson(data));
@@ -83,7 +83,7 @@ void InitWiFi()
   Serial.println("Connecting to AP ...");
   // attempt to connect to WiFi network
 
-  WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
 
     delay(500);
@@ -96,7 +96,7 @@ void reconnect() {
   // Loop until we're reconnected
   status = WiFi.status();
   if ( status != WL_CONNECTED) {
-    WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");

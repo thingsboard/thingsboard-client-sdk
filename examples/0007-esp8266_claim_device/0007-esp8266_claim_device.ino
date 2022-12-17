@@ -3,7 +3,7 @@
 #include <ESP8266WiFi.h>
 
 
-#define WIFI_AP             "YOUR_WIFI_AP"
+#define WIFI_SSID           "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD       "YOUR_WIFI_PASSWORD"
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
@@ -29,7 +29,7 @@ unsigned int claimingRequestDurationMs = 180000;
 void setup() {
   // initialize serial for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
-  WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   InitWiFi();
 }
 
@@ -68,7 +68,7 @@ void InitWiFi()
   Serial.println("Connecting to AP ...");
   // attempt to connect to WiFi network
 
-  WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
 
     delay(500);
@@ -81,7 +81,7 @@ void reconnect() {
   // Loop until we're reconnected
   status = WiFi.status();
   if ( status != WL_CONNECTED) {
-    WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");

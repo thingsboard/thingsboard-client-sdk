@@ -11,7 +11,7 @@
 #include <WiFiEsp.h>
 #include "SoftwareSerial.h"
 
-#define WIFI_AP             "YOUR_WIFI_AP"
+#define WIFI_SSID           "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD       "YOUR_WIFI_PASSWORD"
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/ 
@@ -52,9 +52,9 @@ void setup() {
   // attempt to connect to WiFi network
   while (wifiStatus != WL_CONNECTED) {
     Serial.print("Attempting to connect to WPA SSID: ");
-    Serial.println(WIFI_AP);
+    Serial.println(WIFI_SSID);
     // Connect to WPA/WPA2 network
-    wifiStatus = WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+    wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     delay(500);
   }
 
