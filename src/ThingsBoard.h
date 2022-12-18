@@ -296,7 +296,7 @@ class Shared_Attribute_Callback {
   public:
 
     // Shared attributes callback signature
-    using processFn = const std::function<void(const Shared_Attribute_Data &data)>;
+    using processFn = std::function<void(const Shared_Attribute_Data &data)>;
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
@@ -314,7 +314,7 @@ class Shared_Attribute_Callback {
       : m_att(), m_cb(cb) {  }
 
   private:
-    const std::vector<const char*> m_att;   // Attribute we want to request
+    std::vector<const char*>       m_att;   // Attribute we want to request
     processFn                      m_cb;    // Callback to call
 };
 
