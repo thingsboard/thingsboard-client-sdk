@@ -92,7 +92,7 @@ constexpr char UNABLE_TO_DE_SERIALIZE_ATT_REQUEST[] PROGMEM = "Unable to de-seri
 constexpr char UNABLE_TO_DE_SERIALIZE_ATT_UPDATE[] PROGMEM = "Unable to de-serialize shared attribute update";
 constexpr char RECEIVED_RPC_LOG_MESSAGE[] PROGMEM = "Received RPC:";
 constexpr char RPC_METHOD_NULL[] PROGMEM = "RPC method is NULL";
-constexpr char RPC_CB_NULL[] PROGMEM = "RPC callback or subscribed rpc method name is NULL";
+constexpr char RPC_CB_NULL[] PROGMEM = "RPC callback is NULL";
 constexpr char NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, passing null JSON";
 constexpr char CALLING_RPC[] PROGMEM = "Calling RPC:";
 constexpr char RECEIVED_ATT_UPDATE[] PROGMEM = "Received shared attribute update";
@@ -107,9 +107,10 @@ constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updat
 constexpr char RECEIVED_ATT[] PROGMEM = "Received shared attribute request";
 constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Shared attribute key not found";
 constexpr char ATT_REQUEST_CB_IS_NULL[] PROGMEM = "Shared attribute request callback is NULL";
+constexpr char PROVISION_CB_IS_NULL[] PROGMEM = "Provisioning callback is NULL";
 constexpr char CALLING_REQUEST_ATT_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
 constexpr char TOO_MANY_JSON_FIELDS[] PROGMEM = "Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly";
-constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback on_message from topic: (%s)";
+constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback onMQTTMessage from topic: (%s)";
 constexpr char CONNECT_FAILED[] PROGMEM = "Connecting to server failed";
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
@@ -189,15 +190,9 @@ constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 
 // Telemetry record class, allows to store different data using common interface.
 class Telemetry {
-    template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-    friend class ThingsBoardSized;
-#ifndef ESP8266
-    template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-    friend class ThingsBoardHttpSized;
-#endif
   public:
     inline Telemetry()
-      : m_type(TYPE_NONE), m_key(NULL), m_value() { }
+      : m_type(DataType::TYPE_NONE), m_key(NULL), m_value() { }
 
     // Constructs telemetry record from integer value.
     // EnableIf trick is required to overcome ambiguous float/integer conversion
@@ -206,56 +201,61 @@ class Telemetry {
       typename = ARDUINOJSON_NAMESPACE::enable_if<ARDUINOJSON_NAMESPACE::is_integral<T>::value>
       >
     inline Telemetry(const char *key, T val)
-      : m_type(TYPE_INT), m_key(key), m_value()   {
+      : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
       m_value.integer = val;
     }
 
     // Constructs telemetry record from boolean value.
     inline Telemetry(const char *key, bool val)
-      : m_type(TYPE_BOOL), m_key(key), m_value()  {
+      : m_type(DataType::TYPE_BOOL), m_key(key), m_value()  {
       m_value.boolean = val;
     }
 
     // Constructs telemetry record from float value.
     inline Telemetry(const char *key, float val)
-      : m_type(TYPE_REAL), m_key(key), m_value()  {
+      : m_type(DataType::TYPE_REAL), m_key(key), m_value()  {
       m_value.real = val;
     }
 
     // Constructs telemetry record from string value.
     inline Telemetry(const char *key, const char *val)
-      : m_type(TYPE_STR), m_key(key), m_value()   {
+      : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
       m_value.str = val;
     }
 
+    // Returnd true if the empty constructor was called
+    // and no data was passed to the Telemetry instance istelf.
+    inline const bool IsEmpty() const {
+      return !m_key && m_type == DataType::TYPE_NONE;
+    }
+
+    // Serializes key-value pair in a generic way.
+    const bool SerializeKeyValue(JsonVariant &jsonObj) const;
+
   private:
     // Data container
-    union data {
-        const char  *str;
-        bool        boolean;
-        int         integer;
-        float       real;
-      };
+    union Data {
+      const char  *str;
+      bool        boolean;
+      int         integer;
+      float       real;
+    };
 
     // Data type inside a container
-    enum dataType {
+    enum class DataType: const uint8_t {
       TYPE_NONE,
       TYPE_BOOL,
       TYPE_INT,
       TYPE_REAL,
-      TYPE_STR,
+      TYPE_STR
     };
 
-    dataType     m_type;  // Data type flag
+    DataType     m_type;  // Data type flag
     const char   *m_key;  // Data key
-    data         m_value; // Data value
-
-    // Serializes key-value pair in a generic way.
-    const bool serializeKeyval(JsonVariant &jsonObj) const;
+    Data         m_value; // Data value
 };
 
 // Convenient aliases
-
 using Attribute = Telemetry;
 using RPC_Response = Telemetry;
 // JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
@@ -268,12 +268,11 @@ using Provision_Data = const JsonObjectConst;
 
 // RPC callback wrapper
 class RPC_Callback {
-    template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-    friend class ThingsBoardSized;
   public:
-
     // RPC callback signature
-    using processFn = std::function<RPC_Response(const RPC_Data &data)>;
+    using returnType = RPC_Response;
+    using argumentType = RPC_Data&;
+    using processFn = std::function<returnType(const argumentType data)>;
 
     // Constructs empty callback
     inline RPC_Callback()
@@ -281,8 +280,25 @@ class RPC_Callback {
 
     // Constructs callback that will be fired upon a RPC request arrival with
     // given method name
-    inline RPC_Callback(const char* methodName, processFn cb)
+    inline RPC_Callback(const char* methodName, const processFn cb)
       : m_name(methodName), m_cb(cb) {  }
+
+    // Calls the callback that was subscribed when this class instance was initally created.
+    template<typename Logger>
+    inline returnType Call_Callback(const argumentType data) const {
+      // Check if the callback is a nullptr,
+      // meaning it has not been assigned any valid callback method.
+      if (!m_cb) {
+        Logger::log(RPC_CB_NULL);
+        return returnType();
+      }
+      return m_cb(data);
+    }
+
+    // Gets the name we gave the callback method on the cloud.
+    inline const char* Get_Name() const {
+      return m_name;
+    }
 
   private:
     const char  *m_name;    // Method name
@@ -291,12 +307,11 @@ class RPC_Callback {
 
 // Shared attributes callback wrapper
 class Shared_Attribute_Callback {
-    template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-    friend class ThingsBoardSized;
   public:
-
     // Shared attributes callback signature
-    using processFn = std::function<void(const Shared_Attribute_Data &data)>;
+    using returnType = void;
+    using argumentType = Shared_Attribute_Data&;
+    using processFn = std::function<returnType(const argumentType data)>;
 
     // Constructs empty callback
     inline Shared_Attribute_Callback()
@@ -305,35 +320,76 @@ class Shared_Attribute_Callback {
     // Constructs callback that will be fired upon a Shared attribute update arrival,
     // where one of the given keys was changed.
     template<class InputIterator>
-    inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
+    inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, const processFn cb)
       : m_att(first_itr, last_itr), m_cb(cb) {  }
 
     // Constructs callback that will be fired upon a Shared attribute update arrival,
     // no matter which key was changed.
-    inline Shared_Attribute_Callback(processFn cb)
+    inline Shared_Attribute_Callback(const processFn cb)
       : m_att(), m_cb(cb) {  }
 
+    // Calls the callback that was subscribed when this class instance was initally created.
+    template<typename Logger>
+    inline returnType Call_Callback(const argumentType data) const {
+      // Check if the callback is a nullptr,
+      // meaning it has not been assigned any valid callback method.
+      if (!m_cb) {
+        Logger::log(ATT_CB_IS_NULL);
+        return returnType();
+      }
+      return m_cb(data);
+    }
+
+    // Gets all the subscribed attributes that will result,
+    // in the subscribed method being called if changed by the cloud.
+    inline const std::vector<const char*>& Get_Attributes() const {
+      return m_att;
+    }
+
   private:
-    std::vector<const char*>       m_att;   // Attribute we want to request
-    processFn                      m_cb;    // Callback to call
+    const std::vector<const char*>       m_att;   // Attribute we want to request
+    processFn                            m_cb;    // Callback to call
 };
 
 // Shared attributes request callback wrapper
 class Shared_Attribute_Request_Callback {
-    template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-    friend class ThingsBoardSized;
   public:
-
     // Shared attributes callback signature
-    using processFn = std::function<void(const Shared_Attribute_Data &data)>;
+    using returnType = void;
+    using argumentType = Shared_Attribute_Data&;
+    using processFn = std::function<returnType(const argumentType data)>;
 
     // Constructs empty callback
     inline Shared_Attribute_Request_Callback()
       : m_request_id(0U), m_cb(nullptr) {  }
 
     // Constructs callback that will be fired upon a Shared attribute request arrival
-    inline Shared_Attribute_Request_Callback(processFn cb)
+    inline Shared_Attribute_Request_Callback(const processFn cb)
       : m_request_id(0U), m_cb(cb) {  }
+
+    // Calls the callback that was subscribed when this class instance was initally created.
+    template<typename Logger>
+    inline returnType Call_Callback(const argumentType data) const {
+      // Check if the callback is a nullptr,
+      // meaning it has not been assigned any valid callback method.
+      if (!m_cb) {
+        Logger::log(ATT_REQUEST_CB_IS_NULL);
+        return returnType();
+      }
+      return m_cb(data);
+    }
+
+    // Gets all the subscribed attributes that will result,
+    // in the subscribed method being called if changed by the cloud.
+    inline const uint32_t& Get_Request_ID() const {
+      return m_request_id;
+    }
+
+    // Sets the request id to the actual used request id to later identify,
+    // which Shared_Attribute_Request_Callback is connected to which received data.
+    inline void Set_Request_ID(const uint32_t request_id) {
+      m_request_id = request_id;
+    }
 
   private:
     uint32_t        m_request_id;   // Id the request was called with
@@ -343,12 +399,11 @@ class Shared_Attribute_Request_Callback {
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 // Provisioning callback wrapper
 class Provision_Callback {
-    template <size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-    friend class ThingsBoardSized;
   public:
-
     // Provisioning callback signature
-    using processFn = std::function<void(const Provision_Data& data)>;
+    using returnType = void;
+    using argumentType = Provision_Data&;
+    using processFn = std::function<returnType(const argumentType data)>;
 
     // Constructs empty callback
     inline Provision_Callback()
@@ -356,8 +411,20 @@ class Provision_Callback {
 
     // Constructs callback that will be fired upon a Provision request arrival with
     // given attribute key
-    inline Provision_Callback(processFn cb)
+    inline Provision_Callback(const processFn cb)
       : m_cb(cb) {  }
+
+    // Calls the callback that was subscribed when this class instance was initally created.
+    template<typename Logger>
+    inline returnType Call_Callback(const argumentType data) const {
+      // Check if the callback is a nullptr,
+      // meaning it has not been assigned any valid callback method.
+      if (!m_cb) {
+        Logger::log(PROVISION_CB_IS_NULL);
+        return returnType();
+      }
+      return m_cb(data);
+    }
 
   private:
     processFn   m_cb;       // Callback to call
@@ -420,7 +487,7 @@ class ThingsBoardSized
       m_client.setClient(client);
       m_client.setBufferSize(PayloadSize);
       // Initalize callback.
-      m_client.setCallback(std::bind(&ThingsBoardSized::on_message, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+      m_client.setCallback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     }
 
     // Connects to the specified ThingsBoard server and port.
@@ -500,27 +567,27 @@ class ThingsBoardSized
     template<class T>
     inline const bool sendTelemetryData(const char *key, T value)
     {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends integer telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryInt(const char *key, int value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends boolean telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryBool(const char *key, bool value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends float telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryFloat(const char *key, float value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends string telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryString(const char *key, const char *value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends aggregated telemetry to the ThingsBoard.
@@ -578,27 +645,27 @@ class ThingsBoardSized
     // Sends an attribute with given name and value.
     template<class T>
     inline const bool sendAttributeData(const char *attrName, T value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends integer attribute with given name and value.
     inline const bool sendAttributeInt(const char *attrName, int value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends boolean attribute with given name and value.
     inline const bool sendAttributeBool(const char *attrName, bool value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends float attribute with given name and value.
     inline const bool sendAttributeFloat(const char *attrName, float value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends string attribute with given name and value.
     inline const bool sendAttributeString(const char *attrName, const char *value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends aggregated attributes to the ThingsBoard.
@@ -941,7 +1008,7 @@ class ThingsBoardSized
       Logger::log(message);
 
       m_requestId++;
-      callback.m_request_id = m_requestId;
+      callback.Set_Request_ID(m_requestId);
       Shared_Attributes_Request_Subscribe(callback);
 
       char topic[detect_size(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
@@ -1081,11 +1148,16 @@ class ThingsBoardSized
 
     // Sends single key-value in a generic way.
     template<typename T>
-    inline const bool sendKeyval(const char *key, T value, bool telemetry = true) {
+    inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
       Telemetry t(key, value);
+      if (t.IsEmpty()) {
+        // Message is ignored and not sent at all.
+        return false;
+      }
+
       StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
-      if (!t.serializeKeyval(object)) {
+      if (!t.SerializeKeyValue(object)) {
         Logger::log(UNABLE_TO_SERIALIZE);
         return false;
       }
@@ -1116,13 +1188,14 @@ class ThingsBoardSized
         }
 
         for (const RPC_Callback& callback : m_rpcCallbacks) {
-          if (callback.m_cb == nullptr || callback.m_name == nullptr) {
-            Logger::log(RPC_CB_NULL);
+          const char *subscribedMethodName = callback.Get_Name();
+          if (subscribedMethodName == nullptr) {
+            Logger::log(RPC_METHOD_NULL);
             continue;
           }
           // Strncmp returns the ascis value difference of the ascii characters that are different,
           // meaning 0 is the same string and less and more than 0 is the difference in ascci values between the 2 chararacters.
-          else if (strncmp(callback.m_name, methodName, strlen(callback.m_name)) != 0) {
+          else if (strncmp(subscribedMethodName, methodName, strlen(subscribedMethodName)) != 0) {
             continue;
           }
 
@@ -1144,13 +1217,13 @@ class ThingsBoardSized
             char json[json_size];
             serializeJson(param, json, json_size);
           	Logger::log(json);
-            r = callback.m_cb(param);
+            r = callback.Call_Callback<Logger>(param);
           } else {
             Logger::log(params);
             const JsonObject &param = doc.template as<JsonObject>();
             // Getting non-existing field from JSON should automatically
             // set JSONVariant to null
-            r = callback.m_cb(param);
+            r = callback.Call_Callback<Logger>(param);
           }
           break;
         }
@@ -1160,7 +1233,11 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
       JsonVariant resp_obj = respBuffer.template to<JsonVariant>();
 
-      if (r.serializeKeyval(resp_obj) == false) {
+      if (r.IsEmpty()) {
+        // Message is ignored and not sent at all.
+        return;
+      }
+      else if (!r.SerializeKeyValue(resp_obj)) {
         Logger::log(UNABLE_TO_SERIALIZE);
         return;
       }
@@ -1237,7 +1314,7 @@ class ThingsBoardSized
         snprintf_P(expected, sizeof(expected), MD5_EXPECTED, m_fwChecksum.c_str());
         Logger::log(expected);
         // Check MD5
-        if (m_fwChecksum == md5Str) {
+        if (strncmp(md5Str.c_str(), m_fwChecksum.c_str(), md5Str.length()) != 0) {
           Logger::log(CHKS_VER_FAILED);
 #if defined(ESP32)
           Update.abort();
@@ -1281,20 +1358,16 @@ class ThingsBoardSized
         snprintf_P(id_message, sizeof(id_message), ATT_CB_ID, i);
         Logger::log(id_message);
 
-        if (m_sharedAttributeUpdateCallbacks.at(i).m_cb == nullptr) {
-          Logger::log(ATT_CB_IS_NULL);
-          continue;
-        }
-        else if (m_sharedAttributeUpdateCallbacks.at(i).m_att.empty()) {
+        if (m_sharedAttributeUpdateCallbacks.at(i).Get_Attributes().empty()) {
           Logger::log(ATT_CB_NO_KEYS);
           // No specifc keys were subscribed so we call the callback anyway.
-          m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
+          m_sharedAttributeUpdateCallbacks.at(i).Call_Callback<Logger>(data);
           continue;
         }
 
         bool containsKey = false;
         const char* requested_att;
-        for (const char* att : m_sharedAttributeUpdateCallbacks.at(i).m_att) {
+        for (const char* att : m_sharedAttributeUpdateCallbacks.at(i).Get_Attributes()) {
           if (att == nullptr) {
             Logger::log(ATT_IS_NULL);
             continue;
@@ -1323,7 +1396,7 @@ class ThingsBoardSized
         Logger::log(calling_message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-        m_sharedAttributeUpdateCallbacks.at(i).m_cb(data);
+        m_sharedAttributeUpdateCallbacks.at(i).Call_Callback<Logger>(data);
       }
     }
 
@@ -1355,11 +1428,7 @@ class ThingsBoardSized
       uint32_t response_id = atoi(response.c_str());
 
       for (size_t i = 0; i < m_sharedAttributeRequestCallbacks.size(); i++) {
-        if (m_sharedAttributeRequestCallbacks.at(i).m_cb == nullptr) {
-          Logger::log(ATT_REQUEST_CB_IS_NULL);
-          continue;
-        }
-        else if (m_sharedAttributeRequestCallbacks.at(i).m_request_id != response_id) {
+        if (m_sharedAttributeRequestCallbacks.at(i).Get_Request_ID() != response_id) {
           continue;
         }
 
@@ -1368,7 +1437,7 @@ class ThingsBoardSized
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-        m_sharedAttributeRequestCallbacks.at(i).m_cb(data);
+        m_sharedAttributeRequestCallbacks.at(i).Call_Callback<Logger>(data);
         // Delete callback because the changes have been requested and the callback is no longer needed.
         m_sharedAttributeRequestCallbacks.erase(std::next(m_sharedAttributeRequestCallbacks.begin(), i));
       }
@@ -1398,9 +1467,7 @@ class ThingsBoardSized
         return;
       }
 
-      if (m_provisionCallback.m_cb) {
-        m_provisionCallback.m_cb(data);
-      }
+      m_provisionCallback.Call_Callback<Logger>(data);
     }
 #endif
 
@@ -1410,7 +1477,7 @@ class ThingsBoardSized
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
 
       for (size_t i = 0; i < data_count; ++i) {
-        if (data[i].serializeKeyval(object) == false) {
+        if (!data[i].SerializeKeyValue(object)) {
           Logger::log(UNABLE_TO_SERIALIZE);
           return false;
         }
@@ -1432,12 +1499,11 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32)
     // For Firmware Update
-    const char* m_currFwTitle;
-    const char* m_currFwVersion;
-    const char* m_fwState;
+    const char  *m_currFwTitle;
+    const char  *m_currFwVersion;
+    const char  *m_fwState;
     // Allows for a binary size of up to theoretically 4 GB.
-    uint32_t m_fwSize;
-    // Has to be a string so the actual underlying data is kept in memory as long as it is needed.
+    uint32_t    m_fwSize;
     std::string m_fwChecksum;
     std::function<void(const bool&)> m_fwUpdatedCallback;
     // Number of tries we can request each chunk for,
@@ -1449,7 +1515,7 @@ class ThingsBoardSized
 #endif
 
     // The callback for when a PUBLISH message is received from the server.
-    inline void on_message(char* topic, uint8_t* payload, uint32_t length) {
+    inline void onMQTTMessage(char* topic, uint8_t* payload, uint32_t length) {
       char message[JSON_STRING_SIZE(strlen(CB_ON_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
       snprintf_P(message, sizeof(message), CB_ON_MESSAGE, topic);
       Logger::log(message);
@@ -1504,22 +1570,22 @@ class ThingsBoardHttpSized
 
     // Sends integer telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryInt(const char *key, int value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends boolean telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryBool(const char *key, bool value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends float telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryFloat(const char *key, float value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends string telemetry data to the ThingsBoard, returns true on success.
     inline const bool sendTelemetryString(const char *key, const char *value) {
-      return sendKeyval(key, value);
+      return sendKeyValue(key, value);
     }
 
     // Sends aggregated telemetry to the ThingsBoard.
@@ -1558,22 +1624,22 @@ class ThingsBoardHttpSized
 
     // Sends integer attribute with given name and value.
     inline const bool sendAttributeInt(const char *attrName, int value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends boolean attribute with given name and value.
     inline const bool sendAttributeBool(const char *attrName, bool value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends float attribute with given name and value.
     inline const bool sendAttributeFloat(const char *attrName, float value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends string attribute with given name and value.
     inline const bool sendAttributeString(const char *attrName, const char *value) {
-      return sendKeyval(attrName, value, false);
+      return sendKeyValue(attrName, value, false);
     }
 
     // Sends aggregated attributes to the ThingsBoard.
@@ -1614,7 +1680,7 @@ class ThingsBoardHttpSized
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
 
       for (size_t i = 0; i < data_count; ++i) {
-        if (data[i].serializeKeyval(object) == false) {
+        if (!data[i].SerializeKeyValue(object)) {
           Logger::log(UNABLE_TO_SERIALIZE);
           return false;
         }
@@ -1625,12 +1691,16 @@ class ThingsBoardHttpSized
 
     // Sends single key-value in a generic way.
     template<typename T>
-    inline const bool sendKeyval(const char *key, T value, bool telemetry = true) {
+    inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
       Telemetry t(key, value);
+      if (t.IsEmpty()) {
+        // Message is ignored and not sent at all.
+        return false;
+      }
 
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
-      if (t.serializeKeyval(object) == false) {
+      if (!t.SerializeKeyValue(object)) {
         Logger::log(UNABLE_TO_SERIALIZE);
         return false;
       }
