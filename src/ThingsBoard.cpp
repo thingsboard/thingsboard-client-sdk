@@ -10,41 +10,48 @@
 
 /*----------------------------------------------------------------------------*/
 
-const bool Telemetry::serializeKeyval(JsonVariant &jsonObj) const {
+const bool Telemetry::SerializeKeyValue(JsonVariant &jsonObj) const {
   if (m_key) {
     switch (m_type) {
-      case TYPE_BOOL:
+      case DataType::TYPE_BOOL:
         jsonObj[m_key] = m_value.boolean;
-      break;
-      case TYPE_INT:
+        return true;
+        break;
+      case DataType::TYPE_INT:
         jsonObj[m_key] = m_value.integer;
-      break;
-      case TYPE_REAL:
+        return true;
+        break;
+      case DataType::TYPE_REAL:
         jsonObj[m_key] = m_value.real;
-      break;
-      case TYPE_STR:
+        return true;
+        break;
+      case DataType::TYPE_STR:
         jsonObj[m_key] = m_value.str;
-      break;
+        return true;
+        break;
       default:
-      break;
+        // Nothing to do.
+        break;
     }
-  } else {
-    switch (m_type) {
-      case TYPE_BOOL:
-        return jsonObj.set(m_value.boolean);
-      break;
-      case TYPE_INT:
-        return jsonObj.set(m_value.integer);
-      break;
-      case TYPE_REAL:
-        return jsonObj.set(m_value.real);
-      break;
-      case TYPE_STR:
-        return jsonObj.set(m_value.str);
-      break;
-      default:
-      break;
-    }
+    return false;
   }
-  return true;
+
+  switch (m_type) {
+    case DataType::TYPE_BOOL:
+      return jsonObj.set(m_value.boolean);
+      break;
+    case DataType::TYPE_INT:
+      return jsonObj.set(m_value.integer);
+      break;
+    case DataType::TYPE_REAL:
+      return jsonObj.set(m_value.real);
+      break;
+    case DataType::TYPE_STR:
+      return jsonObj.set(m_value.str);
+      break;
+    default:
+        // Nothing to do.
+      break;
+  }
+  return false;
 }
