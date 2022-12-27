@@ -762,7 +762,7 @@ class ThingsBoardSized
     // Firmware OTA API
 
 #if defined(ESP8266) || defined(ESP32)
-    inline const bool Start_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U) {
+    inline const bool Start_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U, const uint16_t& chunkSize = 4096U) {
       m_fwState = nullptr;
       m_fwChecksum.clear();
 
@@ -784,6 +784,7 @@ class ThingsBoardSized
       m_currFwVersion = currFwVersion;
       m_fwUpdatedCallback = updatedCallback;
       m_fwChunkRetries = chunkRetries;
+      m_fwChunckSize = chunkSize;
 
       // Request the firmware informations
       const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
@@ -878,17 +879,16 @@ class ThingsBoardSized
       Logger::log(firmware);
       Logger::log(DOWNLOADING_FW);
 
-      const uint16_t chunkSize = 4096U; // maybe less if we don't have enough RAM
-      const uint32_t numberOfChunk = (m_fwSize / chunkSize) + 1U;
+      const uint32_t numberOfChunk = (m_fwSize / m_fwChunckSize) + 1U;
       uint32_t currChunk = 0U;
       uint8_t nbRetry = m_fwChunkRetries;
 
       // Get the previous buffer size and cache it so the previous settings can be restored.
       const uint16_t previousBufferSize = m_client.getBufferSize();
-      const bool changeBufferSize = previousBufferSize < (chunkSize + 50U);
+      const bool changeBufferSize = previousBufferSize < (m_fwChunckSize + 50U);
 
       // Increase size of receive buffer
-      if (changeBufferSize && !m_client.setBufferSize(chunkSize + 50U)) {
+      if (changeBufferSize && !m_client.setBufferSize(m_fwChunckSize + 50U)) {
         Logger::log(NOT_ENOUGH_RAM);
         return;
       }
@@ -897,13 +897,13 @@ class ThingsBoardSized
       m_fwState = FW_STATE_DOWNLOADING;
       Firmware_Send_State(m_fwState);
 
-      char size[detect_size(NUMBER_PRINTF, chunkSize)];
+      char size[detect_size(NUMBER_PRINTF, m_fwChunckSize)];
       // Download the firmware
       do {
         // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         char topic[detect_size(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
-        snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunkSize);
+        snprintf_P(size, sizeof(size), NUMBER_PRINTF, m_fwChunckSize);
         m_client.publish(topic, size, m_qos);
 
         // Amount of time we wait until we declare the download as failed in milliseconds.
@@ -1272,8 +1272,6 @@ class ThingsBoardSized
       snprintf_P(message, sizeof(message), FW_CHUNK, m_fwChunkReceive, length);
       Logger::log(message);
 
-      m_fwState = FW_STATE_FAILED;
-
       if (m_fwChunkReceive == 0) {
         sizeReceive = 0;
         md5 = MD5Builder();
@@ -1283,6 +1281,7 @@ class ThingsBoardSized
         if (!Update.begin(m_fwSize)) {
           Logger::log(ERROR_UPDATE_BEGIN);
           m_fwState = FW_STATE_UPDATE_ERROR;
+          Firmware_Send_State(m_fwState);
           // Ensure to call Update.abort after calling Update.begin even if it failed,
           // to make sure that any possibly started processes are stopped and freed.
 #if defined(ESP32)
@@ -1296,6 +1295,7 @@ class ThingsBoardSized
       if (Update.write(payload, length) != length) {
         Logger::log(ERROR_UPDATE_BEGIN);
         m_fwState = FW_STATE_UPDATE_ERROR;
+        Firmware_Send_State(m_fwState);
         return;
       }
 
@@ -1320,6 +1320,7 @@ class ThingsBoardSized
           Update.abort();
 #endif
           m_fwState = FW_STATE_CHKS_ERROR;
+          Firmware_Send_State(m_fwState);
         }
         else {
           Logger::log(CHKS_VER_SUCCESS);
@@ -1510,6 +1511,7 @@ class ThingsBoardSized
     // after successfully getting one chunck the number is reset,
     // but if getting one chunck fails X amount of times the update process is aborted.
     uint8_t m_fwChunkRetries;
+    uint16_t m_fwChunckSize;
     Shared_Attribute_Request_Callback m_fwResponseCallback;
     uint16_t m_fwChunkReceive;
 #endif
