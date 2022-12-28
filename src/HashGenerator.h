@@ -17,7 +17,8 @@ public:
     /// @brief Update the current hash value with new data
     /// @param data Data that should be added to generate the hash
     /// @param len Length of data entered
-    void update(const uint8_t* data, const size_t& len);
+    /// @return Wheter updating the hash for the given bytes was successfull or not
+    const bool update(const uint8_t* data, const size_t& len);
 
     /// @brief Returns the final hash value as a string
     /// @return String containing the final hash value for the passed bytes
