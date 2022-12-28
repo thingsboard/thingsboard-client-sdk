@@ -16,9 +16,9 @@
 // Ensure ArduinoJson supports std::string type.
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
+#include <HashGenerator.h>
 #include <vector>
 #include <array>
-#include <string>
 #include <functional>
 
 #if defined(ESP8266)
@@ -154,11 +154,10 @@ constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
 constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
 constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
 constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
-constexpr char FW_CHECKSUM_VALUE[] PROGMEM = "MD5";
 constexpr char FW_STATE_CHECKING[] PROGMEM = "CHECKING FIRMWARE";
 constexpr char FW_STATE_NO_FW[] PROGMEM = "NO FIRMWARE FOUND";
 constexpr char FW_STATE_UP_TO_DATE[] PROGMEM = "UP TO DATE";
-constexpr char FW_STATE_INVALID_CHKS[] PROGMEM = "CHKS IS NOT MD5";
+constexpr char FW_STATE_INVALID_CHKS[] PROGMEM = "CHECKSUM ALGORITHM INVALID";
 constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
 constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
 constexpr char FW_STATE_UPDATE_ERROR[] PROGMEM = "UPDATE ERROR";
@@ -169,7 +168,7 @@ constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
 constexpr char FW_NOT_FOR_US[] PROGMEM = "Firmware is not for us (title is different)";
-constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm is not supported, please use MD5 only";
+constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
 constexpr char PAGE_BREAK[] PROGMEM = "=================================";
 constexpr char NEW_FW[] PROGMEM = "A new Firmware is available:";
 constexpr char FROM_TOO[] PROGMEM = "(%s) => (%s)";
@@ -180,8 +179,8 @@ constexpr char UNABLE_TO_WRITE[] PROGMEM = "Unable to write firmware";
 constexpr char UNABLE_TO_DOWNLOAD[] PROGMEM = "Unable to download firmware";
 constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
 constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
-constexpr char MD5_ACTUAL[] PROGMEM = "MD5 actual checksum: (%s)";
-constexpr char MD5_EXPECTED[] PROGMEM = "MD5 expected checksum: (%s)";
+constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
+constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
 constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
@@ -765,6 +764,7 @@ class ThingsBoardSized
     inline const bool Start_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U, const uint16_t& chunkSize = 4096U) {
       m_fwState = nullptr;
       m_fwChecksum.clear();
+      m_fwAlgorithm.clear();
 
       // Send current firmware version
       if (currFwTitle == nullptr || currFwVersion == nullptr) {
@@ -843,10 +843,10 @@ class ThingsBoardSized
       const char* fw_title = data[FW_TITLE_KEY].as<const char*>();
       const char* fw_version = data[FW_VER_KEY].as<const char*>();
       m_fwChecksum = data[FW_CHKS_KEY].as<std::string>();
-      const char* fw_checksum_algorithm = data[FW_CHKS_ALGO_KEY].as<const char*>();
+      m_fwAlgorithm = data[FW_CHKS_ALGO_KEY].as<const char*>();
       m_fwSize = data[FW_SIZE_KEY].as<const uint32_t>();
 
-      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum.empty() || fw_checksum_algorithm == nullptr) {
+      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum.empty() || m_fwChecksum.empty()) {
         Logger::log(EMPTY_FW);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
@@ -863,8 +863,24 @@ class ThingsBoardSized
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
-      else if (strncmp_P(FW_CHECKSUM_VALUE, fw_checksum_algorithm, JSON_STRING_SIZE(strlen(FW_CHECKSUM_VALUE))) != 0) {
-        Logger::log(FW_CHKS_ALGO_NOT_SUPPORTED);
+
+      // Set used firmware algorithm, depending on received message
+      if (m_fwChecksum.compare("MD5")) {
+        m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
+      }
+      else if (m_fwChecksum.compare("SHA-256")) {
+        m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA256;
+      }
+      else if (m_fwChecksum.compare("SHA-384")) {
+        m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA384;
+      }
+      else if (m_fwChecksum.compare("SHA-512")) {
+        m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
+      }
+      else {
+        char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(m_fwAlgorithm.size())];
+        snprintf_P(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, m_fwAlgorithm.c_str());
+        Logger::log(message);
         Firmware_Send_State(FW_STATE_INVALID_CHKS);
         return;
       }
@@ -1264,7 +1280,7 @@ class ThingsBoardSized
     // Processes firmware response
     inline void process_firmware_response(char* topic, uint8_t* payload, uint32_t length) {
       static uint32_t sizeReceive = 0;
-      static MD5Builder md5;
+      static HashGenerator hash(m_fwChecksumAlgorithm);
 
       m_fwChunkReceive = atoi(strrchr(topic, SLASH) + 1U);
 
@@ -1274,8 +1290,6 @@ class ThingsBoardSized
 
       if (m_fwChunkReceive == 0) {
         sizeReceive = 0;
-        md5 = MD5Builder();
-        md5.begin();
 
         // Initialize Flash
         if (!Update.begin(m_fwSize)) {
@@ -1300,21 +1314,20 @@ class ThingsBoardSized
       }
 
       // Update value only if write flash success
-      md5.add(payload, length);
+      hash.update(payload, length);
       sizeReceive += length;
 
       // Receive Full Firmware
       if (m_fwSize == sizeReceive) {
-        md5.calculate();
-        String md5Str = md5.toString();
-        char actual[JSON_STRING_SIZE(strlen(MD5_ACTUAL)) + md5Str.length()];
-        snprintf_P(actual, sizeof(actual), MD5_ACTUAL, md5Str.c_str());
+        std::string calculatedHash = hash.get_hash_string();
+        char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + calculatedHash.size()];
+        snprintf_P(actual, sizeof(actual), HASH_ACTUAL, m_fwAlgorithm.c_str(), calculatedHash.c_str());
         Logger::log(actual);
-        char expected[JSON_STRING_SIZE(strlen(MD5_EXPECTED)) + JSON_STRING_SIZE(m_fwChecksum.size())];
-        snprintf_P(expected, sizeof(expected), MD5_EXPECTED, m_fwChecksum.c_str());
+        char expected[JSON_STRING_SIZE(strlen(HASH_EXPECTED)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + JSON_STRING_SIZE(m_fwChecksum.size())];
+        snprintf_P(expected, sizeof(expected), HASH_EXPECTED, m_fwAlgorithm.c_str(), m_fwChecksum.c_str());
         Logger::log(expected);
         // Check MD5
-        if (strncmp(md5Str.c_str(), m_fwChecksum.c_str(), md5Str.length()) != 0) {
+        if (m_fwChecksum.compare(calculatedHash)) {
           Logger::log(CHKS_VER_FAILED);
 #if defined(ESP32)
           Update.abort();
@@ -1500,11 +1513,13 @@ class ThingsBoardSized
 
 #if defined(ESP8266) || defined(ESP32)
     // For Firmware Update
-    const char  *m_currFwTitle;
-    const char  *m_currFwVersion;
-    const char  *m_fwState;
+    const char *m_currFwTitle;
+    const char *m_currFwVersion;
+    const char *m_fwState;
     // Allows for a binary size of up to theoretically 4 GB.
-    uint32_t    m_fwSize;
+    uint32_t m_fwSize;
+    mbedtls_md_type_t m_fwChecksumAlgorithm;
+    std::string m_fwAlgorithm;
     std::string m_fwChecksum;
     std::function<void(const bool&)> m_fwUpdatedCallback;
     // Number of tries we can request each chunk for,
