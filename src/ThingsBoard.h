@@ -162,6 +162,10 @@ constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
 constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
 constexpr char FW_STATE_UPDATE_ERROR[] PROGMEM = "UPDATE ERROR";
 constexpr char FW_STATE_CHKS_ERROR[] PROGMEM = "CHECKSUM ERROR";
+constexpr char CHECKSUM_AGORITM_MD5[] PROGMEM = "MD5";
+constexpr char CHECKSUM_AGORITM_SHA256[] PROGMEM = "SHA256";
+constexpr char CHECKSUM_AGORITM_SHA384[] PROGMEM = "SHA384";
+constexpr char CHECKSUM_AGORITM_SHA512[] PROGMEM = "SHA512";
 
 // Log messages.
 constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
@@ -179,6 +183,8 @@ constexpr char UNABLE_TO_WRITE[] PROGMEM = "Unable to write firmware";
 constexpr char UNABLE_TO_DOWNLOAD[] PROGMEM = "Unable to download firmware";
 constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
 constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
+constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Error during Update.write";
+constexpr char ERROR_UPDATE_END[] PROGMEM = "Error during Update.end, not all bytes written";
 constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
 constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
@@ -843,10 +849,10 @@ class ThingsBoardSized
       const char* fw_title = data[FW_TITLE_KEY].as<const char*>();
       const char* fw_version = data[FW_VER_KEY].as<const char*>();
       m_fwChecksum = data[FW_CHKS_KEY].as<std::string>();
-      m_fwAlgorithm = data[FW_CHKS_ALGO_KEY].as<const char*>();
+      m_fwAlgorithm = data[FW_CHKS_ALGO_KEY].as<std::string>();
       m_fwSize = data[FW_SIZE_KEY].as<const uint32_t>();
 
-      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwChecksum.empty() || m_fwChecksum.empty()) {
+      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwAlgorithm.empty() || m_fwChecksum.empty()) {
         Logger::log(EMPTY_FW);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
@@ -865,16 +871,16 @@ class ThingsBoardSized
       }
 
       // Set used firmware algorithm, depending on received message
-      if (m_fwChecksum.compare("MD5")) {
+      if (m_fwAlgorithm.compare(CHECKSUM_AGORITM_MD5) == 0) {
         m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
       }
-      else if (m_fwChecksum.compare("SHA-256")) {
+      else if (m_fwAlgorithm.compare(CHECKSUM_AGORITM_SHA256) == 0) {
         m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA256;
       }
-      else if (m_fwChecksum.compare("SHA-384")) {
+      else if (m_fwAlgorithm.compare(CHECKSUM_AGORITM_SHA384) == 0) {
         m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA384;
       }
-      else if (m_fwChecksum.compare("SHA-512")) {
+      else if (m_fwAlgorithm.compare(CHECKSUM_AGORITM_SHA512) == 0) {
         m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
       }
       else {
@@ -940,6 +946,9 @@ class ThingsBoardSized
             }
             else {
               nbRetry--;
+              // Reset any possible errors that might have occured and retry them.
+              // Until we run out of retries.
+              m_fwState = FW_STATE_DOWNLOADING;
               if (nbRetry == 0) {
                 Logger::log(UNABLE_TO_WRITE);
                 break;
@@ -1307,41 +1316,50 @@ class ThingsBoardSized
 
       // Write data to Flash
       if (Update.write(payload, length) != length) {
-        Logger::log(ERROR_UPDATE_BEGIN);
+        Logger::log(ERROR_UPDATE_WRITE);
+#if defined(ESP32)
+          Update.abort();
+#endif
         m_fwState = FW_STATE_UPDATE_ERROR;
         Firmware_Send_State(m_fwState);
         return;
       }
 
-      // Update value only if write flash success
+      // Update value only if writing to flash was a success
       hash.update(payload, length);
       sizeReceive += length;
 
-      // Receive Full Firmware
-      if (m_fwSize == sizeReceive) {
-        std::string calculatedHash = hash.get_hash_string();
-        char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + calculatedHash.size()];
-        snprintf_P(actual, sizeof(actual), HASH_ACTUAL, m_fwAlgorithm.c_str(), calculatedHash.c_str());
-        Logger::log(actual);
-        char expected[JSON_STRING_SIZE(strlen(HASH_EXPECTED)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + JSON_STRING_SIZE(m_fwChecksum.size())];
-        snprintf_P(expected, sizeof(expected), HASH_EXPECTED, m_fwAlgorithm.c_str(), m_fwChecksum.c_str());
-        Logger::log(expected);
-        // Check MD5
-        if (m_fwChecksum.compare(calculatedHash)) {
-          Logger::log(CHKS_VER_FAILED);
+      // Check if we received the full firmware already
+      if (m_fwSize != sizeReceive) {
+        return;
+      }
+
+      std::string calculatedHash = hash.get_hash_string();
+      char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + calculatedHash.size()];
+      snprintf_P(actual, sizeof(actual), HASH_ACTUAL, m_fwAlgorithm.c_str(), calculatedHash.c_str());
+      Logger::log(actual);
+      char expected[JSON_STRING_SIZE(strlen(HASH_EXPECTED)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + JSON_STRING_SIZE(m_fwChecksum.size())];
+      snprintf_P(expected, sizeof(expected), HASH_EXPECTED, m_fwAlgorithm.c_str(), m_fwChecksum.c_str());
+      Logger::log(expected);
+      // Check MD5
+      if (m_fwChecksum.compare(calculatedHash) != 0) {
+        Logger::log(CHKS_VER_FAILED);
 #if defined(ESP32)
-          Update.abort();
+        Update.abort();
 #endif
-          m_fwState = FW_STATE_CHKS_ERROR;
+        m_fwState = FW_STATE_CHKS_ERROR;
+        Firmware_Send_State(m_fwState);
+      }
+      else {
+        Logger::log(CHKS_VER_SUCCESS);
+        if (!Update.end()) {
+          Logger::log(ERROR_UPDATE_END);
+          m_fwState = FW_STATE_UPDATE_ERROR;
           Firmware_Send_State(m_fwState);
+          return;
         }
-        else {
-          Logger::log(CHKS_VER_SUCCESS);
-          if (Update.end(true)) {
-            Logger::log(FW_UPDATE_SUCCESS);
-            m_fwState = STATUS_SUCCESS;
-          }
-        }
+        Logger::log(FW_UPDATE_SUCCESS);
+        m_fwState = STATUS_SUCCESS;
       }
     }
 #endif

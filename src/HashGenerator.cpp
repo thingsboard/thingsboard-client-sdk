@@ -19,8 +19,8 @@ HashGenerator::~HashGenerator(void) {
     mbedtls_md_free(&m_ctx);
 }
 
-void HashGenerator::update(const uint8_t* data, const size_t& len) {
-    mbedtls_md_update(&m_ctx, data, len);
+const bool HashGenerator::update(const uint8_t* data, const size_t& len) {
+    return mbedtls_md_update(&m_ctx, data, len) == 0;
 }
 
 const std::string HashGenerator::get_hash_string() {
