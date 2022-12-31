@@ -25,12 +25,12 @@ constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 
 // See https://thingsboard.io/docs/user-guide/device-provisioning/
 // to understand how to create a device profile to be able to provision a device
-constexpr char* provisionDeviceKey PROGMEM = "YOUR_PROVISION_DEVICE_KEY";
-constexpr char* provisionDeviceSecret PROGMEM = "YOUR_PROVISION_DEVICE_SECRET";
-// Optionally keep deviceName empty and the WiFi mac address of the integrated
+constexpr char PROVISION_DEVICE_KEY[] PROGMEM = "YOUR_PROVISION_DEVICE_KEY";
+constexpr char PROVISION_DEVICE_SECRET[] PROGMEM = "YOUR_PROVISION_DEVICE_SECRET";
+// Optionally keep the device name empty and the WiFi mac address of the integrated
 // wifi chip on ESP32 or ESP8266 will be used as the name instead
 // Ensuring your device name is unique, even when reusing this code for multiple devices
-constexpr char deviceName[] PROGMEM = "";
+constexpr char DEVICE_NAME[] PROGMEM = "";
 
 
 // Initialize underlying client, used to establish a connection
@@ -148,10 +148,9 @@ void loop() {
         Serial.println("Failed to connect");
         return;
       }
-      if (tb.Provision_Subscribe(provisionCallback) &&
-          tb.sendProvisionRequest((deviceName != NULL) && (deviceName[0] == '\0') ? WiFi.macAddress().c_str() : deviceName, provisionDeviceKey, provisionDeviceSecret)) {
-        provisionRequestSent = true;
-        Serial.println("Provision request was sent!");
+      Serial.println("Sending provisioning request");
+      provisionRequestSent = tb.Provision_Subscribe(provisionCallback) &&
+                             tb.sendProvisionRequest((DEVICE_NAME != NULL) && (DEVICE_NAME[0] == '\0') ? WiFi.macAddress().c_str() : DEVICE_NAME, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET);
       }
     }
   } else if (provisionResponseProcessed) {
