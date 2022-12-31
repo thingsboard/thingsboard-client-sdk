@@ -7,17 +7,6 @@
 #include <ThingsBoard.h>
 
 
-// Firmware title and version used to compare with remote version, to check if an update is needed.
-// Title needs to be the same and version needs to be different --> downgrading is possible
-constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
-constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
-
-// Maximum amount of retries we attempt to download each firmware chunck over MQTT
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
-// Size of each firmware chunck downloaded over MQTT,
-// increased packet size, might increase download speed
-constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
-
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
 
@@ -33,10 +22,20 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MQTT_MAX_MESSAGE_SIZE PROGMEM = FIRMWARE_PACKET_SIZE + 512U;
+constexpr uint32_t MQTT_MAX_MESSAGE_SIZE PROGMEM = 128U;
 
 // Baud rate for the debugging serial connection
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
+
+// Possible character options used to generate a password if none is provided.
+constexpr char PASSWORD_OPTIONS[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+// See https://thingsboard.io/docs/user-guide/claiming-devices/
+// to know how to claim a device once the request has been sent to Thingsboard cloud
+constexpr uint32_t CLAIMING_REQUEST_DURATION_MS PROGMEM = (3U * 60U * 1000U);
+// Optionally keep the claiming request secret key empty,
+// and a random password will be generated for the claiming request instead.
+std::string claimingRequestSecretKey = "";
 
 
 // Initialize underlying client, used to establish a connection
@@ -44,8 +43,8 @@ WiFiClient espClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoardSized<MQTT_MAX_MESSAGE_SIZE> tb(espClient);
 
-// Statuses for updating
-bool updateRequestSent = false;
+// Statuses for claiming
+bool claimingRequestSent = false;
 
 
 /// @brief Initalizes WiFi connection,
@@ -91,7 +90,23 @@ void updatedCallback(const bool& success) {
   Serial.println("Downloading firmware failed");
 }
 
+/// @brief Generates a random password from a defined set of predefined options
+/// @param length Length of the password that should be generated
+/// @return The generated password.
+const std::string generateRandomPassword(const uint8_t& length = 8U) {
+  std::string password = "";
+  for (int i = 0; i < length; i++) {
+    password.append(1U, PASSWORD_OPTIONS[random(sizeof(PASSWORD_OPTIONS))]);
+  }
+  return password;
+}
+
 void setup() {
+  // If analog input pin 0 is unconnected, random analog
+  // noise will cause the call to randomSeed() to generate
+  // different seed numbers each time the sketch runs.
+  // randomSeed() will then shuffle the random function.
+  randomSeed(analogRead(0));
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
   delay(1000);
@@ -115,11 +130,14 @@ void loop() {
     }
   }
 
-  if (!updateRequestSent) {
-    Serial.println("Firwmare Update...");
-    // See https://thingsboard.io/docs/user-guide/ota-updates/
-    // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
-    updateRequestSent = tb.Start_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updatedCallback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+  if (!claimingRequestSent) {
+    // Check if passed claimingRequestSecretKey was empty,
+    // and if it was generate a random password and use that one instead
+    if (claimingRequestSecretKey.empty()) {
+      claimingRequestSecretKey = generateRandomPassword();
+    }
+    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms", claimingRequestSecretKey.c_str(), claimingRequestSecretKey.length(), CLAIMING_REQUEST_DURATION_MS);
+    claimingRequestSent = tb.sendClaimingRequest(claimingRequestSecretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
   }
 
   tb.loop();
