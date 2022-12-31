@@ -1586,11 +1586,11 @@ class ThingsBoardHttpSized
   public:
     // Initializes ThingsBoardHttpSized class with network client.
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
-                                const char *host, int port = 80)
+                                const char *host, const uint16_t& port = 80U)
       : m_client(client, host, port)
       , m_host(host)
-      , m_token(access_token)
       , m_port(port)
+      , m_token(access_token)
     {
       // Nothing to do.
     }
@@ -1631,7 +1631,7 @@ class ThingsBoardHttpSized
     // Sends custom JSON telemetry string to the ThingsBoard, using HTTP.
     inline const bool sendTelemetryJson(const char *json) {
       if (!json || !m_token) {
-        return  false;
+        return false;
       }
 
       if (!m_client.connected()) {
@@ -1649,7 +1649,7 @@ class ThingsBoardHttpSized
           (m_client.responseStatusCode() != HTTP_SUCCESS)) {
         rc = false;
       }
-
+    
       m_client.stop();
       return rc;
     }
@@ -1685,7 +1685,7 @@ class ThingsBoardHttpSized
     // Sends custom JSON with attributes to the ThingsBoard, using HTTP.
     inline const bool sendAttributeJSON(const char *json) {
       if (!json || !m_token) {
-        return  false;
+        return false;
       }
 
       if (!m_client.connected()) {
@@ -1721,7 +1721,7 @@ class ThingsBoardHttpSized
         }
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
+      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
     }
 
     // Sends single key-value in a generic way.
@@ -1740,12 +1740,12 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
+      return telemetry ? sendTelemetryJson(object) : sendAttributeJSON(object);
     }
 
     HttpClient m_client;
     const char *m_host;
-    int m_port;
+    const uint16_t m_port;
     const char *m_token;
 };
 
