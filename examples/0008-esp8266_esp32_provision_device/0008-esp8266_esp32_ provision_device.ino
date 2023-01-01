@@ -14,7 +14,7 @@ constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
 constexpr char THINGSBOARD_SERVER[] PROGMEM = "demo.thingsboard.io";
 // MQTT port used to communicate with the server, 1883 is the default unencrypted MQTT port,
 // whereas 8883 would be the default encrypted SSL MQTT port
-constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883;
+constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
