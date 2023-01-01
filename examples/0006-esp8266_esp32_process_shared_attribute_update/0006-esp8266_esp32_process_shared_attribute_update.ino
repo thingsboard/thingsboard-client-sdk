@@ -18,7 +18,7 @@ constexpr char TOKEN[] PROGMEM = "YOUR_DEVICE_ACCESS_TOKEN";
 constexpr char THINGSBOARD_SERVER[] PROGMEM = "demo.thingsboard.io";
 // MQTT port used to communicate with the server, 1883 is the default unencrypted MQTT port,
 // whereas 8883 would be the default encrypted SSL MQTT port
-constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883;
+constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
@@ -106,8 +106,8 @@ void setup() {
 void loop() {
   delay(1000);
 
-  if (WiFi.status() != WL_CONNECTED) {
-    reconnect();
+  if (!reconnect()) {
+    return;
   }
 
   if (!tb.connected()) {
@@ -116,11 +116,10 @@ void loop() {
     Serial.print(THINGSBOARD_SERVER);
     Serial.print(" with token ");
     Serial.println(TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
       Serial.println("Failed to connect");
       return;
     }
-
   }
 
   if (!subscribed) {
