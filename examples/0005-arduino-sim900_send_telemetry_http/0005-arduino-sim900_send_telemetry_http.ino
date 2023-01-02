@@ -18,7 +18,7 @@
 
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
-#include <ThingsBoard.h>
+#include <ThingsBoardHttp.h>
 
 
 // Your GPRS credentials
