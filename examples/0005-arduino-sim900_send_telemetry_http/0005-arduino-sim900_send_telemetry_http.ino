@@ -39,7 +39,7 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 80U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MQTT_MAX_MESSAGE_SIZE PROGMEM = 128U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 
 // Baud rate for the debugging serial connection
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
@@ -61,7 +61,7 @@ SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
 TinyGsmClient client(modem);
 
 // Initialize ThingsBoard instance
-ThingsBoardHttpSized<MQTT_MAX_MESSAGE_SIZE> tb(client, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttpSized<MAX_MESSAGE_SIZE> tb(client, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
