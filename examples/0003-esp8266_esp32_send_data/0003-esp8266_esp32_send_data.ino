@@ -4,8 +4,6 @@
 #include <WiFi.h>
 #endif
 
-#include <ThingsBoard.h>
-
 
 // Sending data can either be done over MQTT and the PubSubClient
 // or HTTPS and the HTTPClient, when using the ESP32 or ESP8266
@@ -16,6 +14,13 @@
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.
 #define ENCRYPTED false
+
+
+#if USING_HTTPS
+#include <ThingsBoardHttp.h>
+#else
+#include <ThingsBoard.h>
+#endif
 
 
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";

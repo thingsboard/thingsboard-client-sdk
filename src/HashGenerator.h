@@ -1,5 +1,11 @@
-#ifndef HASH_GENERATOR
-#define HASH_GENERATOR
+/*
+  HashGenerator.h - Library API for sending data to the ThingsBoard
+  Based on PubSub MQTT library.
+  Created by Olender M. Oct 2018.
+  Released into the public domain.
+*/
+#ifndef Hash_Generator_h
+#define Hash_Generator_h
 
 // Library includes.
 #include <mbedtls/md.h>
@@ -32,5 +38,4 @@ private:
     mbedtls_md_context_t m_ctx;
 };
 
-
-#endif // HASH_GENERATOR
+#endif // Hash_Generator_h
