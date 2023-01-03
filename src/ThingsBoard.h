@@ -62,7 +62,6 @@ constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
 constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
 
 // Log messages.
-constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "PayloadSize (%u) to small for the given payloads size (%u)";
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many rpc subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";

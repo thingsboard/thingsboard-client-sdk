@@ -140,6 +140,12 @@ class ThingsBoardHttpSized
         Logger::log(message);
         return false;
       }
+      else if (PayloadSize < jsonSize) {
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
+        Logger::log(message);
+        return false;
+      }
       char json[jsonSize];
       serializeJson(jsonObject, json, jsonSize);
       return sendTelemetryJson(json);
@@ -151,6 +157,12 @@ class ThingsBoardHttpSized
       if (MaxFieldsAmt < jsonVariantSize) {
         char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+      else if (PayloadSize < jsonSize) {
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
       }
@@ -241,6 +253,12 @@ class ThingsBoardHttpSized
         Logger::log(message);
         return false;
       }
+      else if (PayloadSize < jsonSize) {
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
+        Logger::log(message);
+        return false;
+      }
       char json[jsonSize];
       serializeJson(jsonObject, json, jsonSize);
       return sendAttributeJSON(json);
@@ -252,6 +270,12 @@ class ThingsBoardHttpSized
       if (MaxFieldsAmt < jsonVariantSize) {
         char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+      else if (PayloadSize < jsonSize) {
+        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
       }
