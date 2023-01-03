@@ -45,12 +45,18 @@ class ThingsBoardHttpSized
                                 const char *host, const uint16_t& port = 80U)
       : m_client()
       , m_wifiClient(client)
+      , m_secure(port == 433U)
 #endif
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
     {
-      // Nothing to do.
+#if defined(ESP8266) || defined(ESP32)
+      m_client.addHeader("Content-Type", HTTP_POST_PATH);
+      m_client.begin(client, m_host, m_port, "/", m_secure);
+#else
+      m_client.connect(m_host, m_port)
+#endif
     }
 
     // Destroys ThingsBoardHttpSized class with network client.
@@ -92,56 +98,22 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      char path[detect_size(HTTP_TELEMETRY_TOPIC, m_token)];
+      char path[detectSize(HTTP_TELEMETRY_TOPIC, m_token)];
       snprintf_P(path, sizeof(path), HTTP_TELEMETRY_TOPIC, m_token);
-
-      if (!m_client.connected()) {
-#if !defined(ESP8266) && !defined(ESP32)
-        if (!m_client.connect(m_host, m_port)) {
-#else
-        const bool secure = (m_port == 433U);
-        if (!m_client.begin(m_wifiClient, m_host, m_port, path, secure)) {
-#endif
-          Logger::log(CONNECT_FAILED);
-          return false;
-        }
-      }
-
-      bool rc = true;
-
-#if !defined(ESP8266) && !defined(ESP32)
-      if (!m_client.post(path, HTTP_POST_PATH, json)
-          || (m_client.responseStatusCode() != HTTP_SUCCESS)) {
-#else
-      m_client.addHeader("Content-Type", HTTP_POST_PATH);
-      const int status = m_client.POST(json);
-      if (status != HTTP_CODE_OK) {
-        char message[detect_size(HTTP_FAILED_SEND, status)];
-        snprintf_P(message, sizeof(message), HTTP_FAILED_SEND, status);
-        Logger::log(message);
-#endif
-        rc = false;
-      }
-
-#if !defined(ESP8266) && !defined(ESP32)
-      m_client.stop();
-#else
-      m_client.end();
-#endif
-      return rc;
+      return postMessage(path, json);
     }
 
     // Sends custom JSON telemetry JsonObject to the ThingsBoard.
     inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
       else if (PayloadSize < jsonSize) {
-        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
@@ -155,13 +127,13 @@ class ThingsBoardHttpSized
     inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
       else if (PayloadSize < jsonSize) {
-        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
@@ -205,56 +177,22 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      char path[detect_size(HTTP_TELEMETRY_TOPIC, m_token)];
+      char path[detectSize(HTTP_TELEMETRY_TOPIC, m_token)];
       snprintf_P(path, sizeof(path), HTTP_ATTRIBUTES_TOPIC, m_token);
-
-      if (!m_client.connected()) {
-#if !defined(ESP8266) && !defined(ESP32)
-        if (!m_client.connect(m_host, m_port)) {
-#else
-        const bool secure = (m_port == 433U);
-        if (!m_client.begin(m_wifiClient, m_host, m_port, path, secure)) {
-#endif
-          Logger::log(CONNECT_FAILED);
-          return false;
-        }
-      }
-
-      bool rc = true;
-
-#if !defined(ESP8266) && !defined(ESP32)
-      if (!m_client.post(path, HTTP_POST_PATH, json)
-          || (m_client.responseStatusCode() != HTTP_SUCCESS)) {
-#else
-      m_client.addHeader("Content-Type", HTTP_POST_PATH);
-      const int status = m_client.POST(json);
-      if (status != HTTP_CODE_OK) {
-        char message[detect_size(HTTP_FAILED_SEND, status)];
-        snprintf_P(message, sizeof(message), HTTP_FAILED_SEND, status);
-        Logger::log(message);
-#endif
-        rc = false;
-      }
-
-#if !defined(ESP8266) && !defined(ESP32)
-      m_client.stop();
-#else
-      m_client.end();
-#endif
-      return rc;
+      return postMessage(path, json);
     }
 
     // Sends custom JsonObject with attributes to the ThingsBoard.
     inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
       else if (PayloadSize < jsonSize) {
-        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
@@ -268,13 +206,13 @@ class ThingsBoardHttpSized
     inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
-        char message[detect_size(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
       else if (PayloadSize < jsonSize) {
-        char message[detect_size(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
@@ -285,8 +223,64 @@ class ThingsBoardHttpSized
     }
 
   private:
+    inline const bool connect(const char* path) {
+      if (path == nullptr) {
+        return false;
+      }
+#if !defined(ESP8266) || defined(ESP32)
+      m_client.setURL(path);
+#endif
+
+      if (m_client.connected()) {
+        return true;
+      }
+
+#if !defined(ESP8266) && !defined(ESP32)
+      if (!m_client.connect(m_host, m_port)) {
+#else
+      if (!m_client.begin(m_wifiClient, m_host, m_port, path, m_secure)) {
+#endif
+        Logger::log(CONNECT_FAILED);
+        return false;
+      }
+      return true;
+    }
+
+    inline void clearConnection(void) {
+#if !defined(ESP8266) && !defined(ESP32)
+      m_client.stop();
+#else
+      m_client.end();
+#endif
+    }
+
+    inline const bool postMessage(const char* path, const char* json) {
+      if (!connect(path)) {
+        return false;
+      }
+
+      bool result = true;
+
+#if !defined(ESP8266) && !defined(ESP32)
+      const bool success = m_client.post(path, HTTP_POST_PATH, json);
+      const int status = m_client.responseStatusCode();
+      if (!success || status != HTTP_SUCCESS) {
+#else
+      const int status = m_client.POST(json);
+      if (status != HTTP_CODE_OK) {
+#endif
+        char message[detectSize(HTTP_FAILED_SEND, status)];
+        snprintf_P(message, sizeof(message), HTTP_FAILED_SEND, status);
+        Logger::log(message);
+        result = false;
+      }
+
+      clearConnection();
+      return result;
+    }
+
     // Returns the length in chars needed for a given value with the given argument string to be displayed completly.
-    inline const uint8_t detect_size(const char* msg, ...) const {
+    inline const uint8_t detectSize(const char* msg, ...) const {
       va_list args;
       va_start(args, msg);
       // Result is what would have been written if the passed buffer would have been large enough not counting null character,
@@ -335,8 +329,9 @@ class ThingsBoardHttpSized
 #if !defined(ESP8266) && !defined(ESP32)
     HttpClient m_client;
 #else
-    WiFiClient& m_wifiClient;
     HTTPClient m_client;
+    WiFiClient& m_wifiClient;
+    const bool m_secure;
 #endif
     const char *m_host;
     const uint16_t m_port;
