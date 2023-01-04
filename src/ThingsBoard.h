@@ -56,8 +56,6 @@ constexpr char SHARED_KEYS[] PROGMEM = "sharedKeys";
 constexpr char SHARED_KEY[] PROGMEM = "shared";
 
 // RPC data keys.
-constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
-constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
 constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
 
@@ -69,7 +67,6 @@ constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 constexpr char COMMA PROGMEM = ',';
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
 constexpr char REQUEST_ATT[] PROGMEM = "Requesting shared attributes transformed from (%s) into json (%s)";
-constexpr char UNABLE_TO_DE_SERIALIZE_RPC[] PROGMEM = "Unable to de-serialize RPC";
 constexpr char UNABLE_TO_DE_SERIALIZE_ATT_REQUEST[] PROGMEM = "Unable to de-serialize shared attribute request";
 constexpr char UNABLE_TO_DE_SERIALIZE_ATT_UPDATE[] PROGMEM = "Unable to de-serialize shared attribute update";
 constexpr char RECEIVED_RPC_LOG_MESSAGE[] PROGMEM = "Received RPC:";
@@ -1106,9 +1103,11 @@ class ThingsBoardSized
       RPC_Response r;
       {
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-        DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+        const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
         if (error) {
-          Logger::log(UNABLE_TO_DE_SERIALIZE_RPC);
+          char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
+          snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
+          Logger::log(message);
           return;
         }
         const JsonObject &data = jsonBuffer.template as<JsonObject>();
@@ -1144,7 +1143,7 @@ class ThingsBoardSized
 
           // try to de-serialize params
           StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> doc;
-          DeserializationError err_param = deserializeJson(doc, params);
+          const DeserializationError err_param = deserializeJson(doc, params);
           //if failed to de-serialize params then send JsonObject instead
           Logger::log(RPC_PARAMS_KEY);
           if (err_param) {
@@ -1278,7 +1277,7 @@ class ThingsBoardSized
     // Processes shared attribute update message
     inline void process_shared_attribute_update_message(char* topic, uint8_t* payload, uint32_t length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         Logger::log(UNABLE_TO_DE_SERIALIZE_ATT_UPDATE);
         return;
@@ -1346,7 +1345,7 @@ class ThingsBoardSized
     // Processes shared attribute request message
     inline void process_shared_attribute_request_message(char* topic, uint8_t* payload, uint32_t length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         Logger::log(UNABLE_TO_DE_SERIALIZE_ATT_REQUEST);
         return;
@@ -1392,7 +1391,7 @@ class ThingsBoardSized
       Logger::log(PROV_RESPONSE);
 
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-      DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         Logger::log(UNABLE_TO_DE_SERIALIZE_PROV_RESPONSE);
         return;

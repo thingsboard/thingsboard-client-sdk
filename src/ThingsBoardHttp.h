@@ -23,14 +23,18 @@
 /// Constant strings in flash memory.
 /// ---------------------------------
 // HTTP topics.
-constexpr char HTTP_FAILED_SEND[] PROGMEM = "Sending failed HTTP response (%d)";
 constexpr char HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";
 constexpr char HTTP_ATTRIBUTES_TOPIC[] PROGMEM = "/api/v1/%s/attributes";
+constexpr char HTTP_RPC_TOPIC[] PROGMEM = "/api/v1/%s/rpc?timeout=%u";
 constexpr char HTTP_POST_PATH[] PROGMEM = "application/json";
 
+// Log messages.
+constexpr char POST[] PROGMEM = "POST";
+constexpr char GET[] PROGMEM = "GET";
+constexpr char HTTP_FAILED[] PROGMEM = "(%s) failed HTTP response (%d)";
+
 // ThingsBoard HTTP client class
-template<size_t PayloadSize = Default_Payload,
-         size_t MaxFieldsAmt = Default_Fields_Amt,
+template<size_t MaxFieldsAmt = Default_Fields_Amt,
          typename Logger = ThingsBoardDefaultLogger>
 class ThingsBoardHttpSized
 {
@@ -63,6 +67,22 @@ class ThingsBoardHttpSized
     inline ~ThingsBoardHttpSized() {
       // Nothing to do.
     }
+
+    // Loop handles get requests to subscribed topics,
+    // the timeout in milliseconds defined how long we have to respond.
+    inline void loop(const uint32_t& timeoutMs) {
+      char path[detectSize(HTTP_RPC_TOPIC, m_token, timeoutMs)];
+      snprintf_P(path, sizeof(path), HTTP_RPC_TOPIC, m_token, timeoutMs);
+
+      JsonObject data;
+      if (!getMessage(path, data)) {
+        return;
+      }
+      serializeJsonPretty(data, Serial);
+    }
+
+    //----------------------------------------------------------------------------
+    // Telemetry API
 
     //----------------------------------------------------------------------------
     // Telemetry API
@@ -112,12 +132,6 @@ class ThingsBoardHttpSized
         Logger::log(message);
         return false;
       }
-      else if (PayloadSize < jsonSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
-        Logger::log(message);
-        return false;
-      }
       char json[jsonSize];
       serializeJson(jsonObject, json, jsonSize);
       return sendTelemetryJson(json);
@@ -129,12 +143,6 @@ class ThingsBoardHttpSized
       if (MaxFieldsAmt < jsonVariantSize) {
         char message[detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-      else if (PayloadSize < jsonSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
       }
@@ -177,7 +185,7 @@ class ThingsBoardHttpSized
         return false;
       }
 
-      char path[detectSize(HTTP_TELEMETRY_TOPIC, m_token)];
+      char path[detectSize(HTTP_ATTRIBUTES_TOPIC, m_token)];
       snprintf_P(path, sizeof(path), HTTP_ATTRIBUTES_TOPIC, m_token);
       return postMessage(path, json);
     }
@@ -188,12 +196,6 @@ class ThingsBoardHttpSized
       if (MaxFieldsAmt < jsonObjectSize) {
         char message[detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-      else if (PayloadSize < jsonSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
         Logger::log(message);
         return false;
       }
@@ -211,18 +213,13 @@ class ThingsBoardHttpSized
         Logger::log(message);
         return false;
       }
-      else if (PayloadSize < jsonSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
-        Logger::log(message);
-        return false;
-      }
       char json[jsonSize];
       serializeJson(jsonVariant, json, jsonSize);
       return sendAttributeJSON(json);
     }
 
   private:
+    // Establishes a connection over HTTP or HTTPS, on the given api path.
     inline const bool connect(const char* path) {
       if (path == nullptr) {
         return false;
@@ -246,6 +243,8 @@ class ThingsBoardHttpSized
       return true;
     }
 
+    // Clears any remaining memory of the previous conenction,
+    // but keeps the TCP connection open so it can be reused.
     inline void clearConnection(void) {
 #if !defined(ESP8266) && !defined(ESP32)
       m_client.stop();
@@ -254,6 +253,7 @@ class ThingsBoardHttpSized
 #endif
     }
 
+    // Posts the given json data on the given api path.
     inline const bool postMessage(const char* path, const char* json) {
       if (!connect(path)) {
         return false;
@@ -269,12 +269,62 @@ class ThingsBoardHttpSized
       const int status = m_client.POST(json);
       if (status != HTTP_CODE_OK) {
 #endif
-        char message[detectSize(HTTP_FAILED_SEND, status)];
-        snprintf_P(message, sizeof(message), HTTP_FAILED_SEND, status);
+        char message[detectSize(HTTP_FAILED, POST, status)];
+        snprintf_P(message, sizeof(message), HTTP_FAILED, POST, status);
         Logger::log(message);
         result = false;
       }
 
+      clearConnection();
+      return result;
+    }
+
+    // Sends a get request to the given api path and copies the response into the string object
+    // will be kept the safe if the get request wasn't successfull.
+    inline const bool getMessage(const char* path, JsonObject& response) {
+      if (!connect(path)) {
+        return false;
+      }
+
+      bool result = true;
+      DeserializationError error(DeserializationError::Code::Ok);
+      const char* payload = nullptr;
+      static StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      jsonBuffer.clear();
+
+#if !defined(ESP8266) && !defined(ESP32)
+      const bool success = m_client.get(path);
+      const int status = m_client.responseStatusCode();
+      if (!success || status != HTTP_SUCCESS) {
+#else
+      const int status = m_client.GET();
+      if (status != HTTP_CODE_OK) {
+#endif
+        char message[detectSize(HTTP_FAILED, GET, status)];
+        snprintf_P(message, sizeof(message), HTTP_FAILED, GET, status);
+        Logger::log(message);
+        result = false;
+        goto cleanup;
+      }
+
+#if !defined(ESP8266) && !defined(ESP32)
+      payload = m_client.responseBody().c_str();
+#else
+      payload = m_client.getString().c_str();
+#endif
+      error = deserializeJson(jsonBuffer, payload);
+
+      if (error) {
+        char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
+        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
+        Logger::log(message);
+        result = false;
+        goto cleanup;
+      }
+
+      response = jsonBuffer.template as<JsonObject>();
+
+      cleanup:
       clearConnection();
       return result;
     }

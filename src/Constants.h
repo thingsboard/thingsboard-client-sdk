@@ -22,6 +22,11 @@ class ThingsBoardDefaultLogger;
 constexpr char UNABLE_TO_SERIALIZE[] PROGMEM = "Unable to serialize data";
 constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "PayloadSize (%u) to small for the given payloads size (%u)";
 constexpr char TOO_MANY_JSON_FIELDS[] PROGMEM = "Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly";
+constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (%s)";
 constexpr char CONNECT_FAILED[] PROGMEM = "Connecting to server failed";
+
+// RPC data keys.
+constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
+constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 
 #endif // Constants_h
