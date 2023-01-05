@@ -348,8 +348,7 @@ class Provision_Callback {
 template<size_t PayloadSize = Default_Payload,
          size_t MaxFieldsAmt = Default_Fields_Amt,
          typename Logger = ThingsBoardDefaultLogger>
-class ThingsBoardSized
-{
+class ThingsBoardSized {
   public:
     // Initializes ThingsBoardSized class with network client.
     // Certain private members can not be set in the constructor initalizor list,

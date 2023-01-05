@@ -11,8 +11,10 @@
 #include <mbedtls/md.h>
 #include <string>
 
+/// @brief Allows generating a hash of the given type
+/// with partial data and then retreiving the completed hash once it has been completed
 class HashGenerator {
-public:
+  public:
     /// @brief Constructor
     /// @param type Supported type of hash that should be generated from this class
     HashGenerator(const mbedtls_md_type_t& type);
