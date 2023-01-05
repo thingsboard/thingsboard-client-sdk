@@ -14,17 +14,6 @@
 #define ENCRYPTED false
 
 
-// Firmware title and version used to compare with remote version, to check if an update is needed.
-// Title needs to be the same and version needs to be different --> downgrading is possible
-constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
-constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
-
-// Maximum amount of retries we attempt to download each firmware chunck over MQTT
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
-// Size of each firmware chunck downloaded over MQTT,
-// increased packet size, might increase download speed
-constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
-
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
 
@@ -44,7 +33,7 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = FIRMWARE_PACKET_SIZE + 512U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 
 // Baud rate for the debugging serial connection
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
@@ -87,6 +76,19 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
+// Optional, keep subscribed shared attributes empty instead,
+// and the callback will be called for every shared attribute changed on the device,
+// instead of only the one that were entered instead
+constexpr std::array<const char*, 7U> SUBSCRIBED_SHARED_ATTRIBUTES = {
+  "fw_checksum",
+  "fw_checksum_algorithm",
+  "fw_size",
+  "fw_tag",
+  "fw_title",
+  "fw_version",
+  "test"
+};
+
 
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
@@ -97,8 +99,8 @@ WiFiClient espClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
-// Statuses for updating
-bool updateRequestSent = false;
+// Statuses for subscribing to shared attributes
+bool subscribed = false;
 
 
 /// @brief Initalizes WiFi connection,
@@ -132,20 +134,23 @@ const bool reconnect() {
   return true;
 }
 
-/// @brief Updated callback that will be called as soon as the firmware update finishes
-/// @param success Either true (update succesfull) or false (update failed)
-void updatedCallback(const bool& success) {
-  if (success) {
-    Serial.println("Done, Reboot now");
-#if defined(ESP8266)
-    ESP.restart();
-#elif defined(ESP32)
-    esp_restart();
-#endif
-    return;
+/// @brief Update callback that will be called as soon as one of the provided shared attributes changes value,
+/// if none are provided we subscribe to any shared attribute change instead
+/// @param data Data containing the shared attributes that were changed and their current value
+void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    Serial.println(it->key().c_str());
+    // Shared attributes have to be parsed by their type.
+    Serial.println(it->value().as<const char*>());
   }
-  Serial.println("Downloading firmware failed");
+
+  int jsonSize = JSON_STRING_SIZE(measureJson(data));
+  char buffer[jsonSize];
+  serializeJson(data, buffer, jsonSize);
+  Serial.println(buffer);
 }
+
+const Shared_Attribute_Callback callback(SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend(), processSharedAttributeUpdate);
 
 void setup() {
   // Initalize serial connection for debugging
@@ -162,20 +167,26 @@ void loop() {
   }
 
   if (!tb.connected()) {
-    // Reconnect to the ThingsBoard server,
-    // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    // Connect to the ThingsBoard
+    Serial.print("Connecting to: ");
+    Serial.print(THINGSBOARD_SERVER);
+    Serial.print(" with token ");
+    Serial.println(TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
       Serial.println("Failed to connect");
       return;
     }
   }
 
-  if (!updateRequestSent) {
-    Serial.println("Firwmare Update...");
-    // See https://thingsboard.io/docs/user-guide/ota-updates/
-    // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
-    updateRequestSent = tb.Start_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updatedCallback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+  if (!subscribed) {
+    Serial.println("Subscribing for shared attribute updates...");
+    if (!tb.Shared_Attributes_Subscribe(callback)) {
+      Serial.println("Failed to subscribe for shared attribute updates");
+      return;
+    }
+
+    Serial.println("Subscribe done");
+    subscribed = true;
   }
 
   tb.loop();

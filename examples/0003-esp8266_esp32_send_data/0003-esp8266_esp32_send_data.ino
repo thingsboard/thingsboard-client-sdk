@@ -4,8 +4,10 @@
 #include <WiFi.h>
 #endif
 
-#include <ThingsBoard.h>
 
+// Sending data can either be done over MQTT and the PubSubClient
+// or HTTPS and the HTTPClient, when using the ESP32 or ESP8266
+#define USING_HTTPS false
 
 // Wheter the giving script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
@@ -14,16 +16,12 @@
 #define ENCRYPTED false
 
 
-// Firmware title and version used to compare with remote version, to check if an update is needed.
-// Title needs to be the same and version needs to be different --> downgrading is possible
-constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
-constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
+#if USING_HTTPS
+#include <ThingsBoardHttp.h>
+#else
+#include <ThingsBoard.h>
+#endif
 
-// Maximum amount of retries we attempt to download each firmware chunck over MQTT
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
-// Size of each firmware chunck downloaded over MQTT,
-// increased packet size, might increase download speed
-constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
 
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
@@ -34,6 +32,15 @@ constexpr char TOKEN[] PROGMEM = "YOUR_DEVICE_ACCESS_TOKEN";
 
 // Thingsboard we want to establish a connection too
 constexpr char THINGSBOARD_SERVER[] PROGMEM = "demo.thingsboard.io";
+#if USING_HTTPS
+// HTTP port used to communicate with the server, 80 is the default unencrypted HTTP port,
+// whereas 443 would be the default encrypted SSL HTTPS port
+#if ENCRYPTED
+constexpr uint16_t THINGSBOARD_PORT PROGMEM = 443U;
+#else
+constexpr uint16_t THINGSBOARD_PORT PROGMEM = 80U;
+#endif
+#else
 // MQTT port used to communicate with the server, 1883 is the default unencrypted MQTT port,
 // whereas 8883 would be the default encrypted SSL MQTT port
 #if ENCRYPTED
@@ -41,10 +48,11 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 8883U;
 #else
 constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 #endif
+#endif
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = FIRMWARE_PACKET_SIZE + 512U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 
 // Baud rate for the debugging serial connection
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
@@ -95,10 +103,11 @@ WiFiClientSecure espClient;
 WiFiClient espClient;
 #endif
 // Initialize ThingsBoard instance with the maximum needed buffer size
+#if USING_HTTPS
+ThingsBoardHttpSized<MAX_MESSAGE_SIZE> tb(espClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+#else
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
-
-// Statuses for updating
-bool updateRequestSent = false;
+#endif
 
 
 /// @brief Initalizes WiFi connection,
@@ -132,22 +141,12 @@ const bool reconnect() {
   return true;
 }
 
-/// @brief Updated callback that will be called as soon as the firmware update finishes
-/// @param success Either true (update succesfull) or false (update failed)
-void updatedCallback(const bool& success) {
-  if (success) {
-    Serial.println("Done, Reboot now");
-#if defined(ESP8266)
-    ESP.restart();
-#elif defined(ESP32)
-    esp_restart();
-#endif
-    return;
-  }
-  Serial.println("Downloading firmware failed");
-}
-
 void setup() {
+  // If analog input pin 0 is unconnected, random analog
+  // noise will cause the call to randomSeed() to generate
+  // different seed numbers each time the sketch runs.
+  // randomSeed() will then shuffle the random function.
+  randomSeed(analogRead(0));
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
   delay(1000);
@@ -161,22 +160,28 @@ void loop() {
     return;
   }
 
+#if !USING_HTTPS
   if (!tb.connected()) {
-    // Reconnect to the ThingsBoard server,
-    // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    // Connect to the ThingsBoard
+    Serial.print("Connecting to: ");
+    Serial.print(THINGSBOARD_SERVER);
+    Serial.print(" with token ");
+    Serial.println(TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
       Serial.println("Failed to connect");
       return;
     }
   }
+#endif
 
-  if (!updateRequestSent) {
-    Serial.println("Firwmare Update...");
-    // See https://thingsboard.io/docs/user-guide/ota-updates/
-    // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
-    updateRequestSent = tb.Start_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updatedCallback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
-  }
+  Serial.println("Sending data...");
+  // Uploads new telemetry to ThingsBoard using MQTT.
+  // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api
+  // for more details
+  tb.sendTelemetryInt("temperature", random(10, 31));
+  tb.sendTelemetryInt("humidity", random(40, 90));
 
+#if !USING_HTTPS
   tb.loop();
+#endif
 }
