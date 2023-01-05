@@ -12,48 +12,58 @@
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 
-// Telemetry record class, allows to store different data using common interface.
+/// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
   public:
+    /// @brief Creates an empty Telemetry record containg neither a key nor value
     inline Telemetry()
       : m_type(DataType::TYPE_NONE), m_key(NULL), m_value() { }
 
-    // Constructs telemetry record from integer value.
-    // EnableIf trick is required to overcome ambiguous float/integer conversion
-    template <
-      typename T,
-      typename = ARDUINOJSON_NAMESPACE::enable_if<ARDUINOJSON_NAMESPACE::is_integral<T>::value>
-      >
+    /// @brief Constructs telemetry record from integer value
+    /// @tparam T Type of the passed value, is required to be integral,
+    /// to ensure this constructor isn't used instead of the float one by mistake
+    /// @param key Key of the key value pair we want to create
+    /// @param val Value of the key value pair we want to create
+    template <typename T,
+              typename = ARDUINOJSON_NAMESPACE::enable_if<ARDUINOJSON_NAMESPACE::is_integral<T>::value>>
     inline Telemetry(const char *key, T val)
       : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
       m_value.integer = val;
     }
 
-    // Constructs telemetry record from boolean value.
+    /// @brief Constructs telemetry record from boolean value
+    /// @param key Key of the key value pair we want to create
+    /// @param val Value of the key value pair we want to create
     inline Telemetry(const char *key, bool val)
       : m_type(DataType::TYPE_BOOL), m_key(key), m_value()  {
       m_value.boolean = val;
     }
 
-    // Constructs telemetry record from float value.
+    /// @brief Constructs telemetry record from float value
+    /// @param key Key of the key value pair we want to create
+    /// @param val Value of the key value pair we want to create
     inline Telemetry(const char *key, float val)
       : m_type(DataType::TYPE_REAL), m_key(key), m_value()  {
       m_value.real = val;
     }
 
-    // Constructs telemetry record from string value.
+    /// @brief Constructs telemetry record from string value
+    /// @param key Key of the key value pair we want to create
+    /// @param val Value of the key value pair we want to create
     inline Telemetry(const char *key, const char *val)
       : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
       m_value.str = val;
     }
 
-    // Returnd true if the empty constructor was called
-    // and no data was passed to the Telemetry instance istelf.
+    /// @brief Wheter this record is empty or not
+    /// @return Returns wheter there is any data in this record or not
     inline const bool IsEmpty() const {
       return !m_key && m_type == DataType::TYPE_NONE;
     }
 
-    // Serializes key-value pair in a generic way.
+    /// @brief Serializes the key-value pair depending on the constructor used
+    /// @param jsonObj Object the value will be copied into with the given key
+    /// @return Returns wheter serializing was successfull or not
     const bool SerializeKeyValue(JsonVariant &jsonObj) const {
       if (m_key) {
         switch (m_type) {
