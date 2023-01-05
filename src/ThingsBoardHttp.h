@@ -25,7 +25,6 @@
 // HTTP topics.
 constexpr char HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";
 constexpr char HTTP_ATTRIBUTES_TOPIC[] PROGMEM = "/api/v1/%s/attributes";
-constexpr char HTTP_RPC_TOPIC[] PROGMEM = "/api/v1/%s/rpc?timeout=%u";
 constexpr char HTTP_POST_PATH[] PROGMEM = "application/json";
 
 // Log messages.
@@ -67,22 +66,6 @@ class ThingsBoardHttpSized
     inline ~ThingsBoardHttpSized() {
       // Nothing to do.
     }
-
-    // Loop handles get requests to subscribed topics,
-    // the timeout in milliseconds defined how long we have to respond.
-    inline void loop(const uint32_t& timeoutMs) {
-      char path[detectSize(HTTP_RPC_TOPIC, m_token, timeoutMs)];
-      snprintf_P(path, sizeof(path), HTTP_RPC_TOPIC, m_token, timeoutMs);
-
-      JsonObject data;
-      if (!getMessage(path, data)) {
-        return;
-      }
-      serializeJsonPretty(data, Serial);
-    }
-
-    //----------------------------------------------------------------------------
-    // Telemetry API
 
     //----------------------------------------------------------------------------
     // Telemetry API
