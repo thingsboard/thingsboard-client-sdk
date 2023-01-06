@@ -1,3 +1,5 @@
+#if defined(ESP8266) || defined(ESP32)
+
 // Header include.
 #include <HashGenerator.h>
 
@@ -38,3 +40,5 @@ const std::string HashGenerator::get_hash_string() {
 void HashGenerator::finish(unsigned char *hash) {
     mbedtls_md_finish(&m_ctx, hash);
 }
+
+#endif // defined(ESP8266) || defined(ESP32)
