@@ -33,9 +33,9 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 256U;
 
-// Baud rate for the debugging serial connection
+// Baud rate for the debugging serial connection.
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 
@@ -77,16 +77,6 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
-// Possible character options used to generate a password if none is provided.
-constexpr char PASSWORD_OPTIONS[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-// See https://thingsboard.io/docs/user-guide/claiming-devices/
-// to know how to claim a device once the request has been sent to Thingsboard cloud
-constexpr uint32_t CLAIMING_REQUEST_DURATION_MS PROGMEM = (3U * 60U * 1000U);
-// Optionally keep the claiming request secret key empty,
-// and a random password will be generated for the claiming request instead.
-std::string claimingRequestSecretKey = "";
-
 
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
@@ -97,8 +87,8 @@ WiFiClient espClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
-// Statuses for claiming
-bool claimingRequestSent = false;
+// Statuses for subscribing to rpc
+bool subscribed = false;
 
 
 /// @brief Initalizes WiFi connection,
@@ -132,38 +122,48 @@ const bool reconnect() {
   return true;
 }
 
-/// @brief Updated callback that will be called as soon as the firmware update finishes
-/// @param success Either true (update succesfull) or false (update failed)
-void updatedCallback(const bool& success) {
-  if (success) {
-    Serial.println("Done, Reboot now");
-#if defined(ESP8266)
-    ESP.restart();
-#elif defined(ESP32)
-    esp_restart();
-#endif
-    return;
-  }
-  Serial.println("Downloading firmware failed");
+/// @brief Processes function for RPC call "example_set_temperature"
+/// RPC_Data is a JSON variant, that can be queried using operator[]
+/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
+/// @param data Data containing the rpc data that was called and its current value
+/// @return Response that should be sent to the cloud. Useful for getMethods
+RPC_Response processTemperatureChange(const RPC_Data &data) {
+  Serial.println("Received the set temperature RPC method");
+
+  // Process data
+  float example_temperature = data["temp"];
+
+  Serial.print("Example temperature: ");
+  Serial.println(example_temperature);
+
+  // Just an response example
+  return RPC_Response("example_response", 42);
 }
 
-/// @brief Generates a random password from a defined set of predefined options
-/// @param length Length of the password that should be generated
-/// @return The generated password.
-const std::string generateRandomPassword(const uint8_t& length = 8U) {
-  std::string password = "";
-  for (int i = 0; i < length; i++) {
-    password.append(1U, PASSWORD_OPTIONS[random(sizeof(PASSWORD_OPTIONS))]);
-  }
-  return password;
+/// @brief Processes function for RPC call "example_set_switch"
+/// RPC_Data is a JSON variant, that can be queried using operator[]
+/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
+/// @param data Data containing the rpc data that was called and its current value
+/// @return Response that should be sent to the cloud. Useful for getMethods
+RPC_Response processSwitchChange(const RPC_Data &data) {
+  Serial.println("Received the set switch method");
+
+  // Process data
+  bool switch_state = data["switch"];
+
+  Serial.print("Example switch state: ");
+  Serial.println(switch_state);
+
+  // Just an response example
+  return RPC_Response("example_response", 22.02);
 }
+
+const std::array<RPC_Callback, 2U> callbacks = {
+  RPC_Callback{ "example_set_temperature",    processTemperatureChange },
+  RPC_Callback{ "example_set_switch",         processSwitchChange }
+};
 
 void setup() {
-  // If analog input pin 0 is unconnected, random analog
-  // noise will cause the call to randomSeed() to generate
-  // different seed numbers each time the sketch runs.
-  // randomSeed() will then shuffle the random function.
-  randomSeed(analogRead(0));
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
   delay(1000);
@@ -178,23 +178,29 @@ void loop() {
   }
 
   if (!tb.connected()) {
-    // Reconnect to the ThingsBoard server,
-    // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    // Connect to the ThingsBoard
+    Serial.print("Connecting to: ");
+    Serial.print(THINGSBOARD_SERVER);
+    Serial.print(" with token ");
+    Serial.println(TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
       Serial.println("Failed to connect");
       return;
     }
   }
 
-  if (!claimingRequestSent) {
-    // Check if passed claimingRequestSecretKey was empty,
-    // and if it was generate a random password and use that one instead
-    if (claimingRequestSecretKey.empty()) {
-      claimingRequestSecretKey = generateRandomPassword();
+  if (!subscribed) {
+    Serial.println("Subscribing for RPC...");
+    // Perform a subscription. All consequent data processing will happen in
+    // processTemperatureChange() and processSwitchChange() functions,
+    // as denoted by callbacks array.
+    if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
+      Serial.println("Failed to subscribe for RPC");
+      return;
     }
-    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms", claimingRequestSecretKey.c_str(), claimingRequestSecretKey.length(), CLAIMING_REQUEST_DURATION_MS);
-    claimingRequestSent = tb.sendClaimingRequest(claimingRequestSecretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
+
+    Serial.println("Subscribe done");
+    subscribed = true;
   }
 
   tb.loop();

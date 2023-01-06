@@ -29,6 +29,7 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 
 // Baud rate for the debugging serial connection
+// If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 9600U;
 constexpr uint32_t SERIAL_ESP8266_DEBUG_BAUD PROGMEM = 9600U;
 
