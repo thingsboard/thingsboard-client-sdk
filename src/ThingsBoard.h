@@ -704,6 +704,113 @@ class ThingsBoardSized {
       return Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), m_fwResponseCallback);
     }
 
+#endif
+
+    //----------------------------------------------------------------------------
+    // Shared attributes API
+
+    template<class InputIterator>
+    inline const bool Shared_Attributes_Request(const InputIterator& first_itr, const InputIterator& last_itr, Shared_Attribute_Request_Callback& callback) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
+      JsonObject requestObject = requestBuffer.to<JsonObject>();
+
+      std::string sharedKeys;
+      for (auto itr = first_itr; itr != last_itr; ++itr) {
+        // Check if the given attribute is null, if it is skip it.
+        if (*itr == nullptr) {
+          continue;
+        }
+        sharedKeys.append(*itr);
+        sharedKeys.push_back(COMMA);
+      }
+
+      // Check if any sharedKeys were requested.
+      if (sharedKeys.empty()) {
+        Logger::log(NO_KEYS_TO_REQUEST);
+        return false;
+      }
+
+      // Remove latest not needed ,
+      sharedKeys.pop_back();
+
+      requestObject[SHARED_KEYS] = sharedKeys.c_str();
+      int objectSize = measureJson(requestBuffer) + 1;
+      char buffer[objectSize];
+      serializeJson(requestObject, buffer, objectSize);
+
+      // Print requested keys.
+      char message[JSON_STRING_SIZE(strlen(REQUEST_ATT)) + sharedKeys.length() + JSON_STRING_SIZE(strlen(buffer))];
+      snprintf_P(message, sizeof(message), REQUEST_ATT, sharedKeys.c_str(), buffer);
+      Logger::log(message);
+
+      m_requestId++;
+      callback.Set_Request_ID(m_requestId);
+      Shared_Attributes_Request_Subscribe(callback);
+
+      char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
+      snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
+      return m_client.publish(topic, buffer, m_qos);
+    }
+
+    // Subscribes multiple Shared attributes callbacks.
+    template<class InputIterator>
+    inline const bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
+      const uint32_t size = std::distance(first_itr, last_itr);
+      if (m_sharedAttributeUpdateCallbacks.size() + size > m_sharedAttributeUpdateCallbacks.capacity()) {
+        Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
+        return false;
+      }
+      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
+        return false;
+      }
+
+      // Push back complete vector into our local m_sharedAttributeUpdateCallbacks vector.
+      m_sharedAttributeUpdateCallbacks.insert(m_sharedAttributeUpdateCallbacks.end(), first_itr, last_itr);
+      return true;
+    }
+
+    // Subscribe one Shared attributes callback.
+    inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+      if (m_sharedAttributeUpdateCallbacks.size() + 1U > m_sharedAttributeUpdateCallbacks.capacity()) {
+        Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
+        return false;
+      }
+      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
+        return false;
+      }
+
+      // Push back given callback into our local m_sharedAttributeUpdateCallbacks vector.
+      m_sharedAttributeUpdateCallbacks.push_back(callback);
+      return true;
+    }
+
+    inline const bool Shared_Attributes_Unsubscribe() {
+      // Empty all callbacks.
+      m_sharedAttributeUpdateCallbacks.clear();
+      return m_client.unsubscribe(ATTRIBUTE_TOPIC);
+    }
+
+    // -------------------------------------------------------------------------------
+    // Provisioning API
+
+    // Subscribes to get provision response
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+    inline const bool Provision_Subscribe(const Provision_Callback callback) {
+      if (!m_client.subscribe(PROV_RESPONSE_TOPIC, m_qos ? 1 : 0)) {
+        return false;
+      }
+      m_provisionCallback = callback;
+      return true;
+    }
+
+    inline const bool Provision_Unsubscribe() {
+      m_provisionCallback = Provision_Callback();
+      return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
+    }
+#endif
+
+  private:
+#if defined(ESP8266) || defined(ESP32)
     inline const bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
       // Send our firmware title and version
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
@@ -724,19 +831,11 @@ class ThingsBoardSized {
     }
 
     inline const bool Firmware_OTA_Subscribe() {
-      if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
-        return false;
-      }
-
-      return true;
+      return m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0);
     }
 
     inline const bool Firmware_OTA_Unsubscribe() {
-      if (!m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
-        return false;
-      }
-
-      return true;
+      return m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
     inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
@@ -902,117 +1001,6 @@ class ThingsBoardSized {
     }
 #endif
 
-    //----------------------------------------------------------------------------
-    // Shared attributes API
-
-    template<class InputIterator>
-    inline const bool Shared_Attributes_Request(const InputIterator& first_itr, const InputIterator& last_itr, Shared_Attribute_Request_Callback& callback) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
-      JsonObject requestObject = requestBuffer.to<JsonObject>();
-
-      std::string sharedKeys;
-      for (auto itr = first_itr; itr != last_itr; ++itr) {
-        // Check if the given attribute is null, if it is skip it.
-        if (*itr == nullptr) {
-          continue;
-        }
-        sharedKeys.append(*itr);
-        sharedKeys.push_back(COMMA);
-      }
-
-      // Check if any sharedKeys were requested.
-      if (sharedKeys.empty()) {
-        Logger::log(NO_KEYS_TO_REQUEST);
-        return false;
-      }
-
-      // Remove latest not needed ,
-      sharedKeys.pop_back();
-
-      requestObject[SHARED_KEYS] = sharedKeys.c_str();
-      int objectSize = measureJson(requestBuffer) + 1;
-      char buffer[objectSize];
-      serializeJson(requestObject, buffer, objectSize);
-
-      // Print requested keys.
-      char message[JSON_STRING_SIZE(strlen(REQUEST_ATT)) + sharedKeys.length() + JSON_STRING_SIZE(strlen(buffer))];
-      snprintf_P(message, sizeof(message), REQUEST_ATT, sharedKeys.c_str(), buffer);
-      Logger::log(message);
-
-      m_requestId++;
-      callback.Set_Request_ID(m_requestId);
-      Shared_Attributes_Request_Subscribe(callback);
-
-      char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
-      snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      return m_client.publish(topic, buffer, m_qos);
-    }
-
-    // Subscribes multiple Shared attributes callbacks.
-    template<class InputIterator>
-    inline const bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
-      const uint32_t size = std::distance(first_itr, last_itr);
-      if (m_sharedAttributeUpdateCallbacks.size() + size > m_sharedAttributeUpdateCallbacks.capacity()) {
-        Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
-        return false;
-      }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
-        return false;
-      }
-
-      // Push back complete vector into our local m_sharedAttributeUpdateCallbacks vector.
-      m_sharedAttributeUpdateCallbacks.insert(m_sharedAttributeUpdateCallbacks.end(), first_itr, last_itr);
-      return true;
-    }
-
-    // Subscribe one Shared attributes callback.
-    inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
-      if (m_sharedAttributeUpdateCallbacks.size() + 1U > m_sharedAttributeUpdateCallbacks.capacity()) {
-        Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
-        return false;
-      }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
-        return false;
-      }
-
-      // Push back given callback into our local m_sharedAttributeUpdateCallbacks vector.
-      m_sharedAttributeUpdateCallbacks.push_back(callback);
-      return true;
-    }
-
-    inline const bool Shared_Attributes_Unsubscribe() {
-      // Empty all callbacks.
-      m_sharedAttributeUpdateCallbacks.clear();
-      if (!m_client.unsubscribe(ATTRIBUTE_TOPIC)) {
-        return false;
-      }
-      return true;
-    }
-
-    // -------------------------------------------------------------------------------
-    // Provisioning API
-
-    // Subscribes to get provision response
-
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-    inline const bool Provision_Subscribe(const Provision_Callback callback) {
-      if (!m_client.subscribe(PROV_RESPONSE_TOPIC, m_qos ? 1 : 0)) {
-        return false;
-      }
-      m_provisionCallback = callback;
-      return true;
-    }
-
-    inline const bool Provision_Unsubscribe() {
-      if (!m_client.unsubscribe(PROV_RESPONSE_TOPIC)) {
-        return false;
-      }
-      return true;
-    }
-#endif
-
-  private:
-
     // Connects to the client previously set with m_client.setServer().
     inline const bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
       const bool connection_result = m_client.connect(client_id, access_token, password);
@@ -1072,10 +1060,7 @@ class ThingsBoardSized {
     inline const bool Shared_Attributes_Request_Unsubscribe() {
       // Empty all callbacks.
       m_sharedAttributeRequestCallbacks.clear();
-      if (!m_client.unsubscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC)) {
-        return false;
-      }
-      return true;
+      return m_client.unsubscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
     // Sends single key-value in a generic way.
