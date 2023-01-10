@@ -15,6 +15,17 @@
 #define ENCRYPTED false
 
 
+// Firmware title and version used to compare with remote version, to check if an update is needed.
+// Title needs to be the same and version needs to be different --> downgrading is possible
+constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
+constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
+
+// Maximum amount of retries we attempt to download each firmware chunck over MQTT
+constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
+// Size of each firmware chunck downloaded over MQTT,
+// increased packet size, might increase download speed
+constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
+
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
 
@@ -34,9 +45,9 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 256U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 512U;
 
-// Baud rate for the debugging serial connection.
+// Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 
@@ -88,8 +99,8 @@ WiFiClient espClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
-// Statuses for subscribing to rpc
-bool subscribed = false;
+// Statuses for updating
+bool updateRequestSent = false;
 
 
 /// @brief Initalizes WiFi connection,
@@ -123,46 +134,20 @@ const bool reconnect() {
   return true;
 }
 
-/// @brief Processes function for RPC call "example_set_temperature"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
-/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
-/// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processTemperatureChange(const RPC_Data &data) {
-  Serial.println("Received the set temperature RPC method");
-
-  // Process data
-  float example_temperature = data["temp"];
-
-  Serial.print("Example temperature: ");
-  Serial.println(example_temperature);
-
-  // Just an response example
-  return RPC_Response("example_response", 42);
+/// @brief Updated callback that will be called as soon as the firmware update finishes
+/// @param success Either true (update succesfull) or false (update failed)
+void updatedCallback(const bool& success) {
+  if (success) {
+    Serial.println("Done, Reboot now");
+#if defined(ESP8266)
+    ESP.restart();
+#elif defined(ESP32)
+    esp_restart();
+#endif
+    return;
+  }
+  Serial.println("Downloading firmware failed");
 }
-
-/// @brief Processes function for RPC call "example_set_switch"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
-/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
-/// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processSwitchChange(const RPC_Data &data) {
-  Serial.println("Received the set switch method");
-
-  // Process data
-  bool switch_state = data["switch"];
-
-  Serial.print("Example switch state: ");
-  Serial.println(switch_state);
-
-  // Just an response example
-  return RPC_Response("example_response", 22.02);
-}
-
-const std::array<RPC_Callback, 2U> callbacks = {
-  RPC_Callback{ "example_set_temperature",    processTemperatureChange },
-  RPC_Callback{ "example_set_switch",         processSwitchChange }
-};
 
 void setup() {
   // Initalize serial connection for debugging
@@ -179,29 +164,20 @@ void loop() {
   }
 
   if (!tb.connected()) {
-    // Connect to the ThingsBoard
-    Serial.print("Connecting to: ");
-    Serial.print(THINGSBOARD_SERVER);
-    Serial.print(" with token ");
-    Serial.println(TOKEN);
+    // Reconnect to the ThingsBoard server,
+    // if a connection was disrupted or has not yet been established
+    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
       Serial.println("Failed to connect");
       return;
     }
   }
 
-  if (!subscribed) {
-    Serial.println("Subscribing for RPC...");
-    // Perform a subscription. All consequent data processing will happen in
-    // processTemperatureChange() and processSwitchChange() functions,
-    // as denoted by callbacks array.
-    if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
-      Serial.println("Failed to subscribe for RPC");
-      return;
-    }
-
-    Serial.println("Subscribe done");
-    subscribed = true;
+  if (!updateRequestSent) {
+    Serial.println("Firwmare Update Subscription...");
+    // See https://thingsboard.io/docs/user-guide/ota-updates/
+    // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
+    updateRequestSent = tb.Subscribe_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updatedCallback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
   }
 
   tb.loop();

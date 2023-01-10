@@ -179,24 +179,29 @@ using Shared_Attribute_Data = const JsonObjectConst;
 using Provision_Data = const JsonObjectConst;
 #endif
 
-// RPC callback wrapper
+/// @brief RPC callback wrapper
 class RPC_Callback {
   public:
-    // RPC callback signature
+    /// @brief RPC callback signatures
     using returnType = RPC_Response;
     using argumentType = RPC_Data&;
     using processFn = std::function<returnType(const argumentType data)>;
 
-    // Constructs empty callback
+    /// @brief Constructs empty callback, will result in never being called
     inline RPC_Callback()
       : m_name(), m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a RPC request arrival with
-    // given method name
+    /// @brief Constructs callback, will be called upon RPC request arrival with the given methodName
+    /// @param methodName Name we expect to be sent via. RPC so this callback will be called
+    /// @param cb Callback method that will be called and should return a response if excpected
     inline RPC_Callback(const char* methodName, const processFn cb)
       : m_name(methodName), m_cb(cb) {  }
 
-    // Calls the callback that was subscribed when this class instance was initally created.
+    /// @brief Calls the callback that was subscribed, when this class instance was initally created
+    /// @tparam Logger Logging class that should be used to print messages
+    /// @param data Received RPC Data that include optional parameters for the method sent by the cloud
+    /// @return Optional RPC Response that include key-value pair,
+    /// that the sending widget can use to display the gotten information (temperature etc.)
     template<typename Logger>
     inline returnType Call_Callback(const argumentType data) const {
       // Check if the callback is a nullptr,
@@ -208,7 +213,9 @@ class RPC_Callback {
       return m_cb(data);
     }
 
-    // Gets the name we gave the callback method on the cloud.
+    /// @brief Gets the poiner to the underlying name that was passed,
+    /// when this class instance was initally created
+    /// @return Pointer to the passed methodName
     inline const char* Get_Name() const {
       return m_name;
     }
@@ -218,30 +225,40 @@ class RPC_Callback {
     processFn   m_cb;       // Callback to call
 };
 
-// Shared attributes callback wrapper
+/// @brief Shared attributes callback wrapper
 class Shared_Attribute_Callback {
   public:
-    // Shared attributes callback signature
+    /// @brief Shared attributes callback signature
     using returnType = void;
     using argumentType = Shared_Attribute_Data&;
     using processFn = std::function<returnType(const argumentType data)>;
 
-    // Constructs empty callback
+    /// @brief Constructs empty callback, will result in never being called
     inline Shared_Attribute_Callback()
       : m_att(), m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute update arrival,
-    // where one of the given keys was changed.
+    /// @brief Constructs callback, will be called upon shared attribute update arrival,
+    /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
+    /// If the update does not include any of the given shared attributes the callback is not called
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @param cb Callback method that will be called
     template<class InputIterator>
     inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, const processFn cb)
       : m_att(first_itr, last_itr), m_cb(cb) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute update arrival,
-    // no matter which key was changed.
+    /// @brief Constructs callback, will be called upon shared attribute update arrival,
+    /// of any existing or new shared attribute on the given device
+    /// @param cb Callback method that will be called
     inline Shared_Attribute_Callback(const processFn cb)
       : m_att(), m_cb(cb) {  }
-
-    // Calls the callback that was subscribed when this class instance was initally created.
+    
+    /// @brief Calls the callback that was subscribed, when this class instance was initally created
+    /// @tparam Logger Logging class that should be used to print messages
+    /// @param data Received shared attribute update data that include
+    /// the shared attributes that were updated and their new values
     template<typename Logger>
     inline returnType Call_Callback(const argumentType data) const {
       // Check if the callback is a nullptr,
@@ -253,8 +270,10 @@ class Shared_Attribute_Callback {
       return m_cb(data);
     }
 
-    // Gets all the subscribed attributes that will result,
-    // in the subscribed method being called if changed by the cloud.
+    /// @brief Gets all the subscribed shared attributes that will result,
+    /// in the subscribed method being called if changed by the cloud
+    /// passed when this class instance was initally created
+    /// @return Subscribed shared attributes
     inline const std::vector<const char*>& Get_Attributes() const {
       return m_att;
     }
@@ -264,23 +283,33 @@ class Shared_Attribute_Callback {
     processFn                            m_cb;    // Callback to call
 };
 
-// Shared attributes request callback wrapper
+/// @brief Shared attributes request callback wrapper
 class Shared_Attribute_Request_Callback {
   public:
-    // Shared attributes callback signature
+    /// @brief Shared attributes callback signature
     using returnType = void;
     using argumentType = Shared_Attribute_Data&;
     using processFn = std::function<returnType(const argumentType data)>;
 
-    // Constructs empty callback
+    /// @brief Constructs empty callback, will result in never being called
     inline Shared_Attribute_Request_Callback()
-      : m_request_id(0U), m_cb(nullptr) {  }
+      : m_att(), m_request_id(0U), m_cb(nullptr) {  }
 
-    // Constructs callback that will be fired upon a Shared attribute request arrival
-    inline Shared_Attribute_Request_Callback(const processFn cb)
-      : m_request_id(0U), m_cb(cb) {  }
+    /// @brief Constructs callback, will be called upon shared attribute request arrival
+    /// where the given multiple requested shared attributes were sent by the cloud and received by the client
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @param cb Callback method that will be called
+    template<class InputIterator>
+    inline Shared_Attribute_Request_Callback(const InputIterator& first_itr, const InputIterator& last_itr, const processFn cb)
+      : m_att(first_itr, last_itr), m_cb(cb) {  }
 
-    // Calls the callback that was subscribed when this class instance was initally created.
+    /// @brief Calls the callback that was subscribed, when this class instance was initally created
+    /// @tparam Logger Logging class that should be used to print messages
+    /// @param data Received shared attribute request data that include
+    /// the shared attributes that were requested and their current values
     template<typename Logger>
     inline returnType Call_Callback(const argumentType data) const {
       // Check if the callback is a nullptr,
@@ -292,21 +321,35 @@ class Shared_Attribute_Request_Callback {
       return m_cb(data);
     }
 
-    // Gets all the subscribed attributes that will result,
-    // in the subscribed method being called if changed by the cloud.
+    /// @brief Gets the unique request identifier that is connected to the original request,
+    /// and will be later used to verifiy which Shared_Attribute_Request_Callback
+    /// is connected to which received shared attributes
+    /// @return Unique identifier connected to the requested shared attributes.
     inline const uint32_t& Get_Request_ID() const {
       return m_request_id;
     }
 
-    // Sets the request id to the actual used request id to later identify,
-    // which Shared_Attribute_Request_Callback is connected to which received data.
-    inline void Set_Request_ID(const uint32_t request_id) {
+    /// @brief Sets the unique request identifier that is connected to the original request,
+    /// and will be later used to verifiy which Shared_Attribute_Request_Callback
+    /// is connected to which received shared attributes
+    /// @param request_id Unqiue identifier of the request for shared attributes
+    inline void Set_Request_ID(const uint32_t& request_id) {
       m_request_id = request_id;
     }
 
+    /// @brief Gets all the requested shared attributes that will result,
+    /// in the subscribed method being called when the response with their current value
+    // is sent from the cloud and received by the client,
+    /// passed when this class instance was initally created
+    /// @return Requested shared attributes
+    inline const std::vector<const char*>& Get_Attributes() const {
+      return m_att;
+    }
+
   private:
-    uint32_t        m_request_id;   // Id the request was called with
-    processFn       m_cb;           // Callback to call
+    std::vector<const char*>       m_att;          // Attribute we want to request
+    uint32_t                       m_request_id;   // Id the request was called with
+    processFn                      m_cb;           // Callback to call
 };
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
@@ -356,10 +399,29 @@ class ThingsBoardSized {
     // will result in the variables being reset between method calls. Resulting in unexpected behaviour.
     inline ThingsBoardSized(Client& client, const bool& enableQoS = false)
       : m_client()
-      , m_requestId(0)
+      , m_rpcCallbacks()
+      , m_sharedAttributeUpdateCallbacks()
+      , m_sharedAttributeRequestCallbacks()
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+      , m_provisionCallback()
+#endif
+      , m_requestId(0U)
       , m_qos(enableQoS)
 #if defined(ESP8266) || defined(ESP32)
-      , m_fwResponseCallback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_currFwTitle(nullptr)
+      , m_currFwVersion(nullptr)
+      , m_fwState(nullptr)
+      , m_fwSize()
+      , m_fwChecksumAlgorithm()
+      , m_fwAlgorithm()
+      , m_fwChecksum()
+      , m_fwUpdatedCallback(nullptr)
+      , m_fwChunkRetries(0U)
+      , m_fwChunckSize(0U)
+      , m_fwSharedKeys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
+      , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_fwChunkReceive(0U)
 #endif
     {
       reserve_callback_size();
@@ -369,10 +431,29 @@ class ThingsBoardSized {
     // Initializes ThingsBoardSized class without network client. Ensure it is set via. setClient() before using the connect method.
     inline ThingsBoardSized()
       : m_client()
-      , m_requestId(0)
+      , m_rpcCallbacks()
+      , m_sharedAttributeUpdateCallbacks()
+      , m_sharedAttributeRequestCallbacks()
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+      , m_provisionCallback()
+#endif
+      , m_requestId(0U)
       , m_qos(false)
 #if defined(ESP8266) || defined(ESP32)
-      , m_fwResponseCallback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_currFwTitle(nullptr)
+      , m_currFwVersion(nullptr)
+      , m_fwState(nullptr)
+      , m_fwSize()
+      , m_fwChecksumAlgorithm()
+      , m_fwAlgorithm()
+      , m_fwChecksum()
+      , m_fwUpdatedCallback(nullptr)
+      , m_fwChunkRetries(0U)
+      , m_fwChunckSize(0U)
+      , m_fwSharedKeys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
+      , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_fwChunkReceive(0U)
 #endif
     {
       reserve_callback_size();
@@ -405,7 +486,7 @@ class ThingsBoardSized {
     // Connects to the specified ThingsBoard server and port.
     // Access token is used to authenticate a client.
     // Returns true on success, false otherwise.
-    inline const bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t& port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = NULL) {
+    inline const bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       if (!host) {
         return false;
       }
@@ -413,7 +494,7 @@ class ThingsBoardSized {
       return connect_to_host(access_token, client_id, password);
     }
 
-    inline const bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t& port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = NULL) {
+    inline const bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       m_client.setServer(host, port);
       return connect_to_host(access_token, client_id, password);
     }
@@ -438,14 +519,18 @@ class ThingsBoardSized {
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
-    inline const bool sendClaimingRequest(const char *secretKey, uint32_t durationMs) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
+    inline const bool sendClaimingRequest(const char *secretKey, const uint32_t& durationMs) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
       JsonObject resp_obj = requestBuffer.to<JsonObject>();
 
-      resp_obj[SECRET_KEY] = secretKey;
+      // Make the secret key optional,
+      // meaning if it is an empty string or null instead we don't send it at all.
+      if (secretKey != nullptr && secretKey[0] != '\0') {
+        resp_obj[SECRET_KEY] = secretKey;
+      }
       resp_obj[DURATION_KEY] = durationMs;
 
-      uint8_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
+      const size_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char responsePayload[objectSize];
       serializeJson(resp_obj, responsePayload, objectSize);
 
@@ -458,11 +543,15 @@ class ThingsBoardSized {
       StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
       JsonObject requestObject = requestBuffer.to<JsonObject>();
 
-      requestObject[DEVICE_NAME_KEY] = deviceName;
+      // Make the device name optional,
+      // meaning if it is an empty string or null instead we don't send it at all.
+      if (deviceName != nullptr && deviceName[0] != '\0') {
+        requestObject[DEVICE_NAME_KEY] = deviceName;
+      }
       requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
       requestObject[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
 
-      uint8_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
+      const size_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char requestPayload[objectSize];
       serializeJson(requestObject, requestPayload, objectSize);
 
@@ -700,47 +789,75 @@ class ThingsBoardSized {
       m_fwChunckSize = chunkSize;
 
       // Request the firmware informations
-      const std::array<const char*, 5U> fwSharedKeys {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      return Shared_Attributes_Request(fwSharedKeys.cbegin(), fwSharedKeys.cend(), m_fwResponseCallback);
+      return Shared_Attributes_Request(m_fwRequestCallback);
     }
 
+    inline const bool Subscribe_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U, const uint16_t& chunkSize = 4096U) {
+      m_fwState = nullptr;
+      m_fwChecksum.clear();
+      m_fwAlgorithm.clear();
+
+      // Send current firmware version
+      if (currFwTitle == nullptr || currFwVersion == nullptr) {
+        return false;
+      }
+      else if (!Firmware_Send_FW_Info(currFwTitle, currFwVersion)) {
+        return false;
+      }
+
+      // Set private members needed for update.
+      m_currFwTitle = currFwTitle;
+      m_currFwVersion = currFwVersion;
+      m_fwUpdatedCallback = updatedCallback;
+      m_fwChunkRetries = chunkRetries;
+      m_fwChunckSize = chunkSize;
+
+      // Request the firmware informations
+      return Shared_Attributes_Subscribe(m_fwUpdateCallback);
+    }
 #endif
 
     //----------------------------------------------------------------------------
     // Shared attributes API
 
-    template<class InputIterator>
-    inline const bool Shared_Attributes_Request(const InputIterator& first_itr, const InputIterator& last_itr, Shared_Attribute_Request_Callback& callback) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
-      JsonObject requestObject = requestBuffer.to<JsonObject>();
-
-      std::string sharedKeys;
-      for (auto itr = first_itr; itr != last_itr; ++itr) {
-        // Check if the given attribute is null, if it is skip it.
-        if (*itr == nullptr) {
-          continue;
-        }
-        sharedKeys.append(*itr);
-        sharedKeys.push_back(COMMA);
-      }
+    inline const bool Shared_Attributes_Request(Shared_Attribute_Request_Callback& callback) {
+      // Ensure to have enough size for the infinite amount of possible shared attributes that could be requested from the cloud,
+      // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes.
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> requestBuffer;
+      // The .template variant of createing the JsonObject has to be used,
+      // because we are passing a template to the StaticJsonDocument template list
+      // and it will generate a compile time error if not used.
+      JsonObject requestObject = requestBuffer.template as<JsonObject>();
+      const std::vector<const char *>& sharedAttributes = callback.Get_Attributes();
 
       // Check if any sharedKeys were requested.
-      if (sharedKeys.empty()) {
+      if (sharedAttributes.empty()) {
         Logger::log(NO_KEYS_TO_REQUEST);
         return false;
       }
 
-      // Remove latest not needed ,
-      sharedKeys.pop_back();
+      std::string request;
+      for (const char* att : sharedAttributes) {
+        // Check if the given attribute is null, if it is skip it.
+        if (att == nullptr) {
+          Logger::log(ATT_IS_NULL);
+          continue;
+        }
+        request.append(att);
+        request.push_back(COMMA);
+      }
 
-      requestObject[SHARED_KEYS] = sharedKeys.c_str();
-      int objectSize = measureJson(requestBuffer) + 1;
+      // Remove latest not needed ,
+      request.pop_back();
+
+      requestObject[SHARED_KEYS] = request.c_str();
+      const size_t objectSize = JSON_STRING_SIZE(measureJson(requestBuffer));
       char buffer[objectSize];
       serializeJson(requestObject, buffer, objectSize);
 
       // Print requested keys.
-      char message[JSON_STRING_SIZE(strlen(REQUEST_ATT)) + sharedKeys.length() + JSON_STRING_SIZE(strlen(buffer))];
-      snprintf_P(message, sizeof(message), REQUEST_ATT, sharedKeys.c_str(), buffer);
+      char message[JSON_STRING_SIZE(strlen(REQUEST_ATT)) + request.length() + JSON_STRING_SIZE(strlen(buffer))];
+      snprintf_P(message, sizeof(message), REQUEST_ATT, request.c_str(), buffer);
       Logger::log(message);
 
       m_requestId++;
@@ -840,7 +957,7 @@ class ThingsBoardSized {
 
     inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
       // Print out firmware shared attributes.
-      int jsonSize = JSON_STRING_SIZE(measureJson(data));
+      const size_t jsonSize = JSON_STRING_SIZE(measureJson(data));
       char buffer[jsonSize];
       serializeJson(data, buffer, jsonSize);
       Logger::log(buffer);
@@ -1132,7 +1249,7 @@ class ThingsBoardSized {
           Logger::log(RPC_PARAMS_KEY);
           if (err_param) {
             const JsonVariant &param = data[RPC_PARAMS_KEY].as<JsonVariant>();
-            const uint32_t json_size = JSON_STRING_SIZE(measureJson(param));
+            const size_t json_size = JSON_STRING_SIZE(measureJson(param));
             char json[json_size];
             serializeJson(param, json, json_size);
           	Logger::log(json);
@@ -1228,7 +1345,7 @@ class ThingsBoardSized {
         return;
       }
 
-      std::string calculatedHash = hash.get_hash_string();
+      const std::string calculatedHash = hash.get_hash_string();
       char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + calculatedHash.size()];
       snprintf_P(actual, sizeof(actual), HASH_ACTUAL, m_fwAlgorithm.c_str(), calculatedHash.c_str());
       Logger::log(actual);
@@ -1439,7 +1556,9 @@ class ThingsBoardSized {
     // but if getting one chunck fails X amount of times the update process is aborted.
     uint8_t m_fwChunkRetries;
     uint16_t m_fwChunckSize;
-    Shared_Attribute_Request_Callback m_fwResponseCallback;
+    const std::vector<const char*> m_fwSharedKeys;
+    Shared_Attribute_Request_Callback m_fwRequestCallback;
+    const Shared_Attribute_Callback m_fwUpdateCallback;
     uint16_t m_fwChunkReceive;
 #endif
 
