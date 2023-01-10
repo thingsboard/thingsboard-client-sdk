@@ -2,12 +2,13 @@
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #endif
 
 #include <ThingsBoard.h>
 
 
-// Wheter the giving script is using encryption or not,
+// Wheter the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.
@@ -44,7 +45,7 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = FIRMWARE_PACKET_SIZE + 512U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 512U;
 
 // Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable

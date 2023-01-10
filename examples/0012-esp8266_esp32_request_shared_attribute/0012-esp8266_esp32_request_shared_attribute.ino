@@ -34,9 +34,9 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 256U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 
-// Baud rate for the debugging serial connection.
+// Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 
@@ -78,6 +78,19 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
+// Optional, keep subscribed shared attributes empty instead,
+// and the callback will be called for every shared attribute changed on the device,
+// instead of only the one that were entered instead
+constexpr std::array<const char*, 7U> SUBSCRIBED_SHARED_ATTRIBUTES = {
+  "fw_checksum",
+  "fw_checksum_algorithm",
+  "fw_size",
+  "fw_tag",
+  "fw_title",
+  "fw_version",
+  "test"
+};
+
 
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
@@ -88,7 +101,7 @@ WiFiClient espClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
-// Statuses for subscribing to rpc
+// Statuses for subscribing to shared attributes
 bool subscribed = false;
 
 
@@ -123,46 +136,23 @@ const bool reconnect() {
   return true;
 }
 
-/// @brief Processes function for RPC call "example_set_temperature"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
-/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
-/// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processTemperatureChange(const RPC_Data &data) {
-  Serial.println("Received the set temperature RPC method");
+/// @brief Update callback that will be called as soon as the requested shared attributes, have been received.
+/// The callback will then not be called anymore unless it is reused for another request
+/// @param data Data containing the shared attributes that were requested and their current value
+void processSharedAttributeRequest(const Shared_Attribute_Data &data) {
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    Serial.println(it->key().c_str());
+    // Shared attributes have to be parsed by their type.
+    Serial.println(it->value().as<const char*>());
+  }
 
-  // Process data
-  float example_temperature = data["temp"];
-
-  Serial.print("Example temperature: ");
-  Serial.println(example_temperature);
-
-  // Just an response example
-  return RPC_Response("example_response", 42);
+  int jsonSize = JSON_STRING_SIZE(measureJson(data));
+  char buffer[jsonSize];
+  serializeJson(data, buffer, jsonSize);
+  Serial.println(buffer);
 }
 
-/// @brief Processes function for RPC call "example_set_switch"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
-/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
-/// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processSwitchChange(const RPC_Data &data) {
-  Serial.println("Received the set switch method");
-
-  // Process data
-  bool switch_state = data["switch"];
-
-  Serial.print("Example switch state: ");
-  Serial.println(switch_state);
-
-  // Just an response example
-  return RPC_Response("example_response", 22.02);
-}
-
-const std::array<RPC_Callback, 2U> callbacks = {
-  RPC_Callback{ "example_set_temperature",    processTemperatureChange },
-  RPC_Callback{ "example_set_switch",         processSwitchChange }
-};
+Shared_Attribute_Request_Callback callback(SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend(), processSharedAttributeRequest);
 
 void setup() {
   // Initalize serial connection for debugging
@@ -190,18 +180,10 @@ void loop() {
     }
   }
 
-  if (!subscribed) {
-    Serial.println("Subscribing for RPC...");
-    // Perform a subscription. All consequent data processing will happen in
-    // processTemperatureChange() and processSwitchChange() functions,
-    // as denoted by callbacks array.
-    if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
-      Serial.println("Failed to subscribe for RPC");
-      return;
-    }
-
-    Serial.println("Subscribe done");
-    subscribed = true;
+  Serial.println("Requesting shared attributes...");
+  if (!tb.Shared_Attributes_Request(callback)) {
+    Serial.println("Failed to request shared attributes");
+    return;
   }
 
   tb.loop();

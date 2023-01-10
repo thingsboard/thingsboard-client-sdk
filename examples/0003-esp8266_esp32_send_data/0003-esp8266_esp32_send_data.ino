@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #endif
 
 
@@ -9,7 +10,7 @@
 // or HTTPS and the HTTPClient, when using the ESP32 or ESP8266
 #define USING_HTTPS false
 
-// Wheter the giving script is using encryption or not,
+// Wheter the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.
@@ -181,6 +182,7 @@ void loop() {
   // for more details
   tb.sendTelemetryInt("temperature", random(10, 31));
   tb.sendTelemetryInt("humidity", random(40, 90));
+  tb.sendAttributeString("version", "1.0");
 
 #if !USING_HTTPS
   tb.loop();
