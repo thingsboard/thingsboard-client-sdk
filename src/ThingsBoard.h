@@ -9,21 +9,23 @@
 
 // Library includes.
 #include <PubSubClient.h>
-#include <HashGenerator.h>
-#include <vector>
-#include <array>
-#include <functional>
 
-#if defined(ESP8266)
+#if defined ESP8266
 #include <Updater.h>
-#elif defined(ESP32)
+#elif defined ESP32
 #include <Update.h>
 #endif
 
 // Local includes.
 #include "ThingsBoardDefaultLogger.h"
+#include "HashGenerator.h"
 #include "Telemetry.h"
 #include "Constants.h"
+#include "Shared_Attribute_Callback.h"
+#include "Shared_Attribute_Request_Callback.h"
+#include "RPC_Callback.h"
+#include "Provision_Callback.h"
+#include "OTA_Update_Callback.h"
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -71,13 +73,11 @@ constexpr char UNABLE_TO_DE_SERIALIZE_ATT_REQUEST[] PROGMEM = "Unable to de-seri
 constexpr char UNABLE_TO_DE_SERIALIZE_ATT_UPDATE[] PROGMEM = "Unable to de-serialize shared attribute update";
 constexpr char RECEIVED_RPC_LOG_MESSAGE[] PROGMEM = "Received RPC:";
 constexpr char RPC_METHOD_NULL[] PROGMEM = "RPC method is NULL";
-constexpr char RPC_CB_NULL[] PROGMEM = "RPC callback is NULL";
 constexpr char NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, passing null JSON";
 constexpr char CALLING_RPC[] PROGMEM = "Calling RPC:";
 constexpr char RECEIVED_ATT_UPDATE[] PROGMEM = "Received shared attribute update";
 constexpr char NOT_FOUND_ATT_UPDATE[] PROGMEM = "Shared attribute update key not found";
 constexpr char ATT_CB_ID[] PROGMEM = "Shared attribute update callback id: (%u)";
-constexpr char ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
 constexpr char ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
 constexpr char ATT_IS_NULL[] PROGMEM = "Subscribed shared attribute update key is NULL";
 constexpr char ATT_IN_ARRAY[] PROGMEM = "Shared attribute update key: (%s) is subscribed";
@@ -85,8 +85,6 @@ constexpr char ATT_NO_CHANGE[] PROGMEM = "No keys that we subscribed too were ch
 constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
 constexpr char RECEIVED_ATT[] PROGMEM = "Received shared attribute request";
 constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Shared attribute key not found";
-constexpr char ATT_REQUEST_CB_IS_NULL[] PROGMEM = "Shared attribute request callback is NULL";
-constexpr char PROVISION_CB_IS_NULL[] PROGMEM = "Provisioning callback is NULL";
 constexpr char CALLING_REQUEST_ATT_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
 constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback onMQTTMessage from topic: (%s)";
 
@@ -170,223 +168,6 @@ constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 #endif
 #endif
 
-// Convenient aliases
-// JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
-using RPC_Data = const JsonVariantConst;
-// JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
-using Shared_Attribute_Data = const JsonObjectConst;
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-using Provision_Data = const JsonObjectConst;
-#endif
-
-/// @brief RPC callback wrapper
-class RPC_Callback {
-  public:
-    /// @brief RPC callback signatures
-    using returnType = RPC_Response;
-    using argumentType = RPC_Data&;
-    using processFn = std::function<returnType(const argumentType data)>;
-
-    /// @brief Constructs empty callback, will result in never being called
-    inline RPC_Callback()
-      : m_name(), m_cb(nullptr) {  }
-
-    /// @brief Constructs callback, will be called upon RPC request arrival with the given methodName
-    /// @param methodName Name we expect to be sent via. RPC so this callback will be called
-    /// @param cb Callback method that will be called and should return a response if excpected
-    inline RPC_Callback(const char* methodName, const processFn cb)
-      : m_name(methodName), m_cb(cb) {  }
-
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
-    /// @tparam Logger Logging class that should be used to print messages
-    /// @param data Received RPC Data that include optional parameters for the method sent by the cloud
-    /// @return Optional RPC Response that include key-value pair,
-    /// that the sending widget can use to display the gotten information (temperature etc.)
-    template<typename Logger>
-    inline returnType Call_Callback(const argumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_cb) {
-        Logger::log(RPC_CB_NULL);
-        return returnType();
-      }
-      return m_cb(data);
-    }
-
-    /// @brief Gets the poiner to the underlying name that was passed,
-    /// when this class instance was initally created
-    /// @return Pointer to the passed methodName
-    inline const char* Get_Name() const {
-      return m_name;
-    }
-
-  private:
-    const char  *m_name;    // Method name
-    processFn   m_cb;       // Callback to call
-};
-
-/// @brief Shared attributes callback wrapper
-class Shared_Attribute_Callback {
-  public:
-    /// @brief Shared attributes callback signature
-    using returnType = void;
-    using argumentType = Shared_Attribute_Data&;
-    using processFn = std::function<returnType(const argumentType data)>;
-
-    /// @brief Constructs empty callback, will result in never being called
-    inline Shared_Attribute_Callback()
-      : m_att(), m_cb(nullptr) {  }
-
-    /// @brief Constructs callback, will be called upon shared attribute update arrival,
-    /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
-    /// If the update does not include any of the given shared attributes the callback is not called
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
-    /// @param first_itr Iterator pointing to the first element in the data container
-    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
-    /// @param cb Callback method that will be called
-    template<class InputIterator>
-    inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, const processFn cb)
-      : m_att(first_itr, last_itr), m_cb(cb) {  }
-
-    /// @brief Constructs callback, will be called upon shared attribute update arrival,
-    /// of any existing or new shared attribute on the given device
-    /// @param cb Callback method that will be called
-    inline Shared_Attribute_Callback(const processFn cb)
-      : m_att(), m_cb(cb) {  }
-    
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
-    /// @tparam Logger Logging class that should be used to print messages
-    /// @param data Received shared attribute update data that include
-    /// the shared attributes that were updated and their new values
-    template<typename Logger>
-    inline returnType Call_Callback(const argumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_cb) {
-        Logger::log(ATT_CB_IS_NULL);
-        return returnType();
-      }
-      return m_cb(data);
-    }
-
-    /// @brief Gets all the subscribed shared attributes that will result,
-    /// in the subscribed method being called if changed by the cloud
-    /// passed when this class instance was initally created
-    /// @return Subscribed shared attributes
-    inline const std::vector<const char*>& Get_Attributes() const {
-      return m_att;
-    }
-
-  private:
-    const std::vector<const char*>       m_att;   // Attribute we want to request
-    processFn                            m_cb;    // Callback to call
-};
-
-/// @brief Shared attributes request callback wrapper
-class Shared_Attribute_Request_Callback {
-  public:
-    /// @brief Shared attributes callback signature
-    using returnType = void;
-    using argumentType = Shared_Attribute_Data&;
-    using processFn = std::function<returnType(const argumentType data)>;
-
-    /// @brief Constructs empty callback, will result in never being called
-    inline Shared_Attribute_Request_Callback()
-      : m_att(), m_request_id(0U), m_cb(nullptr) {  }
-
-    /// @brief Constructs callback, will be called upon shared attribute request arrival
-    /// where the given multiple requested shared attributes were sent by the cloud and received by the client
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
-    /// @param first_itr Iterator pointing to the first element in the data container
-    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
-    /// @param cb Callback method that will be called
-    template<class InputIterator>
-    inline Shared_Attribute_Request_Callback(const InputIterator& first_itr, const InputIterator& last_itr, const processFn cb)
-      : m_att(first_itr, last_itr), m_cb(cb) {  }
-
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
-    /// @tparam Logger Logging class that should be used to print messages
-    /// @param data Received shared attribute request data that include
-    /// the shared attributes that were requested and their current values
-    template<typename Logger>
-    inline returnType Call_Callback(const argumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_cb) {
-        Logger::log(ATT_REQUEST_CB_IS_NULL);
-        return returnType();
-      }
-      return m_cb(data);
-    }
-
-    /// @brief Gets the unique request identifier that is connected to the original request,
-    /// and will be later used to verifiy which Shared_Attribute_Request_Callback
-    /// is connected to which received shared attributes
-    /// @return Unique identifier connected to the requested shared attributes.
-    inline const uint32_t& Get_Request_ID() const {
-      return m_request_id;
-    }
-
-    /// @brief Sets the unique request identifier that is connected to the original request,
-    /// and will be later used to verifiy which Shared_Attribute_Request_Callback
-    /// is connected to which received shared attributes
-    /// @param request_id Unqiue identifier of the request for shared attributes
-    inline void Set_Request_ID(const uint32_t& request_id) {
-      m_request_id = request_id;
-    }
-
-    /// @brief Gets all the requested shared attributes that will result,
-    /// in the subscribed method being called when the response with their current value
-    // is sent from the cloud and received by the client,
-    /// passed when this class instance was initally created
-    /// @return Requested shared attributes
-    inline const std::vector<const char*>& Get_Attributes() const {
-      return m_att;
-    }
-
-  private:
-    std::vector<const char*>       m_att;          // Attribute we want to request
-    uint32_t                       m_request_id;   // Id the request was called with
-    processFn                      m_cb;           // Callback to call
-};
-
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-// Provisioning callback wrapper
-class Provision_Callback {
-  public:
-    // Provisioning callback signature
-    using returnType = void;
-    using argumentType = Provision_Data&;
-    using processFn = std::function<returnType(const argumentType data)>;
-
-    // Constructs empty callback
-    inline Provision_Callback()
-      : m_cb(nullptr) {  }
-
-    // Constructs callback that will be fired upon a Provision request arrival with
-    // given attribute key
-    inline Provision_Callback(const processFn cb)
-      : m_cb(cb) {  }
-
-    // Calls the callback that was subscribed when this class instance was initally created.
-    template<typename Logger>
-    inline returnType Call_Callback(const argumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_cb) {
-        Logger::log(PROVISION_CB_IS_NULL);
-        return returnType();
-      }
-      return m_cb(data);
-    }
-
-  private:
-    processFn   m_cb;       // Callback to call
-};
-#endif
-
 // ThingsBoardSized client class
 template<size_t PayloadSize = Default_Payload,
          size_t MaxFieldsAmt = Default_Fields_Amt,
@@ -408,16 +189,12 @@ class ThingsBoardSized {
       , m_requestId(0U)
       , m_qos(enableQoS)
 #if defined(ESP8266) || defined(ESP32)
-      , m_currFwTitle(nullptr)
-      , m_currFwVersion(nullptr)
       , m_fwState(nullptr)
-      , m_fwSize()
+      , m_fwCallback(nullptr)
+      , m_fwSize(0U)
       , m_fwChecksumAlgorithm()
       , m_fwAlgorithm()
       , m_fwChecksum()
-      , m_fwUpdatedCallback(nullptr)
-      , m_fwChunkRetries(0U)
-      , m_fwChunckSize(0U)
       , m_fwSharedKeys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
       , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
@@ -440,16 +217,12 @@ class ThingsBoardSized {
       , m_requestId(0U)
       , m_qos(false)
 #if defined(ESP8266) || defined(ESP32)
-      , m_currFwTitle(nullptr)
-      , m_currFwVersion(nullptr)
       , m_fwState(nullptr)
-      , m_fwSize()
+      , m_fwCallback(nullptr)
+      , m_fwSize(0U)
       , m_fwChecksumAlgorithm()
       , m_fwAlgorithm()
       , m_fwChecksum()
-      , m_fwUpdatedCallback(nullptr)
-      , m_fwChunkRetries(0U)
-      , m_fwChunckSize(0U)
       , m_fwSharedKeys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
       , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
@@ -763,54 +536,19 @@ class ThingsBoardSized {
     // Firmware OTA API
 
 #if defined(ESP8266) || defined(ESP32)
-    inline const bool Start_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U, const uint16_t& chunkSize = 4096U) {
-      m_fwState = nullptr;
-      m_fwChecksum.clear();
-      m_fwAlgorithm.clear();
-
-      // Send current firmware version
-      if (currFwTitle == nullptr || currFwVersion == nullptr) {
+    inline const bool Start_Firmware_Update(const OTA_Update_Callback& callback) {
+      if (!Reset_Firmware_Settings(callback))  {
         return false;
       }
-      else if (!Firmware_Send_FW_Info(currFwTitle, currFwVersion)) {
-        return false;
-      }
-
-      // Update state
-      if (!Firmware_Send_State(FW_STATE_CHECKING)) {
-        return false;
-      }
-
-      // Set private members needed for update.
-      m_currFwTitle = currFwTitle;
-      m_currFwVersion = currFwVersion;
-      m_fwUpdatedCallback = updatedCallback;
-      m_fwChunkRetries = chunkRetries;
-      m_fwChunckSize = chunkSize;
 
       // Request the firmware informations
       return Shared_Attributes_Request(m_fwRequestCallback);
     }
 
-    inline const bool Subscribe_Firmware_Update(const char* currFwTitle, const char* currFwVersion, const std::function<void(const bool&)>& updatedCallback, const uint8_t& chunkRetries = 5U, const uint16_t& chunkSize = 4096U) {
-      m_fwState = nullptr;
-      m_fwChecksum.clear();
-      m_fwAlgorithm.clear();
-
-      // Send current firmware version
-      if (currFwTitle == nullptr || currFwVersion == nullptr) {
+    inline const bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
+      if (!Reset_Firmware_Settings(callback))  {
         return false;
       }
-      else if (!Firmware_Send_FW_Info(currFwTitle, currFwVersion)) {
-        return false;
-      }
-
-      // Set private members needed for update.
-      m_currFwTitle = currFwTitle;
-      m_currFwVersion = currFwVersion;
-      m_fwUpdatedCallback = updatedCallback;
-      m_fwChunkRetries = chunkRetries;
-      m_fwChunckSize = chunkSize;
 
       // Request the firmware informations
       return Shared_Attributes_Subscribe(m_fwUpdateCallback);
@@ -928,6 +666,27 @@ class ThingsBoardSized {
 
   private:
 #if defined(ESP8266) || defined(ESP32)
+    inline const bool Reset_Firmware_Settings(const OTA_Update_Callback& callback) {
+      m_fwState = nullptr;
+      m_fwChecksum.clear();
+      m_fwAlgorithm.clear();
+
+      const char* currFwTitle = callback.Get_Firmware_Title();
+      const char* currFwVersion = callback.Get_Firmware_Version();
+
+      // Send current firmware version
+      if (currFwTitle == nullptr || currFwVersion == nullptr) {
+        return false;
+      }
+      else if (!Firmware_Send_FW_Info(currFwTitle, currFwVersion)) {
+        return false;
+      }
+
+      // Set private members needed for update.
+      m_fwCallback = &callback;
+      return true;
+    }
+
     inline const bool Firmware_Send_FW_Info(const char* currFwTitle, const char* currFwVersion) {
       // Send our firmware title and version
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
@@ -975,19 +734,22 @@ class ThingsBoardSized {
       m_fwAlgorithm = data[FW_CHKS_ALGO_KEY].as<std::string>();
       m_fwSize = data[FW_SIZE_KEY].as<const uint32_t>();
 
-      if (fw_title == nullptr || fw_version == nullptr || m_currFwTitle == nullptr || m_currFwVersion == nullptr || m_fwAlgorithm.empty() || m_fwChecksum.empty()) {
+      const char* currFwTitle = m_fwCallback->Get_Firmware_Title();
+      const char* currFwVersion = m_fwCallback->Get_Firmware_Version();
+
+      if (fw_title == nullptr || fw_version == nullptr || currFwTitle == nullptr || currFwVersion == nullptr || m_fwAlgorithm.empty() || m_fwChecksum.empty()) {
         Logger::log(EMPTY_FW);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
       // If firmware is the same, we do not update it
-      else if (strncmp_P(m_currFwTitle, fw_title, JSON_STRING_SIZE(strlen(m_currFwTitle))) == 0 && strncmp_P(m_currFwVersion, fw_version, JSON_STRING_SIZE(strlen(m_currFwVersion))) == 0) {
+      else if (strncmp_P(currFwTitle, fw_title, JSON_STRING_SIZE(strlen(currFwTitle))) == 0 && strncmp_P(currFwVersion, fw_version, JSON_STRING_SIZE(strlen(currFwVersion))) == 0) {
         Logger::log(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_UP_TO_DATE);
         return;
       }
       // If firmware title is not the same, we quit now
-      else if (strncmp_P(m_currFwTitle, fw_title, JSON_STRING_SIZE(strlen(m_currFwTitle))) != 0) {
+      else if (strncmp_P(currFwTitle, fw_title, JSON_STRING_SIZE(strlen(currFwTitle))) != 0) {
         Logger::log(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
@@ -1019,21 +781,22 @@ class ThingsBoardSized {
 
       Logger::log(PAGE_BREAK);
       Logger::log(NEW_FW);
-      char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(m_currFwVersion)) + JSON_STRING_SIZE(strlen(fw_version))];
-      snprintf_P(firmware, sizeof(firmware), FROM_TOO, m_currFwVersion, fw_version);
+      char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(currFwVersion)) + JSON_STRING_SIZE(strlen(fw_version))];
+      snprintf_P(firmware, sizeof(firmware), FROM_TOO, currFwVersion, fw_version);
       Logger::log(firmware);
       Logger::log(DOWNLOADING_FW);
 
-      const uint32_t numberOfChunk = (m_fwSize / m_fwChunckSize) + 1U;
+      const uint16_t& chunckSize = m_fwCallback->Get_Chunk_Size();
+      const uint32_t numberOfChunk = (m_fwSize / chunckSize) + 1U;
       uint32_t currChunk = 0U;
-      uint8_t nbRetry = m_fwChunkRetries;
+      uint8_t retries = m_fwCallback->Get_Chunk_Retries();
 
       // Get the previous buffer size and cache it so the previous settings can be restored.
       const uint16_t previousBufferSize = m_client.getBufferSize();
-      const bool changeBufferSize = previousBufferSize < (m_fwChunckSize + 50U);
+      const bool changeBufferSize = previousBufferSize < (chunckSize + 50U);
 
       // Increase size of receive buffer
-      if (changeBufferSize && !m_client.setBufferSize(m_fwChunckSize + 50U)) {
+      if (changeBufferSize && !m_client.setBufferSize(chunckSize + 50U)) {
         Logger::log(NOT_ENOUGH_RAM);
         return;
       }
@@ -1042,13 +805,13 @@ class ThingsBoardSized {
       m_fwState = FW_STATE_DOWNLOADING;
       Firmware_Send_State(m_fwState);
 
-      char size[detectSize(NUMBER_PRINTF, m_fwChunckSize)];
+      char size[detectSize(NUMBER_PRINTF, chunckSize)];
       // Download the firmware
       do {
         // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         char topic[detectSize(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
-        snprintf_P(size, sizeof(size), NUMBER_PRINTF, m_fwChunckSize);
+        snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunckSize);
         m_client.publish(topic, size, m_qos);
 
         // Amount of time we wait until we declare the download as failed in milliseconds.
@@ -1064,15 +827,16 @@ class ThingsBoardSized {
             // Check if state is still DOWNLOADING and did not fail.
             if (strncmp_P(FW_STATE_DOWNLOADING, m_fwState, strlen(FW_STATE_DOWNLOADING)) == 0) {
               currChunk++;
+              m_fwCallback->Call_Progress_Callback<Logger>(currChunk, numberOfChunk);
               // Current chunck was downloaded successfully, resetting retries accordingly.
-              nbRetry = m_fwChunkRetries;
+              retries = m_fwCallback->Get_Chunk_Retries();
             }
             else {
-              nbRetry--;
+              retries--;
               // Reset any possible errors that might have occured and retry them.
               // Until we run out of retries.
               m_fwState = FW_STATE_DOWNLOADING;
-              if (nbRetry == 0) {
+              if (retries == 0) {
                 Logger::log(UNABLE_TO_WRITE);
                 break;
               }
@@ -1085,8 +849,8 @@ class ThingsBoardSized {
         }
         // Timeout
         else {
-          nbRetry--;
-          if (nbRetry == 0) {
+          retries--;
+          if (retries == 0) {
             Logger::log(UNABLE_TO_DOWNLOAD);
             break;
           }
@@ -1101,20 +865,17 @@ class ThingsBoardSized {
       // Unsubscribe from now not needed topics anymore.
       Firmware_OTA_Unsubscribe();
 
-      bool success = false;
+      const bool success = strncmp_P(STATUS_SUCCESS, m_fwState, strlen(STATUS_SUCCESS)) == 0;
       // Update current_fw_title and current_fw_version if updating was a success.
-      if (strncmp_P(STATUS_SUCCESS, m_fwState, strlen(STATUS_SUCCESS)) == 0) {
+      if (success) {
         Firmware_Send_FW_Info(fw_title, fw_version);
         Firmware_Send_State(STATUS_SUCCESS);
-        success = true;
       }
       else {
         Firmware_Send_State(FW_STATE_FAILED);
       }
 
-      if (m_fwUpdatedCallback != nullptr) {
-        m_fwUpdatedCallback(success);
-      }
+      m_fwCallback->Call_End_Callback<Logger>(success);
     }
 #endif
 
@@ -1541,21 +1302,13 @@ class ThingsBoardSized {
     bool m_qos; // Wheter QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
 #if defined(ESP8266) || defined(ESP32)
-    // For Firmware Update
-    const char *m_currFwTitle;
-    const char *m_currFwVersion;
     const char *m_fwState;
+    const OTA_Update_Callback* m_fwCallback;
     // Allows for a binary size of up to theoretically 4 GB.
     uint32_t m_fwSize;
     mbedtls_md_type_t m_fwChecksumAlgorithm;
     std::string m_fwAlgorithm;
     std::string m_fwChecksum;
-    std::function<void(const bool&)> m_fwUpdatedCallback;
-    // Number of tries we can request each chunk for,
-    // after successfully getting one chunck the number is reset,
-    // but if getting one chunck fails X amount of times the update process is aborted.
-    uint8_t m_fwChunkRetries;
-    uint16_t m_fwChunckSize;
     const std::vector<const char*> m_fwSharedKeys;
     Shared_Attribute_Request_Callback m_fwRequestCallback;
     const Shared_Attribute_Callback m_fwUpdateCallback;
