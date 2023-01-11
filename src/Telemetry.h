@@ -135,6 +135,5 @@ class Telemetry {
 
 // Convenient aliases
 using Attribute = Telemetry;
-using RPC_Response = Telemetry;
 
 #endif // Telemetry_h

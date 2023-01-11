@@ -149,6 +149,8 @@ void updatedCallback(const bool& success) {
   Serial.println("Downloading firmware failed");
 }
 
+const OTA_Update_Callback callback(&updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -177,7 +179,7 @@ void loop() {
     Serial.println("Firwmare Update Subscription...");
     // See https://thingsboard.io/docs/user-guide/ota-updates/
     // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
-    updateRequestSent = tb.Subscribe_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updatedCallback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+    updateRequestSent = tb.Subscribe_Firmware_Update(callback);
   }
 
   tb.loop();
