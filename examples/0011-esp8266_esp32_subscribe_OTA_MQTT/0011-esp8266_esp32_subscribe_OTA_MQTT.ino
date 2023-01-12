@@ -149,7 +149,14 @@ void updatedCallback(const bool& success) {
   Serial.println("Downloading firmware failed");
 }
 
-const OTA_Update_Callback callback(&updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+/// @brief Progress callback that will be called every time we downloaded a new chunk successfully
+/// @param currentChunk 
+/// @param totalChuncks 
+void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks) {
+  Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
+}
+
+const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
 
 void setup() {
   // Initalize serial connection for debugging
