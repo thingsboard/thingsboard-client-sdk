@@ -21,7 +21,7 @@ class RPC_Request_Callback {
   public:
     /// @brief RPC request callback signatures
     using returnType = void;
-    using argumentType = const JsonObjectConst&;
+    using argumentType = const JsonVariantConst&;
     using processFn = std::function<returnType(argumentType data)>;
 
     /// @brief Constructs empty callback, will result in never being called
