@@ -33,7 +33,7 @@ class Provision_Callback {
 
     /// @brief Constructs empty callback, will result in never being called
     inline Provision_Callback()
-      : m_cb(nullptr) {  }
+      : Provision_Callback(nullptr) {  }
 
     /// @brief Constructs callback that will be fired upon a provision request arrival
     /// where the requested credentials were sent by the cloud and received by the client

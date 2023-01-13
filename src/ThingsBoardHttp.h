@@ -416,7 +416,7 @@ class ThingsBoardHttpSized {
     /// @return Wheter sending the data was successful or not
     template<typename T>
     inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
-      Telemetry t(key, value);
+      const Telemetry t(key, value);
       if (t.IsEmpty()) {
         // Message is ignored and not sent at all.
         return false;

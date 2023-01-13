@@ -33,7 +33,13 @@ class Shared_Attribute_Callback {
 
     /// @brief Constructs empty callback, will result in never being called
     inline Shared_Attribute_Callback()
-      : m_att(), m_cb(nullptr) {  }
+      : Shared_Attribute_Callback(nullptr) {  }
+
+    /// @brief Constructs callback, will be called upon shared attribute update arrival,
+    /// of any existing or new shared attribute on the given device
+    /// @param cb Callback method that will be called
+    inline Shared_Attribute_Callback(processFn cb)
+      : m_att(), m_cb(cb) {  }
 
     /// @brief Constructs callback, will be called upon shared attribute update arrival,
     /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
@@ -46,12 +52,6 @@ class Shared_Attribute_Callback {
     template<class InputIterator>
     inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
       : m_att(first_itr, last_itr), m_cb(cb) {  }
-
-    /// @brief Constructs callback, will be called upon shared attribute update arrival,
-    /// of any existing or new shared attribute on the given device
-    /// @param cb Callback method that will be called
-    inline Shared_Attribute_Callback(processFn cb)
-      : m_att(), m_cb(cb) {  }
     
     /// @brief Calls the callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -72,12 +72,12 @@ class Shared_Attribute_Callback {
     /// in the subscribed method being called if changed by the cloud
     /// passed when this class instance was initally created
     /// @return Subscribed shared attributes
-    inline const std::vector<const char*>& Get_Attributes() const {
+    inline const std::vector<const char *>& Get_Attributes() const {
       return m_att;
     }
 
   private:
-    const std::vector<const char*>       m_att;   // Attribute we want to request
+    const std::vector<const char *>      m_att;   // Attribute we want to request
     processFn                            m_cb;    // Callback to call
 };
 

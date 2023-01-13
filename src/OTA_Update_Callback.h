@@ -48,7 +48,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount time for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    inline OTA_Update_Callback(endFn endCb, const char* currFwTitle, const char* currFwVersion, const uint8_t& chunkRetries = CHUNK_RETRIES, const uint16_t& chunkSize = CHUNK_SIZE, const uint16_t& timeout = REQUEST_TIMEOUT)
+    inline OTA_Update_Callback(endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t& chunkRetries = CHUNK_RETRIES, const uint16_t& chunkSize = CHUNK_SIZE, const uint16_t& timeout = REQUEST_TIMEOUT)
       : OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, chunkRetries, chunkSize, timeout) {  }
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
@@ -66,7 +66,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount time for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    inline OTA_Update_Callback(progressFn progressCb, endFn endCb, const char* currFwTitle, const char* currFwVersion, const uint8_t& chunkRetries = CHUNK_RETRIES, const uint16_t& chunkSize = CHUNK_SIZE, const uint16_t& timeout = REQUEST_TIMEOUT)
+    inline OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t& chunkRetries = CHUNK_RETRIES, const uint16_t& chunkSize = CHUNK_SIZE, const uint16_t& timeout = REQUEST_TIMEOUT)
       : m_progressCb(progressCb), m_endCb(endCb), m_fwTitel(currFwTitle), m_fwVersion(currFwVersion), m_retries(chunkRetries), m_size(chunkSize), m_timeout(timeout) {  }
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
