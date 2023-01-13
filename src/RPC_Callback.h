@@ -14,7 +14,7 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
-constexpr char RPC_CB_NULL[] PROGMEM = "RPC callback is NULL";
+constexpr char RPC_CB_NULL[] PROGMEM = "Server-side RPC callback is NULL";
 
 // Convenient aliases
 using RPC_Response = Telemetry;
@@ -31,12 +31,12 @@ class RPC_Callback {
 
     /// @brief Constructs empty callback, will result in never being called
     inline RPC_Callback()
-      : m_name(), m_cb(nullptr) {  }
+      : RPC_Callback(nullptr, nullptr) {  }
 
     /// @brief Constructs callback, will be called upon RPC request arrival with the given methodName
     /// @param methodName Name we expect to be sent via. RPC so this callback will be called
     /// @param cb Callback method that will be called and should return a response if excpected
-    inline RPC_Callback(const char* methodName, processFn cb)
+    inline RPC_Callback(const char *methodName, processFn cb)
       : m_name(methodName), m_cb(cb) {  }
 
     /// @brief Calls the callback that was subscribed, when this class instance was initally created

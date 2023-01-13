@@ -44,7 +44,7 @@ class Shared_Attribute_Request_Callback {
     /// @param cb Callback method that will be called
     template<class InputIterator>
     inline Shared_Attribute_Request_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
-      : m_att(first_itr, last_itr), m_cb(cb) {  }
+      : m_att(first_itr, last_itr), m_request_id(0U), m_cb(cb) {  }
 
     /// @brief Calls the callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -64,7 +64,7 @@ class Shared_Attribute_Request_Callback {
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Shared_Attribute_Request_Callback
     /// is connected to which received shared attributes
-    /// @return Unique identifier connected to the requested shared attributes.
+    /// @return Unique identifier connected to the requested shared attributes
     inline const uint32_t& Get_Request_ID() const {
       return m_request_id;
     }
@@ -82,12 +82,12 @@ class Shared_Attribute_Request_Callback {
     // is sent from the cloud and received by the client,
     /// passed when this class instance was initally created
     /// @return Requested shared attributes
-    inline const std::vector<const char*>& Get_Attributes() const {
+    inline const std::vector<const char *>& Get_Attributes() const {
       return m_att;
     }
 
   private:
-    std::vector<const char*>       m_att;          // Attribute we want to request
+    std::vector<const char *>      m_att;          // Attribute we want to request
     uint32_t                       m_request_id;   // Id the request was called with
     processFn                      m_cb;           // Callback to call
 };

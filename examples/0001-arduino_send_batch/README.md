@@ -12,6 +12,6 @@
 
 ## Feature
 Allows to upload telemetry values to the cloud, as well as attributes.
-Telemtry values keep track of their previous values meaning we can draw graphs with them.
+Telemetry values keep track of their previous values meaning we can draw graphs with them.
 Meant for values wich change over time and where a history might be useful (temperature, humidity, ...)
 Where as attributes are meant for data, which does not require a history and is more seldomly updated (version, settings, ...)

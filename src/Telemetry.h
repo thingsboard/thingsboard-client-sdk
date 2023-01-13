@@ -64,7 +64,7 @@ class Telemetry {
     /// @brief Serializes the key-value pair depending on the constructor used
     /// @param jsonObj Object the value will be copied into with the given key
     /// @return Returns wheter serializing was successfull or not
-    const bool SerializeKeyValue(JsonVariant &jsonObj) const {
+    const bool SerializeKeyValue(const JsonVariant &jsonObj) const {
       if (m_key) {
         switch (m_type) {
           case DataType::TYPE_BOOL:
