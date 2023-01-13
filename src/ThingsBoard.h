@@ -1114,7 +1114,7 @@ class ThingsBoardSized {
       }
 
       StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
-      const JsonVariant object = jsonBuffer.template to<JsonVariant>();
+      const JsonVariant object = jsonBuffer.to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
         Logger::log(UNABLE_TO_SERIALIZE);
         return false;
@@ -1125,7 +1125,7 @@ class ThingsBoardSized {
 
     // Process client-side RPC message
     inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
           char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -1133,7 +1133,10 @@ class ThingsBoardSized {
           Logger::log(message);
           return;
       }
-      const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
+      // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
+      // but it does not change the actual content of the JsonDocument, we don't want that because it already contents content
+      // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonVariantConst instead.
+      const JsonVariantConst data = jsonBuffer.as<JsonVariantConst>();
 
       std::string response = topic;
       // Remove the not needed part of the topic.
@@ -1225,7 +1228,7 @@ class ThingsBoardSized {
             r = callback.Call_Callback<Logger>(param);
           } else {
             Logger::log(params);
-            const JsonObject &param = doc.template as<JsonObject>();
+            const JsonObjectConst param = doc.template as<JsonObjectConst>();
             // Getting non-existing field from JSON should automatically
             // set JSONVariant to null
             r = callback.Call_Callback<Logger>(param);
@@ -1236,7 +1239,7 @@ class ThingsBoardSized {
       // Fill in response
       char responsePayload[PayloadSize] = {0};
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
-      const JsonVariant respObject = respBuffer.template to<JsonVariant>();
+      const JsonVariant respObject = respBuffer.to<JsonVariant>();
 
       if (r.IsEmpty()) {
         // Message is ignored and not sent at all.
@@ -1482,7 +1485,7 @@ class ThingsBoardSized {
         Logger::log(message);
         return;
       }
-      const JsonObjectConst &data = jsonBuffer.template as<JsonObjectConst>();
+      const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
       Logger::log(RECEIVED_PROV_RESPONSE);
 
