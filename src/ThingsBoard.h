@@ -1125,7 +1125,9 @@ class ThingsBoardSized {
 
     // Process client-side RPC message
     inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
+      // Ensure to have enough size for the infinite amount of possible response values that could be sent by the cloud,
+      // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
           char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -1136,7 +1138,7 @@ class ThingsBoardSized {
       // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
       // but it does not change the actual content of the JsonDocument, we don't want that because it already contents content
       // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonVariantConst instead.
-      const JsonVariantConst data = jsonBuffer.as<JsonVariantConst>();
+      const JsonVariantConst data = jsonBuffer.template as<JsonVariantConst>();
 
       std::string response = topic;
       // Remove the not needed part of the topic.
