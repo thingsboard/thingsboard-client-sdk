@@ -197,7 +197,7 @@ class ThingsBoardSized {
     /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
     /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
     inline ThingsBoardSized(Client& client, const bool& enableQoS = false)
-      ThingsBoardSized(enableQoS)
+      : ThingsBoardSized(enableQoS)
     {
       reserve_callback_size(MaxFieldsAmt);
       setClient(client);
