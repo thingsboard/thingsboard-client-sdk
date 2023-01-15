@@ -178,10 +178,6 @@ void processProvisionResponse(const Provision_Data &data) {
     return;
   }
 
-  // Unsubscribe from the callback, has to be done after reading because it seems to
-  // churn up the letters of the first key making it not readable anymore.
-  tb.Provision_Unsubscribe();
-
   // Disconnect from the cloud client connected to the provision account, because it is no longer needed the device has been provisioned
   // and we can reconnect to the cloud with the newly generated credentials.
   if (tb.connected()) {
@@ -221,8 +217,7 @@ void loop() {
       // if the string is empty or null, automatically checked by the sendProvisionRequest method
       DEVICE_NAME;
 #endif
-      provisionRequestSent = tb.Provision_Subscribe(provisionCallback) &&
-                             tb.sendProvisionRequest(deviceName, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET);
+      provisionRequestSent = tb.Provision_Request(deviceName, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET);
     }
   }
   else if (provisionResponseProcessed) {
