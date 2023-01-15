@@ -197,30 +197,9 @@ class ThingsBoardSized {
     /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
     /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
     inline ThingsBoardSized(Client& client, const bool& enableQoS = false)
-      : m_client()
-      , m_rpcCallbacks()
-      , m_rpcRequestCallbacks()
-      , m_sharedAttributeUpdateCallbacks()
-      , m_sharedAttributeRequestCallbacks()
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-      , m_provisionCallback(nullptr)
-#endif
-      , m_requestId(0U)
-      , m_qos(enableQoS)
-#if defined(ESP8266) || defined(ESP32)
-      , m_fwState(nullptr)
-      , m_fwCallback(nullptr)
-      , m_fwSize(0U)
-      , m_fwChecksumAlgorithm()
-      , m_fwAlgorithm()
-      , m_fwChecksum()
-      , m_fwSharedKeys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
-      , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
-      , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
-      , m_fwChunkReceive(0U)
-#endif
+      ThingsBoardSized(enableQoS)
     {
-      reserve_callback_size();
+      reserve_callback_size(MaxFieldsAmt);
       setClient(client);
     }
 
@@ -256,7 +235,7 @@ class ThingsBoardSized {
       , m_fwChunkReceive(0U)
 #endif
     {
-      reserve_callback_size();
+      reserve_callback_size(MaxFieldsAmt);
     }
 
     /// @brief Destructor
