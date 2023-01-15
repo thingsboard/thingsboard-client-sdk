@@ -345,7 +345,7 @@ class ThingsBoardSized {
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
     /// @param durationMs Total time in milliseconds the user has to claim their device as their own
     /// @return Wheter sending the claiming request was successful or not
-    inline const bool sendClaimingRequest(const char *secretKey, const uint32_t& durationMs) {
+    inline const bool Claim_Request(const char *secretKey, const uint32_t& durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
       const JsonObject respObj = requestBuffer.to<JsonObject>();
 
@@ -364,25 +364,34 @@ class ThingsBoardSized {
         return false;
       }
 
-      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos);
+      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
     }
 
     //----------------------------------------------------------------------------
-    // Provision API
+    // Provisioning API
 
     /// @brief Sends provisioning request for a new device, meaning we want to create a device that we can then connect over,
     /// where the given provision device key / secret decide which device profile is used to create the given device with.
     /// Optionally a device name can be passed or be left empty (cloud will use the unqiue access token as a name instead).
-    /// The cloud then sends back json data containing our credentials we can connect to the cloud with if successful,
-    /// which can then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
+    /// The cloud then sends back json data containing our credentials, that the given callback, if creating the device was successful.
+    /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
+    /// @param callback Callback method that will be called
     /// @param deviceName Name the created device should have on the cloud,
     /// pass nullptr or an empty string if the access token should be used as a name instead
     /// @param provisionDeviceKey Device profile provisioning key of the device profile that should be used to create the device under
     /// @param provisionDeviceSecret Device profile provisioning secret of the device profile that should be used to create the device under
     /// @return Wheter sending the provisioning request was successful or not
-    inline const bool sendProvisionRequest(const char *deviceName, const char *provisionDeviceKey, const char *provisionDeviceSecret) {
+    inline const bool Provision_Request(const Provision_Callback& callback, const char *deviceName, const char *provisionDeviceKey, const char *provisionDeviceSecret) {
       StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
       const JsonObject requestObject = requestBuffer.to<JsonObject>();
+
+      if (provisionDeviceKey == nullptr || provisionDeviceSecret == nullptr) {
+        return false;
+      }
+      // Ensure the response topic has been subscribed
+      else if (!Provision_Subscribe(callback)) {
+        return false;
+      }
 
       // Make the device name optional,
       // meaning if it is an empty string or null instead we don't send it at all.
@@ -402,7 +411,7 @@ class ThingsBoardSized {
 
       Logger::log(PROV_REQUEST);
       Logger::log(requestPayload);
-      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos);
+      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
     }
 
 #endif
@@ -475,7 +484,7 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
-      return m_client.publish(TELEMETRY_TOPIC, json, m_qos);
+      return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
@@ -588,7 +597,7 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
-      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos);
+      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
     }
 
     /// @brief Attempts to send custom attribute JsonObject
@@ -680,7 +689,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Unsubcribes all server-side RPC callbacks
-    /// @return Wheter unsubcribing all the previously subscribed callback
+    /// @return Wheter unsubcribing all the previously subscribed callbacks
     /// and from the rpc topic, was successful or not
     inline const bool RPC_Unsubscribe() {
       // Empty all callbacks.
@@ -694,7 +703,7 @@ class ThingsBoardSized {
     /// @brief Requests one client-side RPC callback,
     /// that will be called if a response from the server for the method with the given name is received
     /// @param callback Callback method that will be called
-    /// @return Wheter subscribing the given callback was successful or not
+    /// @return Wheter requesting the given callback was successful or not
     inline const bool RPC_Request(const RPC_Request_Callback& callback) {
       // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
       // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -748,7 +757,7 @@ class ThingsBoardSized {
 
       char topic[detectSize(RPC_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), RPC_REQUEST_TOPIC, m_requestId);
-      return m_client.publish(topic, buffer, m_qos);
+      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
     }
 
     //----------------------------------------------------------------------------
@@ -788,6 +797,10 @@ class ThingsBoardSized {
     //----------------------------------------------------------------------------
     // Shared attributes API
 
+    /// @brief Requests one shared attribute calllback,
+    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// @param callback Callback method that will be called
+    /// @return Wheter requesting the given callback was successful or not
     inline const bool Shared_Attributes_Request(const Shared_Attribute_Request_Callback& callback) {
       // Ensure to have enough size for the infinite amount of possible shared attributes that could be requested from the cloud,
       // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -845,10 +858,16 @@ class ThingsBoardSized {
 
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      return m_client.publish(topic, buffer, m_qos);
+      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
     }
 
-    // Subscribes multiple Shared attributes callbacks.
+    /// @brief Subscribes multiple shared attribute callbacks,
+    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @return Wheter subscribing the given callbacks was successful or not
     template<class InputIterator>
     inline const bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
       const uint32_t size = std::distance(first_itr, last_itr);
@@ -866,7 +885,10 @@ class ThingsBoardSized {
       return true;
     }
 
-    // Subscribe one Shared attributes callback.
+    /// @brief Subscribe one shared attribute callback,
+    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// @param callback Callback method that will be called
+    /// @return Wheter subscribing the given callback was successful or not
     inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
       if (m_sharedAttributeUpdateCallbacks.size() + 1U > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
@@ -882,17 +904,23 @@ class ThingsBoardSized {
       return true;
     }
 
+    /// @brief Unsubcribes all shared attribute callbacks
+    /// @return Wheter unsubcribing all the previously subscribed callbacks
+    /// and from the attribute topic, was successful or not
     inline const bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks.
       m_sharedAttributeUpdateCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
     }
 
-    // -------------------------------------------------------------------------------
-    // Provisioning API
+  private:
 
-    // Subscribes to get provision response
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+
+    /// @brief Subscribes one provision callback,
+    /// that will be called if a provision response from the server is received
+    /// @param callback Callback method that will be called
+    /// @return Wheter requesting the given callback was successful or not
     inline const bool Provision_Subscribe(const Provision_Callback& callback) {
       if (!m_client.subscribe(PROV_RESPONSE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
@@ -902,14 +930,22 @@ class ThingsBoardSized {
       return true;
     }
 
+    /// @brief Unsubcribes the provision callback
+    /// @return Wheter unsubcribing the previously subscribed callback
+    /// and from the provision response topic, was successful or not
     inline const bool Provision_Unsubscribe() {
       m_provisionCallback = nullptr;
       return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
     }
+
 #endif
 
-  private:
 #if defined(ESP8266) || defined(ESP32)
+
+    /// @brief Checks the included information in the callback,
+    /// and attempts to sends the current device firmware information to the cloud
+    /// @param callback Callback method that will be called
+    /// @return Wheter checking and sending the current device firmware information was successful or not
     inline const bool Prepare_Firmware_Settings(const OTA_Update_Callback& callback) {
       const char *currFwTitle = callback.Get_Firmware_Title();
       const char *currFwVersion = callback.Get_Firmware_Version();
@@ -927,8 +963,11 @@ class ThingsBoardSized {
       return true;
     }
 
+    /// @brief Sends the given firmware title and firmware version to the cloud
+    /// @param currFwTitle Current device firmware title
+    /// @param currFwVersion Current device firmware version
+    /// @return Wheter sending the current device firmware information was successful or not
     inline const bool Firmware_Send_FW_Info(const char *currFwTitle, const char *currFwVersion) {
-      // Send our firmware title and version
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       const JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
 
@@ -937,8 +976,10 @@ class ThingsBoardSized {
       return sendTelemetryJson(currentFirmwareInfoObject, JSON_STRING_SIZE(measureJson(currentFirmwareInfoObject)));
     }
 
+    /// @brief Sends the given firmware state to the cloud
+    /// @param currFwState Current firmware download state
+    /// @return Wheter sending the current firmware download state was successful or not
     inline const bool Firmware_Send_State(const char *currFwState) {
-      // Send our firmware title and version
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
       const JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
@@ -946,6 +987,8 @@ class ThingsBoardSized {
       return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
     }
 
+    /// @brief Subscribes to the firmware response topic
+    /// @return Wheter subscribing to the firmware response topic was successful or not
     inline const bool Firmware_OTA_Subscribe() {
       if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
@@ -954,6 +997,9 @@ class ThingsBoardSized {
       return true;
     }
 
+    /// @brief Unsubscribes from the firmware response topic and clears any memory associated with the firmware update,
+    /// should not be called before actually fully completing the firmware update.
+    /// @return Wheter unsubscribing from the firmware response topic was successful or not
     inline const bool Firmware_OTA_Unsubscribe() {
       // Reset now not needed private member variables
       m_fwState = nullptr;
@@ -967,8 +1013,10 @@ class ThingsBoardSized {
       return m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
+    /// @brief Callback that will be called upon firmware shared attribute arrival
+    /// @param data Json data containing key-value pairs for the needed firmware information,
+    /// to ensure we have a firmware assigned and can start the update over MQTT
     inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
-      // Print out firmware shared attributes.
       const size_t jsonSize = JSON_STRING_SIZE(measureJson(data));
       char buffer[jsonSize];
       // Serialize json does not include size of the string null terminator
@@ -976,6 +1024,7 @@ class ThingsBoardSized {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return;
       }
+      // Print out received firmware shared attributes
       Logger::log(buffer);
 
       // Check if firmware is available for our device
@@ -986,6 +1035,7 @@ class ThingsBoardSized {
       }
       else if (m_fwCallback == nullptr) {
         Logger::log(OTA_CB_IS_NULL);
+        Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
 
@@ -1003,20 +1053,20 @@ class ThingsBoardSized {
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
-      // If firmware is the same, we do not update it
+      // If firmware version and title is the same, we do not initiate an update, because we expect the binary to be the same one we are currently using
       else if (strncmp_P(currFwTitle, fw_title, JSON_STRING_SIZE(strlen(currFwTitle))) == 0 && strncmp_P(currFwVersion, fw_version, JSON_STRING_SIZE(strlen(currFwVersion))) == 0) {
         Logger::log(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_UP_TO_DATE);
         return;
       }
-      // If firmware title is not the same, we quit now
+      // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another device type 
       else if (strncmp_P(currFwTitle, fw_title, JSON_STRING_SIZE(strlen(currFwTitle))) != 0) {
         Logger::log(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_NO_FW);
         return;
       }
 
-      // Set used firmware algorithm, depending on received message
+      // Change the used firmware algorithm, depending on which type is set for the given firmware information
       if (m_fwAlgorithm.compare(CHECKSUM_AGORITM_MD5) == 0) {
         m_fwChecksumAlgorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
       }
@@ -1037,8 +1087,9 @@ class ThingsBoardSized {
         return;
       }
 
-      // Subscribe to the needed OTA fw topics.
-      Firmware_OTA_Subscribe();
+      if (!Firmware_OTA_Subscribe()) {
+        return;
+      }
 
       Logger::log(PAGE_BREAK);
       Logger::log(NEW_FW);
@@ -1047,6 +1098,8 @@ class ThingsBoardSized {
       Logger::log(firmware);
       Logger::log(DOWNLOADING_FW);
 
+      // Calculate the number of chuncks we need to request,
+      // in order to download the complete firmware binary
       const uint16_t& chunckSize = m_fwCallback->Get_Chunk_Size();
       const uint32_t numberOfChunk = (m_fwSize / chunckSize) + 1U;
       uint32_t currChunk = 0U;
@@ -1066,65 +1119,69 @@ class ThingsBoardSized {
       m_fwState = FW_STATE_DOWNLOADING;
       Firmware_Send_State(m_fwState);
 
+      // Convert the interger size into a readable string
       char size[detectSize(NUMBER_PRINTF, chunckSize)];
-      // Download the firmware
+      snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunckSize);
+
+      // Start the firmware download
       do {
         // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         char topic[detectSize(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
-        snprintf_P(size, sizeof(size), NUMBER_PRINTF, chunckSize);
-        m_client.publish(topic, size, m_qos);
+        m_client.publish(topic, size, m_qos ? 1 : 0);
 
         // Amount of time we wait until we declare the download as failed in milliseconds.
-        const uint64_t timeout = millis() + 3000U;
+        const uint64_t timeout = millis() + m_fwCallback->Get_Timeout();
         do {
           delay(5);
           loop();
         } while ((m_fwChunkReceive != currChunk) && (timeout >= millis()));
 
+        // If the current chunk is still the same one as the one we received and processed last time,
+        // the while loop timed out, therefore we increase the failure count by one and retry
         if (m_fwChunkReceive == currChunk) {
-          // Check if the current chunk is not the last one.
-          if (numberOfChunk != (currChunk + 1)) {
-            // Check if state is still DOWNLOADING and did not fail.
-            if (strncmp_P(FW_STATE_DOWNLOADING, m_fwState, strlen(FW_STATE_DOWNLOADING)) == 0) {
-              currChunk++;
-              m_fwCallback->Call_Progress_Callback<Logger>(currChunk, numberOfChunk);
-              // Current chunck was downloaded successfully, resetting retries accordingly.
-              retries = m_fwCallback->Get_Chunk_Retries();
-            }
-            else {
-              retries--;
-              // Reset any possible errors that might have occured and retry them.
-              // Until we run out of retries.
-              m_fwState = FW_STATE_DOWNLOADING;
-              if (retries == 0) {
-                Logger::log(UNABLE_TO_WRITE);
-                break;
-              }
-            }
-          }
-          // The last chunk
-          else {
-            currChunk++;
-          }
-        }
-        // Timeout
-        else {
           retries--;
           if (retries == 0) {
             Logger::log(UNABLE_TO_DOWNLOAD);
             break;
           }
+          continue;
+        }
+        // Check if the current chunk is the last one, if it is we have downloaded every single chunk
+        // and can exit the while loop (is done with the numberOfChunk != currChunk check anyway)
+        else if (numberOfChunk >= (currChunk + 1)) {
+          currChunk++;
+          continue;
+        }
+
+        // Check if the current firmware state is still DOWNLOADING and did not fail
+        if (strncmp_P(FW_STATE_DOWNLOADING, m_fwState, strlen(FW_STATE_DOWNLOADING)) == 0) {
+          currChunk++;
+          m_fwCallback->Call_Progress_Callback<Logger>(currChunk, numberOfChunk);
+          // Current chunck was downloaded successfully, resetting retries accordingly
+          retries = m_fwCallback->Get_Chunk_Retries();
+        }
+        else {
+          retries--;
+          // Reset any possible errors that might have occured and retry them,
+          // until we run out of the given amount of retries
+          m_fwState = FW_STATE_DOWNLOADING;
+          if (retries == 0) {
+            Logger::log(UNABLE_TO_WRITE);
+            break;
+          }
         }
       } while (numberOfChunk != currChunk);
 
-      // Buffer size has been set to another value by the method return to the previous value.
+      // Buffer size has been set to another value before the update,
+      // to allow to receive ota chunck packets that might be much bigger than the normal
+      // buffer size would allow, therefore we return to the previous value to decrease overall memory usage
       if (changeBufferSize) {
         m_client.setBufferSize(previousBufferSize);
       }
 
       const bool success = strncmp_P(STATUS_SUCCESS, m_fwState, strlen(STATUS_SUCCESS)) == 0;
-      // Update current_fw_title and current_fw_version if updating was a success.
+      // Send the current firmware information, because the update was succesful
       if (success) {
         Firmware_Send_FW_Info(fw_title, fw_version);
         Firmware_Send_State(STATUS_SUCCESS);
@@ -1140,30 +1197,40 @@ class ThingsBoardSized {
       // additionaly clears and resets all variables connected to the update itself
       Firmware_OTA_Unsubscribe();
     }
+
 #endif
 
-    // Connects to the client previously set with m_client.setServer().
+    /// @brief Connects to the previously set ThingsBoard server, as the given client with the given access token
+    /// @param access_token Access token that connects this device with a created device on the ThingsBoard server,
+    /// can be "provision", if the device creates itself instead
+    /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
+    /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
+    /// @return Wheter connecting to ThingsBoard was successful or not
     inline const bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
       const bool connection_result = m_client.connect(client_id, access_token, password);
-      if (connection_result) {
-        this->RPC_Unsubscribe(); // Cleanup all server-side RPC subscriptions
-        this->RPC_Request_Unsubscribe(); // Cleanup all client-side RPC requests
-        this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
-        this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
+      if (!connection_result) {
+        Logger::log(CONNECT_FAILED);
+        return connection_result;
+      }
+
+      this->RPC_Unsubscribe(); // Cleanup all server-side RPC subscriptions
+      this->RPC_Request_Unsubscribe(); // Cleanup all client-side RPC requests
+      this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
+      this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-        this->Provision_Unsubscribe();
+      this->Provision_Unsubscribe(); // Cleanup all provision subscriptions
 #endif
 #if defined(ESP8266) || defined(ESP32)
-        this->Firmware_OTA_Unsubscribe();
+      this->Firmware_OTA_Unsubscribe(); // Cleanup all firmware subscriptions
 #endif
-      }
-      else {
-        Logger::log(CONNECT_FAILED);
-      }
       return connection_result;
     }
 
-    // Returns the length in chars needed for a given value with the given argument string to be displayed completly.
+    /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
+    /// @param msg Formating message that the given argument will be inserted into
+    /// @param ... Additional arguments that should be inserted into the message at the given points,
+    /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
+    /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
     inline const uint8_t detectSize(const char *msg, ...) const {
       va_list args;
       va_start(args, msg);
@@ -1176,13 +1243,16 @@ class ThingsBoardSized {
       return result;
     }
 
-    // Reserves size of callback vectors to improve performance
-    inline void reserve_callback_size() {
-      // Reserve size of both m_sharedAttributeUpdateCallbacks, rpcCallbacks and m_sharedAttributeRequestCallbacks beforehand for performance reasons.
-      m_rpcCallbacks.reserve(MaxFieldsAmt);
-      m_rpcRequestCallbacks.reserve(MaxFieldsAmt);
-      m_sharedAttributeUpdateCallbacks.reserve(MaxFieldsAmt);
-      m_sharedAttributeRequestCallbacks.reserve(MaxFieldsAmt);
+    /// @brief Reserves size for the given amount of items in our internal callback vectors beforehand for performance reasons,
+    /// this ensures the internal memory blocks do not have to move if new data is inserted,
+    /// because the current memory block is too small to hold the data for all the values
+    /// @param reservedSize Size we want to reserve and should not use more if we do,
+    /// the internal memory blocks might need to be moved to a new location
+    inline void reserve_callback_size(const size_t& reservedSize) {
+      m_rpcCallbacks.reserve(reservedSize);
+      m_rpcRequestCallbacks.reserve(reservedSize);
+      m_sharedAttributeUpdateCallbacks.reserve(reservedSize);
+      m_sharedAttributeRequestCallbacks.reserve(reservedSize);
     }
 
     // Requests one client-side RPC request callback and returns an editable pointer to a reference of the local version that was copied from the passed argument
@@ -1399,7 +1469,7 @@ class ThingsBoardSized {
       Logger::log(RPC_RESPONSE_KEY);
       Logger::log(responseTopic.c_str());
       Logger::log(responsePayload);
-      m_client.publish(responseTopic.c_str(), responsePayload, m_qos);
+      m_client.publish(responseTopic.c_str(), responsePayload, m_qos ? 1 : 0);
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1631,6 +1701,10 @@ class ThingsBoardSized {
       if (m_provisionCallback != nullptr) {
         m_provisionCallback->Call_Callback<Logger>(data);
       }
+
+      // Unsubscribe from the provision response topic,
+      // Will be resubscribed if another request is sent anyway
+      Provision_Unsubscribe();
     }
 #endif
 
