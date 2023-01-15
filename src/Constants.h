@@ -24,5 +24,6 @@ constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "PayloadSize (%u) to small for th
 constexpr char TOO_MANY_JSON_FIELDS[] PROGMEM = "Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly";
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (%s)";
 constexpr char CONNECT_FAILED[] PROGMEM = "Connecting to server failed";
+constexpr char UNABLE_TO_SERIALIZE_JSON[] PROGMEM = "Unable to serialize json data";
 
 #endif // Constants_h
