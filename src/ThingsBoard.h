@@ -662,7 +662,7 @@ class ThingsBoardSized {
         return false;
       }
 
-      // Push back given callback into our local m_rpcCallbacks vector.
+      // Push back given callback into our local vector
       m_rpcCallbacks.push_back(callback);
       return true;
     }
@@ -671,7 +671,7 @@ class ThingsBoardSized {
     /// @return Wheter unsubcribing all the previously subscribed callbacks
     /// and from the rpc topic, was successful or not
     inline const bool RPC_Unsubscribe() {
-      // Empty all callbacks.
+      // Empty all callbacks
       m_rpcCallbacks.clear();
       return m_client.unsubscribe(RPC_SUBSCRIBE_TOPIC);
     }
@@ -878,7 +878,7 @@ class ThingsBoardSized {
         return false;
       }
 
-      // Push back given callback into our local m_sharedAttributeUpdateCallbacks vector.
+      // Push back given callback into our local vector
       m_sharedAttributeUpdateCallbacks.push_back(callback);
       return true;
     }
@@ -887,7 +887,7 @@ class ThingsBoardSized {
     /// @return Wheter unsubcribing all the previously subscribed callbacks
     /// and from the attribute topic, was successful or not
     inline const bool Shared_Attributes_Unsubscribe() {
-      // Empty all callbacks.
+      // Empty all callbacks
       m_sharedAttributeUpdateCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
     }
@@ -1234,7 +1234,10 @@ class ThingsBoardSized {
       m_sharedAttributeRequestCallbacks.reserve(reservedSize);
     }
 
-    // Requests one client-side RPC request callback and returns an editable pointer to a reference of the local version that was copied from the passed argument
+    /// @brief Subscribes to the client-side RPC response topic
+    /// @param callback Callback method that will be called
+    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
+    /// @return Wheter requesting the given callback was successful or not
     inline const bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
       if (m_rpcRequestCallbacks.size() + 1 > m_rpcRequestCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
@@ -1245,20 +1248,25 @@ class ThingsBoardSized {
         return false;
       }
 
-      // Push back given callback into our local m_sharedAttributeRequestCallbacks vector.
+      // Push back given callback into our local vector
       m_rpcRequestCallbacks.push_back(callback);
       registeredCallback = &m_rpcRequestCallbacks.back();
       return true;
     }
 
-    // Unsubscribes all client-side RPC request callbacks.
+    /// @brief Unsubscribes all client-side RPC request callbacks
+    /// @return Wheter unsubcribing the previously subscribed callbacks
+    /// and from the client-side RPC response topic, was successful or not
     inline const bool RPC_Request_Unsubscribe() {
-      // Empty all callbacks.
+      // Empty all callbacks
       m_rpcRequestCallbacks.clear();
       return m_client.unsubscribe(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    // Subscribe one Shared attributes request callback and returns an editable pointer to a reference of the local version that was copied from the passed argument
+    /// @brief Subscribes to attribute response topic
+    /// @param callback Callback method that will be called
+    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
+    /// @return Wheter requesting the given callback was successful or not
     inline const bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback, Shared_Attribute_Callback*& registeredCallback = nullptr) {
       if (m_sharedAttributeRequestCallbacks.size() + 1 > m_sharedAttributeRequestCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
@@ -1269,20 +1277,27 @@ class ThingsBoardSized {
         return false;
       }
 
-      // Push back given callback into our local m_sharedAttributeRequestCallbacks vector.
+      // Push back given callback into our local vector
       m_sharedAttributeRequestCallbacks.push_back(callback);
       registeredCallback = &m_sharedAttributeRequestCallbacks.back();
       return true;
     }
 
-    // UNsubscribes all Shared attributes request callbacks.
+    /// @brief Unsubscribes all shared attributes request callbacks
+    /// @return Wheter unsubcribing the previously subscribed callbacks
+    /// and from the  attribute response topic, was successful or not
     inline const bool Shared_Attributes_Request_Unsubscribe() {
-      // Empty all callbacks.
+      // Empty all callbacks
       m_sharedAttributeRequestCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    // Sends single key-value in a generic way.
+    /// @brief Attempts to send a single key-value pair with the given key and value of the given type
+    /// @tparam T Type of the data value we want to send
+    /// @param key Key of the key value pair we want to send
+    /// @param value Value of the key value pair we want to send
+    /// @param telemetry Wheter the data we want to send should be sent as an attribute or telemetry data value
+    /// @return Wheter sending the data was successful or not
     template<typename T>
     inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
       const Telemetry t(key, value);
@@ -1301,7 +1316,11 @@ class ThingsBoardSized {
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
-    // Process client-side RPC message
+    /// @brief Process callback that will be called upon client-side RPC response arrival
+    /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
       // Ensure to have enough size for the infinite amount of possible response values that could be sent by the cloud,
       // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -1348,7 +1367,11 @@ class ThingsBoardSized {
       }
     }
 
-    // Processes server-side RPC message
+    /// @brief Process callback that will be called upon server-side RPC request arrival
+    /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
       RPC_Response r; {
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -1452,7 +1475,12 @@ class ThingsBoardSized {
     }
 
 #if defined(ESP8266) || defined(ESP32)
-    // Processes firmware response
+
+    /// @brief Process callback that will be called upon firmware response arrival
+    /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void process_firmware_response(char *topic, uint8_t *payload, const uint32_t length) {
       static uint32_t sizeReceive = 0;
       static HashGenerator hash(m_fwChecksumAlgorithm);
@@ -1528,9 +1556,14 @@ class ThingsBoardSized {
         m_fwState = STATUS_SUCCESS;
       }
     }
+
 #endif
 
-    // Processes shared attribute update message
+    /// @brief Process callback that will be called upon shared attribute update arrival
+    /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void process_shared_attribute_update_message(char *topic, uint8_t *payload, const uint32_t length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -1600,7 +1633,11 @@ class ThingsBoardSized {
       }
     }
 
-    // Processes shared attribute request message
+    /// @brief Process callback that will be called upon shared attribute request arrival
+    /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void process_shared_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
@@ -1652,8 +1689,13 @@ class ThingsBoardSized {
       }
     }
 
-    // Processes provisioning response
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+
+    /// @brief Process callback that will be called upon provision response arrival
+    /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void process_provisioning_response(char *topic, uint8_t *payload, const uint32_t length) {
       Logger::log(PROV_RESPONSE);
 
@@ -1685,9 +1727,14 @@ class ThingsBoardSized {
       // Will be resubscribed if another request is sent anyway
       Provision_Unsubscribe();
     }
+
 #endif
 
-    // Sends array of attributes or telemetry to ThingsBoard
+    /// @brief Attempts to send aggregated attribute or telemetry data
+    /// @param data Array containing all the data we want to send
+    /// @param data_count Amount of data entries in the array that we want to send
+    /// @param telemetry Wheter the data we want to send should be sent as an attribute or telemetry data value
+    /// @return Wheter sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       const JsonVariant object = jsonBuffer.template to<JsonVariant>();
@@ -1716,12 +1763,16 @@ class ThingsBoardSized {
     std::vector<Shared_Attribute_Request_Callback> m_sharedAttributeRequestCallbacks; // Shared attribute request callbacks vector
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+
     const Provision_Callback* m_provisionCallback; // Provision response callback
+
 #endif
+
     uint32_t m_requestId; // Allows nearly 4.3 million requests before wrapping back to 0.
     bool m_qos; // Wheter QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
 #if defined(ESP8266) || defined(ESP32)
+
     const char *m_fwState;
     const OTA_Update_Callback* m_fwCallback;
     // Allows for a binary size of up to theoretically 4 GB.
@@ -1733,9 +1784,13 @@ class ThingsBoardSized {
     const Shared_Attribute_Request_Callback m_fwRequestCallback;
     const Shared_Attribute_Callback m_fwUpdateCallback;
     uint16_t m_fwChunkReceive;
+
 #endif
 
-    // The callback for when a PUBLISH message is received from the server.
+    /// @brief MQTT callback that will be called if a publish message is received from the server
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
     inline void onMQTTMessage(char *topic, uint8_t *payload, uint32_t length) {
       char message[JSON_STRING_SIZE(strlen(CB_ON_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
       snprintf_P(message, sizeof(message), CB_ON_MESSAGE, topic);
