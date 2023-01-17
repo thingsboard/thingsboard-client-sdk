@@ -8,8 +8,6 @@
 #define Telemetry_h
 
 // Library includes.
-// Ensure ArduinoJson supports std::string type.
-#define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 
 /// @brief Telemetry record class, allows to store different data using a common interface.
