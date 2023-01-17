@@ -902,19 +902,32 @@ class ThingsBoardSized {
         return false;
       }
 
+#if defined(ESP8266) || defined(ESP32)
       std::string request;
+#else
+      String request;
+#endif // defined(ESP8266) || defined(ESP32)
       for (const char *att : attributes) {
         // Check if the given attribute is null, if it is skip it
         if (att == nullptr) {
           Logger::log(ATT_IS_NULL);
           continue;
         }
+#if defined(ESP8266) || defined(ESP32)
         request.append(att);
         request.push_back(COMMA);
+#else
+        request.concat(att);
+        request.concat(COMMA);
+#endif // defined(ESP8266) || defined(ESP32)
       }
 
       // Remove latest not needed ,
+#if defined(ESP8266) || defined(ESP32)
       request.pop_back();
+#else
+      request.remove(request.length() - 1);
+#endif // defined(ESP8266) || defined(ESP32)
 
       requestObject[attributeRequestKey] = request.c_str();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
@@ -1388,11 +1401,17 @@ class ThingsBoardSized {
       // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonVariantConst instead.
       const JsonVariantConst data = jsonBuffer.template as<JsonVariantConst>();
 
-      std::string response = topic;
-      // Remove the not needed part of the topic.
+      // Remove the not needed part of the topic
       const size_t index = strlen(RPC_RESPONSE_TOPIC) + 1U;
+#if defined(ESP8266) || defined(ESP32)
+      std::string response = topic;
       response = response.substr(index, response.length() - index);
-      // convert the remaining text to an integer
+#else
+      String response = topic;
+      response = response.substring(index);
+#endif // defined(ESP8266) || defined(ESP32)
+
+      // Convert the remaining text to an integer
       const uint32_t responseId = atoi(response.c_str());
 
       for (size_t i = 0; i < m_rpcRequestCallbacks.size(); i++) {
@@ -1519,8 +1538,14 @@ class ThingsBoardSized {
         return;
       }
 
+#if defined(ESP8266) || defined(ESP32)
       std::string responseTopic = topic;
       responseTopic.replace(responseTopic.begin(), responseTopic.end(), RPC_REQUEST_KEY, RPC_RESPONSE_KEY);
+#else
+      String responseTopic = topic;
+      responseTopic.replace(RPC_REQUEST_KEY, RPC_RESPONSE_KEY);
+#endif // defined(ESP8266) || defined(ESP32)
+
       Logger::log(RPC_RESPONSE_KEY);
       Logger::log(responseTopic.c_str());
       Logger::log(responsePayload);
@@ -1702,11 +1727,17 @@ class ThingsBoardSized {
       }
       JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-      std::string response = topic;
-      // Remove the not needed part of the topic.
+      // Remove the not needed part of the topic
       const size_t index = strlen(ATTRIBUTE_RESPONSE_TOPIC) + 1U;
+#if defined(ESP8266) || defined(ESP32)
+      std::string response = topic;
       response = response.substr(index, response.length() - index);
-      // convert the remaining text to an integer
+#else
+      String response = topic;
+      response = response.substring(index);
+#endif // defined(ESP8266) || defined(ESP32)
+
+      // Convert the remaining text to an integer
       const uint32_t response_id = atoi(response.c_str());
 
       char message[detectSize(CALLING_REQUEST_CB, response_id)];
