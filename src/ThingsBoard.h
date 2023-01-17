@@ -22,7 +22,7 @@
 #include "Telemetry.h"
 #include "Constants.h"
 #include "Shared_Attribute_Callback.h"
-#include "Shared_Attribute_Request_Callback.h"
+#include "Attribute_Request_Callback.h"
 #include "RPC_Callback.h"
 #include "RPC_Request_Callback.h"
 #include "Provision_Callback.h"
@@ -58,8 +58,12 @@ constexpr char PROV_ACCESS_TOKEN[] PROGMEM = "provision";
 constexpr char DEFAULT_CLIENT_ID[] PROGMEM = "TbDev";
 
 // Shared attribute request keys.
-constexpr char SHARED_KEYS[] PROGMEM = "sharedKeys";
-constexpr char SHARED_KEY[] PROGMEM = "shared";
+constexpr char SHARED_REQUEST_KEY[] PROGMEM = "sharedKeys";
+constexpr char SHARED_RESPONSE_KEY[] PROGMEM = "shared";
+
+// Client side attribute request keys.
+constexpr char CLIENT_REQUEST_KEYS[] PROGMEM = "clientKeys";
+constexpr char CLIENT_RESPONSE_KEY[] PROGMEM = "client";
 
 // RPC data keys.
 constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
@@ -91,7 +95,7 @@ constexpr char ATT_IN_ARRAY[] PROGMEM = "Shared attribute update key: (%s) is su
 constexpr char ATT_NO_CHANGE[] PROGMEM = "No keys that we subscribed too were changed, skipping callback";
 constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
 constexpr char RECEIVED_ATT[] PROGMEM = "Received shared attribute request";
-constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Shared attribute key not found";
+constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
 constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
 constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback onMQTTMessage from topic: (%s)";
 constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic failed";
@@ -216,7 +220,7 @@ class ThingsBoardSized {
       , m_rpcCallbacks()
       , m_rpcRequestCallbacks()
       , m_sharedAttributeUpdateCallbacks()
-      , m_sharedAttributeRequestCallbacks()
+      , m_attributeRequestCallbacks()
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
       , m_provisionCallback(nullptr)
 #endif
@@ -337,8 +341,14 @@ class ThingsBoardSized {
 
       const size_t objectSize = JSON_STRING_SIZE(measureJson(respObj));
       char responsePayload[objectSize];
+      if (PayloadSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+        Logger::log(message);
+        return false;
+      }
       // Serialize json does not include size of the string null terminator
-      if (serializeJson(respObj, responsePayload, objectSize) < objectSize - 1) {
+      else if (serializeJson(respObj, responsePayload, objectSize) < objectSize - 1) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return false;
       }
@@ -382,8 +392,14 @@ class ThingsBoardSized {
 
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
       char requestPayload[objectSize];
+      if (PayloadSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+        Logger::log(message);
+        return false;
+      }
       // Serialize json does not include size of the string null terminator
-      if (serializeJson(requestObject, requestPayload, objectSize) < objectSize - 1) {
+      else if (serializeJson(requestObject, requestPayload, objectSize) < objectSize - 1) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return false;
       }
@@ -621,6 +637,14 @@ class ThingsBoardSized {
       return sendAttributeJSON(json);
     }
 
+    /// @brief Requests one client-side attribute calllback,
+    /// that will be called if the key-value pair from the server for the given client-side attributes is received
+    /// @param callback Callback method that will be called
+    /// @return Wheter requesting the given callback was successful or not
+    inline const bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
+      return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
+    }
+
     //----------------------------------------------------------------------------
     // Server-side RPC API
 
@@ -720,6 +744,12 @@ class ThingsBoardSized {
 
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
       char buffer[objectSize];
+      if (PayloadSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+        Logger::log(message);
+        return false;
+      }
       // Serialize json does not include size of the string null terminator
       if (serializeJson(requestVariant, buffer, objectSize) < objectSize - 1) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
@@ -780,64 +810,8 @@ class ThingsBoardSized {
     /// that will be called if the key-value pair from the server for the given shared attributes is received
     /// @param callback Callback method that will be called
     /// @return Wheter requesting the given callback was successful or not
-    inline const bool Shared_Attributes_Request(const Shared_Attribute_Request_Callback& callback) {
-      // Ensure to have enough size for the infinite amount of possible shared attributes that could be requested from the cloud,
-      // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> requestBuffer;
-      // The .template variant of createing the JsonObject has to be used,
-      // because we are passing a template to the StaticJsonDocument template list
-      // and it will generate a compile time error if not used
-      const JsonObject requestObject = requestBuffer.template as<JsonObject>();
-      const std::vector<const char *>& sharedAttributes = callback.Get_Attributes();
-
-      // Check if any sharedKeys were requested
-      if (sharedAttributes.empty()) {
-        Logger::log(NO_KEYS_TO_REQUEST);
-        return false;
-      }
-      // Ensure the response topic has been subscribed
-      Shared_Attribute_Request_Callback* registeredCallback = nullptr;
-      if (!Shared_Attributes_Request_Subscribe(callback, registeredCallback)) {
-        return false;
-      }
-      else if (registeredCallback == nullptr) {
-        return false;
-      }
-
-      std::string request;
-      for (const char *att : sharedAttributes) {
-        // Check if the given attribute is null, if it is skip it
-        if (att == nullptr) {
-          Logger::log(ATT_IS_NULL);
-          continue;
-        }
-        request.append(att);
-        request.push_back(COMMA);
-      }
-
-      // Remove latest not needed ,
-      request.pop_back();
-
-      requestObject[SHARED_KEYS] = request.c_str();
-      const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
-      char buffer[objectSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(requestObject, buffer, objectSize) < objectSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
-      }
-
-      // Print requested keys
-      char message[JSON_STRING_SIZE(strlen(REQUEST_ATT)) + request.length() + JSON_STRING_SIZE(strlen(buffer))];
-      snprintf_P(message, sizeof(message), REQUEST_ATT, request.c_str(), buffer);
-      Logger::log(message);
-
-      m_requestId++;
-      registeredCallback->Set_Request_ID(m_requestId);
-
-      char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
-      snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+    inline const bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
+      return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
 
     /// @brief Subscribes multiple shared attribute callbacks,
@@ -893,6 +867,83 @@ class ThingsBoardSized {
     }
 
   private:
+
+    /// @brief Requests one client-side or shared attribute calllback,
+    /// that will be called if the key-value pair from the server for the given client-side or shared attributes is received
+    /// @param callback Callback method that will be called
+    /// @param attributeRequestKey Key of the key-value pair that will contain the attributes we want to request
+    /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
+    /// @return Wheter requesting the given callback was successful or not
+    inline const bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
+      // Ensure to have enough size for the infinite amount of possible shared attributes that could be requested from the cloud,
+      // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> requestBuffer;
+      // The .template variant of createing the JsonVariant has to be used,
+      // because we are passing a template to the StaticJsonDocument template list
+      // and it will generate a compile time error if not used
+      const JsonVariant requestObject = requestBuffer.template as<JsonVariant>();
+      const std::vector<const char *>& attributes = callback.Get_Attributes();
+
+      // Check if any sharedKeys were requested
+      if (attributes.empty()) {
+        Logger::log(NO_KEYS_TO_REQUEST);
+        return false;
+      }
+      else if (attributeRequestKey == nullptr || attributeResponseKey == nullptr) {
+        Logger::log(ATT_KEY_NOT_FOUND);
+        return false;
+      }
+      // Ensure the response topic has been subscribed
+      Attribute_Request_Callback* registeredCallback = nullptr;
+      if (!Attributes_Request_Subscribe(callback, registeredCallback)) {
+        return false;
+      }
+      else if (registeredCallback == nullptr) {
+        return false;
+      }
+
+      std::string request;
+      for (const char *att : attributes) {
+        // Check if the given attribute is null, if it is skip it
+        if (att == nullptr) {
+          Logger::log(ATT_IS_NULL);
+          continue;
+        }
+        request.append(att);
+        request.push_back(COMMA);
+      }
+
+      // Remove latest not needed ,
+      request.pop_back();
+
+      requestObject[attributeRequestKey] = request.c_str();
+      const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
+      char buffer[objectSize];
+      if (PayloadSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+        Logger::log(message);
+        return false;
+      }
+      // Serialize json does not include size of the string null terminator
+      else if (serializeJson(requestObject, buffer, objectSize) < objectSize - 1) {
+        Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        return false;
+      }
+
+      // Print requested keys
+      char message[JSON_STRING_SIZE(strlen(REQUEST_ATT)) + request.length() + JSON_STRING_SIZE(strlen(buffer))];
+      snprintf_P(message, sizeof(message), REQUEST_ATT, request.c_str(), buffer);
+      Logger::log(message);
+
+      m_requestId++;
+      registeredCallback->Set_Request_ID(m_requestId);
+      registeredCallback->Set_Attribute_Key(attributeResponseKey);
+
+      char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
+      snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
+      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+    }
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
@@ -1195,7 +1246,7 @@ class ThingsBoardSized {
       this->RPC_Unsubscribe(); // Cleanup all server-side RPC subscriptions
       this->RPC_Request_Unsubscribe(); // Cleanup all client-side RPC requests
       this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
-      this->Shared_Attributes_Request_Unsubscribe(); // Cleanup all shared attributes requests
+      this->Attributes_Request_Unsubscribe(); // Cleanup all client-side or shared attributes requests
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
       this->Provision_Unsubscribe(); // Cleanup all provision subscriptions
 #endif
@@ -1231,7 +1282,7 @@ class ThingsBoardSized {
       m_rpcCallbacks.reserve(reservedSize);
       m_rpcRequestCallbacks.reserve(reservedSize);
       m_sharedAttributeUpdateCallbacks.reserve(reservedSize);
-      m_sharedAttributeRequestCallbacks.reserve(reservedSize);
+      m_attributeRequestCallbacks.reserve(reservedSize);
     }
 
     /// @brief Subscribes to the client-side RPC response topic
@@ -1267,8 +1318,8 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Wheter requesting the given callback was successful or not
-    inline const bool Shared_Attributes_Request_Subscribe(const Shared_Attribute_Request_Callback& callback, Shared_Attribute_Callback*& registeredCallback = nullptr) {
-      if (m_sharedAttributeRequestCallbacks.size() + 1 > m_sharedAttributeRequestCallbacks.capacity()) {
+    inline const bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
+      if (m_attributeRequestCallbacks.size() + 1 > m_attributeRequestCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
         return false;
       }
@@ -1278,17 +1329,17 @@ class ThingsBoardSized {
       }
 
       // Push back given callback into our local vector
-      m_sharedAttributeRequestCallbacks.push_back(callback);
-      registeredCallback = &m_sharedAttributeRequestCallbacks.back();
+      m_attributeRequestCallbacks.push_back(callback);
+      registeredCallback = &m_attributeRequestCallbacks.back();
       return true;
     }
 
-    /// @brief Unsubscribes all shared attributes request callbacks
+    /// @brief Unsubscribes all client-side or shared attributes request callbacks
     /// @return Wheter unsubcribing the previously subscribed callbacks
     /// and from the  attribute response topic, was successful or not
-    inline const bool Shared_Attributes_Request_Unsubscribe() {
+    inline const bool Attributes_Request_Unsubscribe() {
       // Empty all callbacks
-      m_sharedAttributeRequestCallbacks.clear();
+      m_attributeRequestCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
@@ -1352,11 +1403,13 @@ class ThingsBoardSized {
         char message[detectSize(CALLING_REQUEST_CB, responseId)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, responseId);
         Logger::log(message);
+
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         m_rpcRequestCallbacks.at(i).Call_Callback<Logger>(data);
         // Delete callback because the changes have been requested and the callback is no longer needed.
         m_rpcRequestCallbacks.erase(std::next(m_rpcRequestCallbacks.begin(), i));
+        break;
       }
 
       // Attempt to unsubscribe from the shared attribute request topic,
@@ -1577,8 +1630,8 @@ class ThingsBoardSized {
 
       if (data && (data.size() >= 1)) {
         Logger::log(RECEIVED_ATT_UPDATE);
-        if (data.containsKey(SHARED_KEY)) {
-          data = data[SHARED_KEY];
+        if (data.containsKey(SHARED_RESPONSE_KEY)) {
+          data = data[SHARED_RESPONSE_KEY];
         }
       }
       else {
@@ -1633,12 +1686,12 @@ class ThingsBoardSized {
       }
     }
 
-    /// @brief Process callback that will be called upon shared attribute request arrival
+    /// @brief Process callback that will be called upon client-side or shared attribute request arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    inline void process_shared_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
+    inline void process_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
@@ -1649,16 +1702,6 @@ class ThingsBoardSized {
       }
       JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-      if (data && (data.size() >= 1)) {
-        Logger::log(RECEIVED_ATT);
-        if (data.containsKey(SHARED_KEY)) {
-          data = data[SHARED_KEY];
-        }
-      } else {
-        Logger::log(ATT_KEY_NOT_FOUND);
-        return;
-      }
-
       std::string response = topic;
       // Remove the not needed part of the topic.
       const size_t index = strlen(ATTRIBUTE_RESPONSE_TOPIC) + 1U;
@@ -1666,26 +1709,43 @@ class ThingsBoardSized {
       // convert the remaining text to an integer
       const uint32_t response_id = atoi(response.c_str());
 
-      for (size_t i = 0; i < m_sharedAttributeRequestCallbacks.size(); i++) {
-        if (m_sharedAttributeRequestCallbacks.at(i).Get_Request_ID() != response_id) {
+      char message[detectSize(CALLING_REQUEST_CB, response_id)];
+      for (size_t i = 0; i < m_attributeRequestCallbacks.size(); i++) {
+        if (m_attributeRequestCallbacks.at(i).Get_Request_ID() != response_id) {
           continue;
         }
+        const char *attributeResponseKey = m_attributeRequestCallbacks.at(i).Get_Attribute_Key();
+        if (attributeResponseKey == nullptr) {
+          Logger::log(ATT_KEY_NOT_FOUND);
+          goto delete_callback;
+        }
+        else if (!data || (data.size() < 0)) {
+          Logger::log(ATT_KEY_NOT_FOUND);
+          goto delete_callback;
+        }
 
-        char message[detectSize(CALLING_REQUEST_CB, response_id)];
+        Logger::log(RECEIVED_ATT);
+        if (data.containsKey(attributeResponseKey)) {
+          data = data[attributeResponseKey];
+        }
+
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, response_id);
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-        m_sharedAttributeRequestCallbacks.at(i).Call_Callback<Logger>(data);
-        // Delete callback because the changes have been requested and the callback is no longer needed.
-        m_sharedAttributeRequestCallbacks.erase(std::next(m_sharedAttributeRequestCallbacks.begin(), i));
+        m_attributeRequestCallbacks.at(i).Call_Callback<Logger>(data);
+
+        delete_callback:
+        // Delete callback because the response has been received and the callback is no longer needed
+        m_attributeRequestCallbacks.erase(std::next(m_attributeRequestCallbacks.begin(), i));
+        break;
       }
 
       // Unsubscribe from the shared attribute request topic,
       // if we are not waiting for any further responses with shared attributes from the server.
       // Will be resubscribed if another request is sent anyway
-      if (m_sharedAttributeRequestCallbacks.empty()) {
-        Shared_Attributes_Request_Unsubscribe();
+      if (m_attributeRequestCallbacks.empty()) {
+        Attributes_Request_Unsubscribe();
       }
     }
 
@@ -1760,7 +1820,7 @@ class ThingsBoardSized {
     std::vector<RPC_Callback> m_rpcCallbacks; // Server side RPC callbacks vector
     std::vector<RPC_Request_Callback> m_rpcRequestCallbacks; // Client side RPC callbacks vector
     std::vector<Shared_Attribute_Callback> m_sharedAttributeUpdateCallbacks; // Shared attribute update callbacks vector
-    std::vector<Shared_Attribute_Request_Callback> m_sharedAttributeRequestCallbacks; // Shared attribute request callbacks vector
+    std::vector<Attribute_Request_Callback> m_attributeRequestCallbacks; // Client-side or shared attribute request callbacks vector
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
@@ -1781,7 +1841,7 @@ class ThingsBoardSized {
     std::string m_fwAlgorithm;
     std::string m_fwChecksum;
     const std::vector<const char *> m_fwSharedKeys;
-    const Shared_Attribute_Request_Callback m_fwRequestCallback;
+    const Attribute_Request_Callback m_fwRequestCallback;
     const Shared_Attribute_Callback m_fwUpdateCallback;
     uint16_t m_fwChunkReceive;
 
@@ -1801,7 +1861,7 @@ class ThingsBoardSized {
       } else if (strncmp_P(RPC_TOPIC, topic, strlen(RPC_TOPIC)) == 0) {
         process_rpc_message(topic, payload, length);
       } else if (strncmp_P(ATTRIBUTE_RESPONSE_TOPIC, topic, strlen(ATTRIBUTE_RESPONSE_TOPIC)) == 0) {
-        process_shared_attribute_request_message(topic, payload, length);
+        process_attribute_request_message(topic, payload, length);
       } else if (strncmp_P(ATTRIBUTE_TOPIC, topic, strlen(ATTRIBUTE_TOPIC)) == 0) {
         process_shared_attribute_update_message(topic, payload, length);
       } else if (strncmp_P(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
