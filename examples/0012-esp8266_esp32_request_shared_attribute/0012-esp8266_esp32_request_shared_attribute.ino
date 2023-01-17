@@ -34,7 +34,7 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 256U;
 
 // Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
@@ -78,16 +78,18 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
-// Optional, keep subscribed shared attributes empty instead,
-// and the callback will be called for every shared attribute changed on the device,
-// instead of only the one that were entered instead
-constexpr std::array<const char*, 7U> SUBSCRIBED_SHARED_ATTRIBUTES = {
+// Shared attributes we want to request from the server
+constexpr std::array<const char*, 6U> REQUESTED_SHARED_ATTRIBUTES = {
   "fw_checksum",
   "fw_checksum_algorithm",
   "fw_size",
   "fw_tag",
   "fw_title",
-  "fw_version",
+  "fw_version"
+};
+
+// Client-side attributes we want to request from the server
+constexpr std::array<const char*, 1U> REQUESTED_CLIENT_ATTRIBUTES = {
   "test"
 };
 
@@ -101,8 +103,9 @@ WiFiClient espClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
-// Statuses for subscribing to shared attributes
-bool subscribed = false;
+// Statuses for requesting of attributes
+bool requestedClient = false;
+bool requestedShared = false;
 
 
 /// @brief Initalizes WiFi connection,
@@ -152,7 +155,24 @@ void processSharedAttributeRequest(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-const Shared_Attribute_Request_Callback callback(SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend(), processSharedAttributeRequest);
+/// @brief Update callback that will be called as soon as the requested client-side attributes, have been received.
+/// The callback will then not be called anymore unless it is reused for another request
+/// @param data Data containing the client-side attributes that were requested and their current value
+void processClientAttributeRequest(const Shared_Attribute_Data &data) {
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    Serial.println(it->key().c_str());
+    // Shared attributes have to be parsed by their type.
+    Serial.println(it->value().as<const char*>());
+  }
+
+  int jsonSize = JSON_STRING_SIZE(measureJson(data));
+  char buffer[jsonSize];
+  serializeJson(data, buffer, jsonSize);
+  Serial.println(buffer);
+}
+
+const Attribute_Request_Callback sharedCallback(REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend(), &processSharedAttributeRequest);
+const Attribute_Request_Callback clientCallback(REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend(), &processClientAttributeRequest);
 
 void setup() {
   // Initalize serial connection for debugging
@@ -180,10 +200,20 @@ void loop() {
     }
   }
 
-  Serial.println("Requesting shared attributes...");
-  if (!tb.Shared_Attributes_Request(callback)) {
-    Serial.println("Failed to request shared attributes");
-    return;
+  if (!requestedShared) {
+    Serial.println("Requesting shared attributes...");
+    requestedShared = tb.Shared_Attributes_Request(sharedCallback);
+    if (!requestedShared) {
+      Serial.println("Failed to request shared attributes");
+    }
+  }
+
+  if (!requestedClient) {
+    Serial.println("Requesting client-side attributes...");
+    requestedClient = tb.Client_Attributes_Request(clientCallback);
+    if (!requestedClient) {
+      Serial.println("Failed to request client-side attributes");
+    }
   }
 
   tb.loop();

@@ -1,4 +1,4 @@
-# Requesting the newest value of shared attributes
+# Requesting the newest value of client-side or shared attributes
 
 ## Devices
 | Supported Devcies |
@@ -8,7 +8,8 @@
 
 ## ThingsBoard API
 [Shared Attributes](https://thingsboard.io/docs/user-guide/attributes/#shared-attributes)
+[Client-Side Attributes](https://thingsboard.io/docs/user-guide/attributes/#client-side-attributes)
 
 ## Feature
-Requesting the shared attributes with the given keys, from the cloud and sending them to the device.
+Requesting the client-side or shared attributes with the given keys, from the cloud and sending them to the device.
 Allows for a maximum of MaxFieldsAmt attributes requested at once
