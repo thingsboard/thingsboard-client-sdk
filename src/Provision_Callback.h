@@ -10,8 +10,6 @@
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
 // Library includes.
-// Ensure ArduinoJson supports std::string type.
-#define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 #include <functional>
 

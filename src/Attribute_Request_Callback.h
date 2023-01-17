@@ -8,8 +8,6 @@
 #define Attribute_Request_Callback_h
 
 // Library includes.
-// Ensure ArduinoJson supports std::string type.
-#define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 #include <functional>
 #include <vector>
