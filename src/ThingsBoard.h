@@ -17,14 +17,21 @@
 #include <Update.h>
 #endif
 
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-#include "ArduinoJson/Polyfills/type_traits.hpp"
+// Local includes.
+#include "ThingsBoardDefaultLogger.h"
+#include "Telemetry.h"
+#include "Constants.h"
 
-#define Default_Payload 64
-#define Default_Fields_Amt 8
+/// ---------------------------------
+/// Constant strings in flash memory.
+/// ---------------------------------
+// Publish data topics.
+constexpr char ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";
+constexpr char TELEMETRY_TOPIC[] PROGMEM = "v1/devices/me/telemetry";
 
-class ThingsBoardDefaultLogger;
+// RPC topics.
+constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
+constexpr char RPC_TOPIC[] PROGMEM = "v1/devices/me/rpc";
 
 // Telemetry record class, allows to store different data using common interface.
 class Telemetry {
@@ -93,7 +100,12 @@ class Telemetry {
     bool serializeKeyval(JsonVariant &jsonObj) const;
 };
 
-// Convenient aliases
+// Claim data keys.
+constexpr char SECRET_KEY[] PROGMEM = "secretKey";
+constexpr char DURATION_KEY[] PROGMEM = "durationMs";
+constexpr char DEVICE_NAME_KEY[] PROGMEM = "deviceName";
+constexpr char PROV_DEVICE_KEY[] PROGMEM = "provisionDeviceKey";
+constexpr char PROV_DEVICE_SECRET_KEY[] PROGMEM = "provisionDeviceSecret";
 
 using Attribute = Telemetry;
 using RPC_Response = Telemetry;
@@ -122,6 +134,9 @@ class RPC_Callback {
     inline RPC_Callback(const char *methodName, processFn cb)
       : m_name(methodName), m_cb(cb)        {  }
 
+  private:
+    const char  *m_name;    // Method name
+    processFn   m_cb;       // Callback to call
   private:
     const char  *m_name;    // Method name
     processFn   m_cb;       // Callback to call
@@ -178,6 +193,86 @@ class ThingsBoardDefaultLogger
   public:
     static void log(const char *msg);
 };
+
+// Shared attributes request callback wrapper
+class Shared_Attribute_Request_Callback {
+  public:
+    // Shared attributes callback signature
+    using returnType = void;
+    using argumentType = Shared_Attribute_Data&;
+    using processFn = std::function<returnType(const argumentType data)>;
+
+    // Constructs empty callback
+    inline Shared_Attribute_Request_Callback()
+      : m_request_id(0U), m_cb(nullptr) {  }
+
+    // Constructs callback that will be fired upon a Shared attribute request arrival
+    inline Shared_Attribute_Request_Callback(const processFn cb)
+      : m_request_id(0U), m_cb(cb) {  }
+
+    // Calls the callback that was subscribed when this class instance was initally created.
+    template<typename Logger>
+    inline returnType Call_Callback(const argumentType data) const {
+      // Check if the callback is a nullptr,
+      // meaning it has not been assigned any valid callback method.
+      if (!m_cb) {
+        Logger::log(ATT_REQUEST_CB_IS_NULL);
+        return returnType();
+      }
+      return m_cb(data);
+    }
+
+    // Gets all the subscribed attributes that will result,
+    // in the subscribed method being called if changed by the cloud.
+    inline const uint32_t& Get_Request_ID() const {
+      return m_request_id;
+    }
+
+    // Sets the request id to the actual used request id to later identify,
+    // which Shared_Attribute_Request_Callback is connected to which received data.
+    inline void Set_Request_ID(const uint32_t request_id) {
+      m_request_id = request_id;
+    }
+
+  private:
+    uint32_t        m_request_id;   // Id the request was called with
+    processFn       m_cb;           // Callback to call
+};
+
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+// Provisioning callback wrapper
+class Provision_Callback {
+  public:
+    // Provisioning callback signature
+    using returnType = void;
+    using argumentType = Provision_Data&;
+    using processFn = std::function<returnType(const argumentType data)>;
+
+    // Constructs empty callback
+    inline Provision_Callback()
+      : m_cb(nullptr) {  }
+
+    // Constructs callback that will be fired upon a Provision request arrival with
+    // given attribute key
+    inline Provision_Callback(const processFn cb)
+      : m_cb(cb) {  }
+
+    // Calls the callback that was subscribed when this class instance was initally created.
+    template<typename Logger>
+    inline returnType Call_Callback(const argumentType data) const {
+      // Check if the callback is a nullptr,
+      // meaning it has not been assigned any valid callback method.
+      if (!m_cb) {
+        Logger::log(PROVISION_CB_IS_NULL);
+        return returnType();
+      }
+      return m_cb(data);
+    }
+
+  private:
+    processFn   m_cb;       // Callback to call
+};
+#endif
 
 // ThingsBoardSized client class
 template<size_t PayloadSize = Default_Payload,
@@ -335,6 +430,10 @@ class ThingsBoardSized
     inline void loop() {
       m_client.loop();
     }
+    // Executes an event loop for PubSub client.
+    inline void loop() {
+      m_client.loop();
+    }
 
     //----------------------------------------------------------------------------
     // Claiming API
@@ -417,6 +516,8 @@ class ThingsBoardSized
 
     //----------------------------------------------------------------------------
     // Attribute API
+    //----------------------------------------------------------------------------
+    // Attribute API
 
     // Sends an attribute with given name and value.
     template<class T>
@@ -454,6 +555,8 @@ class ThingsBoardSized
       return m_client.publish("v1/devices/me/attributes", json);
     }
 
+    //----------------------------------------------------------------------------
+    // Server-side RPC API
     //----------------------------------------------------------------------------
     // Server-side RPC API
 
@@ -851,14 +954,20 @@ class ThingsBoardSized
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
       JsonVariant resp_obj = respBuffer.template to<JsonVariant>();
 
-      if (r.serializeKeyval(resp_obj) == false) {
-        Logger::log("unable to serialize data");
-        return;
+      // Buffer size has been set to another value by the method return to the previous value.
+      if (changeBufferSize) {
+        m_client.setBufferSize(previousBufferSize);
       }
 
-      if (measureJson(respBuffer) > PayloadSize - 1) {
-        Logger::log("too small buffer for JSON data");
-        return;
+      // Unsubscribe from now not needed topics anymore.
+      Firmware_OTA_Unsubscribe();
+
+      bool success = false;
+      // Update current_fw_title and current_fw_version if updating was a success.
+      if (strncmp_P(STATUS_SUCCESS, m_fwState, strlen(STATUS_SUCCESS)) == 0) {
+        Firmware_Send_FW_Info(fw_title, fw_version);
+        Firmware_Send_State(STATUS_SUCCESS);
+        success = true;
       }
       serializeJson(resp_obj, responsePayload, sizeof(responsePayload));
 
@@ -1087,8 +1196,7 @@ class ThingsBoardSized
 
 };
 
-template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance;
+  private:
 
 #if !defined(ESP8266) && !defined(ESP32)
 
@@ -1276,7 +1384,11 @@ class ThingsBoardHttpSized
     const char *m_token;
 };
 
-using ThingsBoardHttp = ThingsBoardHttpSized<>;
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
+    Provision_Callback m_provisionCallback; // Provision response callback
+#endif
+    uint32_t m_requestId; // Allows nearly 4.3 million requests before wrapping back to 0.
+    bool m_qos; // Wheter QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
 #endif
 

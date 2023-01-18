@@ -3,6 +3,7 @@
 set -e
 
 EXAMPLES_ARDUINO=(
+EXAMPLES_ARDUINO=(
     "examples/0000-arduino_send_telemetry"
     "examples/0001-arduino_send_batch"
     "examples/0002-arduino_rpc"
@@ -24,7 +25,9 @@ EXAMPLES=( "${EXAMPLES_ESP8266[@]}" "${EXAMPLES_ARDUINO[@]}")
 
 # Test if arduino command line interface is downloaded locally
 if [ -f "$(pwd)/arduino-cli" ]
+if [ -f "$(pwd)/arduino-cli" ]
 then
+    ARDUINO_CLI="$(pwd)/arduino-cli"
     ARDUINO_CLI="$(pwd)/arduino-cli"
     echo "Found arduino CLI in $ARDUINO_CLI"
 else
@@ -33,7 +36,13 @@ fi
 
 do_test() {
     for path in "${EXAMPLES_ARDUINO[@]}"
+    for path in "${EXAMPLES_ARDUINO[@]}"
     do
+        for arduino_board in "${ARDUINOS[@]}"
+        do
+            echo "Building for ${arduino_board}"
+            "${ARDUINO_CLI}" compile --warnings all -b arduino:avr:${arduino_board} "${path}"
+        done
         for arduino_board in "${ARDUINOS[@]}"
         do
             echo "Building for ${arduino_board}"
@@ -41,10 +50,13 @@ do_test() {
         done
     done
 
-    for path in "${EXAMPLES_ESP8266[@]}"
+    for path in "${EXAMPLES_ESP8266_ESP32[@]}"
     do
         echo "Processing ESP8266 example with path: ${path}"
+        echo "Processing ESP8266 example with path: ${path}"
         "${ARDUINO_CLI}" compile -b esp8266:esp8266:generic "${path}"
+        echo "Processing ESP32 example with path: ${path}"
+        "${ARDUINO_CLI}" compile -b esp32:esp32:generic "${path}"
     done
 }
 
@@ -52,8 +64,14 @@ do_test() {
 do_link() {
     for path in "${EXAMPLES[@]}"
     do
+        ln -sf "$(pwd)/src/Constants.h" "${path}/Constants.h"
+        ln -sf "$(pwd)/src/HashGenerator.h" "${path}/HashGenerator.h"
+        ln -sf "$(pwd)/src/HashGenerator.cpp" "${path}/HashGenerator.cpp"
+        ln -sf "$(pwd)/src/Telemetry.h" "${path}/Telemetry.h"
+        ln -sf "$(pwd)/src/ThingsBoardDefaultLogger.h" "${path}/ThingsBoardDefaultLogger.h"
+        ln -sf "$(pwd)/src/ThingsBoardDefaultLogger.cpp" "${path}/ThingsBoardDefaultLogger.cpp"
+        ln -sf "$(pwd)/src/ThingsBoardHttp.h" "${path}/ThingsBoardHttp.h"
         ln -sf "$(pwd)/src/ThingsBoard.h" "${path}/ThingsBoard.h"
-        ln -sf "$(pwd)/src/ThingsBoard.cpp" "${path}/ThingsBoard.cpp"
     done
 }
 
