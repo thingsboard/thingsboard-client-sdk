@@ -9,7 +9,10 @@
 
 // Library includes.
 #include <Telemetry.h>
+#include "Configuration.h"
+#if THINGSBOARD_ENABLE_STL
 #include <functional>
+#endif // THINGSBOARD_ENABLE_STL
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -22,7 +25,11 @@ class RPC_Request_Callback {
     /// @brief RPC request callback signatures
     using returnType = void;
     using argumentType = const JsonVariantConst&;
+#if defined(ESP8266) || defined(ESP32)
     using processFn = std::function<returnType(argumentType data)>;
+#else
+    using processFn = returnType (*)(argumentType data);
+#endif // defined(ESP8266) || defined(ESP32)
 
     /// @brief Constructs empty callback, will result in never being called
     inline RPC_Request_Callback()
