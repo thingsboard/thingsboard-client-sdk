@@ -29,7 +29,7 @@ const char pass[] = "";
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
 #define TOKEN               "YOUR_ACCESS_TOKEN"
-#define THINGSBOARD_SERVER  "demo.thingsboard.io"
+#define THINGSBOARD_SERVER  "thingsboard.cloud"
 #define THINGSBOARD_PORT    80
 
 // Baud rate for debug serial
