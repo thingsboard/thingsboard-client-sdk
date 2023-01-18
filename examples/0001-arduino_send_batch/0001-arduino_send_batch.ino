@@ -5,63 +5,39 @@
 //  - Arduino Uno
 //  - ESP8266 connected to Arduino Uno
 
-#include <ThingsBoard.h>
+#include "ThingsBoard.h"
+
 #include <WiFiEspClient.h>
 #include <WiFiEsp.h>
-#include <SoftwareSerial.h>
+#include "SoftwareSerial.h"
 
+#define WIFI_AP             "YOUR_WIFI_AP"
+#define WIFI_PASSWORD       "YOUR_WIFI_PASSWORD"
 
-constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
-constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
-
-// See https://thingsboard.io/docs/getting-started-guides/helloworld/
+// See https://thingsboard.io/docs/getting-started-guides/helloworld/ 
 // to understand how to obtain an access token
 #define TOKEN               "YOUR_ACCESS_TOKEN"
-#define THINGSBOARD_SERVER  "thingsboard.cloud"
+#define THINGSBOARD_SERVER  "demo.thingsboard.io"
 
+// Baud rate for serial debug
+#define SERIAL_DEBUG_BAUD   9600
+// Baud rate for communicating with ESP chip
+#define SERIAL_ESP8266_BAUD 9600
 
 // Serial driver for ESP
-SoftwareSerial soft(2U, 3U); // RX, TX
+SoftwareSerial soft(2, 3); // RX, TX
 // Initialize the Ethernet client object
 WiFiEspClient espClient;
 // Initialize ThingsBoard instance
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
-
-
-/// @brief Initalizes WiFi connection,
-// will endlessly delay until a connection has been successfully established
-void InitWiFi() {
-  Serial.println("Connecting to AP ...");
-  // Attempting to establish a connection to the given WiFi network
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) {
-    // Delay 500ms until a connection has been succesfully established
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("Connected to AP");
-}
-
-/// @brief Reconnects the WiFi uses InitWiFi if the connection has been removed
-/// @return Returns true as soon as a connection has been established again
-const bool reconnect() {
-  // Check to ensure we aren't connected yet
-  const uint8_t status = WiFi.status();
-  if (status == WL_CONNECTED) {
-    return true;
-  }
-
-  // If we aren't establish a new connection to the given WiFi network
-  InitWiFi();
-  return true;
-}
+ThingsBoard tb(espClient);
 
 void setup() {
+  uint8_t wifiStatus;
+
   // initialize serial for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
   // initialize serial for ESP module
-  soft.begin(SERIAL_ESP8266_DEBUG_BAUD);
-  delay(1000);
+  soft.begin(SERIAL_ESP8266_BAUD);
 
   // initialize ESP module
   WiFi.init(&soft);
@@ -71,15 +47,22 @@ void setup() {
     // don't continue
     while (true);
   }
-  InitWiFi();
+
+  Serial.println("Connecting to AP ...");
+  // attempt to connect to WiFi network
+  while (wifiStatus != WL_CONNECTED) {
+    Serial.print("Attempting to connect to WPA SSID: ");
+    Serial.println(WIFI_AP);
+    // Connect to WPA/WPA2 network
+    wifiStatus = WiFi.begin(WIFI_AP, WIFI_PASSWORD);
+    delay(500);
+  }
+
+  Serial.println("Connected to AP");
 }
 
 void loop() {
   delay(1000);
-
-  if (!reconnect()) {
-    return;
-  }
 
   if (!tb.connected()) {
     // Connect to the ThingsBoard
@@ -87,15 +70,15 @@ void loop() {
     Serial.print(THINGSBOARD_SERVER);
     Serial.print(" with token ");
     Serial.println(TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
-      Serial.println("Failed to connect");
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
+      Serial.println("Failed to connect, retrying ...");
       return;
     }
   }
 
   Serial.println("Sending telemetry data...");
 
-  const uint8_t data_items = 2U;
+  const int data_items = 2;
   Telemetry data[data_items] = {
     { "temperature", 42.2 },
     { "humidity",    80 },
@@ -110,8 +93,8 @@ void loop() {
 
   */
 
-  // Uploads new telemetry to ThingsBoard using MQTT.
-  // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api
+  // Uploads new telemetry to ThingsBoard using MQTT. 
+  // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api 
   // for more details
   tb.sendTelemetry(data, data_items);
 
@@ -132,10 +115,9 @@ void loop() {
 
   */
 
-  // Publish attribute update to ThingsBoard using MQTT.
-  // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server
+  // Publish attribute update to ThingsBoard using MQTT. 
+  // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server 
   // for more details
   tb.sendAttributes(attributes, attribute_items);
-
   tb.loop();
 }

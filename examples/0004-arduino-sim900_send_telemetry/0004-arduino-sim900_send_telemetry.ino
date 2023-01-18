@@ -18,23 +18,24 @@
 
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
-#include <ThingsBoard.h>
-
+#include "ThingsBoard.h"
 
 // Your GPRS credentials
 // Leave empty, if missing user or pass
-constexpr char APN[] PROGMEM = "internet";
-constexpr char USER[] PROGMEM = "";
-constexpr char PASS[] PROGMEM = "";
+const char apn[]  = "internet";
+const char user[] = "";
+const char pass[] = "";
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
 #define TOKEN               "YOUR_ACCESS_TOKEN"
-#define THINGSBOARD_SERVER  "thingsboard.cloud"
+#define THINGSBOARD_SERVER  "demo.thingsboard.io"
 
+// Baud rate for debug serial
+#define SERIAL_DEBUG_BAUD   115200
 
 // Serial port for GSM shield
-SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
+SoftwareSerial serialGsm(7, 8); // RX, TX pins for communicating with modem
 
 // Initialize GSM modem
 TinyGsm modem(serialGsm);
@@ -43,19 +44,12 @@ TinyGsm modem(serialGsm);
 TinyGsmClient client(modem);
 
 // Initialize ThingsBoard instance
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(client);
+ThingsBoard tb(client);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
 
-
 void setup() {
-  // If analog input pin 0 is unconnected, random analog
-  // noise will cause the call to randomSeed() to generate
-  // different seed numbers each time the sketch runs.
-  // randomSeed() will then shuffle the random function.
-  randomSeed(analogRead(0));
-
   // Set console baud rate
   Serial.begin(SERIAL_DEBUG_BAUD);
 
@@ -113,18 +107,20 @@ void loop() {
     Serial.print(THINGSBOARD_SERVER);
     Serial.print(" with token ");
     Serial.println(TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
       Serial.println("Failed to connect");
       return;
     }
   }
 
   Serial.println("Sending data...");
+
   // Uploads new telemetry to ThingsBoard using MQTT.
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api
   // for more details
-  tb.sendTelemetryInt("temperature", random(10, 31));
-  tb.sendTelemetryInt("humidity", random(40, 90));
+
+  tb.sendTelemetryInt("temperature", 22);
+  tb.sendTelemetryFloat("humidity", 42.5);
 
   tb.loop();
 }

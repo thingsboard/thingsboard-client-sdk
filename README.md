@@ -1,12 +1,7 @@
 
 # Arduino ThingsBoard SDK
 
-[![MIT license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://lbesson.mit-license.org/)
-[![ESP32](https://img.shields.io/badge/ESP-32-green.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp32)
-[![ESP8266](https://img.shields.io/badge/ESP-8266-blue.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp8266)
 [![Build Status](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK.svg?branch=master)](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK)
-[![GitHub release](https://img.shields.io/github/release/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
-[![GitHub downloads](https://img.shields.io/github/downloads/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
 
 This library provides access to ThingsBoard platform over MQTT protocol.
 
@@ -29,12 +24,6 @@ Following dependencies must be installed, too:
  - [Telemetry data upload](https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api)
  - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server)
  - [Server-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#server-side-rpc)
- - [Attribute update subscription](https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server)
- - [Device provisioning](https://thingsboard.io/docs/reference/mqtt-api/#device-provisioning)
- - [Device claiming](https://thingsboard.io/docs/reference/mqtt-api/#claiming-devices)
- - [Firmware OTA update](https://thingsboard.io/docs/reference/mqtt-api/#firmware-api)
-
-Example implementations for all features can be found in the examples folder.
 
 ## Troubleshooting
 

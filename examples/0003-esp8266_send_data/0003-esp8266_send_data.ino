@@ -9,8 +9,7 @@
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
 #define TOKEN               "YOUR_ACCESS_TOKEN"
-#define THINGSBOARD_SERVER  "thingsboard.cloud"
-
+#define THINGSBOARD_SERVER  "demo.thingsboard.io"
 
 // Baud rate for debug serial
 #define SERIAL_DEBUG_BAUD   115200
@@ -21,10 +20,6 @@ WiFiClient espClient;
 ThingsBoard tb(espClient);
 // the Wifi radio's status
 int status = WL_IDLE_STATUS;
-bool claimingRequestSent = false;
-
-const char* claimingRequestSecretKey = "YOUR_VERY_SECRET_KEY";
-unsigned int claimingRequestDurationMs = 180000;
 
 void setup() {
   // initialize serial for debugging
@@ -32,7 +27,6 @@ void setup() {
   WiFi.begin(WIFI_AP, WIFI_PASSWORD);
   InitWiFi();
 }
-
 
 void loop() {
   delay(1000);
@@ -47,18 +41,20 @@ void loop() {
     Serial.print(THINGSBOARD_SERVER);
     Serial.print(" with token ");
     Serial.println(TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, 1883)) {
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
       Serial.println("Failed to connect");
       return;
     }
-
   }
 
-  if (!claimingRequestSent) {
-    if (tb.sendClaimingRequest(claimingRequestSecretKey, claimingRequestDurationMs)) {
-      claimingRequestSent = true;
-    }
-  }
+  Serial.println("Sending data...");
+
+  // Uploads new telemetry to ThingsBoard using MQTT.
+  // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api
+  // for more details
+
+  tb.sendTelemetryInt("temperature", 22);
+  tb.sendTelemetryFloat("humidity", 42.5);
 
   tb.loop();
 }
@@ -70,7 +66,6 @@ void InitWiFi()
 
   WiFi.begin(WIFI_AP, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
-
     delay(500);
     Serial.print(".");
   }

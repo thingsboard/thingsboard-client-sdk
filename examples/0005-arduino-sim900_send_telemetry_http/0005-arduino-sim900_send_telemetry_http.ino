@@ -18,24 +18,25 @@
 
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
-#include <ThingsBoardHttp.h>
-
+#include "ThingsBoard.h"
 
 // Your GPRS credentials
 // Leave empty, if missing user or pass
-constexpr char APN[] PROGMEM = "internet";
-constexpr char USER[] PROGMEM = "";
-constexpr char PASS[] PROGMEM = "";
+const char apn[]  = "internet";
+const char user[] = "";
+const char pass[] = "";
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
 #define TOKEN               "YOUR_ACCESS_TOKEN"
-#define THINGSBOARD_SERVER  "thingsboard.cloud"
+#define THINGSBOARD_SERVER  "demo.thingsboard.io"
 #define THINGSBOARD_PORT    80
 
+// Baud rate for debug serial
+#define SERIAL_DEBUG_BAUD   115200
 
 // Serial port for GSM shield
-SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
+SoftwareSerial serialGsm(7, 8); // RX, TX pins for communicating with modem
 
 #ifdef DUMP_AT_COMMANDS
   #include <StreamDebugger.h>
@@ -50,11 +51,10 @@ SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
 TinyGsmClient client(modem);
 
 // Initialize ThingsBoard instance
-ThingsBoardHttpSized<MAX_MESSAGE_SIZE> tb(client, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(client, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
-
 
 void setup() {
   // Set console baud rate
@@ -97,8 +97,8 @@ void loop() {
     Serial.println(" OK");
 
     Serial.print(F("Connecting to "));
-    Serial.print(APN);
-    if (!modem.gprsConnect(APN, USER, PASS)) {
+    Serial.print(apn);
+    if (!modem.gprsConnect(apn, user, pass)) {
         Serial.println(" fail");
         delay(10000);
         return;
