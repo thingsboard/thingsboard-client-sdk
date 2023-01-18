@@ -7,11 +7,12 @@
 #ifndef Provision_Callback_h
 #define Provision_Callback_h
 
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
-
 // Library includes.
 #include <ArduinoJson.h>
+#include "Configuration.h"
+#if THINGSBOARD_ENABLE_STL
 #include <functional>
+#endif // THINGSBOARD_ENABLE_STL
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -27,7 +28,11 @@ class Provision_Callback {
     /// @brief Provisioning callback signature
     using returnType = void;
     using argumentType = const Provision_Data&;
+#if defined(ESP8266) || defined(ESP32)
     using processFn = std::function<returnType(argumentType data)>;
+#else
+    using processFn = returnType (*)(argumentType data);
+#endif // defined(ESP8266) || defined(ESP32)
 
     /// @brief Constructs empty callback, will result in never being called
     inline Provision_Callback()
@@ -57,6 +62,5 @@ class Provision_Callback {
   private:
     processFn   m_cb;       // Callback to call
 };
-#endif // defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
 
 #endif // Provision_Callback_h

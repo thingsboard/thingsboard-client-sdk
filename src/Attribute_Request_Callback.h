@@ -9,8 +9,11 @@
 
 // Library includes.
 #include <ArduinoJson.h>
+#include "Configuration.h"
+#if THINGSBOARD_ENABLE_STL
 #include <functional>
 #include <vector>
+#endif // THINGSBOARD_ENABLE_STL
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -27,11 +30,17 @@ class Attribute_Request_Callback {
     /// @brief Client-side or shared attributes callback signature
     using returnType = void;
     using argumentType = const Attribute_Data&;
+#if defined(ESP8266) || defined(ESP32)
     using processFn = std::function<returnType(argumentType data)>;
+#else
+    using processFn = returnType (*)(argumentType data);
+#endif // defined(ESP8266) || defined(ESP32)
 
     /// @brief Constructs empty callback, will result in never being called
     inline Attribute_Request_Callback()
       : m_attributes(), m_request_id(0U), m_attribute_key(nullptr), m_cb(nullptr) {  }
+
+#if THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs callback, will be called upon client-side or shared attribute request arrival
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client
@@ -43,6 +52,17 @@ class Attribute_Request_Callback {
     template<class InputIterator>
     inline Attribute_Request_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
       : m_attributes(first_itr, last_itr), m_request_id(0U), m_attribute_key(nullptr), m_cb(cb) {  }
+
+#else
+
+    /// @brief Constructs callback, will be called upon client-side or shared attribute request arrival
+    /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client
+    /// @param attributes Comma seperated string containing all attributes we want to request (test1, test2, ...)
+    /// @param cb Callback method that will be called
+    inline Attribute_Request_Callback(const char* attributes, processFn cb)
+      : m_attributes(attributes), m_request_id(0U), m_attribute_key(nullptr), m_cb(cb) {  }
+
+#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Calls the callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -96,12 +116,22 @@ class Attribute_Request_Callback {
     // is sent from the cloud and received by the client,
     /// passed when this class instance was initally created
     /// @return Requested client-side or shared attributes
+#if THINGSBOARD_ENABLE_STL
     inline const std::vector<const char *>& Get_Attributes() const {
       return m_attributes;
     }
+#else
+    inline const char* Get_Attributes() const {
+      return m_attributes;
+    }
+#endif // THINGSBOARD_ENABLE_STL
 
   private:
+#if THINGSBOARD_ENABLE_STL
     std::vector<const char *>      m_attributes;      // Attribute we want to request
+#else
+    const char                     *m_attributes;      // Attribute we want to request
+#endif // THINGSBOARD_ENABLE_STL
     uint32_t                       m_request_id;      // Id the request was called with
     const char                     *m_attribute_key;  // Attribute key that we wil receive the response on ("client" or "shared")
     processFn                      m_cb;              // Callback to call
