@@ -249,7 +249,9 @@ class ThingsBoardSized {
       , m_fwChunkReceive(0U)
 #endif
     {
+#if !THINGSBOARD_ENABLE_STL
       m_subscribedInstance = this;
+#endif // !THINGSBOARD_ENABLE_STL
       reserve_callback_size(MaxFieldsAmt);
     }
 
