@@ -28,11 +28,11 @@ class Provision_Callback {
     /// @brief Provisioning callback signature
     using returnType = void;
     using argumentType = const Provision_Data&;
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_STL
     using processFn = std::function<returnType(argumentType data)>;
 #else
     using processFn = returnType (*)(argumentType data);
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called
     inline Provision_Callback()

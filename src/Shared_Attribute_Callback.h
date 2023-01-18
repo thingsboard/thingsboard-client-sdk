@@ -30,11 +30,11 @@ class Shared_Attribute_Callback {
     /// @brief Shared attributes callback signature
     using returnType = void;
     using argumentType = const Shared_Attribute_Data&;
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_STL
     using processFn = std::function<returnType(argumentType data)>;
 #else
     using processFn = returnType (*)(argumentType data);
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called
     inline Shared_Attribute_Callback()
@@ -85,19 +85,27 @@ class Shared_Attribute_Callback {
       }
       return m_cb(data);
     }
+#if THINGSBOARD_ENABLE_STL
 
     /// @brief Gets all the subscribed shared attributes that will result,
     /// in the subscribed method being called if changed by the cloud
     /// passed when this class instance was initally created
     /// @return Subscribed shared attributes
-#if THINGSBOARD_ENABLE_STL
     inline const std::vector<const char *>& Get_Attributes() const {
       return m_attributes;
     }
+
 #else
+
+    /// @brief Gets the string containing all the requested client-side or shared attributes that will result,
+    /// in the subscribed method being called when the response with their current value
+    // is sent from the cloud and received by the client,
+    /// passed when this class instance was initally created
+    /// @return Requested client-side or shared attributes
     inline const char* Get_Attributes() const {
       return m_attributes;
     }
+
 #endif // THINGSBOARD_ENABLE_STL
 
   private:

@@ -30,11 +30,11 @@ class RPC_Callback {
     /// @brief RPC callback signatures
     using returnType = const RPC_Response;
     using argumentType = const RPC_Data&;
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_STL
     using processFn = std::function<returnType(argumentType data)>;
 #else
     using processFn = returnType (*)(argumentType data);
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called
     inline RPC_Callback()
