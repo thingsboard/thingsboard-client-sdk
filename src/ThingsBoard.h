@@ -953,7 +953,7 @@ class ThingsBoardSized
     }
 
     PubSubClient m_client;              // PubSub MQTT client instance.
-    RPC_Callback m_rpcCallbacks[8];     // RPC callbacks array
+    RPC_Callback m_rpcCallbacks[16];     // RPC callbacks array
     Shared_Attribute_Callback m_sharedAttributeUpdateCallbacks[8];     // Shared attribute update callbacks array
 
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_AVR_MEGA)
