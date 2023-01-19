@@ -190,7 +190,7 @@ void loop() {
   }
 
   if (!currentFWSent) {
-    currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && Firmware_Send_State(FW_STATE_UPDATED);
+    currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && tb.Firmware_Send_State(FW_STATE_UPDATED);
   }
 
   if (!updateRequestSent) {
