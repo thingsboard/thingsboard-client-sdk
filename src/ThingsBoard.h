@@ -1394,7 +1394,13 @@ class ThingsBoardSized {
       // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
       // when creating an array with negative size we assert beforehand with a clear error message.
       const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
+#if THINGSBOARD_ENABLE_STL
       assert(result >= 0);
+#else
+      if (result < 0) {
+        abort();
+      }
+#endif // THINGSBOARD_ENABLE_STL
       va_end(args);
       return result;
     }
@@ -1410,7 +1416,7 @@ class ThingsBoardSized {
       m_rpcRequestCallbacks.reserve(reservedSize);
       m_sharedAttributeUpdateCallbacks.reserve(reservedSize);
       m_attributeRequestCallbacks.reserve(reservedSize);
-#endif
+#endif // THINGSBOARD_ENABLE_STL
     }
 
 #if THINGSBOARD_ENABLE_STL
@@ -1551,11 +1557,18 @@ class ThingsBoardSized {
       // Convert the remaining text to an integer
       const uint32_t responseId = atoi(response.c_str());
 
+#if THINGSBOARD_ENABLE_STL
       for (size_t i = 0; i < m_rpcRequestCallbacks.size(); i++) {
         if (m_rpcRequestCallbacks.at(i).Get_Request_ID() != responseId) {
           continue;
         }
-
+#else
+      for (size_t i = 0; i < m_rpcRequestIndex; i++) {
+        RPC_Request_Callback& callback = m_rpcRequestCallbacks[i];
+        if (callback.Get_Request_ID() != responseId) {
+          continue;
+        }
+#endif // THINGSBOARD_ENABLE_STL
         char message[detectSize(CALLING_REQUEST_CB, responseId)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, responseId);
         Logger::log(message);
@@ -1567,7 +1580,6 @@ class ThingsBoardSized {
         // Delete callback because the changes have been requested and the callback is no longer needed.
         m_rpcRequestCallbacks.erase(std::next(m_rpcRequestCallbacks.begin(), i));
 #else
-        RPC_Request_Callback& callback = m_rpcRequestCallbacks[i];
         callback.Call_Callback<Logger>(data);
 #endif // THINGSBOARD_ENABLE_STL
         break;
@@ -1808,7 +1820,12 @@ class ThingsBoardSized {
         return;
       }
 
+#if THINGSBOARD_ENABLE_STL
       for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
+#else
+      for (size_t i = 0; i < m_sharedAttributeIndex; i++) {
+        Shared_Attribute_Callback& callback = m_sharedAttributeUpdateCallbacks[i];
+#endif // THINGSBOARD_ENABLE_STL
         char id_message[detectSize(ATT_CB_ID, i)];
         snprintf_P(id_message, sizeof(id_message), ATT_CB_ID, i);
         Logger::log(id_message);
@@ -1819,7 +1836,6 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_STL
           m_sharedAttributeUpdateCallbacks.at(i).Call_Callback<Logger>(data);
 #else
-          Shared_Attribute_Callback& callback = m_sharedAttributeUpdateCallbacks[i];
           callback.Call_Callback<Logger>(data);
 #endif // THINGSBOARD_ENABLE_STL
           continue;
@@ -1859,7 +1875,6 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_STL
         m_sharedAttributeUpdateCallbacks.at(i).Call_Callback<Logger>(data);
 #else
-        Shared_Attribute_Callback& callback = m_sharedAttributeUpdateCallbacks[i];
         callback.Call_Callback<Logger>(data);
 #endif // THINGSBOARD_ENABLE_STL
       }
@@ -1897,13 +1912,16 @@ class ThingsBoardSized {
       char message[detectSize(CALLING_REQUEST_CB, response_id)];
 #if THINGSBOARD_ENABLE_STL
       for (size_t i = 0; i < m_attributeRequestCallbacks.size(); i++) {
-#else
-      Shared_Attribute_Callback* callback = nullptr;
-      for (size_t i = 0; i < m_attributeRequestIndex; i++) {
-#endif // THINGSBOARD_ENABLE_STL
         if (m_attributeRequestCallbacks.at(i).Get_Request_ID() != response_id) {
           continue;
         }
+#else
+      for (size_t i = 0; i < m_attributeRequestIndex; i++) {
+        Attribute_Request_Callback& callback = m_attributeRequestCallbacks[i];
+        if (callback.Get_Request_ID() != response_id) {
+          continue;
+        }
+#endif // THINGSBOARD_ENABLE_STL
         const char *attributeResponseKey = m_attributeRequestCallbacks.at(i).Get_Attribute_Key();
         if (attributeResponseKey == nullptr) {
           Logger::log(ATT_KEY_NOT_FOUND);
@@ -1926,8 +1944,7 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_STL
         m_attributeRequestCallbacks.at(i).Call_Callback<Logger>(data);
 #else
-        callback = &m_attributeRequestCallbacks[i];
-        callback->Call_Callback<Logger>(data);
+        callback.Call_Callback<Logger>(data);
 #endif // THINGSBOARD_ENABLE_STL
 
         delete_callback:
