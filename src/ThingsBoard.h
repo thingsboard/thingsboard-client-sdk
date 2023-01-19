@@ -136,20 +136,18 @@ constexpr char FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
 // Firmware data keys.
 constexpr char CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
 constexpr char CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
+constexpr char FW_ERROR_KEY[] PROGMEM = "fw_error";
 constexpr char CURR_FW_STATE_KEY[] PROGMEM = "current_fw_state";
 constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
 constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
 constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
 constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
 constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
-constexpr char FW_STATE_CHECKING[] PROGMEM = "CHECKING FIRMWARE";
-constexpr char FW_STATE_NO_FW[] PROGMEM = "NO FIRMWARE FOUND";
-constexpr char FW_STATE_UP_TO_DATE[] PROGMEM = "UP TO DATE";
-constexpr char FW_STATE_INVALID_CHKS[] PROGMEM = "CHECKSUM ALGORITHM INVALID";
 constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
+constexpr char FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
+constexpr char FW_STATE_VERIFIED[] PROGMEM = "VERIFIED";
+constexpr char FW_STATE_UPDATING[] PROGMEM = "UPDATING";
 constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
-constexpr char FW_STATE_UPDATE_ERROR[] PROGMEM = "UPDATE ERROR";
-constexpr char FW_STATE_CHKS_ERROR[] PROGMEM = "CHECKSUM ERROR";
 constexpr char CHECKSUM_AGORITM_MD5[] PROGMEM = "MD5";
 constexpr char CHECKSUM_AGORITM_SHA256[] PROGMEM = "SHA256";
 constexpr char CHECKSUM_AGORITM_SHA384[] PROGMEM = "SHA384";
@@ -237,7 +235,7 @@ class ThingsBoardSized {
       , m_requestId(0U)
       , m_qos(false)
 #if defined(ESP8266) || defined(ESP32)
-      , m_fwState(nullptr)
+      , m_fwState(false)
       , m_fwCallback(nullptr)
       , m_fwSize(0U)
       , m_fwChecksumAlgorithm()
@@ -863,6 +861,38 @@ class ThingsBoardSized {
       return Shared_Attributes_Subscribe(m_fwUpdateCallback);
     }
 
+    /// @brief Sends the given firmware title and firmware version to the cloud
+    /// @param currFwTitle Current device firmware title
+    /// @param currFwVersion Current device firmware version
+    /// @return Wheter sending the current device firmware information was successful or not
+    inline const bool Firmware_Send_Info(const char *currFwTitle, const char *currFwVersion) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
+      const JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
+
+      currentFirmwareInfoObject[CURR_FW_TITLE_KEY] = currFwTitle;
+      currentFirmwareInfoObject[CURR_FW_VER_KEY] = currFwVersion;
+      return sendTelemetryJson(currentFirmwareInfoObject, JSON_STRING_SIZE(measureJson(currentFirmwareInfoObject)));
+    }
+
+    /// @brief Sends the given firmware state to the cloud
+    /// @param currFwState Current firmware download state
+    /// @param fwError Firmware error message that describes the current firmware state,
+    /// pass nullptr or an empty string if the current state is not a failure state
+    /// and therefore does not require any firmware error messsages
+    /// @return Wheter sending the current firmware download state was successful or not
+    inline const bool Firmware_Send_State(const char *currFwState, const char* fwError = nullptr) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareState;
+      const JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
+
+      // Make the fw error optional,
+      // meaning if it is an empty string or null instead we don't send it at all.
+      if (fwError != nullptr && fwError[0] != '\0') {
+        currentFirmwareStateObject[FW_ERROR_KEY] = fwError;
+      }
+      currentFirmwareStateObject[CURR_FW_STATE_KEY] = currFwState;
+      return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
+    }
+
 #endif
 
     //----------------------------------------------------------------------------
@@ -1112,37 +1142,13 @@ class ThingsBoardSized {
       if (currFwTitle == nullptr || currFwVersion == nullptr) {
         return false;
       }
-      else if (!Firmware_Send_FW_Info(currFwTitle, currFwVersion)) {
+      else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
         return false;
       }
 
-      // Set private members needed for update.
+      // Set private members needed for update
       m_fwCallback = &callback;
       return true;
-    }
-
-    /// @brief Sends the given firmware title and firmware version to the cloud
-    /// @param currFwTitle Current device firmware title
-    /// @param currFwVersion Current device firmware version
-    /// @return Wheter sending the current device firmware information was successful or not
-    inline const bool Firmware_Send_FW_Info(const char *currFwTitle, const char *currFwVersion) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
-      const JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
-
-      currentFirmwareInfoObject[CURR_FW_TITLE_KEY] = currFwTitle;
-      currentFirmwareInfoObject[CURR_FW_VER_KEY] = currFwVersion;
-      return sendTelemetryJson(currentFirmwareInfoObject, JSON_STRING_SIZE(measureJson(currentFirmwareInfoObject)));
-    }
-
-    /// @brief Sends the given firmware state to the cloud
-    /// @param currFwState Current firmware download state
-    /// @return Wheter sending the current firmware download state was successful or not
-    inline const bool Firmware_Send_State(const char *currFwState) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> currentFirmwareState;
-      const JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
-
-      currentFirmwareStateObject[CURR_FW_STATE_KEY] = currFwState;
-      return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
     }
 
     /// @brief Subscribes to the firmware response topic
@@ -1160,7 +1166,7 @@ class ThingsBoardSized {
     /// @return Wheter unsubscribing from the firmware response topic was successful or not
     inline const bool Firmware_OTA_Unsubscribe() {
       // Reset now not needed private member variables
-      m_fwState = nullptr;
+      m_fwState = false;
       m_fwCallback = nullptr;
       m_fwSize = 0U;
       m_fwChecksumAlgorithm = mbedtls_md_type_t();
@@ -1188,12 +1194,12 @@ class ThingsBoardSized {
       // Check if firmware is available for our device
       if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY)) {
         Logger::log(NO_FW);
-        Firmware_Send_State(FW_STATE_NO_FW);
+        Firmware_Send_State(FW_STATE_FAILED, NO_FW);
         return;
       }
       else if (m_fwCallback == nullptr) {
         Logger::log(OTA_CB_IS_NULL);
-        Firmware_Send_State(FW_STATE_NO_FW);
+        Firmware_Send_State(FW_STATE_FAILED, OTA_CB_IS_NULL);
         return;
       }
 
@@ -1208,19 +1214,19 @@ class ThingsBoardSized {
 
       if (fw_title == nullptr || fw_version == nullptr || currFwTitle == nullptr || currFwVersion == nullptr || m_fwAlgorithm.empty() || m_fwChecksum.empty()) {
         Logger::log(EMPTY_FW);
-        Firmware_Send_State(FW_STATE_NO_FW);
+        Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
         return;
       }
       // If firmware version and title is the same, we do not initiate an update, because we expect the binary to be the same one we are currently using
       else if (strncmp_P(currFwTitle, fw_title, JSON_STRING_SIZE(strlen(currFwTitle))) == 0 && strncmp_P(currFwVersion, fw_version, JSON_STRING_SIZE(strlen(currFwVersion))) == 0) {
         Logger::log(FW_UP_TO_DATE);
-        Firmware_Send_State(FW_STATE_UP_TO_DATE);
+        Firmware_Send_State(FW_STATE_FAILED, FW_UP_TO_DATE);
         return;
       }
       // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another device type 
       else if (strncmp_P(currFwTitle, fw_title, JSON_STRING_SIZE(strlen(currFwTitle))) != 0) {
         Logger::log(FW_NOT_FOR_US);
-        Firmware_Send_State(FW_STATE_NO_FW);
+        Firmware_Send_State(FW_STATE_FAILED, FW_NOT_FOR_US);
         return;
       }
 
@@ -1241,7 +1247,7 @@ class ThingsBoardSized {
         char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(m_fwAlgorithm.size())];
         snprintf_P(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, m_fwAlgorithm.c_str());
         Logger::log(message);
-        Firmware_Send_State(FW_STATE_INVALID_CHKS);
+        Firmware_Send_State(FW_STATE_FAILED, message);
         return;
       }
 
@@ -1274,8 +1280,8 @@ class ThingsBoardSized {
       }
 
       // Update state
-      m_fwState = FW_STATE_DOWNLOADING;
-      Firmware_Send_State(m_fwState);
+      m_fwState = true;
+      Firmware_Send_State(FW_STATE_DOWNLOADING);
 
       // Convert the interger size into a readable string
       char size[detectSize(NUMBER_PRINTF, chunckSize)];
@@ -1312,22 +1318,23 @@ class ThingsBoardSized {
           continue;
         }
 
-        // Check if the current firmware state is still DOWNLOADING and did not fail
-        if (strncmp_P(FW_STATE_DOWNLOADING, m_fwState, strlen(FW_STATE_DOWNLOADING)) == 0) {
+        // Check if the download of the latest chunk failed
+        if (m_fwState) {
           currChunk++;
           m_fwCallback->Call_Progress_Callback<Logger>(currChunk, numberOfChunk);
           // Current chunck was downloaded successfully, resetting retries accordingly
           retries = m_fwCallback->Get_Chunk_Retries();
+          continue;
         }
-        else {
-          retries--;
-          // Reset any possible errors that might have occured and retry them,
-          // until we run out of the given amount of retries
-          m_fwState = FW_STATE_DOWNLOADING;
-          if (retries == 0) {
-            Logger::log(UNABLE_TO_WRITE);
-            break;
-          }
+
+        retries--;
+        // Reset any possible errors that might have occured and retry them,
+        // until we run out of the given amount of retries
+        m_fwState = true;
+        Firmware_Send_State(FW_STATE_DOWNLOADING);
+        if (retries == 0) {
+          Logger::log(UNABLE_TO_WRITE);
+          break;
         }
       } while (numberOfChunk != currChunk);
 
@@ -1338,17 +1345,15 @@ class ThingsBoardSized {
         m_client.setBufferSize(previousBufferSize);
       }
 
-      const bool success = strncmp_P(STATUS_SUCCESS, m_fwState, strlen(STATUS_SUCCESS)) == 0;
       // Send the current firmware information, because the update was succesful
-      if (success) {
-        Firmware_Send_FW_Info(fw_title, fw_version);
-        Firmware_Send_State(STATUS_SUCCESS);
+      if (m_fwState) {
+        Firmware_Send_State(FW_STATE_UPDATING);
       }
       else {
         Firmware_Send_State(FW_STATE_FAILED);
       }
 
-      m_fwCallback->Call_End_Callback<Logger>(success);
+      m_fwCallback->Call_End_Callback<Logger>(m_fwState);
 
       // Unsubscribe from now not needed topics anymore,
       // call after everything has been handled, because this method
@@ -1731,8 +1736,8 @@ class ThingsBoardSized {
         // Initialize Flash
         if (!Update.begin(m_fwSize)) {
           Logger::log(ERROR_UPDATE_BEGIN);
-          m_fwState = FW_STATE_UPDATE_ERROR;
-          Firmware_Send_State(m_fwState);
+          m_fwState = false;
+          Firmware_Send_State(FW_STATE_FAILED, ERROR_UPDATE_BEGIN);
           // Ensure to call Update.abort after calling Update.begin even if it failed,
           // to make sure that any possibly started processes are stopped and freed.
 #if defined(ESP32)
@@ -1742,14 +1747,14 @@ class ThingsBoardSized {
         }
       }
 
-      // Write data to Flash
+      // Write received binary data to flash partition
       if (Update.write(payload, length) != length) {
         Logger::log(ERROR_UPDATE_WRITE);
 #if defined(ESP32)
           Update.abort();
 #endif
-        m_fwState = FW_STATE_UPDATE_ERROR;
-        Firmware_Send_State(m_fwState);
+        m_fwState = false;
+        Firmware_Send_State(FW_STATE_FAILED, ERROR_UPDATE_WRITE);
         return;
       }
 
@@ -1762,33 +1767,39 @@ class ThingsBoardSized {
         return;
       }
 
+      Firmware_Send_State(FW_STATE_DOWNLOADED);
+
       const std::string calculatedHash = hash.get_hash_string();
-      char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + calculatedHash.size()];
+      char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + JSON_STRING_SIZE(calculatedHash.size())];
       snprintf_P(actual, sizeof(actual), HASH_ACTUAL, m_fwAlgorithm.c_str(), calculatedHash.c_str());
       Logger::log(actual);
+
       char expected[JSON_STRING_SIZE(strlen(HASH_EXPECTED)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + JSON_STRING_SIZE(m_fwChecksum.size())];
       snprintf_P(expected, sizeof(expected), HASH_EXPECTED, m_fwAlgorithm.c_str(), m_fwChecksum.c_str());
       Logger::log(expected);
-      // Check MD5
+
+      // Check if the initally received checksum is the same as the one we calculated from the received binary data,
+      // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed
       if (m_fwChecksum.compare(calculatedHash) != 0) {
         Logger::log(CHKS_VER_FAILED);
 #if defined(ESP32)
         Update.abort();
 #endif
-        m_fwState = FW_STATE_CHKS_ERROR;
-        Firmware_Send_State(m_fwState);
+        m_fwState = false;
+        Firmware_Send_State(FW_STATE_FAILED, CHKS_VER_FAILED);
+        return;
       }
-      else {
-        Logger::log(CHKS_VER_SUCCESS);
-        if (!Update.end()) {
-          Logger::log(ERROR_UPDATE_END);
-          m_fwState = FW_STATE_UPDATE_ERROR;
-          Firmware_Send_State(m_fwState);
-          return;
-        }
-        Logger::log(FW_UPDATE_SUCCESS);
-        m_fwState = STATUS_SUCCESS;
+
+      Logger::log(CHKS_VER_SUCCESS);
+      if (!Update.end()) {
+        Logger::log(ERROR_UPDATE_END);
+        m_fwState = false;
+        Firmware_Send_State(FW_STATE_FAILED, ERROR_UPDATE_END);
+        return;
       }
+      Logger::log(FW_UPDATE_SUCCESS);
+      m_fwState = true;
+      Firmware_Send_State(FW_STATE_VERIFIED);
     }
 
 #endif
@@ -2051,7 +2062,7 @@ class ThingsBoardSized {
 
 #if defined(ESP8266) || defined(ESP32)
 
-    const char *m_fwState;
+    bool m_fwState;
     const OTA_Update_Callback* m_fwCallback;
     // Allows for a binary size of up to theoretically 4 GB.
     uint32_t m_fwSize;

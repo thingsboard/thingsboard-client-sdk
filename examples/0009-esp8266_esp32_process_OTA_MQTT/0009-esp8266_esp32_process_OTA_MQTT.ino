@@ -20,6 +20,12 @@
 constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
 constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
 
+// Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
+// especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
+// if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
+// to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
+constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
+
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT
 constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
 // Size of each firmware chunck downloaded over MQTT,
@@ -100,6 +106,7 @@ WiFiClient espClient;
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
 // Statuses for updating
+bool currentFWSent = false;
 bool updateRequestSent = false;
 
 
@@ -180,6 +187,10 @@ void loop() {
       Serial.println("Failed to connect");
       return;
     }
+  }
+
+  if (!currentFWSent) {
+    currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && Firmware_Send_State(FW_STATE_UPDATED);
   }
 
   if (!updateRequestSent) {
