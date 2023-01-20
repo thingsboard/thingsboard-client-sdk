@@ -137,7 +137,7 @@ constexpr char FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
 constexpr char CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
 constexpr char CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
 constexpr char FW_ERROR_KEY[] PROGMEM = "fw_error";
-constexpr char CURR_FW_STATE_KEY[] PROGMEM = "current_fw_state";
+constexpr char FW_STATE_KEY[] PROGMEM = "fw_state";
 constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
 constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
 constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
@@ -889,7 +889,7 @@ class ThingsBoardSized {
       if (fwError != nullptr && fwError[0] != '\0') {
         currentFirmwareStateObject[FW_ERROR_KEY] = fwError;
       }
-      currentFirmwareStateObject[CURR_FW_STATE_KEY] = currFwState;
+      currentFirmwareStateObject[FW_STATE_KEY] = currFwState;
       return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
     }
 
@@ -1294,48 +1294,50 @@ class ThingsBoardSized {
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
         m_client.publish(topic, size, m_qos ? 1 : 0);
 
-        // Amount of time we wait until we declare the download as failed in milliseconds.
-        const uint64_t timeout = millis() + m_fwCallback->Get_Timeout();
+        // Amount of time we wait until we declare the download as failed in milliseconds
+        const uint32_t startTime = millis();
+        const uint16_t& timeout = m_fwCallback->Get_Timeout();
         do {
           delay(5);
           loop();
-        } while ((m_fwChunkReceive != currChunk) && (timeout >= millis()));
+        } while ((m_fwChunkReceive != currChunk) && (millis() - startTime < timeout));
 
-        // If the current chunk is still the same one as the one we received and processed last time,
-        // the while loop timed out, therefore we increase the failure count by one and retry
-        if (m_fwChunkReceive == currChunk) {
+        // Check if downloaded the currentChunk timed out, before the packet was received
+        if (m_fwChunkReceive != currChunk) {
           retries--;
           if (retries == 0) {
             Logger::log(UNABLE_TO_DOWNLOAD);
+            Firmware_Send_State(FW_STATE_FAILED, UNABLE_TO_DOWNLOAD);
             break;
           }
           continue;
         }
-        // Check if the current chunk is the last one, if it is we have downloaded every single chunk
-        // and can exit the while loop (is done with the numberOfChunk != currChunk check anyway)
-        else if (numberOfChunk >= (currChunk + 1)) {
-          currChunk++;
-          continue;
-        }
 
-        // Check if the download of the latest chunk failed
-        if (m_fwState) {
+        // Check if the current chunk is the last one
+        if (numberOfChunk == (currChunk + 1)) {
           currChunk++;
-          m_fwCallback->Call_Progress_Callback<Logger>(currChunk, numberOfChunk);
-          // Current chunck was downloaded successfully, resetting retries accordingly
-          retries = m_fwCallback->Get_Chunk_Retries();
-          continue;
-        }
-
-        retries--;
-        // Reset any possible errors that might have occured and retry them,
-        // until we run out of the given amount of retries
-        m_fwState = true;
-        Firmware_Send_State(FW_STATE_DOWNLOADING);
-        if (retries == 0) {
-          Logger::log(UNABLE_TO_WRITE);
           break;
         }
+
+        // Check if downloading the last chunk failed somehow
+        if (!m_fwState) {
+          retries--;
+          if (retries == 0) {
+            Logger::log(UNABLE_TO_WRITE);
+            Firmware_Send_State(FW_STATE_FAILED, UNABLE_TO_WRITE);
+            break;
+          }
+          // Reset any possible errors that might have occured and retry them.
+          // Until we run out of retries.
+          m_fwState = true;
+          Firmware_Send_State(FW_STATE_DOWNLOADING);
+          continue;
+        }
+
+        currChunk++;
+        m_fwCallback->Call_Progress_Callback<Logger>(currChunk, numberOfChunk);
+        // Current chunck was downloaded successfully, resetting retries accordingly.
+        retries = m_fwCallback->Get_Chunk_Retries();
       } while (numberOfChunk != currChunk);
 
       // Buffer size has been set to another value before the update,
