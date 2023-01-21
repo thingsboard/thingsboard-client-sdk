@@ -19,8 +19,15 @@
 #define USE_MAC_FALLBACK false
 
 
+// PROGMEM can only be added when using the ESP32 WiFiClient,
+// will cause a crash if using the ESP8266WiFiSTAClass instead.
+#if defined(ESP8266)
+constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
+constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
+#elif defined(ESP32)
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
+#endif
 
 // Thingsboard we want to establish a connection too
 constexpr char THINGSBOARD_SERVER[] PROGMEM = "demo.thingsboard.io";
