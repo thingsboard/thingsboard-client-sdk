@@ -32,8 +32,15 @@ constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
 // increased packet size, might increase download speed
 constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
 
+// PROGMEM can only be added when using the ESP32 WiFiClient,
+// will cause a crash if using the ESP8266WiFiSTAClass instead.
+#if defined(ESP8266)
+constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
+constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
+#elif defined(ESP32)
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
+#endif
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
