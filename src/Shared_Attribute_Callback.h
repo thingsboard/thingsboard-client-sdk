@@ -62,9 +62,10 @@ class Shared_Attribute_Callback {
 
 #else
 
-    /// @brief Constructs callback, will be called upon client-side or shared attribute request arrival
-    /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client
-    /// @param attributes Comma seperated string containing all attributes we want to request (test1, test2, ...)
+    /// @brief Constructs callback, will be called upon upon shared attribute update arrival,
+    /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
+    /// If the update does not include any of the given shared attributes the callback is not called
+    /// @param attributes Comma seperated string containing all attributes we want to subscribe (test1, test2, ...)
     /// @param cb Callback method that will be called
     inline Shared_Attribute_Callback(const char* attributes, processFn cb)
       : m_attributes(attributes), m_cb(cb) {  }
