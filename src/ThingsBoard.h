@@ -89,7 +89,6 @@ constexpr char NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, 
 constexpr char CALLING_RPC[] PROGMEM = "Calling RPC:";
 constexpr char RECEIVED_ATT_UPDATE[] PROGMEM = "Received shared attribute update";
 constexpr char NOT_FOUND_ATT_UPDATE[] PROGMEM = "Shared attribute update key not found";
-constexpr char ATT_CB_ID[] PROGMEM = "Shared attribute update callback id: (%u)";
 constexpr char ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
 constexpr char ATT_IS_NULL[] PROGMEM = "Subscribed shared attribute update key is NULL";
 constexpr char ATT_IN_ARRAY[] PROGMEM = "Shared attribute update key: (%s) is subscribed";
@@ -699,7 +698,7 @@ class ThingsBoardSized {
         Logger::log(MAX_RPC_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
+      else if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -736,7 +735,7 @@ class ThingsBoardSized {
         Logger::log(MAX_RPC_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
+      else if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -922,7 +921,7 @@ class ThingsBoardSized {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
+      else if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -945,7 +944,7 @@ class ThingsBoardSized {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
+      else if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -970,7 +969,7 @@ class ThingsBoardSized {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
+      else if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -979,10 +978,10 @@ class ThingsBoardSized {
       m_sharedAttributeUpdateCallbacks.push_back(callback);
 #else
       if (1 + m_sharedAttributeIndex > sizeof(m_sharedAttributeUpdateCallbacks) / sizeof(*m_sharedAttributeUpdateCallbacks)) {
-        Logger::log(MAX_RPC_EXCEEDED);
+        Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
-      if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
+      else if (!m_client.subscribe(ATTRIBUTE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -1426,15 +1425,14 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
     }
 
-#if THINGSBOARD_ENABLE_STL
-
     /// @brief Subscribes to the client-side RPC response topic
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Wheter requesting the given callback was successful or not
     inline const bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
+#if THINGSBOARD_ENABLE_STL
       if (m_rpcRequestCallbacks.size() + 1 > m_rpcRequestCallbacks.capacity()) {
-        Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
+        Logger::log(MAX_RPC_REQUEST_EXCEEDED);
         return false;
       }
       else if (!m_client.subscribe(RPC_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
@@ -1445,20 +1443,22 @@ class ThingsBoardSized {
       // Push back given callback into our local vector
       m_rpcRequestCallbacks.push_back(callback);
       registeredCallback = &m_rpcRequestCallbacks.back();
-      return true;
-    }
-
 #else
+      if (1 + m_rpcIndex > sizeof(m_rpcRequestCallbacks) / sizeof(*m_rpcRequestCallbacks)) {
+        Logger::log(MAX_RPC_REQUEST_EXCEEDED);
+        return false;
+      }
+      else if (!m_client.subscribe(RPC_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
+        Logger::log(SUBSCRIBE_TOPIC_FAILED);
+        return false;
+      }
 
-    /// @brief Subscribes to the client-side RPC response topic
-    /// @param callback Callback method that will be called
-    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
-    /// @return Wheter requesting the given callback was successful or not
-    inline const bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
+      m_rpcRequestCallbacks[m_rpcIndex] = callback;
+      m_rpcIndex++;
+      registeredCallback = &m_rpcRequestCallbacks[m_rpcIndex];
+#endif // THINGSBOARD_ENABLE_STL
       return true;
     }
-
-#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Unsubscribes all client-side RPC request callbacks
     /// @return Wheter unsubcribing the previously subscribed callbacks
@@ -1478,6 +1478,7 @@ class ThingsBoardSized {
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Wheter requesting the given callback was successful or not
     inline const bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
+#if THINGSBOARD_ENABLE_STL
       if (m_attributeRequestCallbacks.size() + 1 > m_attributeRequestCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
         return false;
@@ -1490,6 +1491,20 @@ class ThingsBoardSized {
       // Push back given callback into our local vector
       m_attributeRequestCallbacks.push_back(callback);
       registeredCallback = &m_attributeRequestCallbacks.back();
+#else
+      if (1 + m_attributeRequestIndex > sizeof(m_attributeRequestCallbacks) / sizeof(*m_attributeRequestCallbacks)) {
+        Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
+        return false;
+      }
+      else if (!m_client.subscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
+        Logger::log(SUBSCRIBE_TOPIC_FAILED);
+        return false;
+      }
+
+      m_attributeRequestCallbacks[m_attributeRequestIndex] = callback;
+      m_attributeRequestIndex++;
+      registeredCallback = &m_attributeRequestCallbacks[m_attributeRequestIndex];
+#endif // THINGSBOARD_ENABLE_STL
       return true;
     }
 
@@ -1584,10 +1599,12 @@ class ThingsBoardSized {
         // set JSONVariant to null
 #if THINGSBOARD_ENABLE_STL
         m_rpcRequestCallbacks.at(i).Call_Callback<Logger>(data);
-        // Delete callback because the changes have been requested and the callback is no longer needed.
+        // Delete callback because the changes have been requested and the callback is no longer needed
         m_rpcRequestCallbacks.erase(std::next(m_rpcRequestCallbacks.begin(), i));
 #else
         callback.Call_Callback<Logger>(data);
+        // Delete callback because the changes have been requested and the callback is no longer needed
+        m_rpcRequestCallbacks[i] = RPC_Request_Callback();
 #endif // THINGSBOARD_ENABLE_STL
         break;
       }
@@ -1822,41 +1839,50 @@ class ThingsBoardSized {
       }
       JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-      if (data && (data.size() >= 1)) {
-        Logger::log(RECEIVED_ATT_UPDATE);
-        if (data.containsKey(SHARED_RESPONSE_KEY)) {
-          data = data[SHARED_RESPONSE_KEY];
-        }
-      }
-      else {
+      if (data && (data.size() < 1)) {
         Logger::log(NOT_FOUND_ATT_UPDATE);
         return;
       }
 
-#if THINGSBOARD_ENABLE_STL
-      for (size_t i = 0; i < m_sharedAttributeUpdateCallbacks.size(); i++) {
-#else
-      for (size_t i = 0; i < m_sharedAttributeIndex; i++) {
-        Shared_Attribute_Callback& callback = m_sharedAttributeUpdateCallbacks[i];
-#endif // THINGSBOARD_ENABLE_STL
-        char id_message[detectSize(ATT_CB_ID, i)];
-        snprintf_P(id_message, sizeof(id_message), ATT_CB_ID, i);
-        Logger::log(id_message);
+      Logger::log(RECEIVED_ATT_UPDATE);
+      if (data.containsKey(SHARED_RESPONSE_KEY)) {
+        data = data[SHARED_RESPONSE_KEY];
+      }
 
-        if (m_sharedAttributeUpdateCallbacks.at(i).Get_Attributes().empty()) {
+      for (const Shared_Attribute_Callback& callback : m_sharedAttributeUpdateCallbacks) {
+#if THINGSBOARD_ENABLE_STL
+        if (callback.Get_Attributes().empty()) {
+#else
+        if (callback.Get_Attributes() == nullptr) {
+#endif // THINGSBOARD_ENABLE_STL
           Logger::log(ATT_CB_NO_KEYS);
           // No specifc keys were subscribed so we call the callback anyway.
-#if THINGSBOARD_ENABLE_STL
-          m_sharedAttributeUpdateCallbacks.at(i).Call_Callback<Logger>(data);
-#else
           callback.Call_Callback<Logger>(data);
-#endif // THINGSBOARD_ENABLE_STL
           continue;
         }
 
         bool containsKey = false;
         const char *requested_att = nullptr;
-        for (const char *att : m_sharedAttributeUpdateCallbacks.at(i).Get_Attributes()) {
+
+#if THINGSBOARD_ENABLE_STL
+        for (const char *att : callback.Get_Attributes()) {
+#else
+        String stringToSplit = callback.Get_Attributes();
+        int32_t previousIndex = 0;
+        int32_t currentIndex = 0;
+
+        do {
+          // Find the index of the next comma in the string
+          currentIndex = stringToSplit.indexOf(COMMA, previousIndex);
+        
+          // If no more commas are found, set the currentIndex to the end of the string
+          if (currentIndex == -1) {
+            currentIndex = stringToSplit.length();
+          }
+
+          // Extract the attribute from the original string
+          const char *att = stringToSplit.substring(previousIndex, currentIndex).c_str();
+#endif // THINGSBOARD_ENABLE_STL
           if (att == nullptr) {
             Logger::log(ATT_IS_NULL);
             continue;
@@ -1871,7 +1897,12 @@ class ThingsBoardSized {
             requested_att = att;
             break;
           }
+#if THINGSBOARD_ENABLE_STL
         }
+#else
+          previousIndex = currentIndex + 1;
+        } while (currentIndex != stringToSplit.length());
+#endif // THINGSBOARD_ENABLE_STL
 
         // This callback did not request any keys that were in this response,
         // therefore we continue with the next element in the loop.
@@ -1885,11 +1916,7 @@ class ThingsBoardSized {
         Logger::log(calling_message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-#if THINGSBOARD_ENABLE_STL
-        m_sharedAttributeUpdateCallbacks.at(i).Call_Callback<Logger>(data);
-#else
         callback.Call_Callback<Logger>(data);
-#endif // THINGSBOARD_ENABLE_STL
       }
     }
 
@@ -1962,8 +1989,11 @@ class ThingsBoardSized {
 
         delete_callback:
 #if THINGSBOARD_ENABLE_STL
-        // Delete callback because the response has been received and the callback is no longer needed
+        // Delete callback because the changes have been requested and the callback is no longer needed
         m_attributeRequestCallbacks.erase(std::next(m_attributeRequestCallbacks.begin(), i));
+#else
+        // Delete callback because the changes have been requested and the callback is no longer needed
+        m_attributeRequestCallbacks[i] = Attribute_Request_Callback();
 #endif // THINGSBOARD_ENABLE_STL
         break;
       }

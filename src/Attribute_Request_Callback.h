@@ -139,7 +139,7 @@ class Attribute_Request_Callback {
 #if THINGSBOARD_ENABLE_STL
     std::vector<const char *>      m_attributes;      // Attribute we want to request
 #else
-    const char                     *m_attributes;      // Attribute we want to request
+    const char                     *m_attributes;     // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_STL
     uint32_t                       m_request_id;      // Id the request was called with
     const char                     *m_attribute_key;  // Attribute key that we wil receive the response on ("client" or "shared")
