@@ -1581,28 +1581,26 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
       for (size_t i = 0; i < m_rpcRequestCallbacks.size(); i++) {
-        if (m_rpcRequestCallbacks.at(i).Get_Request_ID() != responseId) {
-          continue;
-        }
+        const RPC_Request_Callback& callback = m_rpcRequestCallbacks.at(i);
 #else
       for (size_t i = 0; i < m_rpcRequestIndex; i++) {
-        RPC_Request_Callback& callback = m_rpcRequestCallbacks[i];
+        const RPC_Request_Callback& callback = m_rpcRequestCallbacks[i];
+#endif // THINGSBOARD_ENABLE_STL
         if (callback.Get_Request_ID() != responseId) {
           continue;
         }
-#endif // THINGSBOARD_ENABLE_STL
+
         char message[detectSize(CALLING_REQUEST_CB, responseId)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, responseId);
         Logger::log(message);
 
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
+        callback.Call_Callback<Logger>(data);
 #if THINGSBOARD_ENABLE_STL
-        m_rpcRequestCallbacks.at(i).Call_Callback<Logger>(data);
         // Delete callback because the changes have been requested and the callback is no longer needed
         m_rpcRequestCallbacks.erase(std::next(m_rpcRequestCallbacks.begin(), i));
 #else
-        callback.Call_Callback<Logger>(data);
         // Delete callback because the changes have been requested and the callback is no longer needed
         m_rpcRequestCallbacks[i] = RPC_Request_Callback();
 #endif // THINGSBOARD_ENABLE_STL
@@ -1952,16 +1950,14 @@ class ThingsBoardSized {
       char message[detectSize(CALLING_REQUEST_CB, response_id)];
 #if THINGSBOARD_ENABLE_STL
       for (size_t i = 0; i < m_attributeRequestCallbacks.size(); i++) {
-        if (m_attributeRequestCallbacks.at(i).Get_Request_ID() != response_id) {
-          continue;
-        }
+        const Attribute_Request_Callback& callback = m_attributeRequestCallbacks.at(i);
 #else
       for (size_t i = 0; i < m_attributeRequestIndex; i++) {
-        Attribute_Request_Callback& callback = m_attributeRequestCallbacks[i];
+        const Attribute_Request_Callback& callback = m_attributeRequestCallbacks[i];
+#endif // THINGSBOARD_ENABLE_STL
         if (callback.Get_Request_ID() != response_id) {
           continue;
         }
-#endif // THINGSBOARD_ENABLE_STL
         const char *attributeResponseKey = m_attributeRequestCallbacks.at(i).Get_Attribute_Key();
         if (attributeResponseKey == nullptr) {
           Logger::log(ATT_KEY_NOT_FOUND);
@@ -1981,11 +1977,7 @@ class ThingsBoardSized {
         Logger::log(message);
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-#if THINGSBOARD_ENABLE_STL
-        m_attributeRequestCallbacks.at(i).Call_Callback<Logger>(data);
-#else
         callback.Call_Callback<Logger>(data);
-#endif // THINGSBOARD_ENABLE_STL
 
         delete_callback:
 #if THINGSBOARD_ENABLE_STL
