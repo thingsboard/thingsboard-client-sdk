@@ -1958,7 +1958,7 @@ class ThingsBoardSized {
         if (callback.Get_Request_ID() != response_id) {
           continue;
         }
-        const char *attributeResponseKey = m_attributeRequestCallbacks.at(i).Get_Attribute_Key();
+        const char *attributeResponseKey = callback.Get_Attribute_Key();
         if (attributeResponseKey == nullptr) {
           Logger::log(ATT_KEY_NOT_FOUND);
           goto delete_callback;
