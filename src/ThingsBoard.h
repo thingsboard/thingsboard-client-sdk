@@ -112,19 +112,18 @@ constexpr char DURATION_KEY[] PROGMEM = "durationMs";
 constexpr char DEVICE_NAME_KEY[] PROGMEM = "deviceName";
 constexpr char PROV_DEVICE_KEY[] PROGMEM = "provisionDeviceKey";
 constexpr char PROV_DEVICE_SECRET_KEY[] PROGMEM = "provisionDeviceSecret";
-
-// Provision data keys.
-constexpr char PROV_STATUS_KEY[] PROGMEM = "status";
 constexpr char PROV_CRED_TYPE_KEY[] PROGMEM = "credentialsType";
-constexpr char STATUS_SUCCESS[] PROGMEM = "SUCCESS";
-constexpr char PROV_CRED_TYPE_VALUE[] PROGMEM = "X509_CERTIFICATE";
+constexpr char PROV_TOKEN[] PROGMEM = "token";
+constexpr char PROV_CRED_USERNAME[] PROGMEM = "username";
+constexpr char PROV_CRED_PASSWORD[] PROGMEM = "password";
+constexpr char PROV_CRED_CLIENT_ID[] PROGMEM = "clientId";
+constexpr char PROV_CRED_HASH[] PROGMEM = "hash";
 
 // Log messages.
 constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
 constexpr char UNABLE_TO_DE_SERIALIZE_PROV_RESPONSE[] PROGMEM = "Unable to de-serialize provision response";
 constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
-constexpr char X509_NOT_SUPPORTED[] PROGMEM = "Provision response contains X509_CERTIFICATE credentials, this is not supported yet";
 
 #if defined(ESP8266) || defined(ESP32)
 
@@ -377,14 +376,13 @@ class ThingsBoardSized {
     /// The cloud then sends back json data containing our credentials, that the given callback, if creating the device was successful.
     /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
     /// @param callback Callback method that will be called
-    /// @param deviceName Name the created device should have on the cloud,
-    /// pass nullptr or an empty string if the access token should be used as a name instead
-    /// @param provisionDeviceKey Device profile provisioning key of the device profile that should be used to create the device under
-    /// @param provisionDeviceSecret Device profile provisioning secret of the device profile that should be used to create the device under
     /// @return Wheter sending the provisioning request was successful or not
-    inline const bool Provision_Request(const Provision_Callback& callback, const char *deviceName, const char *provisionDeviceKey, const char *provisionDeviceSecret) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(3)> requestBuffer;
+    inline const bool Provision_Request(const Provision_Callback& callback) {
+      StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
       const JsonObject requestObject = requestBuffer.to<JsonObject>();
+
+      const char *provisionDeviceKey = callback.Get_Device_Key();
+      const char *provisionDeviceSecret = callback.Get_Device_Secret();
 
       if (provisionDeviceKey == nullptr || provisionDeviceSecret == nullptr) {
         return false;
@@ -394,10 +392,39 @@ class ThingsBoardSized {
         return false;
       }
 
-      // Make the device name optional,
+      const char *deviceName = callback.Get_Device_Name();
+      const char *accessToken = callback.Get_Device_Access_Token();
+      const char *credUsername = callback.Get_Credentials_Username();
+      const char *credPassword = callback.Get_Credentials_Password();
+      const char *credClientID = callback.Get_Credentials_Client_ID();
+      const char *hash = callback.Get_Certificate_Hash();
+      const char *credentialsType = callback.Get_Credentials_Type();
+
+      // Make the key-value pairs we don't want to send optional,
       // meaning if it is an empty string or null instead we don't send it at all.
+      // Deciding which underlying provisioning method is restricted, by the Provision_Callback class.
+      // Meaning only the key-value pairs that are needed for the given provisionign method are set,
+      // meaning the rest will not be sent and therefore the provisoning request has the correct formatting
       if (deviceName != nullptr && deviceName[0] != '\0') {
         requestObject[DEVICE_NAME_KEY] = deviceName;
+      }
+      if (accessToken != nullptr && accessToken[0] != '\0') {
+        requestObject[PROV_TOKEN] = accessToken;
+      }
+      if (credUsername != nullptr && credUsername[0] != '\0') {
+        requestObject[PROV_CRED_USERNAME] = credUsername;
+      }
+      if (credPassword != nullptr && credPassword[0] != '\0') {
+        requestObject[PROV_CRED_PASSWORD] = credPassword;
+      }
+      if (credClientID != nullptr && credClientID[0] != '\0') {
+        requestObject[PROV_CRED_CLIENT_ID] = credClientID;
+      }
+      if (hash != nullptr && hash[0] != '\0') {
+        requestObject[PROV_CRED_HASH] = hash;
+      }
+      if (credentialsType != nullptr && credentialsType[0] != '\0') {
+        requestObject[PROV_CRED_TYPE_KEY] = credentialsType;
       }
       requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
       requestObject[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
@@ -2019,14 +2046,6 @@ class ThingsBoardSized {
       const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
       Logger::log(RECEIVED_PROV_RESPONSE);
-
-      const char *provision_status = data[PROV_STATUS_KEY].as<const char *>();
-      const char *provision_credentials = data[PROV_CRED_TYPE_KEY].as<const char *>();
-
-      if (strncmp_P(STATUS_SUCCESS, provision_status, strlen(STATUS_SUCCESS)) == 0 && strncmp_P(PROV_CRED_TYPE_VALUE, provision_credentials, strlen(PROV_CRED_TYPE_VALUE)) == 0) {
-        Logger::log(X509_NOT_SUPPORTED);
-        return;
-      }
 
       if (m_provisionCallback != nullptr) {
         m_provisionCallback->Call_Callback<Logger>(data);
