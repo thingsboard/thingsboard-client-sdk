@@ -229,7 +229,7 @@ class ThingsBoardSized {
       , m_attributeRequestIndex(0U)
 #endif // !THINGSBOARD_ENABLE_STL
       , m_attributeRequestCallbacks()
-      , m_provisionCallback(nullptr)
+      , m_provisionCallback()
       , m_requestId(0U)
       , m_qos(false)
 #if defined(ESP8266) || defined(ESP32)
@@ -1142,7 +1142,7 @@ class ThingsBoardSized {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
-      m_provisionCallback = &callback;
+      m_provisionCallback = callback;
       return true;
     }
 
@@ -1150,7 +1150,7 @@ class ThingsBoardSized {
     /// @return Wheter unsubcribing the previously subscribed callback
     /// and from the provision response topic, was successful or not
     inline const bool Provision_Unsubscribe() {
-      m_provisionCallback = nullptr;
+      m_provisionCallback = Provision_Callback();
       return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
     }
 
@@ -2046,10 +2046,7 @@ class ThingsBoardSized {
       const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
       Logger::log(RECEIVED_PROV_RESPONSE);
-
-      if (m_provisionCallback != nullptr) {
-        m_provisionCallback->Call_Callback<Logger>(data);
-      }
+      m_provisionCallback.Call_Callback<Logger>(data);
 
       // Unsubscribe from the provision response topic,
       // Will be resubscribed if another request is sent anyway
@@ -2099,7 +2096,7 @@ class ThingsBoardSized {
     Attribute_Request_Callback m_attributeRequestCallbacks[MaxFieldsAmt]; // Client-side or shared attribute request callbacks c-style array
 #endif
 
-    const Provision_Callback* m_provisionCallback; // Provision response callback
+    Provision_Callback m_provisionCallback; // Provision response callback
     uint32_t m_requestId; // Allows nearly 4.3 million requests before wrapping back to 0.
     bool m_qos; // Wheter QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
