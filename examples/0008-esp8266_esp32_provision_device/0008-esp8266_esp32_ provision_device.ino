@@ -221,8 +221,7 @@ void loop() {
       // if the string is empty or null, automatically checked by the sendProvisionRequest method
       const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, DEVICE_NAME);
 #endif
-      Serial.println(provisionCallback.Get_Device_Name());
-      //provisionRequestSent = tb.Provision_Request(provisionCallback);
+      provisionRequestSent = tb.Provision_Request(provisionCallback);
     }
   }
   else if (provisionResponseProcessed) {
