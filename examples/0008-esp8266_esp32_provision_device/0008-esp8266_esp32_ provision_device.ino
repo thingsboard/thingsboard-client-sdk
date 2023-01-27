@@ -193,7 +193,15 @@ void processProvisionResponse(const Provision_Data &data) {
   provisionResponseProcessed = true;
 }
 
-const Provision_Callback provisionCallback(&processProvisionResponse);
+#if USE_MAC_FALLBACK
+// Check if passed DEVICE_NAME was empty,
+// and if it was get the mac address of the wifi chip as fallback and use that one instead
+const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, (DEVICE_NAME != NULL) && (DEVICE_NAME[0] == '\0') ? WiFi.macAddress().c_str() : DEVICE_NAME);
+#else
+// Send a claiming request without any device name (access token will be used as the device name)
+// if the string is empty or null, automatically checked by the sendProvisionRequest method
+const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, DEVICE_NAME);
+#endif
 
 void loop() {
   if (!reconnect()) {
@@ -214,17 +222,7 @@ void loop() {
         return;
       }
       Serial.println("Sending provisioning request");
-      const char* deviceName = 
-#if USE_MAC_FALLBACK
-      // Check if passed DEVICE_NAME was empty,
-      // and if it was get the mac address of the wifi chip as fallback and use that one instead
-      (DEVICE_NAME != NULL) && (DEVICE_NAME[0] == '\0') ? WiFi.macAddress().c_str() : DEVICE_NAME;
-#else
-      // Send a claiming request without any device name (access token will be used as the device name)
-      // if the string is empty or null, automatically checked by the sendProvisionRequest method
-      DEVICE_NAME;
-#endif
-      provisionRequestSent = tb.Provision_Request(deviceName, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET);
+      provisionRequestSent = tb.Provision_Request(provisionCallback);
     }
   }
   else if (provisionResponseProcessed) {
