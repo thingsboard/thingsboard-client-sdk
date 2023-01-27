@@ -4,9 +4,7 @@
 [![MIT license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://lbesson.mit-license.org/)
 [![ESP32](https://img.shields.io/badge/ESP-32-green.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp32)
 [![ESP8266](https://img.shields.io/badge/ESP-8266-blue.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp8266)
-[![Build Status](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK.svg?branch=master)](https://travis-ci.org/thingsboard/ThingsBoard-Arduino-MQTT-SDK)
 [![GitHub release](https://img.shields.io/github/release/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
-[![GitHub downloads](https://img.shields.io/github/downloads/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
 
 This library provides access to ThingsBoard platform over MQTT protocol.
 
