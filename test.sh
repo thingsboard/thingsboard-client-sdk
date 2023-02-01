@@ -16,6 +16,7 @@ EXAMPLES_ESP8266_ESP32=(
     "examples/0007-esp8266_esp32_claim_device"
     "examples/0008-esp8266_esp32_provision_device"
     "examples/0009-esp8266_esp32_process_OTA_MQTT"
+    "examples/0010-esp8266_esp32_rpc"
 )
 
 ARDUINOS=( "nano" "uno" "mega" )

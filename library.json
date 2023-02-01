@@ -6,7 +6,12 @@
         "type": "git",
         "url": "https://github.com/thingsboard/ThingsBoard-Arduino-MQTT-SDK"
     },
-    "version": "0.8.0",
+    "dependencies": {
+        "bblanchon/ArduinoJson": "^6.19.4",
+        "knolleary/PubSubClient": "^2.8",
+        "arduino-libraries/ArduinoHttpClient" : "^0.4.0"
+    },
+    "version": "0.9.0",
     "examples": "examples/*/*.ino",
     "frameworks": "arduino"
 }

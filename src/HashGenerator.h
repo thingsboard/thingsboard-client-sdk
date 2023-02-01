@@ -7,8 +7,14 @@
 #ifndef Hash_Generator_h
 #define Hash_Generator_h
 
+#if defined(ESP8266) || defined(ESP32)
+
 // Library includes.
+#if defined(ESP8266)
+#include <Seeed_mbedtls.h>
+#else
 #include <mbedtls/md.h>
+#endif
 #include <string>
 
 /// @brief Allows generating a hash of the given type
@@ -39,5 +45,7 @@ private:
 
     mbedtls_md_context_t m_ctx;
 };
+
+#endif // defined(ESP8266) || defined(ESP32)
 
 #endif // Hash_Generator_h

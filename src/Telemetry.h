@@ -8,8 +8,6 @@
 #define Telemetry_h
 
 // Library includes.
-// Ensure ArduinoJson supports std::string type.
-#define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 
 /// @brief Telemetry record class, allows to store different data using a common interface.
@@ -64,7 +62,7 @@ class Telemetry {
     /// @brief Serializes the key-value pair depending on the constructor used
     /// @param jsonObj Object the value will be copied into with the given key
     /// @return Returns wheter serializing was successfull or not
-    const bool SerializeKeyValue(JsonVariant &jsonObj) const {
+    const bool SerializeKeyValue(const JsonVariant &jsonObj) const {
       if (m_key) {
         switch (m_type) {
           case DataType::TYPE_BOOL:
@@ -135,6 +133,5 @@ class Telemetry {
 
 // Convenient aliases
 using Attribute = Telemetry;
-using RPC_Response = Telemetry;
 
 #endif // Telemetry_h
