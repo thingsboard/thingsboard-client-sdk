@@ -2,12 +2,13 @@
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #endif
 
 #include <ThingsBoard.h>
 
 
-// Wheter the giving script is using encryption or not,
+// Wheter the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.
@@ -19,14 +20,27 @@
 constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
 constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
 
+// Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
+// especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
+// if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
+// to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
+constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
+
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT
 constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
 // Size of each firmware chunck downloaded over MQTT,
 // increased packet size, might increase download speed
 constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
 
+// PROGMEM can only be added when using the ESP32 WiFiClient,
+// will cause a crash if using the ESP8266WiFiSTAClass instead.
+#if defined(ESP8266)
+constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
+constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
+#elif defined(ESP32)
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
+#endif
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
@@ -44,9 +58,10 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = FIRMWARE_PACKET_SIZE + 512U;
+constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 512U;
 
 // Baud rate for the debugging serial connection
+// If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 
 #if ENCRYPTED
@@ -98,6 +113,7 @@ WiFiClient espClient;
 ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 
 // Statuses for updating
+bool currentFWSent = false;
 bool updateRequestSent = false;
 
 
@@ -147,6 +163,15 @@ void updatedCallback(const bool& success) {
   Serial.println("Downloading firmware failed");
 }
 
+/// @brief Progress callback that will be called every time we downloaded a new chunk successfully
+/// @param currentChunk 
+/// @param totalChuncks 
+void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks) {
+  Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
+}
+
+const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -171,11 +196,15 @@ void loop() {
     }
   }
 
+  if (!currentFWSent) {
+    currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && tb.Firmware_Send_State(FW_STATE_UPDATED);
+  }
+
   if (!updateRequestSent) {
     Serial.println("Firwmare Update...");
     // See https://thingsboard.io/docs/user-guide/ota-updates/
     // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
-    updateRequestSent = tb.Start_Firmware_Update(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updatedCallback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+    updateRequestSent = tb.Start_Firmware_Update(callback);
   }
 
   tb.loop();

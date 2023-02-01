@@ -2,20 +2,28 @@
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #endif
 
 #include <ThingsBoard.h>
 
 
-// Wheter the giving script is using encryption or not,
+// Wheter the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.
 #define ENCRYPTED false
 
 
+// PROGMEM can only be added when using the ESP32 WiFiClient,
+// will cause a crash if using the ESP8266WiFiSTAClass instead.
+#if defined(ESP8266)
+constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
+constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
+#elif defined(ESP32)
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
+#endif
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
@@ -36,6 +44,7 @@ constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
 constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 
 // Baud rate for the debugging serial connection
+// If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 
 #if ENCRYPTED

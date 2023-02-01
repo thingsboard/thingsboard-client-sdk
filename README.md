@@ -21,6 +21,7 @@ Following dependencies must be installed, too:
  - [MQTT PubSub Client](https://github.com/knolleary/pubsubclient) — for interacting with MQTT.
  - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — for dealing with JSON files.
  - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with ThingsBoard using HTTP.
+ - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (ESP8266 only, already included in ESP32 base firmware)
 
 ## Supported ThingsBoard Features
 
