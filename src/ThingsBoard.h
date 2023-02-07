@@ -1897,20 +1897,19 @@ class ThingsBoardSized {
       // Remove the not needed part of the topic
       const size_t index = strlen(RPC_REQUEST_TOPIC) + 1U;
 #if THINGSBOARD_ENABLE_STL
-      std::string response = topic;
-      response = response.substr(index, response.length() - index);
+      std::string request = topic;
+      request = request.substr(index, request.length() - index);
 #else
-      String response = topic;
-      response = response.substring(index);
+      String request = topic;
+      request = request.substring(index);
 #endif // THINGSBOARD_ENABLE_STL
 
       // Convert the remaining text to an integer
-      const uint32_t responseId = atoi(response.c_str());
+      const uint32_t requestId = atoi(request.c_str());
 
-      char responseTopic[detectSize(RPC_SEND_RESPONSE_TOPIC, index)];
-      snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, index);
+      char responseTopic[detectSize(RPC_SEND_RESPONSE_TOPIC, requestId)];
+      snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, requestId);
 
-      Logger::log(RPC_RESPONSE_KEY);
       Logger::log(responseTopic);
       Logger::log(responsePayload);
       m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
