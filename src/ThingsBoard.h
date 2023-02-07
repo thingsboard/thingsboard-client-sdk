@@ -46,26 +46,33 @@ constexpr char TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
 constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response/+";
 constexpr char RPC_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_TOPIC[] PROGMEM = "v1/devices/me/rpc";
+constexpr char RPC_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response";
 #else
 constexpr char RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/response/+";
 constexpr char RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_TOPIC[] = "v1/devices/me/rpc";
+constexpr char RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
 #endif // defined(ESP32)
-constexpr char RPC_TOPIC[] PROGMEM = "v1/devices/me/rpc";
-constexpr char RPC_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response";
 
 // Firmware topics.
+#if defined(ESP32)
 constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response";
+#else
+constexpr char FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response";
+#endif // defined(ESP32)
 
 // Shared attribute topics.
 #if defined(ESP32)
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response/+";
+constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
 #else
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
+constexpr char ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
 #endif // defined(ESP32)
-constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
 
 // Provision topics.
 #if defined(ESP32)
