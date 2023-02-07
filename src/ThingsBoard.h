@@ -45,15 +45,17 @@ constexpr char TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
 #if defined(ESP32)
 constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response/+";
-constexpr char RPC_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
-constexpr char RPC_TOPIC[] PROGMEM = "v1/devices/me/rpc";
+constexpr char RPC_SEND_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request";
 constexpr char RPC_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response";
+constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
 #else
 constexpr char RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/response/+";
-constexpr char RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
-constexpr char RPC_TOPIC[] = "v1/devices/me/rpc";
+constexpr char RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
 constexpr char RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
+constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
 #endif // defined(ESP32)
 
 // Firmware topics.
@@ -113,14 +115,10 @@ constexpr char CLIENT_RESPONSE_KEY[] = "client";
 constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
 constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
-constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
-constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
 #else
 constexpr char RPC_METHOD_KEY[] = "method";
 constexpr char RPC_PARAMS_KEY[] = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
-constexpr char RPC_REQUEST_KEY[] = "request";
-constexpr char RPC_RESPONSE_KEY[] = "response";
 #endif // defined(ESP32)
 
 // Log messages.
@@ -1003,8 +1001,8 @@ class ThingsBoardSized {
       m_requestId++;
       registeredCallback->Set_Request_ID(m_requestId);
 
-      char topic[detectSize(RPC_REQUEST_TOPIC, m_requestId)];
-      snprintf_P(topic, sizeof(topic), RPC_REQUEST_TOPIC, m_requestId);
+      char topic[detectSize(RPC_SEND_REQUEST_TOPIC, m_requestId)];
+      snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_requestId);
       return m_client.publish(topic, buffer, m_qos ? 1 : 0);
     }
 
@@ -1896,18 +1894,26 @@ class ThingsBoardSized {
         return;
       }
 
+      // Remove the not needed part of the topic
+      const size_t index = strlen(RPC_REQUEST_TOPIC) + 1U;
 #if THINGSBOARD_ENABLE_STL
-      std::string responseTopic = topic;
-      responseTopic.replace(responseTopic.begin(), responseTopic.end(), RPC_REQUEST_KEY, RPC_RESPONSE_KEY);
+      std::string response = topic;
+      response = response.substr(index, response.length() - index);
 #else
-      String responseTopic = topic;
-      responseTopic.replace(RPC_REQUEST_KEY, RPC_RESPONSE_KEY);
+      String response = topic;
+      response = response.substring(index);
 #endif // THINGSBOARD_ENABLE_STL
 
+      // Convert the remaining text to an integer
+      const uint32_t responseId = atoi(response.c_str());
+
+      char responseTopic[detectSize(RPC_SEND_RESPONSE_TOPIC, index)];
+      snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, index);
+
       Logger::log(RPC_RESPONSE_KEY);
-      Logger::log(responseTopic.c_str());
+      Logger::log(responseTopic);
       Logger::log(responsePayload);
-      m_client.publish(responseTopic.c_str(), responsePayload, m_qos ? 1 : 0);
+      m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -2280,7 +2286,7 @@ class ThingsBoardSized {
 
       if (strncmp_P(RPC_RESPONSE_TOPIC, topic, strlen(RPC_RESPONSE_TOPIC)) == 0) {
         process_rpc_request_message(topic, payload, length);
-      } else if (strncmp_P(RPC_TOPIC, topic, strlen(RPC_TOPIC)) == 0) {
+      } else if (strncmp_P(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0) {
         process_rpc_message(topic, payload, length);
       } else if (strncmp_P(ATTRIBUTE_RESPONSE_TOPIC, topic, strlen(ATTRIBUTE_RESPONSE_TOPIC)) == 0) {
         process_attribute_request_message(topic, payload, length);
