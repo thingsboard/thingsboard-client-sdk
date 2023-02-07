@@ -93,38 +93,39 @@ constexpr char DEFAULT_CLIENT_ID[] = "TbDev";
 // Shared attribute request keys.
 #if defined(ESP32)
 constexpr char SHARED_REQUEST_KEY[] PROGMEM = "sharedKeys";
+constexpr char SHARED_RESPONSE_KEY[] PROGMEM = "shared";
 #else
 constexpr char SHARED_REQUEST_KEY[] = "sharedKeys";
+constexpr char SHARED_RESPONSE_KEY[] = "shared";
 #endif // defined(ESP32)
-constexpr char SHARED_RESPONSE_KEY[] PROGMEM = "shared";
 
 // Client side attribute request keys.
 #if defined(ESP32)
 constexpr char CLIENT_REQUEST_KEYS[] PROGMEM = "clientKeys";
+constexpr char CLIENT_RESPONSE_KEY[] PROGMEM = "client";
 #else
 constexpr char CLIENT_REQUEST_KEYS[] = "clientKeys";
+constexpr char CLIENT_RESPONSE_KEY[] = "client";
 #endif // defined(ESP32)
-constexpr char CLIENT_RESPONSE_KEY[] PROGMEM = "client";
 
 // RPC data keys.
 #if defined(ESP32)
 constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
 constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
+constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
+constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
 #else
 constexpr char RPC_METHOD_KEY[] = "method";
 constexpr char RPC_PARAMS_KEY[] = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
+constexpr char RPC_REQUEST_KEY[] = "request";
+constexpr char RPC_RESPONSE_KEY[] = "response";
 #endif // defined(ESP32)
-constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
-constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
 
 // Log messages.
 #if defined(ESP32)
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
-#else
-constexpr char NUMBER_PRINTF[] = "%u";
-#endif // defined(ESP32)
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] PROGMEM = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -152,6 +153,36 @@ constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic f
 constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
 constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
+#else
+constexpr char NUMBER_PRINTF[] = "%u";
+constexpr char MAX_RPC_EXCEEDED[] = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_RPC_REQUEST_EXCEEDED[] = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
+constexpr char COMMA = ',';
+constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
+constexpr char REQUEST_RPC[] = "Requesting client side RPC with the json (%s)";
+constexpr char REQUEST_ATT[] = "Requesting shared attributes transformed from (%s) into json (%s)";
+constexpr char RECEIVED_RPC_LOG_MESSAGE[] = "Received RPC:";
+constexpr char RPC_METHOD_NULL[] = "RPC methodName is NULL";
+constexpr char NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
+constexpr char CALLING_RPC[] = "Calling RPC:";
+constexpr char RECEIVED_ATT_UPDATE[] = "Received shared attribute update";
+constexpr char NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
+constexpr char ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
+constexpr char ATT_IS_NULL[] = "Subscribed shared attribute update key is NULL";
+constexpr char ATT_IN_ARRAY[] = "Shared attribute update key: (%s) is subscribed";
+constexpr char ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
+constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
+constexpr char RECEIVED_ATT[] = "Received shared attribute request";
+constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
+constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for response id (%u)";
+constexpr char CB_ON_MESSAGE[] = "Callback onMQTTMessage from topic: (%s)";
+constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
+constexpr char PROV_REQUEST[] = "Provision request:";
+constexpr char PROV_RESPONSE[] = "Process provisioning response";
+constexpr char RECEIVED_PROV_RESPONSE[] = "Received provision response";
+#endif // defined(ESP32)
 
 // Claim topics.
 #if defined(ESP32)
@@ -217,6 +248,15 @@ constexpr char FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
 constexpr char FW_STATE_VERIFIED[] PROGMEM = "VERIFIED";
 constexpr char FW_STATE_UPDATING[] PROGMEM = "UPDATING";
 constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
+constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
+constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
+constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
+constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
+constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
+constexpr char CHECKSUM_AGORITM_MD5[] PROGMEM = "MD5";
+constexpr char CHECKSUM_AGORITM_SHA256[] PROGMEM = "SHA256";
+constexpr char CHECKSUM_AGORITM_SHA384[] PROGMEM = "SHA384";
+constexpr char CHECKSUM_AGORITM_SHA512[] PROGMEM = "SHA512";
 #else
 constexpr char CURR_FW_TITLE_KEY[] = "current_fw_title";
 constexpr char CURR_FW_VER_KEY[] = "current_fw_version";
@@ -227,16 +267,16 @@ constexpr char FW_STATE_DOWNLOADED[] = "DOWNLOADED";
 constexpr char FW_STATE_VERIFIED[] = "VERIFIED";
 constexpr char FW_STATE_UPDATING[] = "UPDATING";
 constexpr char FW_STATE_FAILED[] = "FAILED";
+constexpr char FW_VER_KEY[] = "fw_version";
+constexpr char FW_TITLE_KEY[] = "fw_title";
+constexpr char FW_CHKS_KEY[] = "fw_checksum";
+constexpr char FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
+constexpr char FW_SIZE_KEY[] = "fw_size";
+constexpr char CHECKSUM_AGORITM_MD5[] = "MD5";
+constexpr char CHECKSUM_AGORITM_SHA256[] = "SHA256";
+constexpr char CHECKSUM_AGORITM_SHA384[] = "SHA384";
+constexpr char CHECKSUM_AGORITM_SHA512[] = "SHA512";
 #endif // defined(ESP32)
-constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
-constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
-constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
-constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
-constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
-constexpr char CHECKSUM_AGORITM_MD5[] PROGMEM = "MD5";
-constexpr char CHECKSUM_AGORITM_SHA256[] PROGMEM = "SHA256";
-constexpr char CHECKSUM_AGORITM_SHA384[] PROGMEM = "SHA384";
-constexpr char CHECKSUM_AGORITM_SHA512[] PROGMEM = "SHA512";
 
 // Log messages.
 #if defined(ESP32)
@@ -250,18 +290,6 @@ constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
 constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Error during Update.write";
 constexpr char ERROR_UPDATE_END[] PROGMEM = "Error during Update.end, not all bytes written";
 constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
-#else
-constexpr char NO_FW[] = "No new firmware assigned on the given device";
-constexpr char EMPTY_FW[] = "Given firmware was NULL";
-constexpr char FW_UP_TO_DATE[] = "Firmware is already up to date";
-constexpr char FW_NOT_FOR_US[] = "Firmware is not for us (title is different)";
-constexpr char UNABLE_TO_WRITE[] = "Unable to write firmware";
-constexpr char UNABLE_TO_DOWNLOAD[] = "Unable to download firmware";
-constexpr char ERROR_UPDATE_BEGIN[] = "Error during Update.begin";
-constexpr char ERROR_UPDATE_WRITE[] = "Error during Update.write";
-constexpr char ERROR_UPDATE_END[] = "Error during Update.end, not all bytes written";
-constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
-#endif // defined(ESP32)
 constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
 constexpr char PAGE_BREAK[] PROGMEM = "=================================";
 constexpr char NEW_FW[] PROGMEM = "A new Firmware is available:";
@@ -275,6 +303,31 @@ constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#else
+constexpr char NO_FW[] = "No new firmware assigned on the given device";
+constexpr char EMPTY_FW[] = "Given firmware was NULL";
+constexpr char FW_UP_TO_DATE[] = "Firmware is already up to date";
+constexpr char FW_NOT_FOR_US[] = "Firmware is not for us (title is different)";
+constexpr char UNABLE_TO_WRITE[] = "Unable to write firmware";
+constexpr char UNABLE_TO_DOWNLOAD[] = "Unable to download firmware";
+constexpr char ERROR_UPDATE_BEGIN[] = "Error during Update.begin";
+constexpr char ERROR_UPDATE_WRITE[] = "Error during Update.write";
+constexpr char ERROR_UPDATE_END[] = "Error during Update.end, not all bytes written";
+constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
+constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
+constexpr char PAGE_BREAK[] = "=================================";
+constexpr char NEW_FW[] = "A new Firmware is available:";
+constexpr char FROM_TOO[] = "(%s) => (%s)";
+constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
+constexpr char NOT_ENOUGH_RAM[] = "Not enough RAM";
+constexpr char SLASH = '/';
+constexpr char FW_CHUNK[] = "Receive chunk (%i), with size (%u) bytes";
+constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
+constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
+constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
+constexpr char FW_UPDATE_SUCCESS[] = "Update success";
+constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#endif // defined(ESP32)
 
 #endif // defined(ESP8266) || defined(ESP32)
 
