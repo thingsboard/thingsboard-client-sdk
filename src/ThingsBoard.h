@@ -33,52 +33,101 @@
 /// Constant strings in flash memory.
 /// ---------------------------------
 // Publish data topics.
+#if defined(ESP32)
 constexpr char ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";
 constexpr char TELEMETRY_TOPIC[] PROGMEM = "v1/devices/me/telemetry";
+#else
+constexpr char ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
+constexpr char TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
+#endif // defined(ESP32)
 
 // RPC topics.
+#if defined(ESP32)
 constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
-constexpr char RPC_TOPIC[] PROGMEM = "v1/devices/me/rpc";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response/+";
-constexpr char RPC_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_SEND_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request";
 constexpr char RPC_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response";
+constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
+#else
+constexpr char RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
+constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/response/+";
+constexpr char RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
+constexpr char RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
+constexpr char RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
+constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
+#endif // defined(ESP32)
 
 // Firmware topics.
+#if defined(ESP32)
 constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response";
+#else
+constexpr char FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response";
+#endif // defined(ESP32)
 
 // Shared attribute topics.
+#if defined(ESP32)
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response/+";
 constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
+#else
+constexpr char ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
+constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
+constexpr char ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
+#endif // defined(ESP32)
 
 // Provision topics.
+#if defined(ESP32)
 constexpr char PROV_RESPONSE_TOPIC[] PROGMEM = "/provision/response";
+#else
+constexpr char PROV_RESPONSE_TOPIC[] = "/provision/response";
+#endif // defined(ESP32)
 
 // Default login data.
+#if defined(ESP32)
 constexpr char PROV_ACCESS_TOKEN[] PROGMEM = "provision";
 constexpr char DEFAULT_CLIENT_ID[] PROGMEM = "TbDev";
+#else
+constexpr char PROV_ACCESS_TOKEN[] = "provision";
+constexpr char DEFAULT_CLIENT_ID[] = "TbDev";
+#endif // defined(ESP32)
 
 // Shared attribute request keys.
+#if defined(ESP32)
 constexpr char SHARED_REQUEST_KEY[] PROGMEM = "sharedKeys";
 constexpr char SHARED_RESPONSE_KEY[] PROGMEM = "shared";
+#else
+constexpr char SHARED_REQUEST_KEY[] = "sharedKeys";
+constexpr char SHARED_RESPONSE_KEY[] = "shared";
+#endif // defined(ESP32)
 
 // Client side attribute request keys.
+#if defined(ESP32)
 constexpr char CLIENT_REQUEST_KEYS[] PROGMEM = "clientKeys";
 constexpr char CLIENT_RESPONSE_KEY[] PROGMEM = "client";
+#else
+constexpr char CLIENT_REQUEST_KEYS[] = "clientKeys";
+constexpr char CLIENT_RESPONSE_KEY[] = "client";
+#endif // defined(ESP32)
 
 // RPC data keys.
-constexpr char RPC_REQUEST_KEY[] PROGMEM = "request";
-constexpr char RPC_RESPONSE_KEY[] PROGMEM = "response";
+#if defined(ESP32)
 constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
 constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
+#else
+constexpr char RPC_METHOD_KEY[] = "method";
+constexpr char RPC_PARAMS_KEY[] = "params";
+constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
+#endif // defined(ESP32)
 
 // Log messages.
+#if defined(ESP32)
+constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] PROGMEM = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
-constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 constexpr char COMMA PROGMEM = ',';
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
 constexpr char REQUEST_RPC[] PROGMEM = "Requesting client side RPC with the json (%s)";
@@ -99,14 +148,56 @@ constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
 constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
 constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback onMQTTMessage from topic: (%s)";
 constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic failed";
+constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
+constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
+constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
+#else
+constexpr char NUMBER_PRINTF[] = "%u";
+constexpr char MAX_RPC_EXCEEDED[] = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_RPC_REQUEST_EXCEEDED[] = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
+constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
+constexpr char COMMA = ',';
+constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
+constexpr char REQUEST_RPC[] = "Requesting client side RPC with the json (%s)";
+constexpr char REQUEST_ATT[] = "Requesting shared attributes transformed from (%s) into json (%s)";
+constexpr char RECEIVED_RPC_LOG_MESSAGE[] = "Received RPC:";
+constexpr char RPC_METHOD_NULL[] = "RPC methodName is NULL";
+constexpr char NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
+constexpr char CALLING_RPC[] = "Calling RPC:";
+constexpr char RECEIVED_ATT_UPDATE[] = "Received shared attribute update";
+constexpr char NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
+constexpr char ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
+constexpr char ATT_IS_NULL[] = "Subscribed shared attribute update key is NULL";
+constexpr char ATT_IN_ARRAY[] = "Shared attribute update key: (%s) is subscribed";
+constexpr char ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
+constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
+constexpr char RECEIVED_ATT[] = "Received shared attribute request";
+constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
+constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for response id (%u)";
+constexpr char CB_ON_MESSAGE[] = "Callback onMQTTMessage from topic: (%s)";
+constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
+constexpr char PROV_REQUEST[] = "Provision request:";
+constexpr char PROV_RESPONSE[] = "Process provisioning response";
+constexpr char RECEIVED_PROV_RESPONSE[] = "Received provision response";
+#endif // defined(ESP32)
 
 // Claim topics.
+#if defined(ESP32)
 constexpr char CLAIM_TOPIC[] PROGMEM = "v1/devices/me/claim";
+#else
+constexpr char CLAIM_TOPIC[] = "v1/devices/me/claim";
+#endif // defined(ESP32)
 
 // Provision topics.
+#if defined(ESP32)
 constexpr char PROV_REQUEST_TOPIC[] PROGMEM = "/provision/request";
+#else
+constexpr char PROV_REQUEST_TOPIC[] = "/provision/request";
+#endif // defined(ESP32)
 
 // Claim data keys.
+#if defined(ESP32)
 constexpr char SECRET_KEY[] PROGMEM = "secretKey";
 constexpr char DURATION_KEY[] PROGMEM = "durationMs";
 constexpr char DEVICE_NAME_KEY[] PROGMEM = "deviceName";
@@ -118,44 +209,85 @@ constexpr char PROV_CRED_USERNAME[] PROGMEM = "username";
 constexpr char PROV_CRED_PASSWORD[] PROGMEM = "password";
 constexpr char PROV_CRED_CLIENT_ID[] PROGMEM = "clientId";
 constexpr char PROV_CRED_HASH[] PROGMEM = "hash";
-
-// Log messages.
-constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
-constexpr char UNABLE_TO_DE_SERIALIZE_PROV_RESPONSE[] PROGMEM = "Unable to de-serialize provision response";
-constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
-constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
+#else
+constexpr char SECRET_KEY[] = "secretKey";
+constexpr char DURATION_KEY[] = "durationMs";
+constexpr char DEVICE_NAME_KEY[] = "deviceName";
+constexpr char PROV_DEVICE_KEY[] = "provisionDeviceKey";
+constexpr char PROV_DEVICE_SECRET_KEY[] = "provisionDeviceSecret";
+constexpr char PROV_CRED_TYPE_KEY[] = "credentialsType";
+constexpr char PROV_TOKEN[] = "token";
+constexpr char PROV_CRED_USERNAME[] = "username";
+constexpr char PROV_CRED_PASSWORD[] = "password";
+constexpr char PROV_CRED_CLIENT_ID[] = "clientId";
+constexpr char PROV_CRED_HASH[] = "hash";
+#endif // defined(ESP32)
 
 #if defined(ESP8266) || defined(ESP32)
 
 // Firmware topics.
+#if defined(ESP32)
 constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v2/fw/response/#";
 constexpr char FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
+#else
+constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
+constexpr char FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
+#endif // defined(ESP32)
 
 // Firmware data keys.
+
+#if defined(ESP32)
 constexpr char CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
 constexpr char CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
 constexpr char FW_ERROR_KEY[] PROGMEM = "fw_error";
 constexpr char FW_STATE_KEY[] PROGMEM = "fw_state";
-constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
-constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
-constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
-constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
-constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
 constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
 constexpr char FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
 constexpr char FW_STATE_VERIFIED[] PROGMEM = "VERIFIED";
 constexpr char FW_STATE_UPDATING[] PROGMEM = "UPDATING";
 constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
+constexpr char FW_VER_KEY[] PROGMEM = "fw_version";
+constexpr char FW_TITLE_KEY[] PROGMEM = "fw_title";
+constexpr char FW_CHKS_KEY[] PROGMEM = "fw_checksum";
+constexpr char FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
+constexpr char FW_SIZE_KEY[] PROGMEM = "fw_size";
 constexpr char CHECKSUM_AGORITM_MD5[] PROGMEM = "MD5";
 constexpr char CHECKSUM_AGORITM_SHA256[] PROGMEM = "SHA256";
 constexpr char CHECKSUM_AGORITM_SHA384[] PROGMEM = "SHA384";
 constexpr char CHECKSUM_AGORITM_SHA512[] PROGMEM = "SHA512";
+#else
+constexpr char CURR_FW_TITLE_KEY[] = "current_fw_title";
+constexpr char CURR_FW_VER_KEY[] = "current_fw_version";
+constexpr char FW_ERROR_KEY[] = "fw_error";
+constexpr char FW_STATE_KEY[] = "fw_state";
+constexpr char FW_STATE_DOWNLOADING[] = "DOWNLOADING";
+constexpr char FW_STATE_DOWNLOADED[] = "DOWNLOADED";
+constexpr char FW_STATE_VERIFIED[] = "VERIFIED";
+constexpr char FW_STATE_UPDATING[] = "UPDATING";
+constexpr char FW_STATE_FAILED[] = "FAILED";
+constexpr char FW_VER_KEY[] = "fw_version";
+constexpr char FW_TITLE_KEY[] = "fw_title";
+constexpr char FW_CHKS_KEY[] = "fw_checksum";
+constexpr char FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
+constexpr char FW_SIZE_KEY[] = "fw_size";
+constexpr char CHECKSUM_AGORITM_MD5[] = "MD5";
+constexpr char CHECKSUM_AGORITM_SHA256[] = "SHA256";
+constexpr char CHECKSUM_AGORITM_SHA384[] = "SHA384";
+constexpr char CHECKSUM_AGORITM_SHA512[] = "SHA512";
+#endif // defined(ESP32)
 
 // Log messages.
+#if defined(ESP32)
 constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
 constexpr char FW_NOT_FOR_US[] PROGMEM = "Firmware is not for us (title is different)";
+constexpr char UNABLE_TO_WRITE[] PROGMEM = "Unable to write firmware";
+constexpr char UNABLE_TO_DOWNLOAD[] PROGMEM = "Unable to download firmware";
+constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
+constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Error during Update.write";
+constexpr char ERROR_UPDATE_END[] PROGMEM = "Error during Update.end, not all bytes written";
+constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
 constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
 constexpr char PAGE_BREAK[] PROGMEM = "=================================";
 constexpr char NEW_FW[] PROGMEM = "A new Firmware is available:";
@@ -163,18 +295,37 @@ constexpr char FROM_TOO[] PROGMEM = "(%s) => (%s)";
 constexpr char DOWNLOADING_FW[] PROGMEM = "Attempting to download over MQTT...";
 constexpr char NOT_ENOUGH_RAM[] PROGMEM = "Not enough RAM";
 constexpr char SLASH PROGMEM = '/';
-constexpr char UNABLE_TO_WRITE[] PROGMEM = "Unable to write firmware";
-constexpr char UNABLE_TO_DOWNLOAD[] PROGMEM = "Unable to download firmware";
 constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
-constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
-constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Error during Update.write";
-constexpr char ERROR_UPDATE_END[] PROGMEM = "Error during Update.end, not all bytes written";
 constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
 constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
-constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
 constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#else
+constexpr char NO_FW[] = "No new firmware assigned on the given device";
+constexpr char EMPTY_FW[] = "Given firmware was NULL";
+constexpr char FW_UP_TO_DATE[] = "Firmware is already up to date";
+constexpr char FW_NOT_FOR_US[] = "Firmware is not for us (title is different)";
+constexpr char UNABLE_TO_WRITE[] = "Unable to write firmware";
+constexpr char UNABLE_TO_DOWNLOAD[] = "Unable to download firmware";
+constexpr char ERROR_UPDATE_BEGIN[] = "Error during Update.begin";
+constexpr char ERROR_UPDATE_WRITE[] = "Error during Update.write";
+constexpr char ERROR_UPDATE_END[] = "Error during Update.end, not all bytes written";
+constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
+constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
+constexpr char PAGE_BREAK[] = "=================================";
+constexpr char NEW_FW[] = "A new Firmware is available:";
+constexpr char FROM_TOO[] = "(%s) => (%s)";
+constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
+constexpr char NOT_ENOUGH_RAM[] = "Not enough RAM";
+constexpr char SLASH = '/';
+constexpr char FW_CHUNK[] = "Receive chunk (%i), with size (%u) bytes";
+constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
+constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
+constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
+constexpr char FW_UPDATE_SUCCESS[] = "Update success";
+constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#endif // defined(ESP32)
 
 #endif // defined(ESP8266) || defined(ESP32)
 
@@ -850,8 +1001,8 @@ class ThingsBoardSized {
       m_requestId++;
       registeredCallback->Set_Request_ID(m_requestId);
 
-      char topic[detectSize(RPC_REQUEST_TOPIC, m_requestId)];
-      snprintf_P(topic, sizeof(topic), RPC_REQUEST_TOPIC, m_requestId);
+      char topic[detectSize(RPC_SEND_REQUEST_TOPIC, m_requestId)];
+      snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_requestId);
       return m_client.publish(topic, buffer, m_qos ? 1 : 0);
     }
 
@@ -1743,18 +1894,25 @@ class ThingsBoardSized {
         return;
       }
 
+      // Remove the not needed part of the topic
+      const size_t index = strlen(RPC_REQUEST_TOPIC) + 1U;
 #if THINGSBOARD_ENABLE_STL
-      std::string responseTopic = topic;
-      responseTopic.replace(responseTopic.begin(), responseTopic.end(), RPC_REQUEST_KEY, RPC_RESPONSE_KEY);
+      std::string request = topic;
+      request = request.substr(index, request.length() - index);
 #else
-      String responseTopic = topic;
-      responseTopic.replace(RPC_REQUEST_KEY, RPC_RESPONSE_KEY);
+      String request = topic;
+      request = request.substring(index);
 #endif // THINGSBOARD_ENABLE_STL
 
-      Logger::log(RPC_RESPONSE_KEY);
-      Logger::log(responseTopic.c_str());
+      // Convert the remaining text to an integer
+      const uint32_t requestId = atoi(request.c_str());
+
+      char responseTopic[detectSize(RPC_SEND_RESPONSE_TOPIC, requestId)];
+      snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, requestId);
+
+      Logger::log(responseTopic);
       Logger::log(responsePayload);
-      m_client.publish(responseTopic.c_str(), responsePayload, m_qos ? 1 : 0);
+      m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -2127,7 +2285,7 @@ class ThingsBoardSized {
 
       if (strncmp_P(RPC_RESPONSE_TOPIC, topic, strlen(RPC_RESPONSE_TOPIC)) == 0) {
         process_rpc_request_message(topic, payload, length);
-      } else if (strncmp_P(RPC_TOPIC, topic, strlen(RPC_TOPIC)) == 0) {
+      } else if (strncmp_P(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0) {
         process_rpc_message(topic, payload, length);
       } else if (strncmp_P(ATTRIBUTE_RESPONSE_TOPIC, topic, strlen(ATTRIBUTE_RESPONSE_TOPIC)) == 0) {
         process_attribute_request_message(topic, payload, length);
