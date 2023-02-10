@@ -44,9 +44,9 @@ class RPC_Callback {
     /// @param methodName Name we expect to be sent via. RPC so this callback will be called
     /// @param cb Callback method that will be called and should return a response if excpected
     inline RPC_Callback(const char *methodName, processFn cb)
-      : m_name(methodName), m_cb(cb) {  }
+      : m_methodName(methodName), m_cb(cb) {  }
 
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
+    /// @brief Calls the callback that was subscribed
     /// @tparam Logger Logging class that should be used to print messages
     /// @param data Received RPC Data that include optional parameters for the method sent by the cloud
     /// @return Optional RPC Response that include key-value pair,
@@ -62,16 +62,27 @@ class RPC_Callback {
       return m_cb(data);
     }
 
-    /// @brief Gets the poiner to the underlying name that was passed,
-    /// when this class instance was initally created
+    /// @brief Sets the callback method that will be called
+    /// @param cb Callback method that will be called
+    inline void Set_Callback(processFn cb) {
+      m_cb = cb;
+    }
+
+    /// @brief Gets the poiner to the underlying name
     /// @return Pointer to the passed methodName
     inline const char* Get_Name() const {
-      return m_name;
+      return m_methodName;
+    }
+
+    /// @brief Sets the poiner to the underlying name
+    /// @param methodName Pointer to the passed methodName
+    inline void Set_Name(const char *methodName) {
+      m_methodName = methodName;
     }
 
   private:
-    const char  *m_name;    // Method name
-    processFn   m_cb;       // Callback to call
+    const char  *m_methodName;  // Method name
+    processFn   m_cb;           // Callback to call
 };
 
 #endif // RPC_Callback_h
