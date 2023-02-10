@@ -51,7 +51,7 @@ class RPC_Request_Callback {
     inline RPC_Request_Callback(const char *methodName, const JsonArray *parameteres, processFn cb)
       : m_methodName(methodName), m_parameters(parameteres), m_request_id(0U), m_cb(cb) {  }
 
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
+    /// @brief Calls the callback that was subscribed
     /// @tparam Logger Logging class that should be used to print messages
     /// @param data Received RPC response that include optional parameters for the method called on the cloud
     template<typename Logger>
@@ -63,6 +63,12 @@ class RPC_Request_Callback {
         return returnType();
       }
       return m_cb(data);
+    }
+
+    /// @brief Sets the callback method that will be called
+    /// @param cb Callback method that will be called
+    inline void Set_Callback(processFn cb) {
+      m_cb = cb;
     }
 
     /// @brief Gets the unique request identifier that is connected to the original request,
@@ -77,22 +83,32 @@ class RPC_Request_Callback {
     /// and will be later used to verifiy which RPC_Request_Callback
     /// is connected to which received RPC response
     /// @param request_id Unique identifier connected to the request for client side rpc
-    inline void Set_Request_ID(const uint32_t& request_id) {
+    inline void Set_Request_ID(const uint32_t &request_id) {
       m_request_id = request_id;
     }
 
-    /// @brief Gets the poiner to the underlying name that was passed,
-    /// when this class instance was initally created
+    /// @brief Gets the poiner to the underlying name
     /// @return Pointer to the passed methodName
     inline const char* Get_Name() const {
       return m_methodName;
     }
 
-    /// @brief Gets the pointer to the underlying paramaters that were passed,
-    /// when this class instance was initally created
+    /// @brief Sets the poiner to the underlying name
+    /// @param methodName Pointer to the passed methodName
+    inline void Set_Name(const char *methodName) {
+      m_methodName = methodName;
+    }
+
+    /// @brief Gets the pointer to the underlying paramaters
     /// @return Pointer to the passed parameters
     inline const JsonArray* Get_Parameters() const {
       return m_parameters;
+    }
+
+    /// @brief Sets the pointer to the underlying paramaters
+    /// @param parameteres Pointer to the passed parameters
+    inline void Get_Parameters(const JsonArray *parameteres) {
+      m_parameters = parameteres;
     }
 
   private:

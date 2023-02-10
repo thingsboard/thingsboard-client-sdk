@@ -50,7 +50,7 @@ class Attribute_Request_Callback {
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @param cb Callback method that will be called
     template<class InputIterator>
-    inline Attribute_Request_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
+    inline Attribute_Request_Callback(const InputIterator &first_itr, const InputIterator &last_itr, processFn cb)
       : m_attributes(first_itr, last_itr), m_request_id(0U), m_attribute_key(nullptr), m_cb(cb) {  }
 
 #else
@@ -59,7 +59,7 @@ class Attribute_Request_Callback {
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client
     /// @param attributes Comma seperated string containing all attributes we want to request (test1, test2, ...)
     /// @param cb Callback method that will be called
-    inline Attribute_Request_Callback(const char* attributes, processFn cb)
+    inline Attribute_Request_Callback(const char *attributes, processFn cb)
       : m_attributes(attributes), m_request_id(0U), m_attribute_key(nullptr), m_cb(cb) {  }
 
 #endif // THINGSBOARD_ENABLE_STL
@@ -79,6 +79,12 @@ class Attribute_Request_Callback {
       return m_cb(data);
     }
 
+    /// @brief Sets the callback method that will be called
+    /// @param cb Callback method that will be called
+    inline void Set_Callback(processFn cb) {
+      m_cb = cb;
+    }
+
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
@@ -91,16 +97,8 @@ class Attribute_Request_Callback {
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @param request_id Unqiue identifier of the request for client-side or shared attributes
-    inline void Set_Request_ID(const uint32_t& request_id) {
+    inline void Set_Request_ID(const uint32_t &request_id) {
       m_request_id = request_id;
-    }
-
-    /// @brief Sets the response key of the key-value pair,
-    /// that we expect the client-side or shared attribute payload json data to be contained in
-    /// @param attribute_key Key that the data is saved into,
-    /// client for client-side attributes and shared for shared attributes
-    inline void Set_Attribute_Key(const char* attribute_key) {
-      m_attribute_key = attribute_key;
     }
 
     /// @brief Gets the response key of the key-value pair,
@@ -111,26 +109,52 @@ class Attribute_Request_Callback {
       return m_attribute_key;
     }
 
+    /// @brief Sets the response key of the key-value pair,
+    /// that we expect the client-side or shared attribute payload json data to be contained in
+    /// @param attribute_key Key that the data is saved into,
+    /// client for client-side attributes and shared for shared attributes
+    inline void Set_Attribute_Key(const char *attribute_key) {
+      m_attribute_key = attribute_key;
+    }
+
 #if THINGSBOARD_ENABLE_STL
 
     /// @brief Gets all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
-    // is sent from the cloud and received by the client,
-    /// passed when this class instance was initally created
+    // is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
     inline const std::vector<const char *>& Get_Attributes() const {
       return m_attributes;
+    }
+
+    /// @brief Sets all the requested client-side or shared attributes that will result,
+    /// in the subscribed method being called when the response with their current value
+    // is sent from the cloud and received by the client
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    template<class InputIterator>
+    inline void Set_Attributes(const InputIterator &first_itr, const InputIterator &last_itr) {
+      m_attributes.assign(first_itr, last_itr);
     }
 
 #else
 
     /// @brief Gets the string containing all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
-    // is sent from the cloud and received by the client,
-    /// passed when this class instance was initally created
+    // is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
     inline const char* Get_Attributes() const {
       return m_attributes;
+    }
+
+    /// @brief Sets the string containing all the requested client-side or shared attributes that will result,
+    /// in the subscribed method being called when the response with their current value
+    // is sent from the cloud and received by the client
+    /// @param attributes Requested client-side or shared attributes
+    inline void Set_Attributes(const char *attributes) {
+      m_attributes = attributes;
     }
 
 #endif // THINGSBOARD_ENABLE_STL
