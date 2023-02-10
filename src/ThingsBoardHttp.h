@@ -171,6 +171,15 @@ class ThingsBoardHttpSized {
       return sendTelemetryJson(json);
     }
 
+    /// @brief Attempts to send a GET request over HTTP or HTTPS
+    /// @param path API path we want to get data from (example: /api/v1/$TOKEN/rpc)
+    /// @param response JsonObject the GET response will be copied into,
+    /// will not be changed if the GET request wasn't successful
+    /// @return Wheter sending the GET request was successful or not
+    inline const bool sendGetRequest(const char* path, JsonObject& response) {
+      return getMessage(path, response);
+    }
+
     //----------------------------------------------------------------------------
     // Attribute API
 
