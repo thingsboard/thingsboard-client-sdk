@@ -15,7 +15,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
+#if defined(ESP32)
 constexpr char OTA_CB_IS_NULL[] PROGMEM = "OTA update callback is NULL";
+#else
+constexpr char OTA_CB_IS_NULL[] = "OTA update callback is NULL";
+#endif // defined(ESP32)
 
 // OTA default values.
 constexpr uint8_t CHUNK_RETRIES PROGMEM = 5U;
