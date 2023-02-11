@@ -400,6 +400,7 @@ class ThingsBoardSized {
       m_subscribedInstance = this;
 #endif // !THINGSBOARD_ENABLE_STL
       reserve_callback_size(MaxFieldsAmt);
+      enableMQTTQoS(enableQoS);
     }
 
     /// @brief Destructor
