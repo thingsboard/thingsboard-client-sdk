@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.board.fqbn }}
+    name: Arduino Uno
     runs-on: ubuntu-latest
     env:
       LIBRARIES: |
@@ -27,20 +27,12 @@ jobs:
         - name: ArduinoJson
       SKETCHES_REPORTS_PATH: sketches-reports
 
-    strategy:
-      matrix:
-        board:
-          - fqbn: "arduino:avr:uno"
-            platform-name: arduino:avr
-
     steps:
       - uses: actions/checkout@v3
 
       - name: Compile examples
         uses: arduino/compile-sketches@v1
         with:
-          platforms: ${{ matrix.platforms }}
-          fqbn: ${{ matrix.board.fqbn }}
           libraries: ${{ env.LIBRARIES }}
           enable-deltas-report: 'true'
           sketch-paths: |
