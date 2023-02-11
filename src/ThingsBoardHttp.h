@@ -80,7 +80,7 @@ class ThingsBoardHttpSized {
       m_client.addHeader(CONTENT_TYPE, HTTP_POST_PATH);
       m_client.begin(client, m_host, m_port, SLASH, m_secure);
 #else
-      m_client.connect(m_host, m_port)
+      m_client.connect(m_host, m_port);
 #endif
     }
 
@@ -302,7 +302,7 @@ class ThingsBoardHttpSized {
       if (path == nullptr) {
         return false;
       }
-#if !defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32)
       m_client.setURL(path);
 #endif
 
@@ -425,7 +425,13 @@ class ThingsBoardHttpSized {
       // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
       // when creating an array with negative size we assert beforehand with a clear error message.
       const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
+#if THINGSBOARD_ENABLE_STL
       assert(result >= 0);
+#else
+      if (result < 0) {
+        abort();
+      }
+#endif // THINGSBOARD_ENABLE_STL
       va_end(args);
       return result;
     }
