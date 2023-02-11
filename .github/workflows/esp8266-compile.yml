@@ -25,7 +25,7 @@ jobs:
         - name: Seeed_Arduino_mbedtls
       SKETCHES_REPORTS_PATH: sketches-reports
 
-  strategy:
+    strategy:
       matrix:
         board:
           - fqbn: "esp8266:esp8266:huzzah"
