@@ -24,7 +24,7 @@ jobs:
         -
       SKETCHES_REPORTS_PATH: sketches-reports
 
-  strategy:
+    strategy:
       matrix:
         board:
           - fqbn: "esp32:esp32:esp32"
