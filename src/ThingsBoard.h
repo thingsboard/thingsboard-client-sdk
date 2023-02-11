@@ -382,7 +382,7 @@ class ThingsBoardSized {
       , m_attributeRequestCallbacks()
       , m_provisionCallback()
       , m_requestId(0U)
-      , m_qos(false)
+      , m_qos(enableQoS)
 #if defined(ESP8266) || defined(ESP32)
       , m_fwState(false)
       , m_fwCallback(nullptr)
@@ -400,7 +400,6 @@ class ThingsBoardSized {
       m_subscribedInstance = this;
 #endif // !THINGSBOARD_ENABLE_STL
       reserve_callback_size(MaxFieldsAmt);
-      enableMQTTQoS(enableQoS);
     }
 
     /// @brief Destructor
