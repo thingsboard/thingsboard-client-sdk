@@ -128,9 +128,9 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
 }
 
 const uint8_t callback_size = 2U;
-const std::array<RPC_Callback, callback_size> callbacks = {
-  RPC_Callback{ "example_set_temperature",    processTemperatureChange },
-  RPC_Callback{ "example_set_switch",         processSwitchChange }
+const RPC_Callback callbacks[callback_size] = {
+  { "example_set_temperature",    processTemperatureChange },
+  { "example_set_switch",         processSwitchChange }
 };
 
 void loop() {
