@@ -26,6 +26,7 @@ jobs:
         - name: ArduinoHttpClient
         - name: ArduinoJson
         - name: WiFiEsp
+        - name: TinyGsmClient
       SKETCHES_REPORTS_PATH: sketches-reports
 
     steps:
