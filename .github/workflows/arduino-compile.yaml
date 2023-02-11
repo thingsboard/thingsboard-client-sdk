@@ -20,8 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LIBRARIES: |
-        # No additional library dependencies
-        -
+        # Install the additionally needed dependency from the respository
+        - source-path: ./
+        - name: PubSubClient
+        - name: ArduinoHttpClient
+        - name: ArduinoJson
       SKETCHES_REPORTS_PATH: sketches-reports
 
     strategy:
