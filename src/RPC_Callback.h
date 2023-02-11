@@ -17,7 +17,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
+#if defined(ESP32)
 constexpr char RPC_CB_NULL[] PROGMEM = "Server-side RPC callback is NULL";
+#else
+constexpr char RPC_CB_NULL[] = "Server-side RPC callback is NULL";
+#endif // defined(ESP32)
 
 // Convenient aliases
 using RPC_Response = Telemetry;

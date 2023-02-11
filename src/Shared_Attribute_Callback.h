@@ -18,7 +18,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
+#if defined(ESP32)
 constexpr char ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
+#else
+constexpr char ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
+#endif // defined(ESP32)
 
 // Convenient aliases
 // JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
