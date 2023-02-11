@@ -1,0 +1,77 @@
+name: Compile ESP32 Sketches
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/esp32-compile.yml"
+      - "library.properties"
+      - "examples/**"
+      - "src/**"
+  push:
+    paths:
+      - ".github/workflows/esp32-compile.yml"
+      - "library.properties"
+      - "examples/**"
+      - "src/**"
+  workflow_dispatch:
+  repository_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.board.fqbn }}
+    runs-on: ubuntu-latest
+    env:
+      LIBRARIES: |
+        # No additional library dependencies
+        -
+      SKETCHES_REPORTS_PATH: sketches-reports
+
+  strategy:
+      matrix:
+        board:
+          - fqbn: "esp32:esp32:esp32"
+            platform-name: esp32:esp32
+
+  # Make board type-specific customizations to the matrix jobs
+        include:
+          - board:
+              platform-name: esp32:esp32
+            platforms: |
+              # Install ESP32 platform via Boards Manager
+              - name: esp32:esp32
+                source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install ESP32 platform dependencies
+        if: matrix.board.platform-name == 'esp32:esp32'
+        run: pip3 install pyserial
+
+      - name: Compile examples
+        uses: arduino/compile-sketches@v1
+        with:
+          platforms: ${{ matrix.platforms }}
+          fqbn: ${{ matrix.board.fqbn }}
+          libraries: ${{ env.LIBRARIES }}
+          enable-deltas-report: 'true'
+          sketch-paths:
+            - "examples/0003-esp8266_esp32_send_data/**"
+            - "examples/0006-esp8266_esp32_process_shared_attribute_update/**"
+            - "examples/0007-esp8266_esp32_claim_device/**"
+            - "examples/0008-esp8266_esp32_provision_device/**"
+            - "examples/0009-esp8266_esp32_process_OTA_MQTT/**"
+            - "examples/0010-esp8266_esp32_rpc/**"
+            - "examples/0011-esp8266_esp32_subscribe_OTA_MQTT/**"
+            - "examples/0012-esp8266_esp32_request_shared_attribute/**"
+            - "examples/0013-esp8266_esp32_request_rpc/**"
+          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
+          enable-warnings-report: 'true'
+
+      - name: Save memory usage change report as artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: error
+          name: ${{ env.SKETCHES_REPORTS_PATH }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
