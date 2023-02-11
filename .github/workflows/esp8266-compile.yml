@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         board:
-          - fqbn: "esp8266:esp8266:huzzah"
+          - fqbn: "esp8266:esp8266:nodemcuv2"
             platform-name: esp8266:esp8266
 
   # Make board type-specific customizations to the matrix jobs
