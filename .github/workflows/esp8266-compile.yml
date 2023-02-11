@@ -52,15 +52,15 @@ jobs:
           libraries: ${{ env.LIBRARIES }}
           enable-deltas-report: 'true'
           sketch-paths: |
-            - examples/0003-esp8266_esp32_send_data/**
-            - examples/0006-esp8266_esp32_process_shared_attribute_update/**
-            - examples/0007-esp8266_esp32_claim_device/**
-            - examples/0008-esp8266_esp32_provision_device/**
-            - examples/0009-esp8266_esp32_process_OTA_MQTT/**
-            - examples/0010-esp8266_esp32_rpc/**
-            - examples/0011-esp8266_esp32_subscribe_OTA_MQTT/**
-            - examples/0012-esp8266_esp32_request_shared_attribute/**
-            - examples/0013-esp8266_esp32_request_rpc/**
+            - examples/0003-esp8266_esp32_send_data/0003-esp8266_esp32_send_data.ino
+            - examples/0006-esp8266_esp32_process_shared_attribute_update/0006-esp8266_esp32_process_shared_attribute_update.ino
+            - examples/0007-esp8266_esp32_claim_device/0007-esp8266_esp32_claim_device.ino
+            - examples/0008-esp8266_esp32_provision_device/0008-esp8266_esp32_provision_device.ino
+            - examples/0009-esp8266_esp32_process_OTA_MQTT/0009-esp8266_esp32_process_OTA_MQTT.ino
+            - examples/0010-esp8266_esp32_rpc/0010-esp8266_esp32_rpc.ino
+            - examples/0011-esp8266_esp32_subscribe_OTA_MQTT/0011-esp8266_esp32_subscribe_OTA_MQTT.ino
+            - examples/0012-esp8266_esp32_request_shared_attribute/0012-esp8266_esp32_request_shared_attribute.ino
+            - examples/0013-esp8266_esp32_request_rpc/0013-esp8266_esp32_request_rpc.ino
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
           enable-warnings-report: 'true'
 
