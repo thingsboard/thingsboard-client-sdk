@@ -41,11 +41,11 @@ jobs:
           libraries: ${{ env.LIBRARIES }}
           enable-deltas-report: 'true'
           sketch-paths: |
-            - examples/0000-arduino_send_telemetry/**
-            - examples/0001-arduino_send_batch/**
-            - examples/0002-arduino_rpc/**
-            - examples/0004-arduino-sim900_send_telemetry/**
-            - examples/0005-arduino-sim900_send_telemetry_http/**
+            - examples/0000-arduino_send_telemetry/0000-arduino_send_telemetry.ino
+            - examples/0001-arduino_send_batch/0001-arduino_send_batch.ino
+            - examples/0002-arduino_rpc/0002-arduino_rpc.ino
+            - examples/0004-arduino-sim900_send_telemetry/0004-arduino-sim900_send_telemetry.ino
+            - examples/0005-arduino-sim900_send_telemetry_http/0005-arduino-sim900_send_telemetry_http.ino
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
           enable-warnings-report: 'true'
 
