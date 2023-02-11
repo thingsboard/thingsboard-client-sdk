@@ -13,8 +13,6 @@ on:
       - "library.properties"
       - "examples/**"
       - "src/**"
-  workflow_dispatch:
-  repository_dispatch:
 
 jobs:
   build:
