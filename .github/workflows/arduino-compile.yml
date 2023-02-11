@@ -25,6 +25,7 @@ jobs:
         - name: PubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
+        - name: WiFiEsp
       SKETCHES_REPORTS_PATH: sketches-reports
 
     steps:
