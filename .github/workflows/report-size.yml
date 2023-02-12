@@ -1,13 +1,12 @@
 name: Report PR Size Deltas
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/report-size.yml"
   push:
     paths:
       - ".github/workflows/report-size.yml"
-  schedule:
-    - cron:  '*/5 * * * *'
-  workflow_dispatch:
-  repository_dispatch:
 
 jobs:
   report:
