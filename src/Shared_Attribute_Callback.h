@@ -18,7 +18,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
+#if defined(ESP32)
 constexpr char ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
+#else
+constexpr char ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
+#endif // defined(ESP32)
 
 // Convenient aliases
 // JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
@@ -57,7 +61,7 @@ class Shared_Attribute_Callback {
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @param cb Callback method that will be called
     template<class InputIterator>
-    inline Shared_Attribute_Callback(const InputIterator& first_itr, const InputIterator& last_itr, processFn cb)
+    inline Shared_Attribute_Callback(const InputIterator &first_itr, const InputIterator &last_itr, processFn cb)
       : m_attributes(first_itr, last_itr), m_cb(cb) {  }
 
 #else
@@ -67,7 +71,7 @@ class Shared_Attribute_Callback {
     /// If the update does not include any of the given shared attributes the callback is not called
     /// @param attributes Comma seperated string containing all attributes we want to subscribe (test1, test2, ...)
     /// @param cb Callback method that will be called
-    inline Shared_Attribute_Callback(const char* attributes, processFn cb)
+    inline Shared_Attribute_Callback(const char *attributes, processFn cb)
       : m_attributes(attributes), m_cb(cb) {  }
 
 #endif // THINGSBOARD_ENABLE_STL
@@ -86,36 +90,60 @@ class Shared_Attribute_Callback {
       }
       return m_cb(data);
     }
+
+    /// @brief Sets the callback method that will be called
+    /// @param cb Callback method that will be called
+    inline void Set_Callback(processFn cb) {
+      m_cb = cb;
+    }
+
 #if THINGSBOARD_ENABLE_STL
 
     /// @brief Gets all the subscribed shared attributes that will result,
     /// in the subscribed method being called if changed by the cloud
-    /// passed when this class instance was initally created
     /// @return Subscribed shared attributes
     inline const std::vector<const char *>& Get_Attributes() const {
       return m_attributes;
+    }
+
+    /// @brief Sets all the subscribed shared attributes that will result,
+    /// in the subscribed method being called if changed by the cloud
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    template<class InputIterator>
+    inline void Set_Attributes(const InputIterator &first_itr, const InputIterator &last_itr) {
+      m_attributes.assign(first_itr, last_itr);
     }
 
 #else
 
     /// @brief Gets the string containing all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
-    // is sent from the cloud and received by the client,
-    /// passed when this class instance was initally created
+    // is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
     inline const char* Get_Attributes() const {
       return m_attributes;
+    }
+
+    /// @brief Sets the string containing all the requested client-side or shared attributes that will result,
+    /// in the subscribed method being called when the response with their current value
+    // is sent from the cloud and received by the client
+    /// @param attributes Requested client-side or shared attributes
+    inline void Set_Attributes(const char *attributes) {
+      m_attributes = attributes;
     }
 
 #endif // THINGSBOARD_ENABLE_STL
 
   private:
 #if THINGSBOARD_ENABLE_STL
-    const std::vector<const char *>      m_attributes;      // Attribute we want to request
+    std::vector<const char *>      m_attributes;    // Attribute we want to request
 #else
-    const char                           *m_attributes;     // Attribute we want to request
+    const char                     *m_attributes;   // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_STL
-    processFn                            m_cb;              // Callback to call
+    processFn                      m_cb;            // Callback to call
 };
 
 #endif // Shared_Attribute_Callback

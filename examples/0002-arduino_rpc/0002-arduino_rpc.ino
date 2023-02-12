@@ -127,9 +127,10 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
   return RPC_Response("example_response", 22.02);
 }
 
-const std::array<RPC_Callback, 2U> callbacks = {
-  RPC_Callback{ "example_set_temperature",    processTemperatureChange },
-  RPC_Callback{ "example_set_switch",         processSwitchChange }
+const uint8_t callback_size = 2U;
+const RPC_Callback callbacks[callback_size] = {
+  { "example_set_temperature",    processTemperatureChange },
+  { "example_set_switch",         processSwitchChange }
 };
 
 void loop() {
@@ -157,7 +158,7 @@ void loop() {
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.
-    if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
+    if (!tb.RPC_Subscribe(callbacks, callback_size)) {
       Serial.println("Failed to subscribe for RPC");
       return;
     }

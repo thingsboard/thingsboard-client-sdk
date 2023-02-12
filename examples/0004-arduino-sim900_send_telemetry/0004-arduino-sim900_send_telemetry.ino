@@ -109,8 +109,8 @@ void loop() {
     Serial.println(" OK");
 
     Serial.print(F("Connecting to "));
-    Serial.print(apn);
-    if (!modem.gprsConnect(apn, user, pass)) {
+    Serial.print(APN);
+    if (!modem.gprsConnect(APN, USER, PASS)) {
         Serial.println(" fail");
         delay(10000);
         return;

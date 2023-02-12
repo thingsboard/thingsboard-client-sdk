@@ -1,0 +1,20 @@
+name: Report PR Size Deltas
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/report-size.yml"
+  push:
+    paths:
+      - ".github/workflows/report-size.yml"
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Comment size deltas reports to PRs
+        uses: arduino/report-size-deltas@v1
+        with:
+          # The name of the workflow artifact created by the sketch compilation workflow
+          sketches-reports-source: sketches-reports
