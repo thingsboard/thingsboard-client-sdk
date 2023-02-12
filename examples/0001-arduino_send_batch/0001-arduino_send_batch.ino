@@ -11,27 +11,68 @@
 #include <SoftwareSerial.h>
 
 
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char WIFI_SSID[] PROGMEM = "YOUR_WIFI_SSID";
 constexpr char WIFI_PASSWORD[] PROGMEM = "YOUR_WIFI_PASSWORD";
+#else
+constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
+constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
+#endif
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char TOKEN[] PROGMEM = "YOUR_DEVICE_ACCESS_TOKEN";
+#else
+constexpr char TOKEN[] = "YOUR_DEVICE_ACCESS_TOKEN";
+#endif
 
 // Thingsboard we want to establish a connection too
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char THINGSBOARD_SERVER[] PROGMEM = "demo.thingsboard.io";
+#else
+constexpr char THINGSBOARD_SERVER[] = "demo.thingsboard.io";
+#endif
+
 // MQTT port used to communicate with the server, 1883 is the default unencrypted MQTT port,
 // whereas 8883 would be the default encrypted SSL MQTT port
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr uint16_t THINGSBOARD_PORT PROGMEM = 1883U;
+#else
+constexpr uint16_t THINGSBOARD_PORT = 1883U;
+#endif
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
+#else
+constexpr uint32_t MAX_MESSAGE_SIZE = 128U;
+#endif
 
 // Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 9600U;
 constexpr uint32_t SERIAL_ESP8266_DEBUG_BAUD PROGMEM = 9600U;
+#else
+constexpr uint32_t SERIAL_DEBUG_BAUD = 9600U;
+constexpr uint32_t SERIAL_ESP8266_DEBUG_BAUD = 9600U;
+#endif
+
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char TEMPERATURE_KEY[] PROGMEM = "temperature";
+constexpr char HUMIDITY_KEY[] PROGMEM = "humidity";
+constexpr char DEVICE_TYPE_KEY[] PROGMEM = "device_type";
+constexpr char ACTIVE_KEY[] PROGMEM = "active";
+constexpr char SENSOR_VALUE[] PROGMEM = "sensor";
+#else
+constexpr char TEMPERATURE_KEY[] = "temperature";
+constexpr char HUMIDITY_KEY[] = "humidity";
+constexpr char DEVICE_TYPE_KEY[] = "device_type";
+constexpr char ACTIVE_KEY[] = "active";
+constexpr char SENSOR_VALUE[] = "sensor";
+#endif
 
 
 // Serial driver for ESP
@@ -45,15 +86,30 @@ ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
 /// @brief Initalizes WiFi connection,
 // will endlessly delay until a connection has been successfully established
 void InitWiFi() {
+#if THINGSBOARD_ENABLE_PROGMEM
+  Serial.println(F("Connecting to AP ..."));
+#else
   Serial.println("Connecting to AP ...");
+#endif
   // Attempting to establish a connection to the given WiFi network
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     // Delay 500ms until a connection has been succesfully established
     delay(500);
+#if THINGSBOARD_ENABLE_PROGMEM
+    Serial.print(F("."));
+#else
     Serial.print(".");
+#endif
   }
+#if THINGSBOARD_ENABLE_PROGMEM
+  Serial.println(F("Connected to AP"));
+#else
   Serial.println("Connected to AP");
+#endif
+#if ENCRYPTED
+  espClient.setCACert(ROOT_CERT);
+#endif
 }
 
 /// @brief Reconnects the WiFi uses InitWiFi if the connection has been removed
@@ -81,7 +137,11 @@ void setup() {
   WiFi.init(&soft);
   // check for the presence of the shield
   if (WiFi.status() == WL_NO_SHIELD) {
+#if THINGSBOARD_ENABLE_PROGMEM
+    Serial.println(F("WiFi shield not present"));
+#else
     Serial.println("WiFi shield not present");
+#endif
     // don't continue
     while (true);
   }
@@ -96,30 +156,40 @@ void loop() {
   }
 
   if (!tb.connected()) {
-    // Connect to the ThingsBoard
-    Serial.print("Connecting to: ");
-    Serial.print(THINGSBOARD_SERVER);
-    Serial.print(" with token ");
-    Serial.println(TOKEN);
+    // Reconnect to the ThingsBoard server,
+    // if a connection was disrupted or has not yet been established
+#if THINGSBOARD_ENABLE_PROGMEM
+    Serial.printf(F("Connecting to: (%s) with token (%s)\n"), THINGSBOARD_SERVER, TOKEN);
+#else
+    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+#endif
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
+#if THINGSBOARD_ENABLE_PROGMEM
+      Serial.println(F("Failed to connect"));
+#else
       Serial.println("Failed to connect");
+#endif
       return;
     }
   }
 
+#if THINGSBOARD_ENABLE_PROGMEM
+  Serial.println(F("Sending telemetry data..."));
+#else
   Serial.println("Sending telemetry data...");
+#endif
 
   const uint8_t data_items = 2U;
   Telemetry data[data_items] = {
-    { "temperature", 42.2 },
-    { "humidity",    80 },
+    { TEMPERATURE_KEY, 42.2 },
+    { HUMIDITY_KEY,    80 },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
   Telemetry data[data_items] = {
-    Telemetry( "temperature", 42.2 ),
-    Telemetry( "humidity",    80 ),
+    Telemetry( TEMPERATURE_KEY, 42.2 ),
+    Telemetry( HUMIDITY_KEY,    80 ),
   };
 
   */
@@ -129,19 +199,23 @@ void loop() {
   // for more details
   tb.sendTelemetry(data, data_items);
 
+#if THINGSBOARD_ENABLE_PROGMEM
+  Serial.println(F("Sending attributes data..."));
+#else
   Serial.println("Sending attributes data...");
+#endif
 
   const int attribute_items = 2;
   Attribute attributes[attribute_items] = {
-    { "device_type",  "sensor" },
-    { "active",       true     },
+    { DEVICE_TYPE_KEY,  SENSOR_VALUE },
+    { ACTIVE_KEY,       true     },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
   Attribute attributes[data_items] = {
-    Attribute( "device_type",  "sensor" ),
-    Attribute( "active",       true     ),
+    Attribute( DEVICE_TYPE_KEY,  SENSOR_VALUE ),
+    Attribute( ACTIVE_KEY,       true     ),
   };
 
   */

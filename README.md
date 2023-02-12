@@ -47,6 +47,17 @@ Example implementations for all features can be found in the `examples` folder. 
 
 ## Troubleshooting
 
+### No PROGMEM support causing crashes
+
+All constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that simply add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
+
+```c++
+// If not set otherwise the value is 1 per default if the ARDUINO plattform is used,
+// set to 0 if the board has problems with PROGMEM variables and does not seem to work correctly.
+#define THINGSBOARD_ENABLE_PROGMEM 0
+#include <ThingsBoard.h>
+```
+
 ### Not enough space for JSON serialization
 
 The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not send data, if the size of it is bigger than the size originally passed in the constructor as a template argument (`PayLoadSize`). Respective logs in the `"Serial Monitor"` window will indicate the condition:

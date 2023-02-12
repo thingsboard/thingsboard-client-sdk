@@ -18,11 +18,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATT_REQUEST_CB_IS_NULL[] PROGMEM = "Client-side or shared attribute request callback is NULL";
 #else
 constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute request callback is NULL";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Convenient aliases
 // JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
