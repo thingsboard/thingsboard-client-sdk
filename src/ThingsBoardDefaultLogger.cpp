@@ -5,10 +5,10 @@
 #include <HardwareSerial.h>
 
 void ThingsBoardDefaultLogger::log(const char *msg) {
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
   Serial.print(F("[TB] "));
 #else
   Serial.print("[TB] ");
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
   Serial.println(msg);
 }

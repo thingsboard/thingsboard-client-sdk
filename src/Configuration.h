@@ -22,4 +22,15 @@
 #    endif
 #  endif
 
+// Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
+#  ifdef ARDUINO
+#    ifndef THINGSBOARD_ENABLE_PROGMEM
+#      define THINGSBOARD_ENABLE_PROGMEM 1
+#    endif
+#  else
+#    ifndef THINGSBOARD_ENABLE_PROGMEM
+#      define THINGSBOARD_ENABLE_PROGMEM 0
+#    endif
+#  endif
+
 #endif // Configuration_h

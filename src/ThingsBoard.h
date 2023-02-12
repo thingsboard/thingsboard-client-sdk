@@ -33,16 +33,16 @@
 /// Constant strings in flash memory.
 /// ---------------------------------
 // Publish data topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";
 constexpr char TELEMETRY_TOPIC[] PROGMEM = "v1/devices/me/telemetry";
 #else
 constexpr char ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
 constexpr char TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // RPC topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response/+";
 constexpr char RPC_SEND_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
@@ -56,17 +56,17 @@ constexpr char RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
 constexpr char RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
 constexpr char RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
 constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Firmware topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response";
 #else
 constexpr char FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response/+";
 constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
@@ -74,44 +74,44 @@ constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/re
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
 constexpr char ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Provision topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROV_RESPONSE_TOPIC[] PROGMEM = "/provision/response";
 #else
 constexpr char PROV_RESPONSE_TOPIC[] = "/provision/response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Default login data.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROV_ACCESS_TOKEN[] PROGMEM = "provision";
 constexpr char DEFAULT_CLIENT_ID[] PROGMEM = "TbDev";
 #else
 constexpr char PROV_ACCESS_TOKEN[] = "provision";
 constexpr char DEFAULT_CLIENT_ID[] = "TbDev";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute request keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char SHARED_REQUEST_KEY[] PROGMEM = "sharedKeys";
 constexpr char SHARED_RESPONSE_KEY[] PROGMEM = "shared";
 #else
 constexpr char SHARED_REQUEST_KEY[] = "sharedKeys";
 constexpr char SHARED_RESPONSE_KEY[] = "shared";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Client side attribute request keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char CLIENT_REQUEST_KEYS[] PROGMEM = "clientKeys";
 constexpr char CLIENT_RESPONSE_KEY[] PROGMEM = "client";
 #else
 constexpr char CLIENT_REQUEST_KEYS[] = "clientKeys";
 constexpr char CLIENT_RESPONSE_KEY[] = "client";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // RPC data keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
 constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
@@ -119,10 +119,10 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
 constexpr char RPC_METHOD_KEY[] = "method";
 constexpr char RPC_PARAMS_KEY[] = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] PROGMEM = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -180,24 +180,24 @@ constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
 constexpr char PROV_REQUEST[] = "Provision request:";
 constexpr char PROV_RESPONSE[] = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] = "Received provision response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char CLAIM_TOPIC[] PROGMEM = "v1/devices/me/claim";
 #else
 constexpr char CLAIM_TOPIC[] = "v1/devices/me/claim";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Provision topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROV_REQUEST_TOPIC[] PROGMEM = "/provision/request";
 #else
 constexpr char PROV_REQUEST_TOPIC[] = "/provision/request";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim data keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char SECRET_KEY[] PROGMEM = "secretKey";
 constexpr char DURATION_KEY[] PROGMEM = "durationMs";
 constexpr char DEVICE_NAME_KEY[] PROGMEM = "deviceName";
@@ -221,22 +221,22 @@ constexpr char PROV_CRED_USERNAME[] = "username";
 constexpr char PROV_CRED_PASSWORD[] = "password";
 constexpr char PROV_CRED_CLIENT_ID[] = "clientId";
 constexpr char PROV_CRED_HASH[] = "hash";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 #if defined(ESP8266) || defined(ESP32)
 
 // Firmware topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v2/fw/response/#";
 constexpr char FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
 #else
 constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
 constexpr char FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Firmware data keys.
 
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
 constexpr char CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
 constexpr char FW_ERROR_KEY[] PROGMEM = "fw_error";
@@ -274,10 +274,10 @@ constexpr char CHECKSUM_AGORITM_MD5[] = "MD5";
 constexpr char CHECKSUM_AGORITM_SHA256[] = "SHA256";
 constexpr char CHECKSUM_AGORITM_SHA384[] = "SHA384";
 constexpr char CHECKSUM_AGORITM_SHA512[] = "SHA512";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
@@ -325,7 +325,7 @@ constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] = "Update success";
 constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 #endif // defined(ESP8266) || defined(ESP32)
 

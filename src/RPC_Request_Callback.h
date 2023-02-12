@@ -17,11 +17,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char RPC_REQUEST_CB_NULL[] PROGMEM = "Client-side RPC request callback is NULL";
 #else
 constexpr char RPC_REQUEST_CB_NULL[] = "Client-side RPC request callback is NULL";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 /// @brief RPC request callback wrapper
 class RPC_Request_Callback {

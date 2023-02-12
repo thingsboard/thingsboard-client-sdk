@@ -17,7 +17,7 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROVISION_CB_IS_NULL[] PROGMEM = "Provisioning callback is NULL";
 constexpr char ACCESS_TOKEN_CRED_TYPE[] PROGMEM = "ACCESS_TOKEN";
 constexpr char MQTT_BASIC_CRED_TYPE[] PROGMEM = "MQTT_BASIC";
@@ -27,7 +27,7 @@ constexpr char PROVISION_CB_IS_NULL[] = "Provisioning callback is NULL";
 constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
 constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
 constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Convenient aliases
 using Provision_Data = const JsonObjectConst;

@@ -15,11 +15,11 @@
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char OTA_CB_IS_NULL[] PROGMEM = "OTA update callback is NULL";
 #else
 constexpr char OTA_CB_IS_NULL[] = "OTA update callback is NULL";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // OTA default values.
 constexpr uint8_t CHUNK_RETRIES PROGMEM = 5U;
