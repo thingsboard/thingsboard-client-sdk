@@ -1,0 +1,55 @@
+name: Compile Arduino Sketches
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/arduino-compile.yml"
+      - "library.properties"
+      - "examples/**"
+      - "src/**"
+  push:
+    paths:
+      - ".github/workflows/arduino-compile.yml"
+      - "library.properties"
+      - "examples/**"
+      - "src/**"
+
+jobs:
+  build:
+    name: Arduino Uno
+    runs-on: ubuntu-latest
+    env:
+      LIBRARIES: |
+        # Install the additionally needed dependency from the respository
+        - source-path: ./
+        - name: PubSubClient
+        - name: ArduinoHttpClient
+        - name: ArduinoJson
+        - name: WiFiEsp
+        - name: TinyGSM
+      SKETCHES_REPORTS_PATH: sketches-reports
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Compile examples
+        uses: arduino/compile-sketches@v1
+        with:
+          libraries: ${{ env.LIBRARIES }}
+          enable-deltas-report: 'true'
+          sketch-paths: |
+            - examples/0000-arduino_send_telemetry/0000-arduino_send_telemetry.ino
+            - examples/0001-arduino_send_batch/0001-arduino_send_batch.ino
+            - examples/0002-arduino_rpc/0002-arduino_rpc.ino
+            - examples/0004-arduino-sim900_send_telemetry/0004-arduino-sim900_send_telemetry.ino
+            - examples/0005-arduino-sim900_send_telemetry_http/0005-arduino-sim900_send_telemetry_http.ino
+          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
+          enable-warnings-report: 'true'
+
+      - name: Save memory usage change report as artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: error
+          name: ${{ env.SKETCHES_REPORTS_PATH }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
