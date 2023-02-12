@@ -263,11 +263,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-#if THINGSBOARD_ENABLE_PROGMEM
-    Serial.printf(F("Connecting to: (%s) with token (%s)\n"), THINGSBOARD_SERVER, TOKEN);
-#else
     Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
-#endif
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
@@ -289,11 +285,7 @@ void loop() {
       // if the string is empty or null, automatically checked by the sendClaimingRequest method
       claimingRequestSecretKey;
 #endif
-#if THINGSBOARD_ENABLE_PROGMEM
-    Serial.printf(F("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms"), secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
-#else
     Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
-#endif
     claimingRequestSent = tb.Claim_Request(secretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
   }
 
