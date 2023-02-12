@@ -215,11 +215,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-#if THINGSBOARD_ENABLE_PROGMEM
-    Serial.printf(F("Connecting to: (%s) with token (%s)\n"), THINGSBOARD_SERVER, TOKEN);
-#else
     Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
-#endif
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));

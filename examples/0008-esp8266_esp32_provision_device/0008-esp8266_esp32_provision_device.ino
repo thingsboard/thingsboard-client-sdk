@@ -260,18 +260,10 @@ void processProvisionResponse(const Provision_Data &data) {
   int jsonSize = JSON_STRING_SIZE(measureJson(data));
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
-#if THINGSBOARD_ENABLE_PROGMEM
-  Serial.printf(F("Received device provision response (%s)\n"), buffer);
-#else
   Serial.printf("Received device provision response (%s)\n", buffer);
-#endif
 
   if (strncmp(data["status"], "SUCCESS", strlen("SUCCESS")) != 0) {
-#if THINGSBOARD_ENABLE_PROGMEM
     Serial.printf("Provision response contains the error: (%s)\n", data["errorMsg"].as<const char*>());
-#else
-    Serial.printf("Provision response contains the error: (%s)\n", data["errorMsg"].as<const char*>());
-#endif
     return;
   }
 
@@ -287,11 +279,7 @@ void processProvisionResponse(const Provision_Data &data) {
     credentials.password = credentials_value[CLIENT_PASSWORD].as<std::string>();
   }
   else {
-#if THINGSBOARD_ENABLE_PROGMEM
-    Serial.printf(F("Unexpected provision credentialsType: (%s)\n"), data[CREDENTIALS_TYPE].as<const char*>());
-#else
     Serial.printf("Unexpected provision credentialsType: (%s)\n", data[CREDENTIALS_TYPE].as<const char*>());
-#endif
     return;
   }
 
@@ -316,11 +304,7 @@ void loop() {
   if (!provisionRequestSent) {
     if (!tb.connected()) {
       // Connect to the ThingsBoard server as a client wanting to provision a new device
-#if THINGSBOARD_ENABLE_PROGMEM
-      Serial.printf(F("Connecting to: (%s)\n"), THINGSBOARD_SERVER);
-#else
       Serial.printf("Connecting to: (%s)\n", THINGSBOARD_SERVER);
-#endif
       if (!tb.connect(THINGSBOARD_SERVER, "provision", THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
         Serial.println(F("Failed to connect"));
@@ -349,11 +333,7 @@ void loop() {
   else if (provisionResponseProcessed) {
     if (!tb.connected()) {
       // Connect to the ThingsBoard server, as the provisioned client
-#if THINGSBOARD_ENABLE_PROGMEM
-      Serial.printf(F("Connecting to: (%s)\n"), THINGSBOARD_SERVER);
-#else
       Serial.printf("Connecting to: (%s)\n", THINGSBOARD_SERVER);
-#endif
       if (!tb.connect(THINGSBOARD_SERVER, credentials.username.c_str(), THINGSBOARD_PORT, credentials.client_id.c_str(), credentials.password.c_str())) {
 #if THINGSBOARD_ENABLE_PROGMEM
         Serial.println(F("Failed to connect"));

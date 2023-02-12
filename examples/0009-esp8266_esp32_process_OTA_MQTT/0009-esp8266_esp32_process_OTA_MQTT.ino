@@ -267,11 +267,7 @@ void updatedCallback(const bool& success) {
 /// @param currentChunk 
 /// @param totalChuncks 
 void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks) {
-#if THINGSBOARD_ENABLE_PROGMEM
-  Serial.printf(F("Progress %.2f%%\n"), static_cast<float>(currentChunk * 100U) / totalChuncks);
-#else
   Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
-#endif
 }
 
 const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
@@ -293,11 +289,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-#if THINGSBOARD_ENABLE_PROGMEM
-    Serial.printf(F("Connecting to: (%s) with token (%s)\n"), THINGSBOARD_SERVER, TOKEN);
-#else
     Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
-#endif
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
