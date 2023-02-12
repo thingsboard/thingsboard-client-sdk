@@ -8,10 +8,11 @@
 #define ThingsBoard_Http_h
 
 // Library includes.
-#if !defined(ESP8266) && !defined(ESP32)
-#include <ArduinoHttpClient.h>
-#else
+
+#if defined(ESP32)
 #include <HTTPClient.h>
+#else
+#include <ArduinoHttpClient.h>
 #endif
 
 // Local includes.
@@ -61,7 +62,7 @@ class ThingsBoardHttpSized {
     /// @param access_token Token used to verify the devices identity with the ThingsBoard server
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
                                 const char *host, const uint16_t& port = 80U)
       : m_client(client, host, port)
@@ -71,17 +72,17 @@ class ThingsBoardHttpSized {
       : m_client()
       , m_wifiClient(client)
       , m_secure(port == 433U)
-#endif
+#endif // !defined(ESP32)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
     {
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP32)
       m_client.addHeader(CONTENT_TYPE, HTTP_POST_PATH);
       m_client.begin(client, m_host, m_port, SLASH, m_secure);
 #else
       m_client.connect(m_host, m_port);
-#endif
+#endif // !defined(ESP32)
     }
 
     /// @brief Destructor
@@ -302,19 +303,19 @@ class ThingsBoardHttpSized {
       if (path == nullptr) {
         return false;
       }
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP32)
       m_client.setURL(path);
-#endif
+#endif // !defined(ESP32)
 
       if (m_client.connected()) {
         return true;
       }
 
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
       if (!m_client.connect(m_host, m_port)) {
 #else
       if (!m_client.begin(m_wifiClient, m_host, m_port, path, m_secure)) {
-#endif
+#endif // !defined(ESP32)
         Logger::log(CONNECT_FAILED);
         return false;
       }
@@ -325,11 +326,11 @@ class ThingsBoardHttpSized {
     /// but keeps the TCP connection open so it can be reused,
     /// without needing to re-establish the TCP handshake again
     inline void clearConnection() {
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
       m_client.stop();
 #else
       m_client.end();
-#endif
+#endif // !defined(ESP32)
     }
 
     /// @brief Attempts to send a POST request over HTTP or HTTPS
@@ -343,14 +344,14 @@ class ThingsBoardHttpSized {
 
       bool result = true;
 
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
       const bool success = m_client.post(path, HTTP_POST_PATH, json);
       const int status = m_client.responseStatusCode();
       if (!success || status != HTTP_SUCCESS) {
 #else
       const int status = m_client.POST(json);
       if (status != HTTP_CODE_OK) {
-#endif
+#endif // !defined(ESP32)
         char message[detectSize(HTTP_FAILED, POST, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, POST, status);
         Logger::log(message);
@@ -377,14 +378,14 @@ class ThingsBoardHttpSized {
       static StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       jsonBuffer.clear();
 
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
       const bool success = m_client.get(path);
       const int status = m_client.responseStatusCode();
       if (!success || status != HTTP_SUCCESS) {
 #else
       const int status = m_client.GET();
       if (status != HTTP_CODE_OK) {
-#endif
+#endif // !defined(ESP32)
         char message[detectSize(HTTP_FAILED, GET, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, GET, status);
         Logger::log(message);
@@ -392,11 +393,11 @@ class ThingsBoardHttpSized {
         goto cleanup;
       }
 
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
       payload = m_client.responseBody().c_str();
 #else
       payload = m_client.getString().c_str();
-#endif
+#endif // !defined(ESP32)
       error = deserializeJson(jsonBuffer, payload);
 
       if (error) {
@@ -479,13 +480,13 @@ class ThingsBoardHttpSized {
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
-#if !defined(ESP8266) && !defined(ESP32)
+#if !defined(ESP32)
     HttpClient m_client;
 #else
     HTTPClient m_client;
     WiFiClient& m_wifiClient;
     const bool m_secure;
-#endif
+#endif // !defined(ESP32)
     const char *m_host;
     const uint16_t m_port;
     const char *m_token;
