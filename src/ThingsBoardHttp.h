@@ -78,6 +78,29 @@ class ThingsBoardHttpSized {
       // Nothing to do.
     }
 
+    /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
+    /// @param msg Formating message that the given argument will be inserted into
+    /// @param ... Additional arguments that should be inserted into the message at the given points,
+    /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
+    /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
+    inline static const uint8_t detectSize(const char *msg, ...) {
+      va_list args;
+      va_start(args, msg);
+      // Result is what would have been written if the passed buffer would have been large enough not counting null character,
+      // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
+      // when creating an array with negative size we assert beforehand with a clear error message.
+      const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
+#if THINGSBOARD_ENABLE_STL
+      assert(result >= 0);
+#else
+      if (result < 0) {
+        abort();
+      }
+#endif // THINGSBOARD_ENABLE_STL
+      va_end(args);
+      return result;
+    }
+
     //----------------------------------------------------------------------------
     // Telemetry API
 
@@ -347,28 +370,6 @@ class ThingsBoardHttpSized {
 
       cleanup:
       clearConnection();
-      return result;
-    }
-
-    /// @brief Detects the size of the given format string combined with the given arguments
-    /// @param msg Format of the message we want to print, same syntax as printf
-    /// @param ... Additional parameters passed that will be inserted in the given format message
-    /// @return Returns the length in characters needed for a given format string with the given arguments to be displayed completly
-    inline const uint8_t detectSize(const char* msg, ...) const {
-      va_list args;
-      va_start(args, msg);
-      // Result is what would have been written if the passed buffer would have been large enough not counting null character,
-      // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
-      // when creating an array with negative size we assert beforehand with a clear error message.
-      const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
-#if THINGSBOARD_ENABLE_STL
-      assert(result >= 0);
-#else
-      if (result < 0) {
-        abort();
-      }
-#endif // THINGSBOARD_ENABLE_STL
-      va_end(args);
       return result;
     }
 

@@ -217,7 +217,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    char message[detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
+    char message[ThingsBoard::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
     snprintf_P(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
