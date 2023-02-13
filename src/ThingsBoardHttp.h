@@ -59,18 +59,22 @@ class ThingsBoardHttpSized {
     /// @param access_token Token used to verify the devices identity with the ThingsBoard server
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
+    /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
-                                const char *host, const uint16_t& port = 80U)
+                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true)
       : m_client(client, host, port)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
     {
+      if (keepAlive) {
+        m_client.connectionKeepAlive();
+      }
       m_client.connect(m_host, m_port);
     }
 
     /// @brief Destructor
-    inline ~ThingsBoardHttpSized() {
+    inline ~ThingsBoardHttpSized() { 
       // Nothing to do.
     }
 
