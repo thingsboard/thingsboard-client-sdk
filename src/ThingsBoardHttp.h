@@ -8,12 +8,7 @@
 #define ThingsBoard_Http_h
 
 // Library includes.
-
-#if defined(ESP32)
-#include <HTTPClient.h>
-#else
 #include <ArduinoHttpClient.h>
-#endif
 
 // Local includes.
 #include "ThingsBoardDefaultLogger.h"
@@ -28,10 +23,12 @@
 constexpr char HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";
 constexpr char HTTP_ATTRIBUTES_TOPIC[] PROGMEM = "/api/v1/%s/attributes";
 constexpr char HTTP_POST_PATH[] PROGMEM = "application/json";
+constexpr int HTTP_RESPONSE_SUCCESS_CODE PROGMEM = 200;
 #else
 constexpr char HTTP_TELEMETRY_TOPIC[] = "/api/v1/%s/telemetry";
 constexpr char HTTP_ATTRIBUTES_TOPIC[] = "/api/v1/%s/attributes";
 constexpr char HTTP_POST_PATH[] = "application/json";
+constexpr int HTTP_RESPONSE_SUCCESS_CODE = 200;
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
@@ -62,27 +59,14 @@ class ThingsBoardHttpSized {
     /// @param access_token Token used to verify the devices identity with the ThingsBoard server
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
-#if !defined(ESP32)
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
                                 const char *host, const uint16_t& port = 80U)
       : m_client(client, host, port)
-#else
-    inline ThingsBoardHttpSized(WiFiClient &client, const char *access_token,
-                                const char *host, const uint16_t& port = 80U)
-      : m_client()
-      , m_wifiClient(client)
-      , m_secure(port == 433U)
-#endif // !defined(ESP32)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
     {
-#if defined(ESP32)
-      m_client.addHeader(CONTENT_TYPE, HTTP_POST_PATH);
-      m_client.begin(client, m_host, m_port, SLASH, m_secure);
-#else
       m_client.connect(m_host, m_port);
-#endif // !defined(ESP32)
     }
 
     /// @brief Destructor
@@ -296,41 +280,10 @@ class ThingsBoardHttpSized {
     }
 
   private:
-    /// @brief Attempts to establishes a connection over HTTP or HTTPS
-    /// @param path API path we want to connect over (example: /api/v1/$TOKEN/attributes)
-    /// @return Wheter connecting to the host with the given API path was successful or not
-    inline const bool connect(const char* path) {
-      if (path == nullptr) {
-        return false;
-      }
-#if defined(ESP32)
-      m_client.setURL(path);
-#endif // !defined(ESP32)
-
-      if (m_client.connected()) {
-        return true;
-      }
-
-#if !defined(ESP32)
-      if (!m_client.connect(m_host, m_port)) {
-#else
-      if (!m_client.begin(m_wifiClient, m_host, m_port, path, m_secure)) {
-#endif // !defined(ESP32)
-        Logger::log(CONNECT_FAILED);
-        return false;
-      }
-      return true;
-    }
-
     /// @brief Clears any remaining memory of the previous conenction,
-    /// but keeps the TCP connection open so it can be reused,
-    /// without needing to re-establish the TCP handshake again
+    /// and resets the TCP as well, if data is resend the TCP connection has to be re-established
     inline void clearConnection() {
-#if !defined(ESP32)
       m_client.stop();
-#else
-      m_client.end();
-#endif // !defined(ESP32)
     }
 
     /// @brief Attempts to send a POST request over HTTP or HTTPS
@@ -338,20 +291,11 @@ class ThingsBoardHttpSized {
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Wheter sending the POST request was successful or not
     inline const bool postMessage(const char* path, const char* json) {
-      if (!connect(path)) {
-        return false;
-      }
-
       bool result = true;
 
-#if !defined(ESP32)
-      const bool success = m_client.post(path, HTTP_POST_PATH, json);
+      const int success = m_client.post(path, HTTP_POST_PATH, json);
       const int status = m_client.responseStatusCode();
-      if (!success || status != HTTP_SUCCESS) {
-#else
-      const int status = m_client.POST(json);
-      if (status != HTTP_CODE_OK) {
-#endif // !defined(ESP32)
+      if (success != HTTP_SUCCESS || status != HTTP_RESPONSE_SUCCESS_CODE) {
         char message[detectSize(HTTP_FAILED, POST, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, POST, status);
         Logger::log(message);
@@ -368,24 +312,15 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Wheter sending the GET request was successful or not
     inline const bool getMessage(const char* path, JsonObject& response) {
-      if (!connect(path)) {
-        return false;
-      }
-
       bool result = true;
       DeserializationError error(DeserializationError::Code::Ok);
       const char* payload = nullptr;
       static StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
       jsonBuffer.clear();
 
-#if !defined(ESP32)
       const bool success = m_client.get(path);
       const int status = m_client.responseStatusCode();
       if (!success || status != HTTP_SUCCESS) {
-#else
-      const int status = m_client.GET();
-      if (status != HTTP_CODE_OK) {
-#endif // !defined(ESP32)
         char message[detectSize(HTTP_FAILED, GET, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, GET, status);
         Logger::log(message);
@@ -393,11 +328,7 @@ class ThingsBoardHttpSized {
         goto cleanup;
       }
 
-#if !defined(ESP32)
       payload = m_client.responseBody().c_str();
-#else
-      payload = m_client.getString().c_str();
-#endif // !defined(ESP32)
       error = deserializeJson(jsonBuffer, payload);
 
       if (error) {
@@ -480,13 +411,7 @@ class ThingsBoardHttpSized {
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
-#if !defined(ESP32)
     HttpClient m_client;
-#else
-    HTTPClient m_client;
-    WiFiClient& m_wifiClient;
-    const bool m_secure;
-#endif // !defined(ESP32)
     const char *m_host;
     const uint16_t m_port;
     const char *m_token;
