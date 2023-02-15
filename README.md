@@ -63,10 +63,10 @@ All constant variables are per default in flash memory to decrease the memory fo
 The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not send data, if the size of it is bigger than the size originally passed in the constructor as a template argument (`PayLoadSize`). Respective logs in the `"Serial Monitor"` window will indicate the condition:
 
 ```
-[TB] PayloadSize (64) to small for the given payloads size (83)
+[TB] Buffer size (64) to small for the given payloads size (83), increase with setBufferSize accordingly
 ```
 
-If that's a case, the buffer size for serialization should be increased. To do so, `ThingsBoardSized` class can be used in place of `ThingsBoard` as illustrated below:
+If that's a case, the buffer size for serialization should be increased. To do so, `setBufferSize()` method can be used or alternatively the `bufferSize` passed to the constructor can be increased as illustrated below:
 
 ```cpp
 // For the sake of example
@@ -76,7 +76,12 @@ WiFiEspClient espClient;
 // ThingsBoard tb(espClient);
 
 // The SDK setup with 128 bytes for JSON buffer
-ThingsBoardSized<128> tb(espClient);
+ThingsBoard tb(espClient, 128);
+
+void setup() {
+  // Increase internal buffer size after inital creation.
+  tb.setBufferSize(128);
+}
 ```
 
 ### Too much data fields must be serialized
@@ -97,7 +102,7 @@ WiFiEspClient espClient;
 // ThingsBoard tb(espClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<128, 32> tb(espClient);
+ThingsBoardSized<32> tb(espClient, 128);
 ```
 
 ## Tips and Tricks
@@ -128,7 +133,7 @@ WiFiEspClient espClient;
 // ThingsBoard tb(espClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<128, 32, CustomLogger> tb(espClient);
+ThingsBoardSized<32, CustomLogger> tb(espClient, 128);
 ```
 
 ## Have a question or proposal?

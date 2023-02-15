@@ -194,7 +194,7 @@ WiFiClient espClient;
 #if USING_HTTPS
 ThingsBoardHttp tb(espClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
+ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
 #endif
 
 

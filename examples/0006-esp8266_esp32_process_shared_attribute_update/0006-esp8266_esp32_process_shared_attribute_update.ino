@@ -172,7 +172,7 @@ WiFiClientSecure espClient;
 WiFiClient espClient;
 #endif
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
+ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to shared attributes
 bool subscribed = false;

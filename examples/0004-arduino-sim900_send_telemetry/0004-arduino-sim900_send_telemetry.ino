@@ -93,7 +93,7 @@ TinyGsm modem(serialGsm);
 TinyGsmClient client(modem);
 
 // Initialize ThingsBoard instance
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(client);
+ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
