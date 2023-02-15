@@ -76,7 +76,7 @@ SoftwareSerial soft(2U, 3U); // RX, TX
 // Initialize the Ethernet client object
 WiFiEspClient espClient;
 // Initialize ThingsBoard instance
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
+ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
                
 
 /// @brief Initalizes WiFi connection,

@@ -188,7 +188,7 @@ WiFiClientSecure espClient;
 WiFiClient espClient;
 #endif
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoardSized<MAX_MESSAGE_SIZE> tb(espClient);
+ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
 
 uint32_t previous_processing_time = 0U;
 
