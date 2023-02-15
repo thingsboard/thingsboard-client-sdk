@@ -123,6 +123,7 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
 
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] PROGMEM = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -152,6 +153,7 @@ constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
 constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
 #else
+constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NUMBER_PRINTF[] = "%u";
 constexpr char MAX_RPC_EXCEEDED[] = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -278,7 +280,6 @@ constexpr char CHECKSUM_AGORITM_SHA512[] = "SHA512";
 
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
@@ -303,7 +304,6 @@ constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #else
-constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NO_FW[] = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] = "Firmware is already up to date";
