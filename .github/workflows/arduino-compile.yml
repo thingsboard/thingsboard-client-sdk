@@ -13,6 +13,8 @@ on:
       - "library.properties"
       - "examples/**"
       - "src/**"
+  workflow_dispatch:
+  repository_dispatch:
 
 jobs:
   build:
@@ -36,7 +38,7 @@ jobs:
         uses: arduino/compile-sketches@v1
         with:
           libraries: ${{ env.LIBRARIES }}
-          enable-deltas-report: 'true'
+          enable-deltas-report: true
           sketch-paths: |
             - examples/0000-arduino_send_telemetry/0000-arduino_send_telemetry.ino
             - examples/0001-arduino_send_batch/0001-arduino_send_batch.ino

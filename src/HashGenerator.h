@@ -14,7 +14,7 @@
 #include <Seeed_mbedtls.h>
 #else
 #include <mbedtls/md.h>
-#endif
+#endif // defined(ESP8266)
 #include <string>
 
 /// @brief Allows generating a hash of the given type

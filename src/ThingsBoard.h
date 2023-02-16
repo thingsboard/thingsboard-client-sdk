@@ -33,16 +33,16 @@
 /// Constant strings in flash memory.
 /// ---------------------------------
 // Publish data topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";
 constexpr char TELEMETRY_TOPIC[] PROGMEM = "v1/devices/me/telemetry";
 #else
 constexpr char ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
 constexpr char TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // RPC topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
 constexpr char RPC_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response/+";
 constexpr char RPC_SEND_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
@@ -56,17 +56,17 @@ constexpr char RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
 constexpr char RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
 constexpr char RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
 constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Firmware topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response";
 #else
 constexpr char FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response/+";
 constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
@@ -74,44 +74,44 @@ constexpr char ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/re
 constexpr char ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
 constexpr char ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
 constexpr char ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Provision topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROV_RESPONSE_TOPIC[] PROGMEM = "/provision/response";
 #else
 constexpr char PROV_RESPONSE_TOPIC[] = "/provision/response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Default login data.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROV_ACCESS_TOKEN[] PROGMEM = "provision";
 constexpr char DEFAULT_CLIENT_ID[] PROGMEM = "TbDev";
 #else
 constexpr char PROV_ACCESS_TOKEN[] = "provision";
 constexpr char DEFAULT_CLIENT_ID[] = "TbDev";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute request keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char SHARED_REQUEST_KEY[] PROGMEM = "sharedKeys";
 constexpr char SHARED_RESPONSE_KEY[] PROGMEM = "shared";
 #else
 constexpr char SHARED_REQUEST_KEY[] = "sharedKeys";
 constexpr char SHARED_RESPONSE_KEY[] = "shared";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Client side attribute request keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char CLIENT_REQUEST_KEYS[] PROGMEM = "clientKeys";
 constexpr char CLIENT_RESPONSE_KEY[] PROGMEM = "client";
 #else
 constexpr char CLIENT_REQUEST_KEYS[] = "clientKeys";
 constexpr char CLIENT_RESPONSE_KEY[] = "client";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // RPC data keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char RPC_METHOD_KEY[] PROGMEM = "method";
 constexpr char RPC_PARAMS_KEY[] PROGMEM = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
@@ -119,10 +119,11 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
 constexpr char RPC_METHOD_KEY[] = "method";
 constexpr char RPC_PARAMS_KEY[] = "params";
 constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] PROGMEM = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -152,6 +153,7 @@ constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
 constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
 #else
+constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NUMBER_PRINTF[] = "%u";
 constexpr char MAX_RPC_EXCEEDED[] = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -180,24 +182,24 @@ constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
 constexpr char PROV_REQUEST[] = "Provision request:";
 constexpr char PROV_RESPONSE[] = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] = "Received provision response";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char CLAIM_TOPIC[] PROGMEM = "v1/devices/me/claim";
 #else
 constexpr char CLAIM_TOPIC[] = "v1/devices/me/claim";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Provision topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROV_REQUEST_TOPIC[] PROGMEM = "/provision/request";
 #else
 constexpr char PROV_REQUEST_TOPIC[] = "/provision/request";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim data keys.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char SECRET_KEY[] PROGMEM = "secretKey";
 constexpr char DURATION_KEY[] PROGMEM = "durationMs";
 constexpr char DEVICE_NAME_KEY[] PROGMEM = "deviceName";
@@ -221,22 +223,22 @@ constexpr char PROV_CRED_USERNAME[] = "username";
 constexpr char PROV_CRED_PASSWORD[] = "password";
 constexpr char PROV_CRED_CLIENT_ID[] = "clientId";
 constexpr char PROV_CRED_HASH[] = "hash";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 #if defined(ESP8266) || defined(ESP32)
 
 // Firmware topics.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v2/fw/response/#";
 constexpr char FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
 #else
 constexpr char FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
 constexpr char FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Firmware data keys.
 
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
 constexpr char CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
 constexpr char FW_ERROR_KEY[] PROGMEM = "fw_error";
@@ -274,10 +276,10 @@ constexpr char CHECKSUM_AGORITM_MD5[] = "MD5";
 constexpr char CHECKSUM_AGORITM_SHA256[] = "SHA256";
 constexpr char CHECKSUM_AGORITM_SHA384[] = "SHA384";
 constexpr char CHECKSUM_AGORITM_SHA512[] = "SHA512";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if defined(ESP32)
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr char NO_FW[] PROGMEM = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
@@ -325,22 +327,21 @@ constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] = "Update success";
 constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
-#endif // defined(ESP32)
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 #endif // defined(ESP8266) || defined(ESP32)
 
 /// @brief Wrapper around the PubSubClient to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol
 /// @tparam Logger Logging class that should be used to print messages generated by ThingsBoard, default = ThingsBoardDefaultLogger
-/// @tparam PayloadSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
-/// and if we attempt to send data that is bigger, it will not be sent, default = 64
 /// @tparam MaxFieldsAmt Maximum amount of key value pair that we will be able to sent to ThingsBoard in one call, default = 8
-template<size_t PayloadSize = Default_Payload,
-         size_t MaxFieldsAmt = Default_Fields_Amt,
+template<size_t MaxFieldsAmt = Default_Fields_Amt,
          typename Logger = ThingsBoardDefaultLogger>
 class ThingsBoardSized {
   public:
     /// @brief Constructs a ThingsBoardSized instance with the given network client
     /// @param client Network client that should be used to establish the connection to ThingsBoard
+    /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
+    /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param enableQoS Wheter the PubSubClient should use Quality of Service Level 1 or not,
     /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
     /// Level 2 however stores the given message we wanted to send until a response is received from the server,
@@ -348,13 +349,14 @@ class ThingsBoardSized {
     /// will not be a problem if the optional timestamp is added to the sent data,
     /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
     /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
-    inline ThingsBoardSized(Client& client, const bool& enableQoS = false)
+    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const bool& enableQoS = false)
       : ThingsBoardSized(enableQoS)
     {
+      setBufferSize(bufferSize);
       setClient(client);
     }
 
-    /// @brief Constructs a ThingsBoardSized instance without a network client, meaning it has to be added later with the setClient() method
+    /// @brief Constructs a ThingsBoardSized instance without a network client, meaning it has to be added later with the setClient() and setBufferSize() method
     /// @param enableQoS Wheter the PubSubClient should use Quality of Service Level 1 or not,
     /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
     /// Level 2 however stores the given message we wanted to send until a response is received from the server,
@@ -433,13 +435,20 @@ class ThingsBoardSized {
     /// @param client Network client that should be used to establish the connection to ThingsBoard
     inline void setClient(Client& client) {
       m_client.setClient(client);
-      m_client.setBufferSize(PayloadSize);
       // Initalize callback.
 #if THINGSBOARD_ENABLE_STL
       m_client.setCallback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 #else
       m_client.setCallback(ThingsBoardSized::onStaticMQTTMessage);
 #endif // THINGSBOARD_ENABLE_STL
+    }
+
+    /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
+    /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
+    /// and if we attempt to send data that is bigger, it will not be sent
+    /// @return Wheter allocating the needed memory for the given bufferSize was successful or not.
+    inline const bool setBufferSize(const uint16_t& bufferSize) {
+      return m_client.setBufferSize(bufferSize);
     }
 
     /// @brief Connects to the specified ThingsBoard server over the given port as the given device
@@ -501,11 +510,12 @@ class ThingsBoardSized {
       }
       respObj[DURATION_KEY] = durationMs;
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(respObj));
       char responsePayload[objectSize];
-      if (PayloadSize < objectSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+      if (currentBufferSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, objectSize);
         Logger::log(message);
         return false;
       }
@@ -580,11 +590,12 @@ class ThingsBoardSized {
       requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
       requestObject[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
       char requestPayload[objectSize];
-      if (PayloadSize < objectSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+      if (currentBufferSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, objectSize);
         Logger::log(message);
         return false;
       }
@@ -660,10 +671,11 @@ class ThingsBoardSized {
         return false;
       }
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
-      if (PayloadSize < json_size) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
+      if (currentBufferSize < json_size) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
         Logger::log(message);
         return false;
       }
@@ -773,10 +785,11 @@ class ThingsBoardSized {
         return false;
       }
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
-      if (PayloadSize < json_size) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, json_size)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, json_size);
+      if (currentBufferSize < json_size) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
         Logger::log(message);
         return false;
       }
@@ -979,11 +992,12 @@ class ThingsBoardSized {
         requestVariant[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
       }
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
       char buffer[objectSize];
-      if (PayloadSize < objectSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+      if (currentBufferSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, objectSize);
         Logger::log(message);
         return false;
       }
@@ -1183,6 +1197,29 @@ class ThingsBoardSized {
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
     }
 
+    /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
+    /// @param msg Formating message that the given argument will be inserted into
+    /// @param ... Additional arguments that should be inserted into the message at the given points,
+    /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
+    /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
+    inline static const uint8_t detectSize(const char *msg, ...) {
+      va_list args;
+      va_start(args, msg);
+      // Result is what would have been written if the passed buffer would have been large enough not counting null character,
+      // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
+      // when creating an array with negative size we assert beforehand with a clear error message.
+      const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
+#if THINGSBOARD_ENABLE_STL
+      assert(result >= 0);
+#else
+      if (result < 0) {
+        abort();
+      }
+#endif // THINGSBOARD_ENABLE_STL
+      va_end(args);
+      return result;
+    }
+
   private:
 
     /// @brief Requests one client-side or shared attribute calllback,
@@ -1251,11 +1288,12 @@ class ThingsBoardSized {
       requestObject[attributeRequestKey] = request;
 #endif // THINGSBOARD_ENABLE_STL
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
       char buffer[objectSize];
-      if (PayloadSize < objectSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, objectSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, objectSize);
+      if (currentBufferSize < objectSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, objectSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, objectSize);
         Logger::log(message);
         return false;
       }
@@ -1566,29 +1604,6 @@ class ThingsBoardSized {
       return connection_result;
     }
 
-    /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
-    /// @param msg Formating message that the given argument will be inserted into
-    /// @param ... Additional arguments that should be inserted into the message at the given points,
-    /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
-    /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
-    inline const uint8_t detectSize(const char *msg, ...) const {
-      va_list args;
-      va_start(args, msg);
-      // Result is what would have been written if the passed buffer would have been large enough not counting null character,
-      // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
-      // when creating an array with negative size we assert beforehand with a clear error message.
-      const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
-#if THINGSBOARD_ENABLE_STL
-      assert(result >= 0);
-#else
-      if (result < 0) {
-        abort();
-      }
-#endif // THINGSBOARD_ENABLE_STL
-      va_end(args);
-      return result;
-    }
-
     /// @brief Reserves size for the given amount of items in our internal callback vectors beforehand for performance reasons,
     /// this ensures the internal memory blocks do not have to move if new data is inserted,
     /// because the current memory block is too small to hold the data for all the values
@@ -1868,7 +1883,6 @@ class ThingsBoardSized {
         }
       }
       // Fill in response
-      char responsePayload[PayloadSize] = {0};
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
       const JsonVariant respObject = respBuffer.to<JsonVariant>();
 
@@ -1881,15 +1895,18 @@ class ThingsBoardSized {
         return;
       }
 
+      const uint16_t currentBufferSize = m_client.getBufferSize();
       const uint32_t jsonSize = JSON_STRING_SIZE(measureJson(respObject));
-      if (PayloadSize < jsonSize) {
-        char message[detectSize(INVALID_BUFFER_SIZE, PayloadSize, jsonSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, PayloadSize, jsonSize);
+
+      if (currentBufferSize < jsonSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
         Logger::log(message);
         return;
       }
+      char responsePayload[jsonSize];
       // Serialize json does not include size of the string null terminator
-      else if (serializeJson(respObject, responsePayload, jsonSize) < jsonSize - 1) {
+      if (serializeJson(respObject, responsePayload, jsonSize) < jsonSize - 1) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return;
       }
@@ -2320,8 +2337,8 @@ class ThingsBoardSized {
 
 #if !THINGSBOARD_ENABLE_STL
 
-template<size_t PayloadSize, size_t MaxFieldsAmt, typename Logger>
-ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger> *ThingsBoardSized<PayloadSize, MaxFieldsAmt, Logger>::m_subscribedInstance = nullptr;
+template<size_t MaxFieldsAmt, typename Logger>
+ThingsBoardSized<MaxFieldsAmt, Logger> *ThingsBoardSized<MaxFieldsAmt, Logger>::m_subscribedInstance = nullptr;
 
 #endif // !THINGSBOARD_ENABLE_STL
 
