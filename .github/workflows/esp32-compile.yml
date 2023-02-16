@@ -13,6 +13,8 @@ on:
       - "library.properties"
       - "examples/**"
       - "src/**"
+  workflow_dispatch:
+  repository_dispatch:
 
 jobs:
   build:
@@ -55,7 +57,7 @@ jobs:
           platforms: ${{ matrix.platforms }}
           fqbn: ${{ matrix.board.fqbn }}
           libraries: ${{ env.LIBRARIES }}
-          enable-deltas-report: 'true'
+          enable-deltas-report: true
           sketch-paths: |
             - examples/0003-esp8266_esp32_send_data/0003-esp8266_esp32_send_data.ino
             - examples/0006-esp8266_esp32_process_shared_attribute_update/0006-esp8266_esp32_process_shared_attribute_update.ino
