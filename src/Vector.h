@@ -56,10 +56,13 @@ class Vector {
         return m_elements;
     }
 
-    /// @brief Returns a pointer to the last element of the vector
-    /// @return Pointer to the last element of the vector
-    T* back() {
-        return m_elements + m_size - 1U;
+    /// @brief Returns the last element of the vector
+    /// @return Reference to the last element of the vector
+    T& back() {
+        if (m_size == 0U) {
+          abort();
+        }
+        return m_elements[m_size - 1U];
     }
 
     /// @brief Returns a pointer to one-past-the-end element of the vector
@@ -74,15 +77,12 @@ class Vector {
         return m_elements;
     }
 
-    /// @brief Returns a constant pointer to the last element of the vector
-    /// @return Constant pointer to the last element of the vector
-    const T* cback() const {
-        return m_elements + m_size - 1U;
-    }
-
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
     const T* cend() const {
+        if (index >= m_size) {
+          abort();
+        }
         return m_elements + m_size;
     }
 
