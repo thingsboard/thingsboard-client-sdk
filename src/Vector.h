@@ -120,7 +120,7 @@ class Vector {
     /// ensures the device crashes if we attempted to access in an invalid location
     /// @param index Index we want to get the corresponding element for
     T& at(const size_t& index) {
-        if (index >= size) {
+        if (index >= m_size) {
           abort();
         }
         return m_elements[index];
