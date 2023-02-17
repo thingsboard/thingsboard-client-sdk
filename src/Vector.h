@@ -80,9 +80,6 @@ class Vector {
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
     const T* cend() const {
-        if (index >= m_size) {
-          abort();
-        }
         return m_elements + m_size;
     }
 
