@@ -33,4 +33,11 @@
 #    endif
 #  endif
 
+// Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
+// If enabled the programm might be slightly slower and all the memory will be placed onto the heap instead of the stack.
+// See https://arduinojson.org/v6/api/dynamicjsondocument/ for the main difference in the underlying code.
+# ifndef THINGSBOARD_ENABLE_DYNAMIC
+#   define THINGSBOARD_ENABLE_DYNAMIC 0
+# endif
+
 #endif // Configuration_h
