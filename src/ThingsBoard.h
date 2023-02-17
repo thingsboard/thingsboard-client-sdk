@@ -124,6 +124,7 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
 
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (%s)";
 constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -156,6 +157,7 @@ constexpr char PROV_REQUEST[] PROGMEM = "Provision request:";
 constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
 constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
 #else
+constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (%s)";
 constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly";
 constexpr char NUMBER_PRINTF[] = "%u";
 #if !THINGSBOARD_ENABLE_DYNAMIC
