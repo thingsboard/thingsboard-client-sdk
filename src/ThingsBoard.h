@@ -1801,7 +1801,6 @@ class ThingsBoardSized {
 
         const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
         const char *methodName = data[RPC_METHOD_KEY].as<const char *>();
-        const char *params = data[RPC_PARAMS_KEY].as<const char *>();
 
         if (methodName != nullptr) {
           Logger::log(RECEIVED_RPC_LOG_MESSAGE);
