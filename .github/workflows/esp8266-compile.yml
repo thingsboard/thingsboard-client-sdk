@@ -43,7 +43,7 @@ jobs:
             platforms: |
               # Install ESP8266 platform via Boards Manager
               - name: esp8266:esp8266
-                source-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+                source-url: https://raw.githubusercontent.com/esp8266/Arduino/master/package/package_esp8266com_index.template.json
                 version: 2.5.0
 
     steps:
