@@ -7,9 +7,11 @@
 #ifndef Provision_Callback_h
 #define Provision_Callback_h
 
+// Local includes.
+#include "Configuration.h"
+
 // Library includes.
 #include <ArduinoJson.h>
-#include "Configuration.h"
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
 #endif // THINGSBOARD_ENABLE_STL

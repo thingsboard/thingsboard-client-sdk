@@ -7,9 +7,11 @@
 #ifndef Shared_Attribute_Callback_h
 #define Shared_Attribute_Callback_h
 
+// Local includes.
+#include "Configuration.h"
+
 // Library includes.
 #include <ArduinoJson.h>
-#include "Configuration.h"
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
 #include <vector>
