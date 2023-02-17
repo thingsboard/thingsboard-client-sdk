@@ -3,8 +3,6 @@
 // Disable PROGMEM because the ESP8266WiFi library,
 // does not support flash strings.
 #define THINGSBOARD_ENABLE_PROGMEM 0
-// Overwrite ESP8266 assuming it does not have support for the C++ STL.
-#define THINGSBOARD_ENABLE_STL 1
 #elif defined(ESP32)
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
