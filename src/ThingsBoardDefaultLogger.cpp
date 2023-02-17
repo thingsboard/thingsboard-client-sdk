@@ -1,11 +1,14 @@
 // Header include.
 #include <ThingsBoardDefaultLogger.h>
 
-// Library include.
-#include <HardwareSerial.h>
-
 // Local includes.
 #include "Configuration.h"
+
+// Library include.
+#if THINGSBOARD_ENABLE_PROGMEM
+#include <WString.h>
+#endif // THINGSBOARD_ENABLE_PROGMEM
+#include <HardwareSerial.h>
 
 void ThingsBoardDefaultLogger::log(const char *msg) {
 #if THINGSBOARD_ENABLE_PROGMEM
