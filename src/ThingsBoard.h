@@ -8,6 +8,7 @@
 #define ThingsBoard_h
 
 // Library includes.
+#include <stdarg.h>
 #include <PubSubClient.h>
 
 #if defined(ESP8266)
@@ -15,6 +16,14 @@
 #elif defined(ESP32)
 #include <Update.h>
 #endif
+
+// Definition for not defined function (RP2040)
+#ifndef snprintf_P
+#define snprintf_P    snprintf
+#endif // snprintf_P
+#ifndef vsnprintf_P
+#define vsnprintf_P   vsnprintf
+#endif // vsnprintf_P
 
 // Local includes.
 #include "Configuration.h"

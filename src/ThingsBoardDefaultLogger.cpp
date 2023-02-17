@@ -2,6 +2,7 @@
 #include <ThingsBoardDefaultLogger.h>
 
 // Library include.
+#include <Arduino.h>
 #include <HardwareSerial.h>
 
 void ThingsBoardDefaultLogger::log(const char *msg) {
