@@ -12,9 +12,6 @@
 
 #if !THINGSBOARD_ENABLE_STL
 
-// Library includes.
-#include <cstddef>
-
 /// @brief Replacement data container for boards that do not support the C++ STL.
 /// @tparam T Type of the underlying data the list should point too.
 template <typename T>
