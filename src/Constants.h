@@ -17,6 +17,17 @@
 #define Default_Fields_Amt 8
 class ThingsBoardDefaultLogger;
 
+#if !THINGSBOARD_ENABLE_PROGMEM
+// Ensure snprintf_P and vsnprintf_P are defined,
+// when not using PROGMEM and if Arduino itself has not already defined it
+#ifndef snprintf_P
+#define snprintf_P    snprintf
+#endif // snprintf_P
+#ifndef vsnprintf_P
+#define vsnprintf_P   vsnprintf
+#endif // vsnprintf_P
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
 /// ---------------------------------
 /// Constant strings in flash memory,
 /// used by both ThingsBoard and ThingsBoardHttp.

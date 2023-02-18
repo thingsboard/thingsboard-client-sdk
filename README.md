@@ -47,6 +47,18 @@ Example implementations for all features can be found in the `examples` folder. 
 
 ## Troubleshooting
 
+### PubSubClient causing problems with non ESP boards
+
+For boards that do support the C++ Standard Library (STL), but aren't either the `ESP32` or the `ESP8266` the PubSubClient does not support `std::function` usage.
+Meaning the usage of the C++ STL with the ThingsBoard Arduino SDK has to be disabled, luckily this can be done pretty easily simply add a `#define THINGSBOARD_ENABLE_STL 0` before including the ThingsBoard header file.
+
+```c++
+// If not set otherwise the value is 0 or 1 depending on if the given device does support the needed C++ STL functionalities.
+// Set to 0 if the board does support the C++ STL, but is neither en ESP32 nor an ESP8266, see https://github.com/knolleary/pubsubclient/pull/993 for more information about the issue
+#define THINGSBOARD_ENABLE_STL 0
+#include <ThingsBoard.h>
+```
+
 ### No PROGMEM support causing crashes
 
 All constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that simply add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.

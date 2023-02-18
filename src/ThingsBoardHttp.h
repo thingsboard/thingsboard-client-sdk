@@ -8,6 +8,7 @@
 #define ThingsBoard_Http_h
 
 // Library includes.
+#include <stdarg.h>
 #include <ArduinoHttpClient.h>
 
 // Local includes.
