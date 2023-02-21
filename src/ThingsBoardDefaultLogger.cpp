@@ -2,6 +2,8 @@
 #include <ThingsBoardDefaultLogger.h>
 
 // Library include.
+#include <Configuration.h>
+#include <Constants.h>
 #include <HardwareSerial.h>
 
 void ThingsBoardDefaultLogger::log(const char *msg) {

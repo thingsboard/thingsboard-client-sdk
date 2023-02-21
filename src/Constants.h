@@ -7,7 +7,16 @@
 #ifndef Constants_h
 #define Constants_h
 
+#include <stdarg.h>
 #include <Arduino.h>
+#if !THINGSBOARD_ENABLE_PROGMEM
+#ifndef snprintf_P 
+#define snprintf_P snprintf
+#endif // snprintf_P
+#ifndef vsnprintf_P 
+#define vsnprintf_P vsnprintf
+#endif // vsnprintf_P
+#endif // !THINGSBOARD_ENABLE_PROGMEM
 
 #define Default_Payload 64
 #define Default_Fields_Amt 8

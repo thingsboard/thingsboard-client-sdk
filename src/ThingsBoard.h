@@ -18,10 +18,10 @@
 
 // Local includes.
 #include "Configuration.h"
+#include "Constants.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "HashGenerator.h"
 #include "Telemetry.h"
-#include "Constants.h"
 #include "Shared_Attribute_Callback.h"
 #include "Attribute_Request_Callback.h"
 #include "RPC_Callback.h"
