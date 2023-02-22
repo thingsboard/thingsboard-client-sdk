@@ -9,6 +9,9 @@
 
 #if defined(ESP8266) || defined(ESP32)
 
+// Local includes.
+#include "Configuration.h"
+
 // Library includes.
 #include <functional>
 
