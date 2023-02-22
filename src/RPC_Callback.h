@@ -7,9 +7,11 @@
 #ifndef RPC_Callback_h
 #define RPC_Callback_h
 
+// Local includes.
+#include "Configuration.h"
+
 // Library includes.
 #include <Telemetry.h>
-#include "Configuration.h"
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
 #endif // THINGSBOARD_ENABLE_STL
