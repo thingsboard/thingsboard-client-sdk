@@ -9,7 +9,7 @@
 
 // Library includes.
 #include <stdarg.h>
-#include <PubSubClient.h>
+#include <TBPubSubClient.h>
 
 #if defined(ESP8266)
 #include <Updater.h>
