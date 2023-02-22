@@ -1,0 +1,4 @@
+[submodule "PubSubClient"]
+	path = src/pubsubclient
+	url = git@github.com:thingsboard/pubsubclient.git
+	branch = submodule
