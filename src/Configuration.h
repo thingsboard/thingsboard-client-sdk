@@ -31,14 +31,16 @@
 #  endif
 
 // Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
-#  ifdef ARDUINO
-#    ifndef THINGSBOARD_ENABLE_PROGMEM
-#      define THINGSBOARD_ENABLE_PROGMEM 1
+#  ifdef __has_include
+#    if  __has_include(<pgmspace>)
+#      ifndef THINGSBOARD_ENABLE_PROGMEM
+#        define THINGSBOARD_ENABLE_PROGMEM 1
+#      endif
 #    endif
-#  else
-#    ifndef THINGSBOARD_ENABLE_PROGMEM
-#      define THINGSBOARD_ENABLE_PROGMEM 0
-#    endif
+#  endif
+
+#  ifndef THINGSBOARD_ENABLE_PROGMEM
+#    define THINGSBOARD_ENABLE_PROGMEM 0
 #  endif
 
 // Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
