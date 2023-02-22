@@ -31,6 +31,15 @@
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
 
+#if !THINGSBOARD_ENABLE_PROGMEM
+#ifndef snprintf_P 
+#define snprintf_P snprintf
+#endif // snprintf_P
+#ifndef vsnprintf_P 
+#define vsnprintf_P vsnprintf
+#endif // vsnprintf_P
+#endif // !THINGSBOARD_ENABLE_PROGMEM
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
