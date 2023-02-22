@@ -8,7 +8,7 @@
 #define ThingsBoard_h
 
 // Library includes.
-#include <PubSubClient.h>
+#include <TBPubSubClient.h>
 
 #if defined(ESP8266)
 #include <Updater.h>
