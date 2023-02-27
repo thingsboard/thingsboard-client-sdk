@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "bblanchon/ArduinoJson": "^6.19.4",
-        "https://github.com/thingsboard/pubsubclient.git": "^2.9",
+        "https://github.com/thingsboard/pubsubclient.git": "^2.9.1",
         "arduino-libraries/ArduinoHttpClient" : "^0.4.0"
     },
     "version": "0.9.4",
