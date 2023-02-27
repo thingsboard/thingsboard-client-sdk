@@ -1,4 +1,3 @@
-
 # Arduino ThingsBoard SDK
 
 [![MIT license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://lbesson.mit-license.org/)
@@ -11,7 +10,7 @@
 [![Actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml)
 ![GitHub stars](https://img.shields.io/github/stars/thingsboard/thingsboard-arduino-sdk?style=social)
 
-This library provides access to ThingsBoard platform over MQTT protocol.
+This library provides access to ThingsBoard platform over the `MQTT` protocol or alternatively over `HTTP/S`.
 
 ## Examples
 
@@ -20,19 +19,23 @@ Please review the complete guide for `ESP32` Pico Kit GPIO control and `DHT22` s
 
 ## Installation
 
-ThingsBoard SDK can be installed directly from the Arduino Library manager.
+ThingsBoard SDK can be installed directly from the [Arduino Library manager](https://docs.arduino.cc/software/ide-v1/tutorials/installing-libraries) or [PlattformIO](https://registry.platformio.org/).
 Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
- - [MQTT PubSub Client](https://github.com/knolleary/pubsubclient) — for interacting with MQTT.
- - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — for dealing with JSON files.
- - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with ThingsBoard using HTTP.
+ - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`.
+ - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — for dealing with `JSON` files.
+ - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with ThingsBoard using `HTTP/S`.
 
 **Needs to be installed manually:**
- - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (ESP8266 only, already included in ESP32 base firmware).
- - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using an `Arduino Uno` in combiantion with an `ESP8266`.
+ - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
+ - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using an `Arduino Uno` in combination with an `ESP8266`.
 
 ## Supported ThingsBoard Features
+
+### Over `MQTT`:
+
+All possible features are implemented over `MQTT`
 
  - [Telemetry data upload](https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api)
  - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server)
@@ -43,30 +46,38 @@ Following dependencies are installed automatically or must be installed, too:
  - [Device claiming](https://thingsboard.io/docs/reference/mqtt-api/#claiming-devices)
  - [Firmware OTA update](https://thingsboard.io/docs/reference/mqtt-api/#firmware-api)
 
-Example implementations for all features can be found in the `examples` folder. See the according `README.md`, to see which boards are supported and which functionality the example shows.
+Over `HTTP\S`:
+
+Remaining features have to be implemented by hand with the `sendGetRequest` or `sendPostRequest` method, see the [ThingsBoard Documentation](https://thingsboard.io/docs/reference/http-api) on how these features could be implemented.
+
+ - [Telemetry data upload](https://thingsboard.io/docs/reference/http-api/#telemetry-upload-api)
+ - [Device attribute publish](https://thingsboard.io/docs/reference/http-api/#publish-attribute-update-to-the-server)
+
+Example implementations for all base features, mentioned above, can be found in the `examples` folder. See the according `README.md`, to see which boards are supported and which functionality the example shows.
 
 ## Troubleshooting
-
-### PubSubClient causing problems with non ESP boards
-
-For boards that do support the C++ Standard Library (STL), but aren't either the `ESP32` or the `ESP8266` the PubSubClient does not support `std::function` usage.
-Meaning the usage of the C++ STL with the ThingsBoard Arduino SDK has to be disabled, luckily this can be done pretty easily simply add a `#define THINGSBOARD_ENABLE_STL 0` before including the ThingsBoard header file.
-
-```c++
-// If not set otherwise the value is 0 or 1 depending on if the given device does support the needed C++ STL functionalities.
-// Set to 0 if the board does support the C++ STL, but is neither en ESP32 nor an ESP8266, see https://github.com/knolleary/pubsubclient/pull/993 for more information about the issue
-#define THINGSBOARD_ENABLE_STL 0
-#include <ThingsBoard.h>
-```
 
 ### No PROGMEM support causing crashes
 
 All constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that simply add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
 
 ```c++
-// If not set otherwise the value is 1 per default if the ARDUINO plattform is used,
+// If not set otherwise the value is 1 per default if the pgmspace include exists,
 // set to 0 if the board has problems with PROGMEM variables and does not seem to work correctly.
 #define THINGSBOARD_ENABLE_PROGMEM 0
+#include <ThingsBoard.h>
+```
+
+### Dynamic ThingsBoard usage
+
+The received `JSON` payload, as well as the `sendAttributes` and` sendTelemetry` methods use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) by default, this furthemore requires the `MaxFieldsAmt` template argument passed in the constructor. To set the size the buffer should have, where bigger messages will cause not sent / received key-value pairs or failed deserializations.
+
+To remove the need for the `MaxFieldsAmt` template argument in the constructor and ensure the size the buffer should have is always enough to hold the sent or received messages, instead `#define THINGSBOARD_ENABLE_DYNAMIC 1` can be set before including the ThingsBoard header file. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/).
+
+```c++
+// If not set otherwise the value is 0 per default,
+// set to 1 if the MaxFieldsAmt template argument should not be required.
+#define THINGSBOARD_ENABLE_DYNAMIC 1
 #include <ThingsBoard.h>
 ```
 
@@ -104,7 +115,7 @@ A buffer allocated internally by `ArduinoJson` library is fixed and is capable f
 [TB] Too many JSON fields passed (26), increase MaxFieldsAmt (8) accordingly
 ```
 
-The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization).**
+The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization)**. See **Dynamic ThingsBoard Usage** above if the usage of `MaxFieldsAmt`, should be replaced with automatic detection of the needed size.
 
 ```cpp
 // For the sake of example

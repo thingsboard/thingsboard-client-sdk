@@ -36,10 +36,12 @@
 #      ifndef THINGSBOARD_ENABLE_PROGMEM
 #        define THINGSBOARD_ENABLE_PROGMEM 1
 #      endif
+#    else
+#      ifndef THINGSBOARD_ENABLE_PROGMEM
+#        define THINGSBOARD_ENABLE_PROGMEM 0
+#      endif
 #    endif
-#  endif
-
-#  ifndef THINGSBOARD_ENABLE_PROGMEM
+#  else
 #    define THINGSBOARD_ENABLE_PROGMEM 0
 #  endif
 
