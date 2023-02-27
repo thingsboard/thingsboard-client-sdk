@@ -226,6 +226,14 @@ class ThingsBoardHttpSized {
       return getMessage(path, response);
     }
 
+    /// @brief Attempts to send a POST request over HTTP or HTTPS
+    /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
+    /// @param json String containing our json key value pairs we want to attempt to send
+    /// @return Wheter sending the POST request was successful or not
+    inline const bool sendPostRequest(const char* path, const char* json) {
+      return postMessage(path, json);
+    }
+
     //----------------------------------------------------------------------------
     // Attribute API
 
