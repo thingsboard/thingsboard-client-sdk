@@ -24,7 +24,7 @@ jobs:
       LIBRARIES: |
         # Install the additionally needed dependency from the respository
         - source-path: ./
-        - name: PubSubClient
+        - name: TBPubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
         - name: WiFiEsp
