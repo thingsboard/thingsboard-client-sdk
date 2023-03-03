@@ -31,6 +31,27 @@
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
 
+#if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+#include <esp_heap_caps.h>
+struct SpiRamAllocator {
+  void* allocate(size_t size) {
+    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+  }
+
+  void deallocate(void* pointer) {
+    heap_caps_free(pointer);
+  }
+
+  void* reallocate(void* ptr, size_t new_size) {
+    return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
+  }
+};
+
+using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
+#else
+using TBJsonDocument = DynamicJsonDocument;
+#endif
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
@@ -689,14 +710,18 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
-      return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+        return m_client.publish_P(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+      #else 
+        return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+      #endif
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Wheter sending the data was successful or not
-    inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+    inline const bool sendTelemetryJson(const JsonObject* jsonObject, const uint32_t& jsonSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -807,7 +832,11 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
-      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+        return m_client.publish_P(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+      #else 
+        return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+      #endif
     }
 
     /// @brief Attempts to send custom attribute JsonObject
@@ -981,7 +1010,7 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_DYNAMIC
       // Ensure to have enough size for the given amount of parameters if any were passed and the methodName key-value pair.
-      DynamicJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 1U : 1U));
+      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 1U : 1U));
 #else
       // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
       // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -1259,9 +1288,9 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DYNAMIC
       // Ensure to have enough size for the given amount of parameters if any were passed and the methodName key-value pair.
 #if THINGSBOARD_ENABLE_STL
-      DynamicJsonDocument requestBuffer(JSON_OBJECT_SIZE(attributes.size()));
+      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(attributes.size()));
 #else
-      DynamicJsonDocument requestBuffer(JSON_OBJECT_SIZE(1) + JSON_STRING_SIZE(strlen(request)));
+      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(1) + JSON_STRING_SIZE(strlen(request)));
 #endif // THINGSBOARD_ENABLE_STL
 #else
       // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
@@ -1326,7 +1355,11 @@ class ThingsBoardSized {
 
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+        return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
+      #else 
+        return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+      #endif
     }
 
     /// @brief Subscribes one provision callback,
@@ -1701,7 +1734,12 @@ class ThingsBoardSized {
         return false;
       }
 
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
+      #if THINGSBOARD_ENABLE_DYNAMIC
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(1));
+      #else
+        StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
+      #endif
+
       const JsonVariant object = jsonBuffer.to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
         Logger::log(UNABLE_TO_SERIALIZE);
@@ -1718,7 +1756,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      DynamicJsonDocument jsonBuffer(length);
+      TBJsonDocument jsonBuffer(length);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -1787,7 +1825,7 @@ class ThingsBoardSized {
     inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
       RPC_Response r; {
 #if THINGSBOARD_ENABLE_DYNAMIC
-        DynamicJsonDocument jsonBuffer(length);
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -1992,7 +2030,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_shared_attribute_update_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      DynamicJsonDocument jsonBuffer(length);
+      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2094,7 +2132,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      DynamicJsonDocument jsonBuffer(length);
+      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2177,7 +2215,7 @@ class ThingsBoardSized {
       Logger::log(PROV_RESPONSE);
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-      DynamicJsonDocument jsonBuffer(length);
+      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2206,7 +2244,7 @@ class ThingsBoardSized {
     /// @return Wheter sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      DynamicJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
+      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

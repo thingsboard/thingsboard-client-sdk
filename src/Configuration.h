@@ -32,7 +32,7 @@
 
 // Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
 #  ifdef __has_include
-#    if  __has_include(<pgmspace>)
+#    if  __has_include(<pgmspace.h>)
 #      ifndef THINGSBOARD_ENABLE_PROGMEM
 #        define THINGSBOARD_ENABLE_PROGMEM 1
 #      endif
