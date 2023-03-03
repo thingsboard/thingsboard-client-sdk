@@ -293,6 +293,7 @@ constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
 constexpr char FW_NOT_FOR_US[] PROGMEM = "Firmware is not for us (title is different)";
 constexpr char UNABLE_TO_WRITE[] PROGMEM = "Unable to write firmware";
+constexpr char UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware chunk";
 constexpr char UNABLE_TO_DOWNLOAD[] PROGMEM = "Unable to download firmware";
 constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Error during Update.begin";
 constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Error during Update.write";
@@ -317,6 +318,7 @@ constexpr char EMPTY_FW[] = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] = "Firmware is already up to date";
 constexpr char FW_NOT_FOR_US[] = "Firmware is not for us (title is different)";
 constexpr char UNABLE_TO_WRITE[] = "Unable to write firmware";
+constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
 constexpr char UNABLE_TO_DOWNLOAD[] = "Unable to download firmware";
 constexpr char ERROR_UPDATE_BEGIN[] = "Error during Update.begin";
 constexpr char ERROR_UPDATE_WRITE[] = "Error during Update.write";
@@ -535,7 +537,11 @@ class ThingsBoardSized {
         return false;
       }
 
+#if THINGSBOARD_ENABLE_PROGMEM
+      return m_client.publish_P(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
+#else
       return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
+#endif
     }
 
     //----------------------------------------------------------------------------
@@ -617,7 +623,12 @@ class ThingsBoardSized {
 
       Logger::log(PROV_REQUEST);
       Logger::log(requestPayload);
+
+#if THINGSBOARD_ENABLE_PROGMEM
+      return m_client.publish_P(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
+#else
       return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
+#endif
     }
 
     //----------------------------------------------------------------------------
@@ -683,24 +694,26 @@ class ThingsBoardSized {
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
+
       if (currentBufferSize < json_size) {
         char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
         Logger::log(message);
         return false;
       }
-      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PSRAM
-        return m_client.publish_P(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
-      #else 
-        return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
-      #endif
+
+#if THINGSBOARD_ENABLE_PROGMEM
+      return m_client.publish_P(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+#else 
+      return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+#endif
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Wheter sending the data was successful or not
-    inline const bool sendTelemetryJson(const JsonObject jsonObject, const uint32_t& jsonSize) {
+    inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -805,17 +818,19 @@ class ThingsBoardSized {
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
+
       if (currentBufferSize < json_size) {
         char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
         snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
         Logger::log(message);
         return false;
       }
-      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PSRAM
-        return m_client.publish_P(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
-      #else 
-        return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
-      #endif
+
+#if THINGSBOARD_ENABLE_PROGMEM
+      return m_client.publish_P(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+#else
+      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+#endif
     }
 
     /// @brief Attempts to send custom attribute JsonObject
@@ -1036,7 +1051,12 @@ class ThingsBoardSized {
 
       char topic[detectSize(RPC_SEND_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_requestId);
+
+#if THINGSBOARD_ENABLE_PROGMEM
+      return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
+#else 
       return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+#endif
     }
 
     //----------------------------------------------------------------------------
@@ -1334,11 +1354,12 @@ class ThingsBoardSized {
 
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PSRAM
-        return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
-      #else 
-        return m_client.publish(topic, buffer, m_qos ? 1 : 0);
-      #endif
+
+#if THINGSBOARD_ENABLE_PROGMEM
+      return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
+#else 
+      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+#endif
     }
 
     /// @brief Subscribes one provision callback,
@@ -1526,7 +1547,21 @@ class ThingsBoardSized {
         // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         char topic[detectSize(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
-        m_client.publish(topic, size, m_qos ? 1 : 0);
+
+#if THINGSBOARD_ENABLE_PROGMEM
+        const bool result = m_client.publish_P(topic, size, m_qos ? 1 : 0);
+#else 
+        const bool result = m_client.publish(topic, size, m_qos ? 1 : 0);
+#endif
+        if (!result) {
+          retries--;
+          if (retries == 0) {
+            Logger::log(UNABLE_TO_REQUEST_CHUNCKS);
+            Firmware_Send_State(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
+            break;
+          }
+          continue;
+        }
 
         // Amount of time we wait until we declare the download as failed in milliseconds
         const uint32_t startTime = millis();
@@ -1713,11 +1748,7 @@ class ThingsBoardSized {
         return false;
       }
 
-      #if THINGSBOARD_ENABLE_DYNAMIC
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(1));
-      #else
-        StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
-      #endif
+      StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
 
       const JsonVariant object = jsonBuffer.to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
@@ -1804,7 +1835,7 @@ class ThingsBoardSized {
     inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
       RPC_Response r; {
 #if THINGSBOARD_ENABLE_DYNAMIC
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
+        TBJsonDocument jsonBuffer(length);
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -1908,7 +1939,12 @@ class ThingsBoardSized {
 
       Logger::log(responseTopic);
       Logger::log(responsePayload);
-      m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
+
+      #if THINGSBOARD_ENABLE_PROGMEM
+        return m_client.publish_P(responseTopic, responsePayload, m_qos ? 1 : 0);
+      #else
+        m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
+      #endif
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -2009,7 +2045,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_shared_attribute_update_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
+      TBJsonDocument jsonBuffer(length);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2111,7 +2147,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
+      TBJsonDocument jsonBuffer(length);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2194,7 +2230,7 @@ class ThingsBoardSized {
       Logger::log(PROV_RESPONSE);
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(length));
+      TBJsonDocument jsonBuffer(length);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

@@ -50,27 +50,26 @@ constexpr char CONNECT_FAILED[] = "Connecting to server failed";
 constexpr char UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-#if THINGSBOARD_ENABLE_DYNAMIC 
-  #if THINGSBOARD_ENABLE_PSRAM
-    #include <esp_heap_caps.h>
-    struct SpiRamAllocator {
-      void* allocate(size_t size) {
-        return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
-      }
+#if THINGSBOARD_ENABLE_PSRAM
+  #include <esp_heap_caps.h>
 
-      void deallocate(void* pointer) {
-        heap_caps_free(pointer);
-      }
+  struct SpiRamAllocator {
+    void* allocate(size_t size) {
+      return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+    }
 
-      void* reallocate(void* ptr, size_t new_size) {
-        return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
-      }
-    };
+    void deallocate(void* pointer) {
+      heap_caps_free(pointer);
+    }
 
-    using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
-  #else
-    using TBJsonDocument = DynamicJsonDocument;
-  #endif
+    void* reallocate(void* ptr, size_t new_size) {
+      return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
+    }
+  };
+
+  using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
+#else
+  using TBJsonDocument = DynamicJsonDocument;
 #endif
 
 #endif // Constants_h
