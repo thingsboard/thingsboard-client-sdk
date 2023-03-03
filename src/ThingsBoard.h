@@ -1940,11 +1940,11 @@ class ThingsBoardSized {
       Logger::log(responseTopic);
       Logger::log(responsePayload);
 
-      #if THINGSBOARD_ENABLE_PROGMEM
-        return m_client.publish_P(responseTopic, responsePayload, m_qos ? 1 : 0);
-      #else
-        m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
-      #endif
+#if THINGSBOARD_ENABLE_PROGMEM
+      m_client.publish_P(responseTopic, responsePayload, m_qos ? 1 : 0);
+#else
+      m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
+#endif
     }
 
 #if defined(ESP8266) || defined(ESP32)
