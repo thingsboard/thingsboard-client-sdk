@@ -13,8 +13,8 @@
 // Local includes.
 #include "Configuration.h"
 
-#define Default_Payload 64
-#define Default_Fields_Amt 8
+#define Default_Payload 128
+#define Default_Fields_Amt 16
 class ThingsBoardDefaultLogger;
 
 #if !THINGSBOARD_ENABLE_PROGMEM
