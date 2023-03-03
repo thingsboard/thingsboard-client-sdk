@@ -31,27 +31,6 @@
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
 
-#if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
-#include <esp_heap_caps.h>
-struct SpiRamAllocator {
-  void* allocate(size_t size) {
-    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
-  }
-
-  void deallocate(void* pointer) {
-    heap_caps_free(pointer);
-  }
-
-  void* reallocate(void* ptr, size_t new_size) {
-    return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
-  }
-};
-
-using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
-#else
-using TBJsonDocument = DynamicJsonDocument;
-#endif
-
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
@@ -710,7 +689,7 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
-      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PSRAM
         return m_client.publish_P(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
       #else 
         return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
@@ -721,7 +700,7 @@ class ThingsBoardSized {
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Wheter sending the data was successful or not
-    inline const bool sendTelemetryJson(const JsonObject* jsonObject, const uint32_t& jsonSize) {
+    inline const bool sendTelemetryJson(const JsonObject jsonObject, const uint32_t& jsonSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -832,7 +811,7 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
-      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PSRAM
         return m_client.publish_P(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
       #else 
         return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
@@ -1355,7 +1334,7 @@ class ThingsBoardSized {
 
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
-      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PROGMEM
+      #if THINGSBOARD_ENABLE_DYNAMIC && THINGSBOARD_ENABLE_PSRAM
         return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
       #else 
         return m_client.publish(topic, buffer, m_qos ? 1 : 0);

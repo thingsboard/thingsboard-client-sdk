@@ -397,7 +397,7 @@ class ThingsBoardHttpSized {
     /// @return Wheter sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      DynamicJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
+      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
