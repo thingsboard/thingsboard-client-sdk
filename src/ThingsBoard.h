@@ -714,6 +714,12 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Wheter sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
+      if (jsonObject.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -737,6 +743,12 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Wheter sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
+      if (jsonVariant.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
@@ -838,6 +850,12 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Wheter sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
+      if (jsonObject.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -861,6 +879,12 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Wheter sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
+      if (jsonVariant.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
@@ -1025,6 +1049,11 @@ class ThingsBoardSized {
       else {
         requestVariant[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
       }
+
+#if THINGSBOARD_ENABLE_DYNAMIC
+      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
+      requestBuffer.shrinkToFit();
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
@@ -1322,6 +1351,11 @@ class ThingsBoardSized {
 #else
       requestVariant[attributeRequestKey] = request;
 #endif // THINGSBOARD_ENABLE_STL
+
+#if THINGSBOARD_ENABLE_DYNAMIC
+      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
+      requestBuffer.shrinkToFit();
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
@@ -2272,6 +2306,11 @@ class ThingsBoardSized {
           return false;
         }
       }
+
+#if THINGSBOARD_ENABLE_DYNAMIC
+      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
+      jsonBuffer.shrinkToFit();
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }

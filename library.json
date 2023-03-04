@@ -7,7 +7,7 @@
         "url": "https://github.com/thingsboard/ThingsBoard-Arduino-MQTT-SDK"
     },
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.19.4",
+        "bblanchon/ArduinoJson": "^6.20.1",
         "thingsboard/TBPubSubClient": "https://github.com/thingsboard/pubsubclient.git#v2.9.1",
         "arduino-libraries/ArduinoHttpClient" : "^0.4.0"
     },
