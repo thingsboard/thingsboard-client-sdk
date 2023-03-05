@@ -370,8 +370,9 @@ class ThingsBoardSized {
     /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
-    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const bool& enableQoS = false)
-      : ThingsBoardSized(enableQoS)
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
+    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const bool& enableQoS = false, const uint32_t& maxStackSize = Default_Max_Stack_Size)
+      : ThingsBoardSized(enableQoS, maxStackSize)
     {
       setBufferSize(bufferSize);
       setClient(client);
@@ -385,8 +386,10 @@ class ThingsBoardSized {
     /// will not be a problem if the optional timestamp is added to the sent data,
     /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
     /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
-    inline ThingsBoardSized(const bool& enableQoS = false)
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
+    inline ThingsBoardSized(const bool& enableQoS = false, const uint32_t& maxStackSize = Default_Max_Stack_Size)
       : m_client()
+      , m_maxStack(maxStackSize)
       , m_rpcCallbacks()
       , m_rpcRequestCallbacks()
       , m_sharedAttributeUpdateCallbacks()
@@ -452,6 +455,12 @@ class ThingsBoardSized {
 #else
       m_client.setCallback(ThingsBoardSized::onStaticMQTTMessage);
 #endif // THINGSBOARD_ENABLE_STL
+    }
+
+    /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
+    inline void setMaximumStackSize(const uint32_t& maxStackSize) {
+      m_maxStack = maxStackSize;
     }
 
     /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
@@ -732,7 +741,7 @@ class ThingsBoardSized {
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getRemainingStackSize() < jsonSize) {
+      if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
@@ -782,7 +791,7 @@ class ThingsBoardSized {
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getRemainingStackSize() < jsonSize) {
+      if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
@@ -910,7 +919,7 @@ class ThingsBoardSized {
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getRemainingStackSize() < jsonSize) {
+      if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
@@ -960,7 +969,7 @@ class ThingsBoardSized {
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getRemainingStackSize() < jsonSize) {
+      if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
@@ -1357,23 +1366,13 @@ class ThingsBoardSized {
       return result;
     }
 
-    /// @brief Returns the remaining amount of bytes for the thread or current task on the stack.
-    /// In other words if more memory is allocated on the stack, then this method returns a stack overflow will occur
-    /// @return Remaining amount of bytes on the stack
-    inline static const uint32_t getRemainingStackSize() {
-#if defined(ESP32)
-      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
-      const uint32_t remainingBytes = highWaterMark * 4U;
-#elif defined(ESP8266)
-      const uint32_t remainingBytes = ESP.getFreeContStack();
-#else
-      const uint32_t remainingBytes = freeStack();
-#endif // defined(ESP32) || defined(ESP8266)
-      return remainingBytes;
-    }
-
   private:
+
+    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @return Maximum amount of bytes we want to allocate on the stack
+    inline const uint32_t& getMaximumStackSize() {
+      return m_maxStack;
+    }
 
     /// @brief Requests one client-side or shared attribute calllback,
     /// that will be called if the key-value pair from the server for the given client-side or shared attributes is received
@@ -2415,6 +2414,7 @@ class ThingsBoardSized {
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
+    const uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
 
 #if THINGSBOARD_ENABLE_STL
     // Vectors hold copy of the actual passed data, this is to ensure they stay valid,

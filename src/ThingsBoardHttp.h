@@ -73,9 +73,11 @@ class ThingsBoardHttpSized {
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
-                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true)
+                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const uint32_t& maxStackSize = Default_Max_Stack_Size)
       : m_client(client, host, port)
+      , m_maxStack(maxStackSize)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
@@ -89,6 +91,12 @@ class ThingsBoardHttpSized {
     /// @brief Destructor
     inline ~ThingsBoardHttpSized() { 
       // Nothing to do.
+    }
+
+    /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
+    inline void setMaximumStackSize(const uint32_t& maxStackSize) {
+      m_maxStack = maxStackSize;
     }
 
     /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
@@ -460,6 +468,13 @@ class ThingsBoardHttpSized {
     }
 
   private:
+
+    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @return Maximum amount of bytes we want to allocate on the stack
+    inline const uint32_t& getMaximumStackSize() {
+      return m_maxStack;
+    }
+
     /// @brief Clears any remaining memory of the previous conenction,
     /// and resets the TCP as well, if data is resend the TCP connection has to be re-established
     inline void clearConnection() {
@@ -565,10 +580,11 @@ class ThingsBoardHttpSized {
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
-    HttpClient m_client;
-    const char *m_host;
-    const uint16_t m_port;
-    const char *m_token;
+    HttpClient m_client; // HttpClient instance
+    const uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
+    const char *m_host; // Host address we connect too
+    const uint16_t m_port; // Port we connect over
+    const char *m_token; // Access token used to connect with
 };
 
 using ThingsBoardHttp = ThingsBoardHttpSized<>;
