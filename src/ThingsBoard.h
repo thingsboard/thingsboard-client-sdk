@@ -729,13 +729,38 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
+      const size_t remainingBytes = highWaterMark * 4U;
+
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (remainingBytes < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendAttributeJSON(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendTelemetryJson(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendTelemetryJson(json);
+      }
+      return result;
     }
 
     /// @brief Attempts to send custom telemetry JsonVariant
@@ -758,13 +783,38 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
+      const size_t remainingBytes = highWaterMark * 4U;
+
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (remainingBytes < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendAttributeJSON(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendTelemetryJson(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendTelemetryJson(json);
+      }
+      return result;
     }
 
     //----------------------------------------------------------------------------
@@ -865,13 +915,38 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
+      const size_t remainingBytes = highWaterMark * 4U;
+
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (remainingBytes < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendAttributeJSON(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendAttributeJSON(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendAttributeJSON(json);
+      }
+      return result;
     }
 
     /// @brief Attempts to send custom attribute JsonVariant
@@ -894,13 +969,38 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
+      const size_t remainingBytes = highWaterMark * 4U;
+
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (remainingBytes < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendAttributeJSON(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendAttributeJSON(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendAttributeJSON(json);
+      }
+      return result;
     }
 
     /// @brief Requests one client-side attribute calllback,
