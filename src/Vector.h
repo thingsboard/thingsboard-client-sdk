@@ -32,8 +32,8 @@ class Vector {
         m_elements = nullptr;
     }
 
-    /// @brief Returns wheter there are still any element in the underlying data container
-    /// @return Wheter the underlying data container is empty or not
+    /// @brief Returns whether there are still any element in the underlying data container
+    /// @return Whether the underlying data container is empty or not
     const bool empty() const {
         return m_size == 0U;
     }

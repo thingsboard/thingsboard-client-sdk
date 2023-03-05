@@ -362,7 +362,7 @@ class ThingsBoardSized {
   public:
     /// @brief Constructs a ThingsBoardSized instance with the given network client
     /// @param client Network client that should be used to establish the connection to ThingsBoard
-    /// @param enableQoS Wheter the PubSubClient should use Quality of Service Level 1 or not,
+    /// @param enableQoS Whether the PubSubClient should use Quality of Service Level 1 or not,
     /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
     /// Level 2 however stores the given message we wanted to send until a response is received from the server,
     /// meaning that the message has been sent at least once, but it could have been sent multiple times as well,
@@ -379,7 +379,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Constructs a ThingsBoardSized instance without a network client, meaning it has to be added later with the setClient() and setBufferSize() method
-    /// @param enableQoS Wheter the PubSubClient should use Quality of Service Level 1 or not,
+    /// @param enableQoS Whether the PubSubClient should use Quality of Service Level 1 or not,
     /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
     /// Level 2 however stores the given message we wanted to send until a response is received from the server,
     /// meaning that the message has been sent at least once, but it could have been sent multiple times as well,
@@ -431,7 +431,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Sets the Quality of Service Level used by the MQTT client either true for Level 1 or false for Level 0
-    /// @param enableQoS  Wheter the PubSubClient should use Quality of Service Level 1 or not,
+    /// @param enableQoS  Whether the PubSubClient should use Quality of Service Level 1 or not,
     /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
     /// Level 2 however stores the given message we wanted to send until a response is received from the server,
     /// meaning that the message has been sent at least once, but it could have been sent multiple times as well,
@@ -458,7 +458,7 @@ class ThingsBoardSized {
     /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent
-    /// @return Wheter allocating the needed memory for the given bufferSize was successful or not.
+    /// @return Whether allocating the needed memory for the given bufferSize was successful or not.
     inline const bool setBufferSize(const uint16_t& bufferSize) {
       return m_client.setBufferSize(bufferSize);
     }
@@ -470,7 +470,7 @@ class ThingsBoardSized {
     /// @param port Port that will be used to establish a connection and send / receive data from ThingsBoard over
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
-    /// @return Wheter connecting to ThingsBoard was successful or not
+    /// @return Whether connecting to ThingsBoard was successful or not
     inline const bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       if (!host) {
         return false;
@@ -491,7 +491,7 @@ class ThingsBoardSized {
 
     /// @brief Returns our current connection status to the cloud, true meaning we are connected,
     /// false meaning we have been disconnected or have not established a connection yet
-    /// @return Wheter the underlying PubSubClient is currently connected or not
+    /// @return Whether the underlying PubSubClient is currently connected or not
     inline const bool connected() {
       return m_client.connected();
     }
@@ -510,7 +510,7 @@ class ThingsBoardSized {
     /// @param secretKey Password the user additionaly to the device name needs to enter to claim it as their own,
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
     /// @param durationMs Total time in milliseconds the user has to claim their device as their own
-    /// @return Wheter sending the claiming request was successful or not
+    /// @return Whether sending the claiming request was successful or not
     inline const bool Claim_Request(const char *secretKey, const uint32_t& durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
       const JsonObject respObj = requestBuffer.to<JsonObject>();
@@ -553,7 +553,7 @@ class ThingsBoardSized {
     /// The cloud then sends back json data containing our credentials, that the given callback, if creating the device was successful.
     /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
     /// @param callback Callback method that will be called
-    /// @return Wheter sending the provisioning request was successful or not
+    /// @return Whether sending the provisioning request was successful or not
     inline const bool Provision_Request(const Provision_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
       const JsonObject requestObject = requestBuffer.to<JsonObject>();
@@ -638,7 +638,7 @@ class ThingsBoardSized {
     /// @tparam T Type of the data value we want to send
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     template<class T>
     inline const bool sendTelemetryData(const char *key, T value) {
       return sendKeyValue(key, value);
@@ -647,7 +647,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send integer telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetryInt(const char *key, int value) {
       return sendKeyValue(key, value);
     }
@@ -655,7 +655,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send boolean telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetryBool(const char *key, bool value) {
       return sendKeyValue(key, value);
     }
@@ -663,7 +663,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send float telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetryFloat(const char *key, float value) {
       return sendKeyValue(key, value);
     }
@@ -671,7 +671,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send string telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetryString(const char *key, const char *value) {
       return sendKeyValue(key, value);
     }
@@ -679,14 +679,14 @@ class ThingsBoardSized {
     /// @brief Attempts to send aggregated telemetry data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetry(const Telemetry *data, size_t data_count) {
       return sendDataArray(data, data_count);
     }
 
     /// @brief Attempts to send custom json telemetry string
     /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetryJson(const char *json) {
       if (json == nullptr) {
         return false;
@@ -712,8 +712,8 @@ class ThingsBoardSized {
     /// @brief Attempts to send custom telemetry JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
-    /// @return Wheter sending the data was successful or not
-    inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+    /// @return Whether sending the data was successful or not
+    inline const bool sendTelemetryJson(const JsonObject jsonObject, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
       if (jsonObject.isNull()) {
@@ -741,7 +741,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send custom telemetry JsonVariant
     /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
@@ -774,7 +774,7 @@ class ThingsBoardSized {
     /// @tparam T Type of the data value we want to send
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     template<class T>
     inline const bool sendAttributeData(const char *attrName, T value) {
       return sendKeyValue(attrName, value, false);
@@ -783,7 +783,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send integer attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeInt(const char *attrName, int value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -791,7 +791,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send boolean attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeBool(const char *attrName, bool value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -799,7 +799,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send float attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeFloat(const char *attrName, float value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -807,7 +807,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send string attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeString(const char *attrName, const char *value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -815,14 +815,14 @@ class ThingsBoardSized {
     /// @brief Attempts to send aggregated attribute data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributes(const Attribute *data, size_t data_count) {
       return sendDataArray(data, data_count, false);
     }
 
     /// @brief Attempts to send custom json attribute string
     /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeJSON(const char *json) {
       if (json == nullptr) {
         return false;
@@ -848,7 +848,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send custom attribute JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
@@ -877,7 +877,7 @@ class ThingsBoardSized {
     /// @brief Attempts to send custom attribute JsonVariant
     /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Wheter sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
@@ -906,7 +906,7 @@ class ThingsBoardSized {
     /// @brief Requests one client-side attribute calllback,
     /// that will be called if the key-value pair from the server for the given client-side attributes is received
     /// @param callback Callback method that will be called
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
       return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
     }
@@ -923,7 +923,7 @@ class ThingsBoardSized {
     /// of the given data container, allows for using / passing either std::vector or std::array
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
-    /// @return Wheter subscribing the given callbacks was successful or not
+    /// @return Whether subscribing the given callbacks was successful or not
     template<class InputIterator>
     inline const bool RPC_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -950,7 +950,7 @@ class ThingsBoardSized {
     /// @param callbacks Pointer to the c-style array
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
-    /// @return Wheter subscribing the given callbacks was successful or not
+    /// @return Whether subscribing the given callbacks was successful or not
     inline const bool RPC_Subscribe(const RPC_Callback *callbacks, const size_t& callbacksSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcCallbacks.size() + callbacksSize > m_rpcCallbacks.capacity()) {
@@ -974,7 +974,7 @@ class ThingsBoardSized {
     /// @brief Subscribe one server-side RPC callback,
     /// that will be called if a request from the server for the method with the given name is received
     /// @param callback Callback method that will be called
-    /// @return Wheter subscribing the given callback was successful or not
+    /// @return Whether subscribing the given callback was successful or not
     inline const bool RPC_Subscribe(const RPC_Callback& callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcCallbacks.size() + 1 > m_rpcCallbacks.capacity()) {
@@ -993,7 +993,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Unsubcribes all server-side RPC callbacks
-    /// @return Wheter unsubcribing all the previously subscribed callbacks
+    /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the rpc topic, was successful or not
     inline const bool RPC_Unsubscribe() {
       // Empty all callbacks
@@ -1007,7 +1007,7 @@ class ThingsBoardSized {
     /// @brief Requests one client-side RPC callback,
     /// that will be called if a response from the server for the method with the given name is received
     /// @param callback Callback method that will be called
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool RPC_Request(const RPC_Request_Callback& callback) {
       const char *methodName = callback.Get_Name();
 
@@ -1095,7 +1095,7 @@ class ThingsBoardSized {
 
     /// @brief Immediately starts a firmware update if firmware is assigned to the given device
     /// @param callback Callback method that will be called
-    /// @return Wheter subscribing the given callback was successful or not
+    /// @return Whether subscribing the given callback was successful or not
     inline const bool Start_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
         Logger::log(RESETTING_FAILED);
@@ -1109,7 +1109,7 @@ class ThingsBoardSized {
     /// @brief Subscribes for any assignment of firmware to the given device device,
     /// which will then start a firmware update
     /// @param callback Callback method that will be called
-    /// @return Wheter subscribing the given callback was successful or not
+    /// @return Whether subscribing the given callback was successful or not
     inline const bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
         Logger::log(RESETTING_FAILED);
@@ -1123,7 +1123,7 @@ class ThingsBoardSized {
     /// @brief Sends the given firmware title and firmware version to the cloud
     /// @param currFwTitle Current device firmware title
     /// @param currFwVersion Current device firmware version
-    /// @return Wheter sending the current device firmware information was successful or not
+    /// @return Whether sending the current device firmware information was successful or not
     inline const bool Firmware_Send_Info(const char *currFwTitle, const char *currFwVersion) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       const JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
@@ -1138,7 +1138,7 @@ class ThingsBoardSized {
     /// @param fwError Firmware error message that describes the current firmware state,
     /// pass nullptr or an empty string if the current state is not a failure state
     /// and therefore does not require any firmware error messsages
-    /// @return Wheter sending the current firmware download state was successful or not
+    /// @return Whether sending the current firmware download state was successful or not
     inline const bool Firmware_Send_State(const char *currFwState, const char* fwError = nullptr) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareState;
       const JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
@@ -1160,7 +1160,7 @@ class ThingsBoardSized {
     /// @brief Requests one shared attribute calllback,
     /// that will be called if the key-value pair from the server for the given shared attributes is received
     /// @param callback Callback method that will be called
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
       return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
@@ -1173,7 +1173,7 @@ class ThingsBoardSized {
     /// of the given data container, allows for using / passing either std::vector or std::array
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
-    /// @return Wheter subscribing the given callbacks was successful or not
+    /// @return Whether subscribing the given callbacks was successful or not
     template<class InputIterator>
     inline const bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -1200,7 +1200,7 @@ class ThingsBoardSized {
     /// @param callbacks Pointer to the c-style array
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
-    /// @return Wheter subscribing the given callbacks was successful or not
+    /// @return Whether subscribing the given callbacks was successful or not
     inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, const size_t& callbacksSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_sharedAttributeUpdateCallbacks.size() + callbacksSize > m_sharedAttributeUpdateCallbacks.capacity()) {
@@ -1224,7 +1224,7 @@ class ThingsBoardSized {
     /// @brief Subscribe one shared attribute callback,
     /// that will be called if the key-value pair from the server for the given shared attributes is received
     /// @param callback Callback method that will be called
-    /// @return Wheter subscribing the given callback was successful or not
+    /// @return Whether subscribing the given callback was successful or not
     inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_sharedAttributeUpdateCallbacks.size() + 1U > m_sharedAttributeUpdateCallbacks.capacity()) {
@@ -1243,7 +1243,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Unsubcribes all shared attribute callbacks
-    /// @return Wheter unsubcribing all the previously subscribed callbacks
+    /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the attribute topic, was successful or not
     inline const bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks
@@ -1281,7 +1281,7 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param attributeRequestKey Key of the key-value pair that will contain the attributes we want to request
     /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
 #if THINGSBOARD_ENABLE_STL
       const std::vector<const char *>& attributes = callback.Get_Attributes();
@@ -1399,7 +1399,7 @@ class ThingsBoardSized {
     /// @brief Subscribes one provision callback,
     /// that will be called if a provision response from the server is received
     /// @param callback Callback method that will be called
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool Provision_Subscribe(const Provision_Callback& callback) {
       if (!m_client.subscribe(PROV_RESPONSE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
@@ -1410,7 +1410,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Unsubcribes the provision callback
-    /// @return Wheter unsubcribing the previously subscribed callback
+    /// @return Whether unsubcribing the previously subscribed callback
     /// and from the provision response topic, was successful or not
     inline const bool Provision_Unsubscribe() {
       m_provisionCallback = Provision_Callback();
@@ -1422,7 +1422,7 @@ class ThingsBoardSized {
     /// @brief Checks the included information in the callback,
     /// and attempts to sends the current device firmware information to the cloud
     /// @param callback Callback method that will be called
-    /// @return Wheter checking and sending the current device firmware information was successful or not
+    /// @return Whether checking and sending the current device firmware information was successful or not
     inline const bool Prepare_Firmware_Settings(const OTA_Update_Callback& callback) {
       const char *currFwTitle = callback.Get_Firmware_Title();
       const char *currFwVersion = callback.Get_Firmware_Version();
@@ -1441,7 +1441,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Subscribes to the firmware response topic
-    /// @return Wheter subscribing to the firmware response topic was successful or not
+    /// @return Whether subscribing to the firmware response topic was successful or not
     inline const bool Firmware_OTA_Subscribe() {
       if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
@@ -1452,7 +1452,7 @@ class ThingsBoardSized {
 
     /// @brief Unsubscribes from the firmware response topic and clears any memory associated with the firmware update,
     /// should not be called before actually fully completing the firmware update.
-    /// @return Wheter unsubscribing from the firmware response topic was successful or not
+    /// @return Whether unsubscribing from the firmware response topic was successful or not
     inline const bool Firmware_OTA_Unsubscribe() {
       // Reset now not needed private member variables
       m_fwState = false;
@@ -1673,7 +1673,7 @@ class ThingsBoardSized {
     /// can be "provision", if the device creates itself instead
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
-    /// @return Wheter connecting to ThingsBoard was successful or not
+    /// @return Whether connecting to ThingsBoard was successful or not
     inline const bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
       const bool connection_result = m_client.connect(client_id, access_token, password);
       if (!connection_result) {
@@ -1709,7 +1709,7 @@ class ThingsBoardSized {
     /// @brief Subscribes to the client-side RPC response topic
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcRequestCallbacks.size() + 1 > m_rpcRequestCallbacks.capacity()) {
@@ -1729,7 +1729,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Unsubscribes all client-side RPC request callbacks
-    /// @return Wheter unsubcribing the previously subscribed callbacks
+    /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the client-side RPC response topic, was successful or not
     inline const bool RPC_Request_Unsubscribe() {
       // Empty all callbacks
@@ -1740,7 +1740,7 @@ class ThingsBoardSized {
     /// @brief Subscribes to attribute response topic
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
-    /// @return Wheter requesting the given callback was successful or not
+    /// @return Whether requesting the given callback was successful or not
     inline const bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_attributeRequestCallbacks.size() + 1 > m_attributeRequestCallbacks.capacity()) {
@@ -1760,7 +1760,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Unsubscribes all client-side or shared attributes request callbacks
-    /// @return Wheter unsubcribing the previously subscribed callbacks
+    /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the  attribute response topic, was successful or not
     inline const bool Attributes_Request_Unsubscribe() {
       // Empty all callbacks
@@ -1772,8 +1772,8 @@ class ThingsBoardSized {
     /// @tparam T Type of the data value we want to send
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @param telemetry Wheter the data we want to send should be sent as an attribute or telemetry data value
-    /// @return Wheter sending the data was successful or not
+    /// @param telemetry Whether the data we want to send should be sent as an attribute or telemetry data value
+    /// @return Whether sending the data was successful or not
     template<typename T>
     inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
       const Telemetry t(key, value);
@@ -2289,8 +2289,8 @@ class ThingsBoardSized {
     /// @brief Attempts to send aggregated attribute or telemetry data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
-    /// @param telemetry Wheter the data we want to send should be sent as an attribute or telemetry data value
-    /// @return Wheter sending the data was successful or not
+    /// @param telemetry Whether the data we want to send should be sent as an attribute or telemetry data value
+    /// @return Whether sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
       TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
@@ -2337,7 +2337,7 @@ class ThingsBoardSized {
 
     Provision_Callback m_provisionCallback; // Provision response callback
     uint32_t m_requestId; // Allows nearly 4.3 million requests before wrapping back to 0.
-    bool m_qos; // Wheter QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
+    bool m_qos; // Whether QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
 #if defined(ESP8266) || defined(ESP32)
 
