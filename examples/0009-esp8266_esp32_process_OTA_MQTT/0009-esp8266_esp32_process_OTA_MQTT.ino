@@ -11,7 +11,7 @@
 #include <ThingsBoard.h>
 
 
-// Wheter the given script is using encryption or not,
+// Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.

@@ -121,7 +121,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send integer telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryInt(const char *key, int value) {
       return sendKeyValue(key, value);
     }
@@ -129,7 +129,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send boolean telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryBool(const char *key, bool value) {
       return sendKeyValue(key, value);
     }
@@ -137,7 +137,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send float telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryFloat(const char *key, float value) {
       return sendKeyValue(key, value);
     }
@@ -145,7 +145,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send string telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryString(const char *key, const char *value) {
       return sendKeyValue(key, value);
     }
@@ -153,14 +153,14 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send aggregated telemetry data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetry(const Telemetry *data, size_t data_count) {
       return sendDataArray(data, data_count);
     }
 
     /// @brief Attempts to send custom json telemetry string
     /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryJson(const char *json) {
       if (json == nullptr || m_token == nullptr) {
         return false;
@@ -174,7 +174,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send custom telemetry JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
@@ -203,7 +203,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send custom telemetry JsonVariant
     /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
@@ -233,7 +233,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to get data from (example: /api/v1/$TOKEN/rpc)
     /// @param response String the GET response will be copied into,
     /// will not be changed if the GET request wasn't successful
-    /// @return Wheter sending the GET request was successful or not
+    /// @return Whetherr sending the GET request was successful or not
     inline const bool sendGetRequest(const char* path, String& response) {
       return getMessage(path, response);
     }
@@ -241,7 +241,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send a POST request over HTTP or HTTPS
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Wheter sending the POST request was successful or not
+    /// @return Whetherr sending the POST request was successful or not
     inline const bool sendPostRequest(const char* path, const char* json) {
       return postMessage(path, json);
     }
@@ -252,7 +252,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send integer attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeInt(const char *attrName, int value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -260,7 +260,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send boolean attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeBool(const char *attrName, bool value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -268,7 +268,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send float attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeFloat(const char *attrName, float value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -276,7 +276,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send string attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeString(const char *attrName, const char *value) {
       return sendKeyValue(attrName, value, false);
     }
@@ -284,14 +284,14 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send aggregated attribute data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributes(const Attribute *data, size_t data_count) {
       return sendDataArray(data, data_count, false);
     }
 
     /// @brief Attempts to send custom json attribute string
     /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeJSON(const char *json) {
       if (json == nullptr || m_token == nullptr) {
         return false;
@@ -305,7 +305,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send custom attribute JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
@@ -334,7 +334,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send custom attribute JsonVariant
     /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Wheter sending the data was successful or not
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
@@ -370,7 +370,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send a POST request over HTTP or HTTPS
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Wheter sending the POST request was successful or not
+    /// @return Whetherr sending the POST request was successful or not
     inline const bool postMessage(const char* path, const char* json) {
       bool result = true;
 
@@ -392,7 +392,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to get data from (example: /api/v1/$TOKEN/rpc)
     /// @param response String the GET response will be copied into,
     /// will not be changed if the GET request wasn't successful
-    /// @return Wheter sending the GET request was successful or not
+    /// @return Whetherr sending the GET request was successful or not
     inline const bool getMessage(const char* path, String& response) {
       bool result = true;
 
@@ -417,8 +417,8 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send aggregated attribute or telemetry data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
-    /// @param telemetry Wheter the aggregated data is telemetry (true) or attribut (false)
-    /// @return Wheter sending the data was successful or not
+    /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
+    /// @return Whetherr sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
       TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
@@ -446,8 +446,8 @@ class ThingsBoardHttpSized {
     /// @tparam T Type of the passed value
     /// @param key Key of the key value pair we want to send
     /// @param val Value of the key value pair we want to send
-    /// @param telemetry Wheter the aggregated data is telemetry (true) or attribut (false)
-    /// @return Wheter sending the data was successful or not
+    /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
+    /// @return Whetherr sending the data was successful or not
     template<typename T>
     inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
       const Telemetry t(key, value);
