@@ -190,9 +190,14 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
+
+#if defined(ESP32) || defined(ESP8266)
       const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
       const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
       const size_t remainingBytes = highWaterMark * 4U;
+#else
+      const size_t remainingBytes = freeStack();
+#endif // defined(ESP32) || defined(ESP8266)
 
       bool result = false;
 
@@ -244,9 +249,14 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
+
+#if defined(ESP32) || defined(ESP8266)
       const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
       const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
       const size_t remainingBytes = highWaterMark * 4U;
+#else
+      const size_t remainingBytes = freeStack();
+#endif // defined(ESP32) || defined(ESP8266)
 
       bool result = false;
 
@@ -371,9 +381,14 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
+
+#if defined(ESP32) || defined(ESP8266)
       const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
       const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
       const size_t remainingBytes = highWaterMark * 4U;
+#else
+      const size_t remainingBytes = freeStack();
+#endif // defined(ESP32) || defined(ESP8266)
 
       bool result = false;
 
@@ -425,9 +440,14 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
+
+#if defined(ESP32) || defined(ESP8266)
       const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
       const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
       const size_t remainingBytes = highWaterMark * 4U;
+#else
+      const size_t remainingBytes = freeStack();
+#endif // defined(ESP32) || defined(ESP8266)
 
       bool result = false;
 
