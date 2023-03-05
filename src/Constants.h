@@ -10,11 +10,6 @@
 // Library includes.
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#if defined(ESP32)
-#include <freertos/FreeRTOS.h>
-#elif defined(ESP8266)
-#include <FreeRTOS.h>
-#endif
 
 // Local includes.
 #include "Configuration.h"

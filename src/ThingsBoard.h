@@ -728,20 +728,11 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-#if defined(ESP32) || defined(ESP8266)
-      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
-      const size_t remainingBytes = highWaterMark * 4U;
-#else
-      const size_t remainingBytes = freeStack();
-#endif // defined(ESP32) || defined(ESP8266)
-
       bool result = false;
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (remainingBytes < jsonSize) {
+      if (getRemainingStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
@@ -787,20 +778,11 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-#if defined(ESP32) || defined(ESP8266)
-      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
-      const size_t remainingBytes = highWaterMark * 4U;
-#else
-      const size_t remainingBytes = freeStack();
-#endif // defined(ESP32) || defined(ESP8266)
-
       bool result = false;
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (remainingBytes < jsonSize) {
+      if (getRemainingStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
@@ -924,20 +906,11 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-#if defined(ESP32) || defined(ESP8266)
-      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
-      const size_t remainingBytes = highWaterMark * 4U;
-#else
-      const size_t remainingBytes = freeStack();
-#endif // defined(ESP32) || defined(ESP8266)
-
       bool result = false;
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (remainingBytes < jsonSize) {
+      if (getRemainingStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
@@ -983,20 +956,11 @@ class ThingsBoardSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-#if defined(ESP32) || defined(ESP8266)
-      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
-      const size_t remainingBytes = highWaterMark * 4U;
-#else
-      const size_t remainingBytes = freeStack();
-#endif // defined(ESP32) || defined(ESP8266)
-
       bool result = false;
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (remainingBytes < jsonSize) {
+      if (getRemainingStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         // Serialize json does not include size of the string null terminator
         if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
@@ -1391,6 +1355,22 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
       va_end(args);
       return result;
+    }
+
+    /// @brief Returns the remaining amount of bytes for the thread or current task on the stack.
+    /// In other words if more memory is allocated on the stack, then this method returns a stack overflow will occur
+    /// @return Remaining amount of bytes on the stack
+    inline static const uint32_t getRemainingStackSize() {
+#if defined(ESP32)
+      const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+      const UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(taskHandle);
+      const uint32_t remainingBytes = highWaterMark * 4U;
+#elif defined(ESP8266)
+      const uint32_t remainingBytes = ESP.getFreeContStack();
+#else
+      const uint32_t remainingBytes = freeStack();
+#endif // defined(ESP32) || defined(ESP8266)
+      return remainingBytes;
     }
 
   private:
