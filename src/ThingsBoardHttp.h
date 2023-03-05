@@ -471,7 +471,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
-    inline const uint32_t& getMaximumStackSize() {
+    inline const uint32_t& getMaximumStackSize() const {
       return m_maxStack;
     }
 
@@ -581,7 +581,7 @@ class ThingsBoardHttpSized {
     }
 
     HttpClient m_client; // HttpClient instance
-    const uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
+    uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
     const char *m_host; // Host address we connect too
     const uint16_t m_port; // Port we connect over
     const char *m_token; // Access token used to connect with

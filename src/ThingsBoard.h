@@ -372,8 +372,9 @@ class ThingsBoardSized {
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const bool& enableQoS = false, const uint32_t& maxStackSize = Default_Max_Stack_Size)
-      : ThingsBoardSized(enableQoS, maxStackSize)
+      : ThingsBoardSized(enableQoS)
     {
+      setMaximumStackSize(maxStackSize);
       setBufferSize(bufferSize);
       setClient(client);
     }
@@ -386,10 +387,9 @@ class ThingsBoardSized {
     /// will not be a problem if the optional timestamp is added to the sent data,
     /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
     /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
-    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardSized(const bool& enableQoS = false, const uint32_t& maxStackSize = Default_Max_Stack_Size)
+    inline ThingsBoardSized(const bool& enableQoS = false)
       : m_client()
-      , m_maxStack(maxStackSize)
+      , m_maxStack(Default_Max_Stack_Size)
       , m_rpcCallbacks()
       , m_rpcRequestCallbacks()
       , m_sharedAttributeUpdateCallbacks()
@@ -443,7 +443,7 @@ class ThingsBoardSized {
     inline void enableMQTTQoS(const bool& enableQoS) {
       m_qos = enableQoS;
     }
-    
+
     /// @brief Sets the underlying network client that should be used to establish the connection to ThingsBoard,
     /// ensure to disconnect and connect again after changing the underlying client
     /// @param client Network client that should be used to establish the connection to ThingsBoard
@@ -1370,7 +1370,7 @@ class ThingsBoardSized {
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
-    inline const uint32_t& getMaximumStackSize() {
+    inline const uint32_t& getMaximumStackSize() const {
       return m_maxStack;
     }
 
@@ -2414,7 +2414,7 @@ class ThingsBoardSized {
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
-    const uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
+    uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
 
 #if THINGSBOARD_ENABLE_STL
     // Vectors hold copy of the actual passed data, this is to ensure they stay valid,
