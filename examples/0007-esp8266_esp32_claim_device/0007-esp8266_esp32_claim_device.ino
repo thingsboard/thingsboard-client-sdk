@@ -11,12 +11,12 @@
 #include <ThingsBoard.h>
 
 
-// Wheter the given script is using encryption or not,
+// Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
 // it does come with an overhead tough as having an encrypted session requires a lot of memory,
 // which might not be avaialable on lower end devices.
 #define ENCRYPTED false
-// Wheter the given script generates a random password from a pre defined list of password options,
+// Whether the given script generates a random password from a pre defined list of password options,
 // as a fallback option, if no secret key is defined.
 // If not the request is sent without any secret key, meaning for the given amount of time every user can claim the devie
 // as long as they know the name of it

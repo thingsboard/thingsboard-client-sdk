@@ -100,7 +100,7 @@ class OTA_Update_Callback {
 
     /// @brief Calls the end callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
-    /// @param data Received data that shows, wheter the update was successfull or not
+    /// @param data Received data that shows, whether the update was successfull or not
     template<typename Logger>
     inline returnType Call_End_Callback(endArgumentType data) const {
       // Check if the callback is a nullptr,
