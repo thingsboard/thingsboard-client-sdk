@@ -14,6 +14,7 @@
 // Local includes.
 #include "Configuration.h"
 
+#define Default_Max_Stack_Size 1024
 #define Default_Payload 64
 #define Default_Fields_Amt 8
 class ThingsBoardDefaultLogger;
