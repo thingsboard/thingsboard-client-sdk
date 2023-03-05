@@ -10,6 +10,7 @@
 // Library includes.
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <freertos/FreeRTOS.h>
 
 // Local includes.
 #include "Configuration.h"

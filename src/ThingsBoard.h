@@ -18,9 +18,8 @@
 #endif
 
 // Local includes.
-#include "Configuration.h"
-#include "Vector.h"
 #include "Constants.h"
+#include "Vector.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "HashGenerator.h"
 #include "Telemetry.h"

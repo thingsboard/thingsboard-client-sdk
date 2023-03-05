@@ -12,10 +12,9 @@
 #include <ArduinoHttpClient.h>
 
 // Local includes.
-#include "Configuration.h"
+#include "Constants.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "Telemetry.h"
-#include "Constants.h"
 
 /// ---------------------------------
 /// Constant strings in flash memory.
