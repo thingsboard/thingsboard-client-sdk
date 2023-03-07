@@ -736,7 +736,7 @@ class ThingsBoardSized {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
-          result = sendAttributeJSON(json);
+          result = sendTelemetryJson(json);
         }
         // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
         // and set the pointer to null so we do not have a dangling reference.
@@ -786,7 +786,7 @@ class ThingsBoardSized {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
-          result = sendAttributeJSON(json);
+          result = sendTelemetryJson(json);
         }
         // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
         // and set the pointer to null so we do not have a dangling reference.
