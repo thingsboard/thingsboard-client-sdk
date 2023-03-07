@@ -12,10 +12,9 @@
 #include <ArduinoHttpClient.h>
 
 // Local includes.
-#include "Configuration.h"
+#include "Constants.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "Telemetry.h"
-#include "Constants.h"
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -74,9 +73,11 @@ class ThingsBoardHttpSized {
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
-                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true)
+                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const uint32_t& maxStackSize = Default_Max_Stack_Size)
       : m_client(client, host, port)
+      , m_maxStack(maxStackSize)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
@@ -90,6 +91,12 @@ class ThingsBoardHttpSized {
     /// @brief Destructor
     inline ~ThingsBoardHttpSized() { 
       // Nothing to do.
+    }
+
+    /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
+    inline void setMaximumStackSize(const uint32_t& maxStackSize) {
+      m_maxStack = maxStackSize;
     }
 
     /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
@@ -176,6 +183,12 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
+      if (jsonObject.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -185,13 +198,34 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (getMaximumStackSize() < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendTelemetryJson(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendTelemetryJson(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendTelemetryJson(json);
+      }
+      return result;
     }
 
     /// @brief Attempts to send custom telemetry JsonVariant
@@ -199,6 +233,12 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Whetherr sending the data was successful or not
     inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
+      if (jsonVariant.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
@@ -208,13 +248,34 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (getMaximumStackSize() < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendTelemetryJson(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendTelemetryJson(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendTelemetryJson(json);
+      }
+      return result;
     }
 
     /// @brief Attempts to send a GET request over HTTP or HTTPS
@@ -295,6 +356,12 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
+      if (jsonObject.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
@@ -304,13 +371,34 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (getMaximumStackSize() < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendAttributeJSON(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendAttributeJSON(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendAttributeJSON(json);
+      }
+      return result;
     }
 
     /// @brief Attempts to send custom attribute JsonVariant
@@ -318,6 +406,12 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Whetherr sending the data was successful or not
     inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
+      if (jsonVariant.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
@@ -327,16 +421,44 @@ class ThingsBoardHttpSized {
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      char json[jsonSize];
-      // Serialize json does not include size of the string null terminator
-      if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
-        Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        return false;
+      bool result = false;
+
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (getMaximumStackSize() < jsonSize) {
+        char* json = new char[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = sendAttributeJSON(json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
       }
-      return sendAttributeJSON(json);
+      else {
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = sendAttributeJSON(json);
+      }
+      return result;
     }
 
   private:
+
+    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @return Maximum amount of bytes we want to allocate on the stack
+    inline const uint32_t& getMaximumStackSize() const {
+      return m_maxStack;
+    }
+
     /// @brief Clears any remaining memory of the previous conenction,
     /// and resets the TCP as well, if data is resend the TCP connection has to be re-established
     inline void clearConnection() {
@@ -410,6 +532,11 @@ class ThingsBoardHttpSized {
         }
       }
 
+#if THINGSBOARD_ENABLE_DYNAMIC
+      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
+      requestBuffer.shrinkToFit();
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
+
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
@@ -437,10 +564,11 @@ class ThingsBoardHttpSized {
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
 
-    HttpClient m_client;
-    const char *m_host;
-    const uint16_t m_port;
-    const char *m_token;
+    HttpClient m_client; // HttpClient instance
+    uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
+    const char *m_host; // Host address we connect too
+    const uint16_t m_port; // Port we connect over
+    const char *m_token; // Access token used to connect with
 };
 
 using ThingsBoardHttp = ThingsBoardHttpSized<>;
