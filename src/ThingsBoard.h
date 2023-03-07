@@ -545,11 +545,7 @@ class ThingsBoardSized {
         return false;
       }
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      return m_client.publish_P(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
-#else
       return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
-#endif
     }
 
     //----------------------------------------------------------------------------
@@ -632,11 +628,7 @@ class ThingsBoardSized {
       Logger::log(PROV_REQUEST);
       Logger::log(requestPayload);
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      return m_client.publish_P(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
-#else
       return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
-#endif
     }
 
     //----------------------------------------------------------------------------
@@ -710,11 +702,7 @@ class ThingsBoardSized {
         return false;
       }
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      return m_client.publish_P(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
-#else 
       return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
-#endif
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
@@ -888,11 +876,7 @@ class ThingsBoardSized {
         return false;
       }
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      return m_client.publish_P(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
-#else
       return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
-#endif
     }
 
     /// @brief Attempts to send custom attribute JsonObject
@@ -1173,11 +1157,7 @@ class ThingsBoardSized {
       char topic[detectSize(RPC_SEND_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_requestId);
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
-#else 
       return m_client.publish(topic, buffer, m_qos ? 1 : 0);
-#endif
     }
 
     //----------------------------------------------------------------------------
@@ -1487,11 +1467,7 @@ class ThingsBoardSized {
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      return m_client.publish_P(topic, buffer, m_qos ? 1 : 0);
-#else 
       return m_client.publish(topic, buffer, m_qos ? 1 : 0);
-#endif
     }
 
     /// @brief Subscribes one provision callback,
@@ -1680,11 +1656,7 @@ class ThingsBoardSized {
         char topic[detectSize(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
 
-#if THINGSBOARD_ENABLE_PROGMEM
-        const bool result = m_client.publish_P(topic, size, m_qos ? 1 : 0);
-#else 
         const bool result = m_client.publish(topic, size, m_qos ? 1 : 0);
-#endif
         if (!result) {
           retries--;
           if (retries == 0) {
@@ -2072,11 +2044,7 @@ class ThingsBoardSized {
       Logger::log(responseTopic);
       Logger::log(responsePayload);
 
-#if THINGSBOARD_ENABLE_PROGMEM
-      m_client.publish_P(responseTopic, responsePayload, m_qos ? 1 : 0);
-#else
       m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
-#endif
     }
 
 #if defined(ESP8266) || defined(ESP32)
