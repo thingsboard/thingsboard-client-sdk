@@ -2186,7 +2186,7 @@ class ThingsBoardSized {
       }
       JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-      if (data && (data.size() < 1)) {
+      if (!data) {
         Logger::log(NOT_FOUND_ATT_UPDATE);
         return;
       }
@@ -2320,7 +2320,7 @@ class ThingsBoardSized {
           Logger::log(ATT_KEY_NOT_FOUND);
           goto delete_callback;
         }
-        else if (!data || (data.size() < 0)) {
+        else if (!data) {
           Logger::log(ATT_KEY_NOT_FOUND);
           goto delete_callback;
         }
