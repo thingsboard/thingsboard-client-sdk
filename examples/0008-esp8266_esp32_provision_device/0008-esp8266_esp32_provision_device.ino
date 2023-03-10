@@ -236,7 +236,7 @@ void InitWiFi() {
 
 /// @brief Reconnects the WiFi uses InitWiFi if the connection has been removed
 /// @return Returns true as soon as a connection has been established again
-const bool reconnect() {
+bool reconnect() {
   // Check to ensure we aren't connected yet
   const wl_status_t status = WiFi.status();
   if (status == WL_CONNECTED) {
