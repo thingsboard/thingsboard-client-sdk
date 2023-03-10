@@ -21,11 +21,11 @@ HashGenerator::~HashGenerator(void) {
     mbedtls_md_free(&m_ctx);
 }
 
-const bool HashGenerator::update(const uint8_t* data, const size_t& len) {
+bool HashGenerator::update(const uint8_t* data, const size_t& len) {
     return mbedtls_md_update(&m_ctx, data, len) == 0;
 }
 
-const std::string HashGenerator::get_hash_string() {
+std::string HashGenerator::get_hash_string() {
     // Calculate the current hash value
     uint8_t hash[MBEDTLS_MD_MAX_SIZE];
     finish(hash);

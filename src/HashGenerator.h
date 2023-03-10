@@ -32,11 +32,11 @@ class HashGenerator {
     /// @param data Data that should be added to generate the hash
     /// @param len Length of data entered
     /// @return Whether updating the hash for the given bytes was successfull or not
-    const bool update(const uint8_t* data, const size_t& len);
+    bool update(const uint8_t* data, const size_t& len);
 
     /// @brief Returns the final hash value as a string
     /// @return String containing the final hash value for the passed bytes
-    const std::string get_hash_string();
+    std::string get_hash_string();
 
 private:
     /// @brief Calculates the final hash value
