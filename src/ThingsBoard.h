@@ -1029,7 +1029,7 @@ class ThingsBoardSized {
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
     /// @return Whether subscribing the given callbacks was successful or not
-    inline const bool RPC_Subscribe(const RPC_Callback *callbacks, const size_t& callbacksSize) {
+    inline bool RPC_Subscribe(const RPC_Callback *callbacks, const size_t& callbacksSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcCallbacks.size() + callbacksSize > m_rpcCallbacks.capacity()) {
         Logger::log(MAX_RPC_EXCEEDED);
@@ -1073,7 +1073,7 @@ class ThingsBoardSized {
     /// @brief Unsubcribes all server-side RPC callbacks
     /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the rpc topic, was successful or not
-    inline const bool RPC_Unsubscribe() {
+    inline bool RPC_Unsubscribe() {
       // Empty all callbacks
       m_rpcCallbacks.clear();
       return m_client.unsubscribe(RPC_SUBSCRIBE_TOPIC);
@@ -1182,7 +1182,7 @@ class ThingsBoardSized {
     /// which will then start a firmware update
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-    inline const bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
+    inline bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
         Logger::log(RESETTING_FAILED);
         return false;
@@ -1317,7 +1317,7 @@ class ThingsBoardSized {
     /// @brief Unsubcribes all shared attribute callbacks
     /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the attribute topic, was successful or not
-    inline const bool Shared_Attributes_Unsubscribe() {
+    inline bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks
       m_sharedAttributeUpdateCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
