@@ -55,14 +55,14 @@ class Telemetry {
 
     /// @brief Whether this record is empty or not
     /// @return Whether there is any data in this record or not
-    inline const bool IsEmpty() const {
+    inline bool IsEmpty() const {
       return !m_key && m_type == DataType::TYPE_NONE;
     }
 
     /// @brief Serializes the key-value pair depending on the constructor used
     /// @param jsonObj Object the value will be copied into with the given key
     /// @return Whether serializing was successfull or not
-    const bool SerializeKeyValue(const JsonVariant &jsonObj) const {
+    inline bool SerializeKeyValue(const JsonVariant &jsonObj) const {
       if (m_key) {
         switch (m_type) {
           case DataType::TYPE_BOOL:

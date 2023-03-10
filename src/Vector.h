@@ -34,19 +34,19 @@ class Vector {
 
     /// @brief Returns whether there are still any element in the underlying data container
     /// @return Whether the underlying data container is empty or not
-    const bool empty() const {
+    bool empty() const {
         return m_size == 0U;
     }
 
     /// @brief Gets the current amount of elements in the underlying data container
     /// @return The amount of items currently in the underlying data container
-    const size_t size() const {
+    const size_t& size() const {
         return m_size;
     }
 
     /// @brief Gets the maximum amount of elements that can currently be stored in the underlying data container
     /// @return The maximum amount of items that can currently be stored in the underlying data container
-    const size_t capacity() const {
+    const size_t& capacity() const {
         return m_capacity;
     }
     
