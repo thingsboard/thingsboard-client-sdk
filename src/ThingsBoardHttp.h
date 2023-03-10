@@ -519,7 +519,11 @@ class ThingsBoardHttpSized {
     /// @return Whetherr sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC

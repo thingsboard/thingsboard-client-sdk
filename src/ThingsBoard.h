@@ -134,6 +134,7 @@ constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attri
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char COMMA PROGMEM = ',';
+constexpr char COLON PROGMEM = ':';
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
 constexpr char REQUEST_RPC[] PROGMEM = "Requesting client side RPC with the json (%s)";
 constexpr char REQUEST_ATT[] PROGMEM = "Requesting shared attributes transformed from (%s) into json (%s)";
@@ -167,6 +168,7 @@ constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] = "Too many shared attribute upd
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char COMMA = ',';
+constexpr char COLON = ':';
 constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
 constexpr char REQUEST_RPC[] = "Requesting client side RPC with the json (%s)";
 constexpr char REQUEST_ATT[] = "Requesting shared attributes transformed from (%s) into json (%s)";
@@ -545,7 +547,7 @@ class ThingsBoardSized {
         return false;
       }
 
-      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
+      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos);
     }
 
     //----------------------------------------------------------------------------
@@ -628,7 +630,7 @@ class ThingsBoardSized {
       Logger::log(PROV_REQUEST);
       Logger::log(requestPayload);
 
-      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
+      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos);
     }
 
     //----------------------------------------------------------------------------
@@ -693,16 +695,16 @@ class ThingsBoardSized {
       }
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
+      const uint32_t jsonSize = JSON_STRING_SIZE(strlen(json));
 
-      if (currentBufferSize < json_size) {
-        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
+      if (currentBufferSize < jsonSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
         Logger::log(message);
         return false;
       }
 
-      return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+      return m_client.publish(TELEMETRY_TOPIC, json, m_qos);
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
@@ -867,16 +869,16 @@ class ThingsBoardSized {
       }
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
+      const uint32_t jsonSize = JSON_STRING_SIZE(strlen(json));
 
-      if (currentBufferSize < json_size) {
-        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
+      if (currentBufferSize < jsonSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
         Logger::log(message);
         return false;
       }
 
-      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos);
     }
 
     /// @brief Attempts to send custom attribute JsonObject
@@ -1103,8 +1105,11 @@ class ThingsBoardSized {
       const JsonArray* parameters = callback.Get_Parameters();
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-      // Ensure to have enough size for the given amount of parameters if any were passed and the methodName key-value pair.
-      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 1U : 1U));
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed + the default methodName and params key needed for the request.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
+      TBJsonDocument requestBuffer(dataStructureMemoryUsage);
 #else
       // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
       // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -1125,11 +1130,6 @@ class ThingsBoardSized {
       else {
         requestVariant[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
       }
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      requestBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
@@ -1157,7 +1157,7 @@ class ThingsBoardSized {
       char topic[detectSize(RPC_SEND_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_requestId);
 
-      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+      return m_client.publish(topic, buffer, m_qos);
     }
 
     //----------------------------------------------------------------------------
@@ -1391,18 +1391,11 @@ class ThingsBoardSized {
         return false;
       }
 
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Ensure to have enough size for the given amount of parameters if any were passed and the methodName key-value pair.
-#if THINGSBOARD_ENABLE_STL
-      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(attributes.size()));
-#else
-      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(1) + JSON_STRING_SIZE(strlen(request)));
-#endif // THINGSBOARD_ENABLE_STL
-#else
-      // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
-      // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> requestBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed + the default clientKeys or sharedKeys
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      constexpr uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(1U);
+      StaticJsonDocument<dataStructureMemoryUsage> requestBuffer;
       // The .template variant of createing the JsonVariant has to be used,
       // because we are passing a template to the StaticJsonDocument template list
       // and it will generate a compile time error if not used
@@ -1429,11 +1422,6 @@ class ThingsBoardSized {
 #else
       requestVariant[attributeRequestKey] = request;
 #endif // THINGSBOARD_ENABLE_STL
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      requestBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
@@ -1467,7 +1455,7 @@ class ThingsBoardSized {
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
 
-      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+      return m_client.publish(topic, buffer, m_qos);
     }
 
     /// @brief Subscribes one provision callback,
@@ -1656,7 +1644,7 @@ class ThingsBoardSized {
         char topic[detectSize(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
 
-        const bool result = m_client.publish(topic, size, m_qos ? 1 : 0);
+        const bool result = m_client.publish(topic, size, m_qos);
         if (!result) {
           retries--;
           if (retries == 0) {
@@ -1870,11 +1858,18 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
           char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -1939,11 +1934,18 @@ class ThingsBoardSized {
     inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
       RPC_Response r; {
 #if THINGSBOARD_ENABLE_DYNAMIC
-        TBJsonDocument jsonBuffer(length);
+        // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+        // Data structure size depends on the amount of key value pairs received.
+        // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+        const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+        TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+        // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+        // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+        // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
         const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
         if (error) {
           char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2044,7 +2046,7 @@ class ThingsBoardSized {
       Logger::log(responseTopic);
       Logger::log(responsePayload);
 
-      m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
+      m_client.publish(responseTopic, responsePayload, m_qos);
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -2145,11 +2147,18 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_shared_attribute_update_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2247,11 +2256,18 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2330,11 +2346,18 @@ class ThingsBoardSized {
       Logger::log(PROV_RESPONSE);
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2359,7 +2382,11 @@ class ThingsBoardSized {
     /// @return Whether sending the data was successful or not
     inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2373,12 +2400,25 @@ class ThingsBoardSized {
         }
       }
 
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      jsonBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
+    }
+
+    /// @brief Returns the amount of occurences of the given smybol in the given string
+    /// @param str String that we want to check the symbol in
+    /// @param symbol Symbols we want to search for
+    /// @return Amount of occurences of the given symbol
+    inline uint32_t getOccurences(const char *str, char symbol) const {
+      uint32_t count = 0;
+      if (str == nullptr) {
+        return count;
+      }
+      for (uint32_t i = 0; i < strlen(str); i++) {
+        if (str[i] != symbol) {
+          continue;
+        }
+        count++;
+      }
+      return count;
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
