@@ -78,11 +78,11 @@ jobs:
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
   report:
-    needs: compile  # Wait for the compile job to finish to get the data for the report
+    needs: build  # Wait for the build job to finish to get the data for the report
     if: github.event_name == 'pull_request' # Only run the job when the workflow is triggered by a pull request
     runs-on: ubuntu-latest
     steps:
-      # This step is needed to get the size data produced by the compile jobs
+      # This step is needed to get the size data produced by the build jobs
       - name: Download sketches reports artifact
         uses: actions/download-artifact@v2
         with:
