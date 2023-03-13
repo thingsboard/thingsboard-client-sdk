@@ -26,7 +26,7 @@ constexpr char RPC_CB_NULL[] = "Server-side RPC callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Convenient aliases
-using RPC_Response = Telemetry;
+using RPC_Response = JsonVariant;
 // JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
 using RPC_Data = const JsonVariantConst;
 
@@ -34,8 +34,8 @@ using RPC_Data = const JsonVariantConst;
 class RPC_Callback {
   public:
     /// @brief RPC callback signatures
-    using returnType = const RPC_Response;
-    using argumentType = const RPC_Data&;
+    using returnType = RPC_Response;
+    using argumentType = RPC_Data&;
 #if THINGSBOARD_ENABLE_STL
     using processFn = std::function<returnType(argumentType data)>;
 #else
