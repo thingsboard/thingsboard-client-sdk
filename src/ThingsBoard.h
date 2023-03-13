@@ -134,6 +134,7 @@ constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attri
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char COMMA PROGMEM = ',';
+constexpr char COLON PROGMEM = ':';
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
 constexpr char REQUEST_RPC[] PROGMEM = "Requesting client side RPC with the json (%s)";
 constexpr char REQUEST_ATT[] PROGMEM = "Requesting shared attributes transformed from (%s) into json (%s)";
@@ -167,6 +168,7 @@ constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] = "Too many shared attribute upd
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char COMMA = ',';
+constexpr char COLON = ':';
 constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
 constexpr char REQUEST_RPC[] = "Requesting client side RPC with the json (%s)";
 constexpr char REQUEST_ATT[] = "Requesting shared attributes transformed from (%s) into json (%s)";
@@ -467,7 +469,7 @@ class ThingsBoardSized {
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent
     /// @return Whether allocating the needed memory for the given bufferSize was successful or not.
-    inline const bool setBufferSize(const uint16_t& bufferSize) {
+    inline bool setBufferSize(const uint16_t& bufferSize) {
       return m_client.setBufferSize(bufferSize);
     }
 
@@ -479,7 +481,7 @@ class ThingsBoardSized {
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
     /// @return Whether connecting to ThingsBoard was successful or not
-    inline const bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
+    inline bool connect(const char *host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       if (!host) {
         return false;
       }
@@ -487,7 +489,7 @@ class ThingsBoardSized {
       return connect_to_host(access_token, client_id, password);
     }
 
-    inline const bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
+    inline bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       m_client.setServer(host, port);
       return connect_to_host(access_token, client_id, password);
     }
@@ -500,7 +502,7 @@ class ThingsBoardSized {
     /// @brief Returns our current connection status to the cloud, true meaning we are connected,
     /// false meaning we have been disconnected or have not established a connection yet
     /// @return Whether the underlying PubSubClient is currently connected or not
-    inline const bool connected() {
+    inline bool connected() {
       return m_client.connected();
     }
 
@@ -519,7 +521,7 @@ class ThingsBoardSized {
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
     /// @param durationMs Total time in milliseconds the user has to claim their device as their own
     /// @return Whether sending the claiming request was successful or not
-    inline const bool Claim_Request(const char *secretKey, const uint32_t& durationMs) {
+    inline bool Claim_Request(const char *secretKey, const uint32_t& durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
       const JsonObject respObj = requestBuffer.to<JsonObject>();
 
@@ -545,7 +547,7 @@ class ThingsBoardSized {
         return false;
       }
 
-      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos ? 1 : 0);
+      return m_client.publish(CLAIM_TOPIC, responsePayload, m_qos);
     }
 
     //----------------------------------------------------------------------------
@@ -558,7 +560,7 @@ class ThingsBoardSized {
     /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
     /// @param callback Callback method that will be called
     /// @return Whether sending the provisioning request was successful or not
-    inline const bool Provision_Request(const Provision_Callback& callback) {
+    inline bool Provision_Request(const Provision_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
       const JsonObject requestObject = requestBuffer.to<JsonObject>();
 
@@ -628,7 +630,7 @@ class ThingsBoardSized {
       Logger::log(PROV_REQUEST);
       Logger::log(requestPayload);
 
-      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos ? 1 : 0);
+      return m_client.publish(PROV_REQUEST_TOPIC, requestPayload, m_qos);
     }
 
     //----------------------------------------------------------------------------
@@ -640,7 +642,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<class T>
-    inline const bool sendTelemetryData(const char *key, T value) {
+    inline bool sendTelemetryData(const char *key, T value) {
       return sendKeyValue(key, value);
     }
 
@@ -648,7 +650,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryInt(const char *key, int value) {
+    inline bool sendTelemetryInt(const char *key, int value) {
       return sendKeyValue(key, value);
     }
 
@@ -656,7 +658,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryBool(const char *key, bool value) {
+    inline bool sendTelemetryBool(const char *key, bool value) {
       return sendKeyValue(key, value);
     }
 
@@ -664,7 +666,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryFloat(const char *key, float value) {
+    inline bool sendTelemetryFloat(const char *key, float value) {
       return sendKeyValue(key, value);
     }
 
@@ -672,7 +674,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryString(const char *key, const char *value) {
+    inline bool sendTelemetryString(const char *key, const char *value) {
       return sendKeyValue(key, value);
     }
 
@@ -680,36 +682,36 @@ class ThingsBoardSized {
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetry(const Telemetry *data, size_t data_count) {
+    inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
       return sendDataArray(data, data_count);
     }
 
     /// @brief Attempts to send custom json telemetry string
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryJson(const char *json) {
+    inline bool sendTelemetryJson(const char *json) {
       if (json == nullptr) {
         return false;
       }
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
+      const uint32_t jsonSize = JSON_STRING_SIZE(strlen(json));
 
-      if (currentBufferSize < json_size) {
-        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
+      if (currentBufferSize < jsonSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
         Logger::log(message);
         return false;
       }
 
-      return m_client.publish(TELEMETRY_TOPIC, json, m_qos ? 1 : 0);
+      return m_client.publish(TELEMETRY_TOPIC, json, m_qos);
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryJson(const JsonObject jsonObject, const uint32_t& jsonSize) {
+    inline bool sendTelemetryJson(const JsonObject jsonObject, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
       if (jsonObject.isNull()) {
@@ -759,7 +761,7 @@ class ThingsBoardSized {
     /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Whether sending the data was successful or not
-    inline const bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+    inline bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
       if (jsonVariant.isNull()) {
@@ -814,7 +816,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<class T>
-    inline const bool sendAttributeData(const char *attrName, T value) {
+    inline bool sendAttributeData(const char *attrName, T value) {
       return sendKeyValue(attrName, value, false);
     }
 
@@ -822,7 +824,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeInt(const char *attrName, int value) {
+    inline bool sendAttributeInt(const char *attrName, int value) {
       return sendKeyValue(attrName, value, false);
     }
 
@@ -830,7 +832,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeBool(const char *attrName, bool value) {
+    inline bool sendAttributeBool(const char *attrName, bool value) {
       return sendKeyValue(attrName, value, false);
     }
 
@@ -838,7 +840,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeFloat(const char *attrName, float value) {
+    inline bool sendAttributeFloat(const char *attrName, float value) {
       return sendKeyValue(attrName, value, false);
     }
 
@@ -846,7 +848,7 @@ class ThingsBoardSized {
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeString(const char *attrName, const char *value) {
+    inline bool sendAttributeString(const char *attrName, const char *value) {
       return sendKeyValue(attrName, value, false);
     }
 
@@ -854,36 +856,36 @@ class ThingsBoardSized {
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributes(const Attribute *data, size_t data_count) {
+    inline bool sendAttributes(const Attribute *data, size_t data_count) {
       return sendDataArray(data, data_count, false);
     }
 
     /// @brief Attempts to send custom json attribute string
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeJSON(const char *json) {
+    inline bool sendAttributeJSON(const char *json) {
       if (json == nullptr) {
         return false;
       }
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t json_size = JSON_STRING_SIZE(strlen(json));
+      const uint32_t jsonSize = JSON_STRING_SIZE(strlen(json));
 
-      if (currentBufferSize < json_size) {
-        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, json_size)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, json_size);
+      if (currentBufferSize < jsonSize) {
+        char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
         Logger::log(message);
         return false;
       }
 
-      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos ? 1 : 0);
+      return m_client.publish(ATTRIBUTE_TOPIC, json, m_qos);
     }
 
     /// @brief Attempts to send custom attribute JsonObject
     /// @param jsonObject JsonObject containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
+    inline bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
       if (jsonObject.isNull()) {
@@ -933,7 +935,7 @@ class ThingsBoardSized {
     /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Whether sending the data was successful or not
-    inline const bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+    inline bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
       if (jsonVariant.isNull()) {
@@ -983,7 +985,7 @@ class ThingsBoardSized {
     /// that will be called if the key-value pair from the server for the given client-side attributes is received
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-    inline const bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
+    inline bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
       return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
     }
 
@@ -1001,7 +1003,7 @@ class ThingsBoardSized {
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether subscribing the given callbacks was successful or not
     template<class InputIterator>
-    inline const bool RPC_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
+    inline bool RPC_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t size = std::distance(first_itr, last_itr);
       if (m_rpcCallbacks.size() + size > m_rpcCallbacks.capacity()) {
@@ -1027,7 +1029,7 @@ class ThingsBoardSized {
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
     /// @return Whether subscribing the given callbacks was successful or not
-    inline const bool RPC_Subscribe(const RPC_Callback *callbacks, const size_t& callbacksSize) {
+    inline bool RPC_Subscribe(const RPC_Callback *callbacks, const size_t& callbacksSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcCallbacks.size() + callbacksSize > m_rpcCallbacks.capacity()) {
         Logger::log(MAX_RPC_EXCEEDED);
@@ -1051,7 +1053,7 @@ class ThingsBoardSized {
     /// that will be called if a request from the server for the method with the given name is received
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-    inline const bool RPC_Subscribe(const RPC_Callback& callback) {
+    inline bool RPC_Subscribe(const RPC_Callback& callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcCallbacks.size() + 1 > m_rpcCallbacks.capacity()) {
         Logger::log(MAX_RPC_EXCEEDED);
@@ -1071,7 +1073,7 @@ class ThingsBoardSized {
     /// @brief Unsubcribes all server-side RPC callbacks
     /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the rpc topic, was successful or not
-    inline const bool RPC_Unsubscribe() {
+    inline bool RPC_Unsubscribe() {
       // Empty all callbacks
       m_rpcCallbacks.clear();
       return m_client.unsubscribe(RPC_SUBSCRIBE_TOPIC);
@@ -1084,7 +1086,7 @@ class ThingsBoardSized {
     /// that will be called if a response from the server for the method with the given name is received
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-    inline const bool RPC_Request(const RPC_Request_Callback& callback) {
+    inline bool RPC_Request(const RPC_Request_Callback& callback) {
       const char *methodName = callback.Get_Name();
 
       if (methodName == nullptr) {
@@ -1103,8 +1105,11 @@ class ThingsBoardSized {
       const JsonArray* parameters = callback.Get_Parameters();
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-      // Ensure to have enough size for the given amount of parameters if any were passed and the methodName key-value pair.
-      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 1U : 1U));
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed + the default methodName and params key needed for the request.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
+      TBJsonDocument requestBuffer(dataStructureMemoryUsage);
 #else
       // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
       // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -1125,11 +1130,6 @@ class ThingsBoardSized {
       else {
         requestVariant[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
       }
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      requestBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
@@ -1157,7 +1157,7 @@ class ThingsBoardSized {
       char topic[detectSize(RPC_SEND_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_requestId);
 
-      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+      return m_client.publish(topic, buffer, m_qos);
     }
 
     //----------------------------------------------------------------------------
@@ -1168,7 +1168,7 @@ class ThingsBoardSized {
     /// @brief Immediately starts a firmware update if firmware is assigned to the given device
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-    inline const bool Start_Firmware_Update(const OTA_Update_Callback& callback) {
+    inline bool Start_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
         Logger::log(RESETTING_FAILED);
         return false;
@@ -1182,7 +1182,7 @@ class ThingsBoardSized {
     /// which will then start a firmware update
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-    inline const bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
+    inline bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
         Logger::log(RESETTING_FAILED);
         return false;
@@ -1196,7 +1196,7 @@ class ThingsBoardSized {
     /// @param currFwTitle Current device firmware title
     /// @param currFwVersion Current device firmware version
     /// @return Whether sending the current device firmware information was successful or not
-    inline const bool Firmware_Send_Info(const char *currFwTitle, const char *currFwVersion) {
+    inline bool Firmware_Send_Info(const char *currFwTitle, const char *currFwVersion) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       const JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
 
@@ -1211,7 +1211,7 @@ class ThingsBoardSized {
     /// pass nullptr or an empty string if the current state is not a failure state
     /// and therefore does not require any firmware error messsages
     /// @return Whether sending the current firmware download state was successful or not
-    inline const bool Firmware_Send_State(const char *currFwState, const char* fwError = nullptr) {
+    inline bool Firmware_Send_State(const char *currFwState, const char* fwError = nullptr) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareState;
       const JsonObject currentFirmwareStateObject = currentFirmwareState.to<JsonObject>();
 
@@ -1233,7 +1233,7 @@ class ThingsBoardSized {
     /// that will be called if the key-value pair from the server for the given shared attributes is received
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-    inline const bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
+    inline bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
       return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
 
@@ -1247,7 +1247,7 @@ class ThingsBoardSized {
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether subscribing the given callbacks was successful or not
     template<class InputIterator>
-    inline const bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
+    inline bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t size = std::distance(first_itr, last_itr);
       if (m_sharedAttributeUpdateCallbacks.size() + size > m_sharedAttributeUpdateCallbacks.capacity()) {
@@ -1273,7 +1273,7 @@ class ThingsBoardSized {
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
     /// @return Whether subscribing the given callbacks was successful or not
-    inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, const size_t& callbacksSize) {
+    inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback *callbacks, const size_t& callbacksSize) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_sharedAttributeUpdateCallbacks.size() + callbacksSize > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
@@ -1297,7 +1297,7 @@ class ThingsBoardSized {
     /// that will be called if the key-value pair from the server for the given shared attributes is received
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-    inline const bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+    inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_sharedAttributeUpdateCallbacks.size() + 1U > m_sharedAttributeUpdateCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
@@ -1317,7 +1317,7 @@ class ThingsBoardSized {
     /// @brief Unsubcribes all shared attribute callbacks
     /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the attribute topic, was successful or not
-    inline const bool Shared_Attributes_Unsubscribe() {
+    inline bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks
       m_sharedAttributeUpdateCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
@@ -1328,7 +1328,7 @@ class ThingsBoardSized {
     /// @param ... Additional arguments that should be inserted into the message at the given points,
     /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
     /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
-    inline static const uint8_t detectSize(const char *msg, ...) {
+    inline static uint8_t detectSize(const char *msg, ...) {
       va_list args;
       va_start(args, msg);
       // Result is what would have been written if the passed buffer would have been large enough not counting null character,
@@ -1346,6 +1346,24 @@ class ThingsBoardSized {
       return result;
     }
 
+    /// @brief Returns the amount of occurences of the given smybol in the given string
+    /// @param str String that we want to check the symbol in
+    /// @param symbol Symbols we want to search for
+    /// @return Amount of occurences of the given symbol
+    inline static uint32_t getOccurences(const char *str, char symbol) {
+      uint32_t count = 0;
+      if (str == nullptr) {
+        return count;
+      }
+      for (uint32_t i = 0; i < strlen(str); i++) {
+        if (str[i] != symbol) {
+          continue;
+        }
+        count++;
+      }
+      return count;
+    }
+
   private:
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
@@ -1360,7 +1378,7 @@ class ThingsBoardSized {
     /// @param attributeRequestKey Key of the key-value pair that will contain the attributes we want to request
     /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
-    inline const bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
+    inline bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
 #if THINGSBOARD_ENABLE_STL
       const std::vector<const char *>& attributes = callback.Get_Attributes();
 
@@ -1391,18 +1409,11 @@ class ThingsBoardSized {
         return false;
       }
 
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Ensure to have enough size for the given amount of parameters if any were passed and the methodName key-value pair.
-#if THINGSBOARD_ENABLE_STL
-      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(attributes.size()));
-#else
-      TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(1) + JSON_STRING_SIZE(strlen(request)));
-#endif // THINGSBOARD_ENABLE_STL
-#else
-      // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
-      // therefore we set the size to the MaxFieldsAmt instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> requestBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed + the default clientKeys or sharedKeys
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      constexpr uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(1U);
+      StaticJsonDocument<dataStructureMemoryUsage> requestBuffer;
       // The .template variant of createing the JsonVariant has to be used,
       // because we are passing a template to the StaticJsonDocument template list
       // and it will generate a compile time error if not used
@@ -1429,11 +1440,6 @@ class ThingsBoardSized {
 #else
       requestVariant[attributeRequestKey] = request;
 #endif // THINGSBOARD_ENABLE_STL
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      requestBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
@@ -1467,14 +1473,14 @@ class ThingsBoardSized {
       char topic[detectSize(ATTRIBUTE_REQUEST_TOPIC, m_requestId)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_requestId);
 
-      return m_client.publish(topic, buffer, m_qos ? 1 : 0);
+      return m_client.publish(topic, buffer, m_qos);
     }
 
     /// @brief Subscribes one provision callback,
     /// that will be called if a provision response from the server is received
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-    inline const bool Provision_Subscribe(const Provision_Callback& callback) {
+    inline bool Provision_Subscribe(const Provision_Callback& callback) {
       if (!m_client.subscribe(PROV_RESPONSE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
@@ -1486,7 +1492,7 @@ class ThingsBoardSized {
     /// @brief Unsubcribes the provision callback
     /// @return Whether unsubcribing the previously subscribed callback
     /// and from the provision response topic, was successful or not
-    inline const bool Provision_Unsubscribe() {
+    inline bool Provision_Unsubscribe() {
       m_provisionCallback = Provision_Callback();
       return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
     }
@@ -1497,7 +1503,7 @@ class ThingsBoardSized {
     /// and attempts to sends the current device firmware information to the cloud
     /// @param callback Callback method that will be called
     /// @return Whether checking and sending the current device firmware information was successful or not
-    inline const bool Prepare_Firmware_Settings(const OTA_Update_Callback& callback) {
+    inline bool Prepare_Firmware_Settings(const OTA_Update_Callback& callback) {
       const char *currFwTitle = callback.Get_Firmware_Title();
       const char *currFwVersion = callback.Get_Firmware_Version();
 
@@ -1516,7 +1522,7 @@ class ThingsBoardSized {
 
     /// @brief Subscribes to the firmware response topic
     /// @return Whether subscribing to the firmware response topic was successful or not
-    inline const bool Firmware_OTA_Subscribe() {
+    inline bool Firmware_OTA_Subscribe() {
       if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC, m_qos ? 1 : 0)) {
         Logger::log(SUBSCRIBE_TOPIC_FAILED);
         return false;
@@ -1527,7 +1533,7 @@ class ThingsBoardSized {
     /// @brief Unsubscribes from the firmware response topic and clears any memory associated with the firmware update,
     /// should not be called before actually fully completing the firmware update.
     /// @return Whether unsubscribing from the firmware response topic was successful or not
-    inline const bool Firmware_OTA_Unsubscribe() {
+    inline bool Firmware_OTA_Unsubscribe() {
       // Reset now not needed private member variables
       m_fwState = false;
       m_fwCallback = nullptr;
@@ -1656,7 +1662,7 @@ class ThingsBoardSized {
         char topic[detectSize(FIRMWARE_REQUEST_TOPIC, currChunk)];
         snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, currChunk);
 
-        const bool result = m_client.publish(topic, size, m_qos ? 1 : 0);
+        const bool result = m_client.publish(topic, size, m_qos);
         if (!result) {
           retries--;
           if (retries == 0) {
@@ -1744,7 +1750,7 @@ class ThingsBoardSized {
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
     /// @return Whether connecting to ThingsBoard was successful or not
-    inline const bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
+    inline bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
       const bool connection_result = m_client.connect(client_id, access_token, password);
       if (!connection_result) {
         Logger::log(CONNECT_FAILED);
@@ -1780,7 +1786,7 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
-    inline const bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
+    inline bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpcRequestCallbacks.size() + 1 > m_rpcRequestCallbacks.capacity()) {
         Logger::log(MAX_RPC_REQUEST_EXCEEDED);
@@ -1801,7 +1807,7 @@ class ThingsBoardSized {
     /// @brief Unsubscribes all client-side RPC request callbacks
     /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the client-side RPC response topic, was successful or not
-    inline const bool RPC_Request_Unsubscribe() {
+    inline bool RPC_Request_Unsubscribe() {
       // Empty all callbacks
       m_rpcRequestCallbacks.clear();
       return m_client.unsubscribe(RPC_RESPONSE_SUBSCRIBE_TOPIC);
@@ -1811,7 +1817,7 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
-    inline const bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
+    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_attributeRequestCallbacks.size() + 1 > m_attributeRequestCallbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_REQUEST_EXCEEDED);
@@ -1832,7 +1838,7 @@ class ThingsBoardSized {
     /// @brief Unsubscribes all client-side or shared attributes request callbacks
     /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the  attribute response topic, was successful or not
-    inline const bool Attributes_Request_Unsubscribe() {
+    inline bool Attributes_Request_Unsubscribe() {
       // Empty all callbacks
       m_attributeRequestCallbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
@@ -1845,7 +1851,7 @@ class ThingsBoardSized {
     /// @param telemetry Whether the data we want to send should be sent as an attribute or telemetry data value
     /// @return Whether sending the data was successful or not
     template<typename T>
-    inline const bool sendKeyValue(const char *key, T value, bool telemetry = true) {
+    inline bool sendKeyValue(const char *key, T value, bool telemetry = true) {
       const Telemetry t(key, value);
       if (t.IsEmpty()) {
         // Message is ignored and not sent at all.
@@ -1870,11 +1876,18 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
           char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -1939,11 +1952,18 @@ class ThingsBoardSized {
     inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
       RPC_Response r; {
 #if THINGSBOARD_ENABLE_DYNAMIC
-        TBJsonDocument jsonBuffer(length);
+        // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+        // Data structure size depends on the amount of key value pairs received.
+        // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+        const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+        TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+        // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+        // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+        // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
         const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
         if (error) {
           char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2044,7 +2064,7 @@ class ThingsBoardSized {
       Logger::log(responseTopic);
       Logger::log(responsePayload);
 
-      m_client.publish(responseTopic, responsePayload, m_qos ? 1 : 0);
+      m_client.publish(responseTopic, responsePayload, m_qos);
     }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -2145,11 +2165,18 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_shared_attribute_update_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2159,7 +2186,7 @@ class ThingsBoardSized {
       }
       JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-      if (data && (data.size() < 1)) {
+      if (!data) {
         Logger::log(NOT_FOUND_ATT_UPDATE);
         return;
       }
@@ -2247,11 +2274,18 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2286,7 +2320,7 @@ class ThingsBoardSized {
           Logger::log(ATT_KEY_NOT_FOUND);
           goto delete_callback;
         }
-        else if (!data || (data.size() < 0)) {
+        else if (!data) {
           Logger::log(ATT_KEY_NOT_FOUND);
           goto delete_callback;
         }
@@ -2330,11 +2364,18 @@ class ThingsBoardSized {
       Logger::log(PROV_RESPONSE);
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(length);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
         char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
@@ -2357,9 +2398,13 @@ class ThingsBoardSized {
     /// @param data_count Amount of data entries in the array that we want to send
     /// @param telemetry Whether the data we want to send should be sent as an attribute or telemetry data value
     /// @return Whether sending the data was successful or not
-    inline const bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
+    inline bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-      TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(data_count));
+      // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
+      // Data structure size depends on the amount of key value pairs passed.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -2372,11 +2417,6 @@ class ThingsBoardSized {
           return false;
         }
       }
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      jsonBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
     }
