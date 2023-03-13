@@ -16,6 +16,10 @@ on:
   workflow_dispatch:
   repository_dispatch:
 
+env:
+  SKETCHES_REPORTS_PATH: sketches-reports
+  SKETCHES_REPORTS_NAME: esp32
+
 jobs:
   build:
     name: ${{ matrix.board.fqbn }}
@@ -27,8 +31,6 @@ jobs:
         - name: TBPubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
-      SKETCHES_REPORTS_PATH: sketches-reports
-      SKETCHES_REPORTS_NAME: arduino
 
     strategy:
       matrix:
@@ -84,9 +86,6 @@ jobs:
     needs: build  # Wait for the build job to finish to get the data for the report
     if: github.event_name == 'pull_request' # Only run the job when the workflow is triggered by a pull request
     runs-on: ubuntu-latest
-    env:
-      SKETCHES_REPORTS_PATH: sketches-reports
-      SKETCHES_REPORTS_NAME: arduino
     steps:
       # This step is needed to get the size data produced by the build jobs
       - name: Download sketches reports artifact
