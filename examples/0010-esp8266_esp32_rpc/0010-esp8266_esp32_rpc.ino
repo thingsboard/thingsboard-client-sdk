@@ -242,7 +242,9 @@ RPC_Response processTemperatureChange(const RPC_Data &data) {
   Serial.println(example_temperature);
 
   // Just an response example
-  return RPC_Response(RPC_RESPONSE_KEY, 42);
+  StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
+  doc[RPC_RESPONSE_KEY] = 42;
+  return doc;
 }
 
 /// @brief Processes function for RPC call "example_set_switch"
@@ -268,7 +270,9 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
   Serial.println(switch_state);
 
   // Just an response example
-  return RPC_Response(RPC_RESPONSE_KEY, 22.02);
+  StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
+  doc[RPC_RESPONSE_KEY] = 22.02;
+  return doc;
 }
 
 const std::array<RPC_Callback, 2U> callbacks = {
