@@ -76,3 +76,19 @@ jobs:
           if-no-files-found: error
           name: ${{ env.SKETCHES_REPORTS_PATH }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+  report:
+    needs: build  # Wait for the build job to finish to get the data for the report
+    if: github.event_name == 'pull_request' # Only run the job when the workflow is triggered by a pull request
+    runs-on: ubuntu-latest
+    steps:
+      # This step is needed to get the size data produced by the build jobs
+      - name: Download sketches reports artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.SKETCHES_REPORTS_PATH }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+      - uses: arduino/report-size-deltas@v1
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
