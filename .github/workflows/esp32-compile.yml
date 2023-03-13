@@ -16,6 +16,10 @@ on:
   workflow_dispatch:
   repository_dispatch:
 
+env:
+  SKETCHES_REPORTS_PATH: sketches-reports
+  SKETCHES_REPORTS_NAME: esp32
+
 jobs:
   build:
     name: ${{ matrix.board.fqbn }}
@@ -27,7 +31,6 @@ jobs:
         - name: TBPubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
-      SKETCHES_REPORTS_PATH: sketches-reports
 
     strategy:
       matrix:
@@ -68,7 +71,7 @@ jobs:
             - examples/0011-esp8266_esp32_subscribe_OTA_MQTT/0011-esp8266_esp32_subscribe_OTA_MQTT.ino
             - examples/0012-esp8266_esp32_request_shared_attribute/0012-esp8266_esp32_request_shared_attribute.ino
             - examples/0013-esp8266_esp32_request_rpc/0013-esp8266_esp32_request_rpc.ino
-          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
+          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
           enable-warnings-report: 'true'
 
       - name: Save memory usage change report as artifact
@@ -76,8 +79,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           if-no-files-found: error
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: ${{ env.SKETCHES_REPORTS_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
 
   report:
     needs: build  # Wait for the build job to finish to get the data for the report
@@ -88,9 +91,9 @@ jobs:
       - name: Download sketches reports artifact
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: ${{ env.SKETCHES_REPORTS_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
 
       - uses: arduino/report-size-deltas@v1
         with:
-          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
