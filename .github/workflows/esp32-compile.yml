@@ -28,6 +28,7 @@ jobs:
         - name: ArduinoHttpClient
         - name: ArduinoJson
       SKETCHES_REPORTS_PATH: sketches-reports
+      SKETCHES_REPORTS_NAME: arduino
 
     strategy:
       matrix:
@@ -76,8 +77,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           if-no-files-found: error
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: ${{ env.SKETCHES_REPORTS_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
 
   report:
     needs: build  # Wait for the build job to finish to get the data for the report
@@ -88,9 +89,9 @@ jobs:
       - name: Download sketches reports artifact
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: ${{ env.SKETCHES_REPORTS_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
 
       - uses: arduino/report-size-deltas@v1
         with:
-          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
