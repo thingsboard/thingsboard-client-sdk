@@ -16,6 +16,10 @@ on:
   workflow_dispatch:
   repository_dispatch:
 
+env:
+  SKETCHES_REPORTS_PATH: sketches-reports
+  SKETCHES_REPORTS_NAME: esp32
+
 jobs:
   build:
     name: Arduino Uno
@@ -29,7 +33,6 @@ jobs:
         - name: ArduinoJson
         - name: WiFiEsp
         - name: TinyGSM
-      SKETCHES_REPORTS_PATH: sketches-reports
 
     steps:
       - uses: actions/checkout@v3
@@ -45,7 +48,7 @@ jobs:
             - examples/0002-arduino_rpc/0002-arduino_rpc.ino
             - examples/0004-arduino-sim900_send_telemetry/0004-arduino-sim900_send_telemetry.ino
             - examples/0005-arduino-sim900_send_telemetry_http/0005-arduino-sim900_send_telemetry_http.ino
-          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
+          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
           enable-warnings-report: 'true'
 
       - name: Save memory usage change report as artifact
@@ -53,8 +56,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           if-no-files-found: error
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: ${{ env.SKETCHES_REPORTS_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
 
   report:
     needs: build  # Wait for the build job to finish to get the data for the report
@@ -65,9 +68,9 @@ jobs:
       - name: Download sketches reports artifact
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: ${{ env.SKETCHES_REPORTS_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
 
       - uses: arduino/report-size-deltas@v1
         with:
-          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
