@@ -5,9 +5,9 @@
 [![ESP8266](https://img.shields.io/badge/ESP-8266-blue.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp8266)
 [![GitHub release](https://img.shields.io/github/release/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
 [![GitHub downloads](https://img.shields.io/github/downloads/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
-[![Actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/arduino-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/arduino-compile.yml)
-[![Actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp32-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp32-compile.yml)
-[![Actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml)
+[![Arduino actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/arduino-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/arduino-compile.yml)
+[![ESP32 actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp32-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp32-compile.yml)
+[![ESP8266 actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml)
 ![GitHub stars](https://img.shields.io/github/stars/thingsboard/thingsboard-arduino-sdk?style=social)
 
 This library provides access to ThingsBoard platform over the `MQTT` protocol or alternatively over `HTTP/S`.
@@ -15,7 +15,7 @@ This library provides access to ThingsBoard platform over the `MQTT` protocol or
 ## Examples
 
 The SDK comes with a number of example sketches. See **Files --> Examples --> ThingsBoard** within the Arduino application.
-Please review the complete guide for `ESP32` Pico Kit GPIO control and `DHT22` sensor monitoring available [here](https://thingsboard.io/docs/samples/esp32/gpio-control-pico-kit-dht22-sensor/).
+Please review the complete guide for `ESP32` Pico Kit `GPIO` control and `DHT22` sensor monitoring available [here](https://thingsboard.io/docs/samples/esp32/gpio-control-pico-kit-dht22-sensor/).
 
 ## Installation
 
@@ -29,7 +29,7 @@ Following dependencies are installed automatically or must be installed, too:
 
 **Needs to be installed manually:**
  - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
- - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using an `Arduino Uno` in combination with an `ESP8266`.
+ - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` in combination with a `ESP8266`.
 
 ## Supported ThingsBoard Features
 
@@ -70,7 +70,7 @@ All constant variables are per default in flash memory to decrease the memory fo
 
 ### Dynamic ThingsBoard usage
 
-The received `JSON` payload, as well as the `sendAttributes` and` sendTelemetry` methods use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) by default, this furthemore requires the `MaxFieldsAmt` template argument passed in the constructor. To set the size the buffer should have, where bigger messages will cause not sent / received key-value pairs or failed deserializations.
+The received `JSON` payload, as well as the `sendAttributes` and `sendTelemetry` methods use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) by default, this furthermore requires the `MaxFieldsAmt` template argument passed in the constructor. To set the size the buffer should have, where bigger messages will cause not sent / received key-value pairs or failed de-/serialization.
 
 To remove the need for the `MaxFieldsAmt` template argument in the constructor and ensure the size the buffer should have is always enough to hold the sent or received messages, instead `#define THINGSBOARD_ENABLE_DYNAMIC 1` can be set before including the ThingsBoard header file. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/).
 
@@ -130,7 +130,7 @@ ThingsBoardSized<32> tb(espClient, 128);
 
 ## Tips and Tricks
 
-To use your own logger you have to create a class and pass it as third parameter `Logger` to your `ThingsBoardSized` class instance.
+To use your own logger you have to create a class and pass it as second template parameter `Logger` to your `ThingsBoardSized` class instance.
 
 **For example:**
 

@@ -1950,87 +1950,79 @@ class ThingsBoardSized {
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
     inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
-      RPC_Response r; {
+      RPC_Response respVariant;
 #if THINGSBOARD_ENABLE_DYNAMIC
-        // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
-        // Data structure size depends on the amount of key value pairs received.
-        // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
-        TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
-        StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
-        // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
-        // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
-        // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-        const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
-        if (error) {
-          char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-          snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-          Logger::log(message);
-          return;
-        }
-
-        const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
-        const char *methodName = data[RPC_METHOD_KEY].as<const char *>();
-
-        if (methodName != nullptr) {
-          Logger::log(RECEIVED_RPC_LOG_MESSAGE);
-          Logger::log(methodName);
-        } else {
-          Logger::log(RPC_METHOD_NULL);
-          return;
-        }
-
-        for (const RPC_Callback& callback : m_rpcCallbacks) {
-          const char *subscribedMethodName = callback.Get_Name();
-          if (subscribedMethodName == nullptr) {
-            Logger::log(RPC_METHOD_NULL);
-            continue;
-          }
-          // Strncmp returns the ascis value difference of the ascii characters that are different,
-          // meaning 0 is the same string and less and more than 0 is the difference in ascci values between the 2 chararacters.
-          else if (strncmp(subscribedMethodName, methodName, strlen(subscribedMethodName)) != 0) {
-            continue;
-          }
-
-          Logger::log(CALLING_RPC);
-          Logger::log(methodName);
-          // Do not inform client, if parameter field is missing for some reason
-          if (!data.containsKey(RPC_PARAMS_KEY)) {
-            Logger::log(NO_RPC_PARAMS_PASSED);
-          }
-
-          Logger::log(RPC_PARAMS_KEY);
-          const JsonVariantConst param = data[RPC_PARAMS_KEY].as<JsonVariantConst>();
-          const size_t jsonSize = JSON_STRING_SIZE(measureJson(param));
-          char json[jsonSize];
-          // Serialize json does not include size of the string null terminator
-          if (serializeJson(param, json, jsonSize) < jsonSize - 1) {
-            Logger::log(UNABLE_TO_SERIALIZE_JSON);
-            return;
-          }
-          Logger::log(json);
-          r = callback.Call_Callback<Logger>(param);
-          break;
-        }
-      }
-      // Fill in response
-      StaticJsonDocument<JSON_OBJECT_SIZE(1)> respBuffer;
-      const JsonVariant respObject = respBuffer.to<JsonVariant>();
-
-      if (r.IsEmpty()) {
-        // Message is ignored and not sent at all.
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
+      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      if (error) {
+        char message[detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
+        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
+        Logger::log(message);
         return;
       }
-      else if (!r.SerializeKeyValue(respObject)) {
-        Logger::log(UNABLE_TO_SERIALIZE);
+
+      const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
+      const char *methodName = data[RPC_METHOD_KEY].as<const char *>();
+
+      if (methodName != nullptr) {
+        Logger::log(RECEIVED_RPC_LOG_MESSAGE);
+        Logger::log(methodName);
+      } else {
+        Logger::log(RPC_METHOD_NULL);
+        return;
+      }
+
+      for (const RPC_Callback& callback : m_rpcCallbacks) {
+        const char *subscribedMethodName = callback.Get_Name();
+        if (subscribedMethodName == nullptr) {
+          Logger::log(RPC_METHOD_NULL);
+          continue;
+        }
+        // Strncmp returns the ascis value difference of the ascii characters that are different,
+        // meaning 0 is the same string and less and more than 0 is the difference in ascci values between the 2 chararacters.
+        else if (strncmp(subscribedMethodName, methodName, strlen(subscribedMethodName)) != 0) {
+          continue;
+        }
+
+        Logger::log(CALLING_RPC);
+        Logger::log(methodName);
+        // Do not inform client, if parameter field is missing for some reason
+        if (!data.containsKey(RPC_PARAMS_KEY)) {
+          Logger::log(NO_RPC_PARAMS_PASSED);
+        }
+
+        Logger::log(RPC_PARAMS_KEY);
+        const JsonVariantConst param = data[RPC_PARAMS_KEY].as<JsonVariantConst>();
+        const size_t jsonSize = JSON_STRING_SIZE(measureJson(param));
+        char json[jsonSize];
+        // Serialize json does not include size of the string null terminator
+        if (serializeJson(param, json, jsonSize) < jsonSize - 1) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return;
+        }
+        Logger::log(json);
+        respVariant = callback.Call_Callback<Logger>(param);
+        break;
+      }
+
+      if (respVariant.isNull()) {
+        // Message is ignored and not sent at all.
         return;
       }
 
       const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t jsonSize = JSON_STRING_SIZE(measureJson(respObject));
+      const uint32_t jsonSize = JSON_STRING_SIZE(measureJson(respVariant));
 
       if (currentBufferSize < jsonSize) {
         char message[detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
@@ -2040,7 +2032,7 @@ class ThingsBoardSized {
       }
       char responsePayload[jsonSize];
       // Serialize json does not include size of the string null terminator
-      if (serializeJson(respObject, responsePayload, jsonSize) < jsonSize - 1) {
+      if (serializeJson(respVariant, responsePayload, jsonSize) < jsonSize - 1) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return;
       }
