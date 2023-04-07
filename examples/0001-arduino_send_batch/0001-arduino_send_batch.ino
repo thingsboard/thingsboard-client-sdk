@@ -181,15 +181,15 @@ void loop() {
 
   const uint8_t data_items = 2U;
   Telemetry data[data_items] = {
-    { TEMPERATURE_KEY, 42.2 },
-    { HUMIDITY_KEY,    80 },
+    { Float(), TEMPERATURE_KEY, 42.2 },
+    { Int(), HUMIDITY_KEY,    80 },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
   Telemetry data[data_items] = {
-    Telemetry( TEMPERATURE_KEY, 42.2 ),
-    Telemetry( HUMIDITY_KEY,    80 ),
+    Telemetry( Float(), TEMPERATURE_KEY, 42.2 ),
+    Telemetry( Int(), HUMIDITY_KEY,    80 ),
   };
 
   */

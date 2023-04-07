@@ -637,13 +637,14 @@ class ThingsBoardSized {
     // Telemetry API
 
     /// @brief Attempts to send telemetry data with the given key and value of the given type
-    /// @tparam T Type of the data value we want to send
+    /// @tparam T1 Type of the struct that is used to choose how the Telemtry object is constructed
+    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = String, bool = Bool, int = Int, float = Float)
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    template<class T>
-    inline bool sendTelemetryData(const char *key, T value) {
-      return sendKeyValue(key, value);
+    template<typename T1, typename T2>
+    inline bool sendTelemetryData(T1 type, const char *key, T2 value) {
+      return sendKeyValue(type, key, value);
     }
 
     /// @brief Attempts to send integer telemetry data with the given key and value
@@ -651,7 +652,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     inline bool sendTelemetryInt(const char *key, int value) {
-      return sendKeyValue(key, value);
+      return sendKeyValue(Int(), key, value);
     }
 
     /// @brief Attempts to send boolean telemetry data with the given key and value
@@ -659,7 +660,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     inline bool sendTelemetryBool(const char *key, bool value) {
-      return sendKeyValue(key, value);
+      return sendKeyValue(Bool(), key, value);
     }
 
     /// @brief Attempts to send float telemetry data with the given key and value
@@ -667,7 +668,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     inline bool sendTelemetryFloat(const char *key, float value) {
-      return sendKeyValue(key, value);
+      return sendKeyValue(Float(), key, value);
     }
 
     /// @brief Attempts to send string telemetry data with the given key and value
@@ -675,7 +676,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     inline bool sendTelemetryString(const char *key, const char *value) {
-      return sendKeyValue(key, value);
+      return sendKeyValue(String(), key, value);
     }
 
     /// @brief Attempts to send aggregated telemetry data
@@ -811,45 +812,46 @@ class ThingsBoardSized {
     // Attribute API
 
     /// @brief Attempts to send attribute data with the given key and value of the given type
-    /// @tparam T Type of the data value we want to send
+    /// @tparam T1 Type of the struct that is used to choose how the Telemtry object is constructed
+    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = String, bool = Bool, int = Int, float = Float)
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    template<class T>
-    inline bool sendAttributeData(const char *attrName, T value) {
-      return sendKeyValue(attrName, value, false);
+    template<typename T1, typename T2>
+    inline bool sendAttributeData(T1 type, const char *key, T2 value) {
+      return sendKeyValue(key, value, false);
     }
 
     /// @brief Attempts to send integer attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline bool sendAttributeInt(const char *attrName, int value) {
-      return sendKeyValue(attrName, value, false);
+    inline bool sendAttributeInt(const char *key, int value) {
+      return sendKeyValue(Int(), key, value, false);
     }
 
     /// @brief Attempts to send boolean attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline bool sendAttributeBool(const char *attrName, bool value) {
-      return sendKeyValue(attrName, value, false);
+    inline bool sendAttributeBool(const char *key, bool value) {
+      return sendKeyValue(Bool(), key, value, false);
     }
 
     /// @brief Attempts to send float attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline bool sendAttributeFloat(const char *attrName, float value) {
-      return sendKeyValue(attrName, value, false);
+    inline bool sendAttributeFloat(const char *key, float value) {
+      return sendKeyValue(Float(), key, value, false);
     }
 
     /// @brief Attempts to send string attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
-    inline bool sendAttributeString(const char *attrName, const char *value) {
-      return sendKeyValue(attrName, value, false);
+    inline bool sendAttributeString(const char *key, const char *value) {
+      return sendKeyValue(String(), key, value, false);
     }
 
     /// @brief Attempts to send aggregated attribute data
@@ -1845,14 +1847,15 @@ class ThingsBoardSized {
     }
 
     /// @brief Attempts to send a single key-value pair with the given key and value of the given type
-    /// @tparam T Type of the data value we want to send
+    /// @tparam T1 Type of the struct that is used to choose how the Telemtry object is constructed
+    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = String, bool = Bool, int = Int, float = Float)
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @param telemetry Whether the data we want to send should be sent as an attribute or telemetry data value
     /// @return Whether sending the data was successful or not
-    template<typename T>
-    inline bool sendKeyValue(const char *key, T value, bool telemetry = true) {
-      const Telemetry t(key, value);
+    template<typename T1, typename T2>
+    inline bool sendKeyValue(T1 type, const char *key, T2 value, bool telemetry = true) {
+      const Telemetry t(type, key, value);
       if (t.IsEmpty()) {
         // Message is ignored and not sent at all.
         return false;
