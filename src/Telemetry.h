@@ -10,13 +10,6 @@
 // Library includes.
 #include <ArduinoJson.h>
 
-// Struct dispatch tags, to differentiate between constructors,
-// solves the issue of not being able to distuinguish float, integer and the boolean constructor.
-struct Float{};
-struct Bool{};
-struct Int{};
-struct CString{};
-
 /// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
   public:
@@ -25,9 +18,14 @@ class Telemetry {
       : m_type(DataType::TYPE_NONE), m_key(NULL), m_value() { }
 
     /// @brief Constructs telemetry record from integer value
+    /// @brief Constructs telemetry record from integer value
+    /// @tparam T Type of the passed value, is required to be integral,
+    /// to ensure this constructor isn't used instead of the float one by mistake
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
-    inline Telemetry(Int, const char *key, int val)
+    template <typename T,
+              typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+    inline Telemetry(const char *key, int val)
             : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
         m_value.integer = val;
     }
@@ -35,7 +33,7 @@ class Telemetry {
     /// @brief Constructs telemetry record from boolean value
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
-    inline Telemetry(Bool, const char *key, bool val)
+    inline Telemetry(const char *key, bool val)
             : m_type(DataType::TYPE_BOOL), m_key(key), m_value()  {
         m_value.boolean = val;
     }
@@ -43,7 +41,7 @@ class Telemetry {
     /// @brief Constructs telemetry record from float value
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
-    inline Telemetry(Float, const char *key, float val)
+    inline Telemetry(const char *key, float val)
       : m_type(DataType::TYPE_REAL), m_key(key), m_value()  {
       m_value.real = val;
     }
@@ -51,7 +49,7 @@ class Telemetry {
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
-    inline Telemetry(CString, const char *key, const char *val)
+    inline Telemetry(const char *key, const char *val)
             : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
         m_value.str = val;
     }
