@@ -244,7 +244,7 @@ RPC_Response processTemperatureChange(const RPC_Data &data) {
   // Just an response example
   StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
   doc[RPC_RESPONSE_KEY] = 42;
-  return doc;
+  return RPC_Response(doc);
 }
 
 /// @brief Processes function for RPC call "example_set_switch"
@@ -272,7 +272,7 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
   // Just an response example
   StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
   doc[RPC_RESPONSE_KEY] = 22.02;
-  return doc;
+  return RPC_Response(doc);
 }
 
 const std::array<RPC_Callback, 2U> callbacks = {
