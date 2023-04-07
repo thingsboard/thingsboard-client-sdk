@@ -9,8 +9,9 @@
 
 // Local includes.
 #include "Configuration.h"
-
 #include "RPC_Response.h"
+
+// Library includes.
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
 #endif // THINGSBOARD_ENABLE_STL
