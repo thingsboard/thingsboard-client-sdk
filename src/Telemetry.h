@@ -9,7 +9,7 @@
 
 // Library includes.
 #include <ArduinoJson.h>
-#include <<concepts>
+#include <concepts>
 
 /// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
