@@ -10,8 +10,7 @@
 // Local includes.
 #include "Configuration.h"
 
-// Library includes.
-#include <Telemetry.h>
+#include "RPC_Response.h"
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
 #endif // THINGSBOARD_ENABLE_STL
@@ -25,8 +24,6 @@ constexpr char RPC_CB_NULL[] PROGMEM = "Server-side RPC callback is NULL";
 constexpr char RPC_CB_NULL[] = "Server-side RPC callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-// Convenient aliases
-using RPC_Response = JsonVariant;
 // JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
 using RPC_Data = const JsonVariantConst;
 
