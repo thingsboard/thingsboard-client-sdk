@@ -29,9 +29,9 @@ public:
         this->set(object);
     }
 
-    template <typename T1, typename T2>
-    RPC_Response(T1 type, const char *key, T2 value)
-      : RPC_Response(Telemetry(type, key, value)) {
+    template <typename T>
+    RPC_Response(const char *key, T value)
+      : RPC_Response(Telemetry(key, value)) {
     }
 };
 
