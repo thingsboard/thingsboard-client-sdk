@@ -207,15 +207,15 @@ void loop() {
 
   const int attribute_items = 2;
   Attribute attributes[attribute_items] = {
-    { DEVICE_TYPE_KEY,  SENSOR_VALUE },
-    { ACTIVE_KEY,       true     },
+    { CString(), DEVICE_TYPE_KEY,  SENSOR_VALUE },
+    { Bool(), ACTIVE_KEY,       true     },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
   Attribute attributes[data_items] = {
-    Attribute( DEVICE_TYPE_KEY,  SENSOR_VALUE ),
-    Attribute( ACTIVE_KEY,       true     ),
+    Attribute( CString(), DEVICE_TYPE_KEY,  SENSOR_VALUE ),
+    Attribute( Bool(), ACTIVE_KEY,       true     ),
   };
 
   */
