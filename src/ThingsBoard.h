@@ -642,7 +642,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    inline bool sendTelemetryData(const char *key, T2 value) {
+    inline bool sendTelemetryData(const char *key, T value) {
       return sendKeyValue(key, value);
     }
 

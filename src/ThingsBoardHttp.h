@@ -309,7 +309,7 @@ class ThingsBoardHttpSized {
     // Attribute API
 
     /// @brief Attempts to send attribute data with the given key and value of the given type
-    /// @tparam T2 Type of the passed value
+    /// @tparam T Type of the passed value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
@@ -565,7 +565,7 @@ class ThingsBoardHttpSized {
     }
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
-    /// @tparam T2 Type of the passed value
+    /// @tparam T Type of the passed value
     /// @param key Key of the key value pair we want to send
     /// @param val Value of the key value pair we want to send
     /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
