@@ -49,14 +49,6 @@ class Telemetry {
         m_value.str = val;
     }
 
-    /// @brief Constructs telemetry record from string value
-    /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(const char *key, const char *val)
-            : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
-        m_value.str = val;
-    }
-
     /// @brief Whether this record is empty or not
     /// @return Whether there is any data in this record or not
     inline bool IsEmpty() const {
