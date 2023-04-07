@@ -15,7 +15,7 @@
 struct Float{};
 struct Bool{};
 struct Int{};
-struct String{};
+struct CString{};
 
 /// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
@@ -51,7 +51,7 @@ class Telemetry {
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
-    inline Telemetry(String, const char *key, const char *val)
+    inline Telemetry(CString, const char *key, const char *val)
             : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
         m_value.str = val;
     }

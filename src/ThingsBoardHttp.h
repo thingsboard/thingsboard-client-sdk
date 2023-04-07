@@ -127,7 +127,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Attempts to send telemetry data with the given key and value of the given type
     /// @tparam T1 Type of the struct that is used to choose how the Telemtry object is constructed
-    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = String, bool = Bool, int = Int, float = Float)
+    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = CString, bool = Bool, int = Int, float = Float)
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
@@ -165,7 +165,7 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     inline bool sendTelemetryString(const char *key, const char *value) {
-      return sendKeyValue(String(), key, value);
+      return sendKeyValue(CString(), key, value);
     }
 
     /// @brief Attempts to send aggregated telemetry data
@@ -311,7 +311,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Attempts to send attribute data with the given key and value of the given type
     /// @tparam T1 Type of the struct that is used to choose how the Telemtry object is constructed
-    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = String, bool = Bool, int = Int, float = Float)
+    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = CString, bool = Bool, int = Int, float = Float)
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
@@ -349,7 +349,7 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     inline bool sendAttributeString(const char *key, const char *value) {
-      return sendKeyValue(String(), key, value, false);
+      return sendKeyValue(CString(), key, value, false);
     }
 
     /// @brief Attempts to send aggregated attribute data
@@ -568,7 +568,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
     /// @tparam T1 Type of the struct that is used to choose how the Telemtry object is constructed
-    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = String, bool = Bool, int = Int, float = Float)
+    /// @tparam T2 Type of the passed value should be equal to T1 (const char* = CString, bool = Bool, int = Int, float = Float)
     /// @param key Key of the key value pair we want to send
     /// @param val Value of the key value pair we want to send
     /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
