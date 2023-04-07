@@ -30,8 +30,8 @@ public:
     }
 
     template <typename T1, typename T2>
-    RPC_Response(T1 key, T2 value)
-      : RPC_Response(Telemetry(key, value)) {
+    RPC_Response(T1 type, const char *key, T2 value)
+      : RPC_Response(Telemetry(type, key, value)) {
     }
 };
 
