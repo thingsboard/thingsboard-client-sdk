@@ -7,7 +7,7 @@
         "url": "https://github.com/thingsboard/thingsboard-arduino-sdk"
     },
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.20.1",
+        "bblanchon/ArduinoJson": "^6.21.1",
         "thingsboard/TBPubSubClient": "https://github.com/thingsboard/pubsubclient.git#v2.9.1",
         "arduino-libraries/ArduinoHttpClient" : "^0.4.0"
     },
