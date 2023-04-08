@@ -33,7 +33,7 @@ class Telemetry {
 #if THINGSBOARD_ENABLE_STL
               typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 #else
-              typename ArduinoJson::enable_if<ArduinoJson::is_integral<T>::value>::type* = nullptr>
+              typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
     inline Telemetry(const char *key, T val)
             : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
