@@ -14,6 +14,8 @@
 #include <ArduinoJson.h>
 #if THINGSBOARD_ENABLE_STL
 #include <type_traits>
+#else
+#define ArduinoJsonNameSpace ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail
 #endif // THINGSBOARD_ENABLE_STL
 
 /// @brief Telemetry record class, allows to store different data using a common interface.
@@ -32,14 +34,22 @@ class Telemetry {
     template <typename T,
 #if THINGSBOARD_ENABLE_STL
               // Standard library is_integral, includes bool, char, signed char, unsigned char, short, unsigned short, int, unsigned int, long, unsigned long, long long, and unsigned long longy
-              typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+              typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value>::type* = nullptr>
 #else
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
-              typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
+              typename ArduinoJsonNameSpace::enable_if<ArduinoJsonNameSpace::is_integral<T>::value && !ArduinoJsonNameSpace::is_same<T, bool>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
     inline Telemetry(const char *key, T val)
             : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
         m_value.integer = val;
+    }
+
+    /// @brief Constructs telemetry record from boolean value
+    /// @param key Key of the key value pair we want to create
+    /// @param val Value of the key value pair we want to create
+    inline Telemetry(const char *key, bool val)
+            : m_type(DataType::TYPE_BOOL), m_key(key), m_value()  {
+        m_value.boolean = val;
     }
 
     /// @brief Constructs telemetry record from float value
@@ -70,6 +80,10 @@ class Telemetry {
     inline bool SerializeKeyValue(const JsonVariant &jsonObj) const {
       if (m_key) {
         switch (m_type) {
+          case DataType::TYPE_BOOL:
+            jsonObj[m_key] = m_value.boolean;
+            return true;
+            break;
           case DataType::TYPE_INT:
             jsonObj[m_key] = m_value.integer;
             return true;
@@ -90,6 +104,9 @@ class Telemetry {
       }
 
       switch (m_type) {
+        case DataType::TYPE_BOOL:
+          return jsonObj.set(m_value.boolean);
+          break;
         case DataType::TYPE_INT:
           return jsonObj.set(m_value.integer);
           break;
@@ -110,6 +127,7 @@ class Telemetry {
     // Data container
     union Data {
       const char  *str;
+      bool        boolean;
       int         integer;
       float       real;
     };
@@ -117,6 +135,7 @@ class Telemetry {
     // Data type inside a container
     enum class DataType: const uint8_t {
       TYPE_NONE,
+      TYPE_BOOL,
       TYPE_INT,
       TYPE_REAL,
       TYPE_STR
