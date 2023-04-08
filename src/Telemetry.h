@@ -23,8 +23,6 @@ class Telemetry {
     inline Telemetry()
       : m_type(DataType::TYPE_NONE), m_key(NULL), m_value() { }
 
-#if THINGSBOARD_ENABLE_STL
-
     /// @brief Constructs telemetry record from integer value
     /// @brief Constructs telemetry record from integer value
     /// @tparam T Type of the passed value, is required to be integral,
@@ -32,13 +30,15 @@ class Telemetry {
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
     template <typename T,
+#if THINGSBOARD_ENABLE_STL
               typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+#else
+              typename ArduinoJson::enable_if<ArduinoJson::is_integral<T>::value>::type* = nullptr>
+#endif // THINGSBOARD_ENABLE_STL
     inline Telemetry(const char *key, T val)
             : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
         m_value.integer = val;
     }
-
-#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs telemetry record from boolean value
     /// @param key Key of the key value pair we want to create
