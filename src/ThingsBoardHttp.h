@@ -125,10 +125,20 @@ class ThingsBoardHttpSized {
     //----------------------------------------------------------------------------
     // Telemetry API
 
+    /// @brief Attempts to send telemetry data with the given key and value of the given type
+    /// @tparam T Type of the passed value
+    /// @param key Key of the key value pair we want to send
+    /// @param value Value of the key value pair we want to send
+    /// @return Whether sending the data was successful or not
+    template<typename T>
+    inline bool sendTelemetryData(const char *key, T value) {
+      return sendKeyValue(key, value);
+    }
+
     /// @brief Attempts to send integer telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline bool sendTelemetryInt(const char *key, int value) {
       return sendKeyValue(key, value);
     }
@@ -136,7 +146,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send boolean telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline bool sendTelemetryBool(const char *key, bool value) {
       return sendKeyValue(key, value);
     }
@@ -144,7 +154,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send float telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline bool sendTelemetryFloat(const char *key, float value) {
       return sendKeyValue(key, value);
     }
@@ -152,7 +162,7 @@ class ThingsBoardHttpSized {
     /// @brief Attempts to send string telemetry data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
+    /// @return Whether sending the data was successful or not
     inline bool sendTelemetryString(const char *key, const char *value) {
       return sendKeyValue(key, value);
     }
@@ -298,36 +308,46 @@ class ThingsBoardHttpSized {
     //----------------------------------------------------------------------------
     // Attribute API
 
+    /// @brief Attempts to send attribute data with the given key and value of the given type
+    /// @tparam T Type of the passed value
+    /// @param key Key of the key value pair we want to send
+    /// @param value Value of the key value pair we want to send
+    /// @return Whether sending the data was successful or not
+    template<typename T>
+    inline bool sendAttributeData(const char *key, T value) {
+      return sendKeyValue(key, value, false);
+    }
+
     /// @brief Attempts to send integer attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeInt(const char *attrName, int value) {
-      return sendKeyValue(attrName, value, false);
+    /// @return Whether sending the data was successful or not
+    inline bool sendAttributeInt(const char *key, int value) {
+      return sendKeyValue(key, value, false);
     }
 
     /// @brief Attempts to send boolean attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeBool(const char *attrName, bool value) {
-      return sendKeyValue(attrName, value, false);
+    /// @return Whether sending the data was successful or not
+    inline bool sendAttributeBool(const char *key, bool value) {
+      return sendKeyValue(key, value, false);
     }
 
     /// @brief Attempts to send float attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeFloat(const char *attrName, float value) {
-      return sendKeyValue(attrName, value, false);
+    /// @return Whether sending the data was successful or not
+    inline bool sendAttributeFloat(const char *key, float value) {
+      return sendKeyValue(key, value, false);
     }
 
     /// @brief Attempts to send string attribute data with the given key and value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeString(const char *attrName, const char *value) {
-      return sendKeyValue(attrName, value, false);
+    /// @return Whether sending the data was successful or not
+    inline bool sendAttributeString(const char *key, const char *value) {
+      return sendKeyValue(key, value, false);
     }
 
     /// @brief Attempts to send aggregated attribute data
