@@ -33,7 +33,8 @@ class Telemetry {
 #if THINGSBOARD_ENABLE_STL
               typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 #else
-              typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
+              // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
+              typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>>
 #endif // THINGSBOARD_ENABLE_STL
     inline Telemetry(const char *key, T val)
             : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
