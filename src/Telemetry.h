@@ -7,8 +7,14 @@
 #ifndef Telemetry_h
 #define Telemetry_h
 
+// Local includes.
+#include "Configuration.h"
+
 // Library includes.
 #include <ArduinoJson.h>
+#if THINGSBOARD_ENABLE_STL
+#include <type_traits>
+#endif // THINGSBOARD_ENABLE_STL
 
 /// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
@@ -17,39 +23,28 @@ class Telemetry {
     inline Telemetry()
       : m_type(DataType::TYPE_NONE), m_key(NULL), m_value() { }
 
+#if THINGSBOARD_ENABLE_STL
+
+    /// @brief Constructs telemetry record from integer value
     /// @brief Constructs telemetry record from integer value
     /// @tparam T Type of the passed value, is required to be integral,
     /// to ensure this constructor isn't used instead of the float one by mistake
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
-    inline Telemetry(const char *key, int val)
+    template <typename T,
+              typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+    inline Telemetry(const char *key, T val)
             : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
         m_value.integer = val;
     }
 
-    /// @brief Constructs telemetry record from integer value
-    /// @tparam T Type of the passed value, is required to be integral,
-    /// to ensure this constructor isn't used instead of the float one by mistake
-    /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(String key, int val)
-            : m_type(DataType::TYPE_INT), m_key(key.c_str()), m_value()   {
-        m_value.integer = val;
-    }
+#endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs telemetry record from boolean value
     /// @param key Key of the key value pair we want to create
     /// @param val Value of the key value pair we want to create
     inline Telemetry(const char *key, bool val)
             : m_type(DataType::TYPE_BOOL), m_key(key), m_value()  {
-        m_value.boolean = val;
-    }
-
-    /// @brief Constructs telemetry record from boolean value
-    /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(String key, bool val)
-            : m_type(DataType::TYPE_BOOL), m_key(key.c_str()), m_value()  {
         m_value.boolean = val;
     }
 
@@ -67,22 +62,6 @@ class Telemetry {
     inline Telemetry(const char *key, const char *val)
             : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
         m_value.str = val;
-    }
-
-    /// @brief Constructs telemetry record from string value
-    /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(String key, const char *val)
-            : m_type(DataType::TYPE_STR), m_key(key.c_str()), m_value()   {
-        m_value.str = val;
-    }
-
-    /// @brief Constructs telemetry record from string value
-    /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(String key, String val)
-            : m_type(DataType::TYPE_STR), m_key(key.c_str()), m_value()   {
-        m_value.str = val.c_str();
     }
 
     /// @brief Whether this record is empty or not
