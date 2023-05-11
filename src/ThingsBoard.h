@@ -234,7 +234,7 @@ constexpr char PROV_CRED_CLIENT_ID[] = "clientId";
 constexpr char PROV_CRED_HASH[] = "hash";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
 // Firmware topics.
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -340,7 +340,7 @@ constexpr char FW_UPDATE_SUCCESS[] = "Update success";
 constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_OTA
 
 #if THINGSBOARD_ENABLE_DYNAMIC
 /// @brief Wrapper around the PubSubClient to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol.
@@ -399,7 +399,7 @@ class ThingsBoardSized {
       , m_provisionCallback()
       , m_requestId(0U)
       , m_qos(enableQoS)
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
       , m_fwState(false)
       , m_fwCallback(nullptr)
       , m_fwSize(0U)
@@ -410,7 +410,7 @@ class ThingsBoardSized {
       , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fwChunkReceive(0U)
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
     {
 #if !THINGSBOARD_ENABLE_STL
       m_subscribedInstance = this;
@@ -1163,7 +1163,7 @@ class ThingsBoardSized {
     //----------------------------------------------------------------------------
     // Firmware OTA API
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
     /// @brief Immediately starts a firmware update if firmware is assigned to the given device
     /// @param callback Callback method that will be called
@@ -1224,7 +1224,7 @@ class ThingsBoardSized {
       return sendTelemetryJson(currentFirmwareStateObject, JSON_STRING_SIZE(measureJson(currentFirmwareStateObject)));
     }
 
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
 
     //----------------------------------------------------------------------------
     // Shared attributes API
@@ -1497,7 +1497,7 @@ class ThingsBoardSized {
       return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
     }
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
     /// @brief Checks the included information in the callback,
     /// and attempts to sends the current device firmware information to the cloud
@@ -1742,7 +1742,7 @@ class ThingsBoardSized {
       Firmware_OTA_Unsubscribe();
     }
 
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
 
     /// @brief Connects to the previously set ThingsBoard server, as the given client with the given access token
     /// @param access_token Access token that connects this device with a created device on the ThingsBoard server,
@@ -1762,9 +1762,9 @@ class ThingsBoardSized {
       this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
       this->Attributes_Request_Unsubscribe(); // Cleanup all client-side or shared attributes requests
       this->Provision_Unsubscribe(); // Cleanup all provision subscriptions
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
       this->Firmware_OTA_Unsubscribe(); // Cleanup all firmware subscriptions
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
       return connection_result;
     }
 
@@ -2059,7 +2059,7 @@ class ThingsBoardSized {
       m_client.publish(responseTopic, responsePayload, m_qos);
     }
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
     /// @brief Process callback that will be called upon firmware response arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
@@ -2148,7 +2148,7 @@ class ThingsBoardSized {
       Firmware_Send_State(FW_STATE_VERIFIED);
     }
 
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
 
     /// @brief Process callback that will be called upon shared attribute update arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
@@ -2438,7 +2438,7 @@ class ThingsBoardSized {
     uint32_t m_requestId; // Allows nearly 4.3 million requests before wrapping back to 0.
     bool m_qos; // Whether QoS level 1 should be enabled or disabled (Resends the packet until the message was received and a PUBACK packet was returned).
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
     bool m_fwState;
     const OTA_Update_Callback* m_fwCallback;
@@ -2452,7 +2452,7 @@ class ThingsBoardSized {
     const Shared_Attribute_Callback m_fwUpdateCallback;
     uint16_t m_fwChunkReceive;
 
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
 
     /// @brief MQTT callback that will be called if a publish message is received from the server
     /// @param topic Previously subscribed topic, we got the response over
@@ -2474,9 +2474,9 @@ class ThingsBoardSized {
       } else if (strncmp_P(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
         process_provisioning_response(topic, payload, length);
       } else if (strncmp_P(FIRMWARE_RESPONSE_TOPIC, topic, strlen(FIRMWARE_RESPONSE_TOPIC)) == 0) {
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
         process_firmware_response(topic, payload, length);
-#endif
+#endif // THINGSBOARD_ENABLE_OTA
       }
     }
 

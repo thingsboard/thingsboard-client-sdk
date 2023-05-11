@@ -30,6 +30,11 @@
 #    endif
 #  endif
 
+// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality and when using ESP8266 or the ESP32
+#  ifndef THINGSBOARD_ENABLE_OTA
+#    define THINGSBOARD_ENABLE_OTA THINGSBOARD_ENABLE_STL && (defined(ESP8266) || defined(ESP32))
+#  endif
+
 // Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
 #  ifdef __has_include
 #    if  __has_include(<pgmspace.h>)
