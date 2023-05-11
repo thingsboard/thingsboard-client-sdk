@@ -7,7 +7,7 @@
 #ifndef OTA_Update_Callback_h
 #define OTA_Update_Callback_h
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
 // Local includes.
 #include "Configuration.h"
@@ -196,6 +196,6 @@ class OTA_Update_Callback {
     uint16_t        m_timeout;       // How long we maximum wait for each chunck to arrive
 };
 
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // OTA_Update_Callback_h

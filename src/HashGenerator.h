@@ -7,7 +7,7 @@
 #ifndef Hash_Generator_h
 #define Hash_Generator_h
 
-#if defined(ESP8266) || defined(ESP32)
+#if THINGSBOARD_ENABLE_OTA
 
 // Library includes.
 #if defined(ESP8266)
@@ -46,6 +46,6 @@ private:
     mbedtls_md_context_t m_ctx;
 };
 
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // Hash_Generator_h
