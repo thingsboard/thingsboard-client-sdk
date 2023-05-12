@@ -1,8 +1,7 @@
-#if THINGSBOARD_ENABLE_OTA
-
 // Header include.
 #include <HashGenerator.h>
 
+#if THINGSBOARD_ENABLE_OTA
 // Library includes.
 #include <sstream>
 #include <iomanip>

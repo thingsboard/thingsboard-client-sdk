@@ -7,16 +7,6 @@
 #ifndef ThingsBoard_h
 #define ThingsBoard_h
 
-// Library includes.
-#include <stdarg.h>
-#include <TBPubSubClient.h>
-
-#if defined(ESP8266)
-#include <Updater.h>
-#elif defined(ESP32)
-#include <Update.h>
-#endif
-
 // Local includes.
 #include "Constants.h"
 #include "Vector.h"
@@ -29,6 +19,20 @@
 #include "RPC_Request_Callback.h"
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
+
+// Library includes.
+#include <stdarg.h>
+#include <TBPubSubClient.h>
+
+#if THINGSBOARD_ENABLE_OTA
+#ifdef ESP8266
+#include <Updater.h>
+#else
+#ifdef ESP32
+#include <Update.h>
+#endif // ESP32
+#endif // ESP8266
+#endif // THINGSBOARD_ENABLE_OTA
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -2086,7 +2090,7 @@ class ThingsBoardSized {
           Firmware_Send_State(FW_STATE_FAILED, ERROR_UPDATE_BEGIN);
           // Ensure to call Update.abort after calling Update.begin even if it failed,
           // to make sure that any possibly started processes are stopped and freed.
-#if defined(ESP32)
+#ifdef ESP32
           Update.abort();
 #endif
           return;
@@ -2096,7 +2100,7 @@ class ThingsBoardSized {
       // Write received binary data to flash partition
       if (Update.write(payload, length) != length) {
         Logger::log(ERROR_UPDATE_WRITE);
-#if defined(ESP32)
+#ifdef ESP32
           Update.abort();
 #endif
         m_fwState = false;
@@ -2128,7 +2132,7 @@ class ThingsBoardSized {
       // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed
       if (m_fwChecksum.compare(calculatedHash) != 0) {
         Logger::log(CHKS_VER_FAILED);
-#if defined(ESP32)
+#ifdef ESP32
         Update.abort();
 #endif
         m_fwState = false;

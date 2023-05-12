@@ -7,10 +7,10 @@
 #ifndef OTA_Update_Callback_h
 #define OTA_Update_Callback_h
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Local includes.
 #include "Configuration.h"
+
+#if THINGSBOARD_ENABLE_OTA
 
 // Library includes.
 #include <functional>
