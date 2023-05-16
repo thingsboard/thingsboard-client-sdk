@@ -30,6 +30,10 @@
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
 
+#if THINGSBOARD_ENABLE_STL
+#include <assert.h>
+#endif // THINGSBOARD_ENABLE_STL
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
