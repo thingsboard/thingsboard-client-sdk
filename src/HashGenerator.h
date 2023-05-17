@@ -7,14 +7,17 @@
 #ifndef Hash_Generator_h
 #define Hash_Generator_h
 
-#if defined(ESP8266) || defined(ESP32)
+// Local includes.
+#include "Configuration.h"
+
+#if THINGSBOARD_ENABLE_OTA
 
 // Library includes.
-#if defined(ESP8266)
-#include <Seeed_mbedtls.h>
-#else
+#ifdef ESP32
 #include <mbedtls/md.h>
-#endif // defined(ESP8266)
+#else
+#include <Seeed_mbedtls.h>
+#endif // ESP32
 #include <string>
 
 /// @brief Allows generating a hash of the given type
@@ -46,6 +49,6 @@ private:
     mbedtls_md_context_t m_ctx;
 };
 
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // Hash_Generator_h

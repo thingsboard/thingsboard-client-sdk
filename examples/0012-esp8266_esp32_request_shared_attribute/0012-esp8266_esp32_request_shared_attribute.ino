@@ -1,12 +1,14 @@
-#if defined(ESP8266)
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
 // Disable PROGMEM because the ESP8266WiFi library,
 // does not support flash strings.
 #define THINGSBOARD_ENABLE_PROGMEM 0
-#elif defined(ESP32)
+#else
+#ifdef ESP32
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#endif
+#endif // ESP32
+#endif // ESP8266
 
 #include <ThingsBoard.h>
 
