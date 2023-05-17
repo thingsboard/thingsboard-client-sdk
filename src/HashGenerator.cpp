@@ -1,8 +1,7 @@
-#if defined(ESP8266) || defined(ESP32)
-
 // Header include.
 #include <HashGenerator.h>
 
+#if THINGSBOARD_ENABLE_OTA
 // Library includes.
 #include <sstream>
 #include <iomanip>
@@ -41,4 +40,4 @@ void HashGenerator::finish(unsigned char *hash) {
     mbedtls_md_finish(&m_ctx, hash);
 }
 
-#endif // defined(ESP8266) || defined(ESP32)
+#endif // THINGSBOARD_ENABLE_OTA
