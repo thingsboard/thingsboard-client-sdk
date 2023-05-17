@@ -20,6 +20,10 @@
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
 
+#if THINGSBOARD_ENABLE_STL
+#include <assert.h>
+#endif // THINGSBOARD_ENABLE_STL
+
 // Library includes.
 #include <stdarg.h>
 #include <TBPubSubClient.h>
@@ -33,6 +37,7 @@
 #endif // ESP32
 #endif // ESP8266
 #endif // THINGSBOARD_ENABLE_OTA
+
 
 /// ---------------------------------
 /// Constant strings in flash memory.
