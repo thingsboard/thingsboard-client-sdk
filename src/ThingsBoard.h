@@ -510,15 +510,19 @@ class ThingsBoardSized {
         return false;
       }
       m_client.setServer(host, port);
+#if THINGSBOARD_ENABLE_OTA
       delete m_stringConnectArguments;
       m_stringConnectArguments = new ArgumentCache<const char *, const char *, const uint16_t, const char *, const char *>(host, access_token, port, client_id, password);
+#endif // THINGSBOARD_ENABLE_OTA
       return connect_to_host(access_token, client_id, password);
     }
 
     inline bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       m_client.setServer(host, port);
+#if THINGSBOARD_ENABLE_OTA
       delete m_ipConnectArguments;
       m_ipConnectArguments = new ArgumentCache<const IPAddress&, const char *, const uint16_t, const char *, const char *>(host, access_token, port, client_id, password);
+#endif // THINGSBOARD_ENABLE_OTA
       return connect_to_host(access_token, client_id, password);
     }
 
