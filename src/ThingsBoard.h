@@ -19,6 +19,7 @@
 #include "RPC_Request_Callback.h"
 #include "Provision_Callback.h"
 #include "OTA_Update_Callback.h"
+#include "ArgumentCache.h"
 
 #if THINGSBOARD_ENABLE_STL
 #include <assert.h>
@@ -322,6 +323,8 @@ constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
+constexpr char DISCONNECT_WHILE_UPDATING[] PROGMEM = "Disconnected from server while update was ongoing, attempting to reconnect";
+constexpr char NO_CONNECT_CACHE[] PROGMEM = "Reconnecting failed, because no connect arguments were cached. Ensure to call connect before starting an update";
 #else
 constexpr char NO_FW[] = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] = "Given firmware was NULL";
@@ -347,6 +350,8 @@ constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] = "Update success";
 constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
+constexpr char DISCONNECT_WHILE_UPDATING[] = "Disconnected from server while update was ongoing, attempting to reconnect";
+constexpr char NO_CONNECT_CACHE[] = "Reconnecting failed, because no connect arguments were cached. Ensure to call connect before starting an update";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 #endif // THINGSBOARD_ENABLE_OTA
@@ -414,11 +419,14 @@ class ThingsBoardSized {
       , m_fwSize(0U)
       , m_fwChecksumAlgorithm()
       , m_fwAlgorithm()
+      , m_hash(nullptr)
       , m_fwChecksum()
       , m_fwSharedKeys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
       , m_fwRequestCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fwUpdateCallback(m_fwSharedKeys.cbegin(), m_fwSharedKeys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fwChunkReceive(0U)
+      , m_stringConnectArguments(nullptr)
+      , m_ipConnectArguments(nullptr)
 #endif // THINGSBOARD_ENABLE_OTA
     {
 #if !THINGSBOARD_ENABLE_STL
@@ -431,7 +439,14 @@ class ThingsBoardSized {
 
     /// @brief Destructor
     inline ~ThingsBoardSized() {
-      // Nothing to do.
+#if THINGSBOARD_ENABLE_OTA
+      delete m_hash;
+      m_hash = nullptr;
+      delete m_ipConnectArguments;
+      m_ipConnectArguments = nullptr;
+      delete m_stringConnectArguments;
+      m_stringConnectArguments = nullptr;
+#endif // THINGSBOARD_ENABLE_OTA
     }
 
     /// @brief Gets the currently connected PubSubClient as a reference,
@@ -495,11 +510,15 @@ class ThingsBoardSized {
         return false;
       }
       m_client.setServer(host, port);
+      delete m_stringConnectArguments;
+      m_stringConnectArguments = new ArgumentCache<const char *, const char *, const uint16_t, const char *, const char *>(host, access_token, port, client_id, password);
       return connect_to_host(access_token, client_id, password);
     }
 
     inline bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       m_client.setServer(host, port);
+      delete m_ipConnectArguments;
+      m_ipConnectArguments = new ArgumentCache<const IPAddress&, const char *, const uint16_t, const char *, const char *>(host, access_token, port, client_id, password);
       return connect_to_host(access_token, client_id, password);
     }
 
@@ -516,8 +535,8 @@ class ThingsBoardSized {
     }
 
     /// @brief Receives / sends any outstanding messages from and to the MQTT broker
-    inline void loop() {
-      m_client.loop();
+    inline bool loop() {
+      return m_client.loop();
     }
 
     //----------------------------------------------------------------------------
@@ -1548,6 +1567,8 @@ class ThingsBoardSized {
       m_fwCallback = nullptr;
       m_fwSize = 0U;
       m_fwChecksumAlgorithm = mbedtls_md_type_t();
+      delete m_hash;
+      m_hash = nullptr;
       m_fwChecksum.clear();
       m_fwAlgorithm.clear();
       m_fwChunkReceive = 0U;
@@ -1633,6 +1654,8 @@ class ThingsBoardSized {
         return;
       }
 
+      m_hash = new HashGenerator(m_fwChecksumAlgorithm);
+
       Logger::log(PAGE_BREAK);
       Logger::log(NEW_FW);
       char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(currFwVersion)) + JSON_STRING_SIZE(strlen(fw_version))];
@@ -1687,7 +1710,24 @@ class ThingsBoardSized {
         const uint16_t& timeout = m_fwCallback->Get_Timeout();
         do {
           delay(5);
-          loop();
+          if (loop()) {
+            continue;
+          }
+          
+          Logger::log(DISCONNECT_WHILE_UPDATING);
+
+          if (m_stringConnectArguments != nullptr) {
+            auto args = m_stringConnectArguments->getArguments();
+            connect(std::get<0>(args), std::get<1>(args), std::get<2>(args), std::get<3>(args), std::get<4>(args));
+            continue;
+          }
+          else if (m_ipConnectArguments != nullptr) {
+            auto args = m_ipConnectArguments->getArguments();
+            connect(std::get<0>(args), std::get<1>(args), std::get<2>(args), std::get<3>(args), std::get<4>(args));
+            continue;
+          }
+
+          Logger::log(NO_CONNECT_CACHE);
         } while ((m_fwChunkReceive != currChunk) && (millis() - startTime < timeout));
 
         // Check if downloaded the currentChunk timed out, before the packet was received
@@ -2077,7 +2117,6 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void process_firmware_response(char *topic, uint8_t *payload, const uint32_t length) {
       static uint32_t sizeReceive = 0;
-      static HashGenerator hash(m_fwChecksumAlgorithm);
 
       m_fwChunkReceive = atoi(strrchr(topic, SLASH) + 1U);
 
@@ -2086,6 +2125,7 @@ class ThingsBoardSized {
       Logger::log(message);
 
       if (m_fwChunkReceive == 0) {
+        // Reset internal variables to start condition
         sizeReceive = 0;
 
         // Initialize Flash
@@ -2114,7 +2154,7 @@ class ThingsBoardSized {
       }
 
       // Update value only if writing to flash was a success
-      hash.update(payload, length);
+      m_hash->update(payload, length);
       sizeReceive += length;
 
       // Check if we received the full firmware already
@@ -2124,7 +2164,7 @@ class ThingsBoardSized {
 
       Firmware_Send_State(FW_STATE_DOWNLOADED);
 
-      const std::string calculatedHash = hash.get_hash_string();
+      const std::string calculatedHash = m_hash->get_hash_string();
       char actual[JSON_STRING_SIZE(strlen(HASH_ACTUAL)) + JSON_STRING_SIZE(m_fwAlgorithm.size()) + JSON_STRING_SIZE(calculatedHash.size())];
       snprintf_P(actual, sizeof(actual), HASH_ACTUAL, m_fwAlgorithm.c_str(), calculatedHash.c_str());
       Logger::log(actual);
@@ -2450,16 +2490,19 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_OTA
 
     bool m_fwState;
-    const OTA_Update_Callback* m_fwCallback;
+    const OTA_Update_Callback *m_fwCallback;
     // Allows for a binary size of up to theoretically 4 GB.
     uint32_t m_fwSize;
     mbedtls_md_type_t m_fwChecksumAlgorithm;
     std::string m_fwAlgorithm;
+    HashGenerator *m_hash;
     std::string m_fwChecksum;
     const std::vector<const char *> m_fwSharedKeys;
     const Attribute_Request_Callback m_fwRequestCallback;
     const Shared_Attribute_Callback m_fwUpdateCallback;
     uint16_t m_fwChunkReceive;
+    const ArgumentCache<const char *, const char *, const uint16_t, const char *, const char *> *m_stringConnectArguments;
+    const ArgumentCache<const IPAddress&, const char *, const uint16_t, const char *, const char *> *m_ipConnectArguments;
 
 #endif // THINGSBOARD_ENABLE_OTA
 
