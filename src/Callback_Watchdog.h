@@ -32,7 +32,7 @@ class Callback_Watchdog {
     /// @brief Starts the watchdog timer
     /// @param timeout_millis Amount of milliseconds until the feed method is excpected to have been called or the given callback method will be called
     /// @param callback Callback method that will be called if the timeout time passes without being fed
-    inline void start(const uint32_t& timeout_millis, OnReceiveCb callback) {
+    inline void start(const uint32_t& timeout_millis, std::function<void(void)> callback) {
         m_timeout_millis = timeout_millis;
         m_callback = callback;
         m_ticker.attach_ms(m_timeout_millis, &Callback_Watchdog::timerCallback);
@@ -46,7 +46,7 @@ class Callback_Watchdog {
 
   private:
     uint32_t m_timeout_millis;
-    OnReceiveCb m_callback;
+    std::function<void(void)> m_callback;
     Ticker m_ticker;
     uint32_t m_last_feed_millis;
 

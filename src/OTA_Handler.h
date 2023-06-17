@@ -81,7 +81,7 @@ template<typename Logger>
 class OTA_Handler {
   public:
     /// @brief Constructor
-    OTA_Handler(const OTA_Update_Callback *fw_callback, OnReceiveCb reconnect_callback, std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool()> finish_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm)
+    OTA_Handler(const OTA_Update_Callback *fw_callback, std::function<void(void)> reconnect_callback, std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm)
         : m_fw_callback(fw_callback)
         , m_reconnect_callback(reconnect_callback)
         , m_publish_callback(publish_callback)
@@ -183,10 +183,10 @@ class OTA_Handler {
 
   private:
     const OTA_Update_Callback *m_fw_callback;
-    OnReceiveCb m_reconnect_callback;
+    std::function<void(void)> m_reconnect_callback;
     std::function<bool(const uint32_t&)> m_publish_callback;
     std::function<bool(const char *, const char *)> m_send_fw_state_callback;
-    std::function<bool()> m_finish_callback;
+    std::function<bool(void)> m_finish_callback;
     // Allows for a binary size of up to theoretically 4 GB.
     const uint32_t m_fw_size;
     const std::string m_fw_algorithm;
