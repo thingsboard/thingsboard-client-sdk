@@ -174,7 +174,7 @@ class OTA_Update_Callback {
       m_size = chunkSize;
     }
 
-    /// @brief Gets the time we wait until we decleare a single chunk we attempted to download as a timeout
+    /// @brief Gets the time in seconds we wait until we declare a single chunk we attempted to download as a failure
     /// @return Gets the timeout time for each single chunk to be downloaded
     inline const uint16_t& Get_Timeout() const {
       return m_timeout;
