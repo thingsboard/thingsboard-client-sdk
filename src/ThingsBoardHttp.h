@@ -15,6 +15,7 @@
 #include "Constants.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "Telemetry.h"
+#include "Helper.h"
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -77,7 +78,7 @@ class ThingsBoardHttpSized {
     inline ThingsBoardHttpSized(Client &client, const char *access_token,
                                 const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const uint32_t& maxStackSize = Default_Max_Stack_Size)
       : m_client(client, host, port)
-      , m_maxStack(maxStackSize)
+      , m_max_stack(maxStackSize)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
@@ -96,30 +97,7 @@ class ThingsBoardHttpSized {
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
     inline void setMaximumStackSize(const uint32_t& maxStackSize) {
-      m_maxStack = maxStackSize;
-    }
-
-    /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
-    /// @param msg Formating message that the given argument will be inserted into
-    /// @param ... Additional arguments that should be inserted into the message at the given points,
-    /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
-    /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
-    inline static uint8_t detectSize(const char *msg, ...) {
-      va_list args;
-      va_start(args, msg);
-      // Result is what would have been written if the passed buffer would have been large enough not counting null character,
-      // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
-      // when creating an array with negative size we assert beforehand with a clear error message.
-      const int32_t result = JSON_STRING_SIZE(vsnprintf_P(nullptr, 0U, msg, args));
-#if THINGSBOARD_ENABLE_STL
-      assert(result >= 0);
-#else
-      if (result < 0) {
-        abort();
-      }
-#endif // THINGSBOARD_ENABLE_STL
-      va_end(args);
-      return result;
+      m_max_stack = maxStackSize;
     }
 
     //----------------------------------------------------------------------------
@@ -183,7 +161,7 @@ class ThingsBoardHttpSized {
         return false;
       }
 
-      char path[detectSize(HTTP_TELEMETRY_TOPIC, m_token)];
+      char path[Helper::detectSize(HTTP_TELEMETRY_TOPIC, m_token)];
       snprintf_P(path, sizeof(path), HTTP_TELEMETRY_TOPIC, m_token);
       return postMessage(path, json);
     }
@@ -202,7 +180,7 @@ class ThingsBoardHttpSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
-        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
@@ -252,7 +230,7 @@ class ThingsBoardHttpSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
-        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
@@ -366,7 +344,7 @@ class ThingsBoardHttpSized {
         return false;
       }
 
-      char path[detectSize(HTTP_ATTRIBUTES_TOPIC, m_token)];
+      char path[Helper::detectSize(HTTP_ATTRIBUTES_TOPIC, m_token)];
       snprintf_P(path, sizeof(path), HTTP_ATTRIBUTES_TOPIC, m_token);
       return postMessage(path, json);
     }
@@ -385,7 +363,7 @@ class ThingsBoardHttpSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonObjectSize = jsonObject.size();
       if (MaxFieldsAmt < jsonObjectSize) {
-        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
+        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
@@ -435,7 +413,7 @@ class ThingsBoardHttpSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const uint32_t jsonVariantSize = jsonVariant.size();
       if (MaxFieldsAmt < jsonVariantSize) {
-        char message[detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
+        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
         Logger::log(message);
         return false;
@@ -476,7 +454,7 @@ class ThingsBoardHttpSized {
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
     inline const uint32_t& getMaximumStackSize() const {
-      return m_maxStack;
+      return m_max_stack;
     }
 
     /// @brief Clears any remaining memory of the previous conenction,
@@ -496,7 +474,7 @@ class ThingsBoardHttpSized {
       const int status = m_client.responseStatusCode();
 
       if (success != HTTP_SUCCESS || status != HTTP_RESPONSE_SUCCESS_CODE) {
-        char message[detectSize(HTTP_FAILED, POST, status)];
+        char message[Helper::detectSize(HTTP_FAILED, POST, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, POST, status);
         Logger::log(message);
         result = false;
@@ -518,7 +496,7 @@ class ThingsBoardHttpSized {
       const int status = m_client.responseStatusCode();
 
       if (!success || status != HTTP_SUCCESS) {
-        char message[detectSize(HTTP_FAILED, GET, status)];
+        char message[Helper::detectSize(HTTP_FAILED, GET, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, GET, status);
         Logger::log(message);
         result = false;
@@ -589,7 +567,7 @@ class ThingsBoardHttpSized {
     }
 
     HttpClient m_client; // HttpClient instance
-    uint32_t m_maxStack; // Maximum stack size we allocate at once on the stack.
+    uint32_t m_max_stack; // Maximum stack size we allocate at once on the stack.
     const char *m_host; // Host address we connect too
     const uint16_t m_port; // Port we connect over
     const char *m_token; // Access token used to connect with
