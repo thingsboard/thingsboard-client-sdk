@@ -19,7 +19,6 @@
 #include "Provision_Callback.h"
 #include "Argument_Cache.h"
 #include "OTA_Handler.h"
-#include "Helper.h"
 
 #if THINGSBOARD_ENABLE_STL
 #include <assert.h>
@@ -59,9 +58,9 @@ constexpr char RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
 
 // Firmware topics.
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response";
+constexpr char FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response/0/chunk";
 #else
-constexpr char FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response";
+constexpr char FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/0/chunk";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute topics.
@@ -1934,10 +1933,10 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
       // Convert the remaining text to an integer
-      const uint32_t requestId = atoi(request.c_str());
+      const uint32_t request_id = atoi(request.c_str());
 
-      char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, requestId)];
-      snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, requestId);
+      char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)];
+      snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
 
       Logger::log(responseTopic);
       Logger::log(responsePayload);
@@ -1953,8 +1952,22 @@ class ThingsBoardSized {
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
     inline void process_firmware_response(char *topic, uint8_t *payload, const uint32_t length) {
-      m_ota->Process_Firmware_Packet(topic, payload, length);
-      m_ota->Request_Next_Firmware_Packet();
+      // Remove the not needed part of the topic
+      const size_t index = strlen(FIRMWARE_RESPONSE_TOPIC) + 1U;
+#if THINGSBOARD_ENABLE_STL
+      std::string request = topic;
+      request = request.substr(index, request.length() - index);
+#else
+      String request = topic;
+      request = request.substring(index);
+#endif // THINGSBOARD_ENABLE_STL
+
+      Serial.println(request.c_str());
+
+      // Convert the remaining text to an integer
+      const uint32_t request_id = atoi(request.c_str());
+
+      m_ota->Process_Firmware_Packet(request_id, payload, length);
     }
 
 #endif // THINGSBOARD_ENABLE_OTA
