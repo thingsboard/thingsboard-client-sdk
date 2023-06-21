@@ -52,7 +52,7 @@ constexpr char UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware
 constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Failed to initalize flash updater";
 constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary data to flash memory instead of expected (%u)";
 constexpr char UPDATING_HASH_FAILED[] PROGMEM = "Updating hash failed";
-constexpr char ERROR_UPDATE_END[] PROGMEM = "Error during flash updater not all bytes written";
+constexpr char ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
 constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
 constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
 constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
@@ -64,7 +64,7 @@ constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
 constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater";
 constexpr char ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data to flash memory instead of expected (%u)";
 constexpr char UPDATING_HASH_FAILED[] = "Updating hash failed";
-constexpr char ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
+constexpr char ERROR_UPDATE_END[] = "Error (%u) during flash updater not all bytes written";
 constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
 constexpr char FW_CHUNK[] = "Receive chunk (%i), with size (%u) bytes";
 constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
@@ -106,6 +106,7 @@ class OTA_Handler {
             return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
         }
 
+        m_requested_chunks = 0U;
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
         m_retries = m_fw_callback->Get_Chunk_Retries();
         m_hash.start(m_fw_checksum_algorithm);
@@ -161,8 +162,8 @@ class OTA_Handler {
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
         }
 
-        m_fw_callback->Call_Progress_Callback<Logger>(current_chunk, m_total_chunks);
         m_requested_chunks = current_chunk + 1;
+        m_fw_callback->Call_Progress_Callback<Logger>(m_requested_chunks, m_total_chunks);
 
         // Reset retries as the current chunk has been downloaded and handled successfully
         m_retries = m_fw_callback->Get_Chunk_Retries();
@@ -188,7 +189,7 @@ class OTA_Handler {
 
     inline void Request_Next_Firmware_Packet() {
         // Check if we have already requested and handled the last remaining chunk
-        if (m_requested_chunks > m_total_chunks) {
+        if (m_requested_chunks >= m_total_chunks) {
             Finish_Firmware_Update();   
             return;
         }
@@ -225,8 +226,11 @@ class OTA_Handler {
         Logger::log(CHKS_VER_SUCCESS);
 
         if (!Update.end()) {
-            Logger::log(ERROR_UPDATE_END);
-            (void)m_send_fw_state_callback(FW_STATE_FAILED, ERROR_UPDATE_END);
+            const uint8_t error = Update.getError();
+            char message[Helper::detectSize(ERROR_UPDATE_END, error)];
+            snprintf_P(message, sizeof(message), ERROR_UPDATE_END, error);
+            Logger::log(message);
+            (void)m_send_fw_state_callback(FW_STATE_FAILED, message);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
         }
 
