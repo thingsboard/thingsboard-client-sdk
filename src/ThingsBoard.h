@@ -1962,12 +1962,25 @@ class ThingsBoardSized {
       request = request.substring(index);
 #endif // THINGSBOARD_ENABLE_STL
 
-      Serial.println(request.c_str());
-
       // Convert the remaining text to an integer
       const uint32_t request_id = atoi(request.c_str());
 
-      m_ota->Process_Firmware_Packet(request_id, payload, length);
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+      if (getMaximumStackSize() < length) {
+        uint8_t* binary = new uint8_t[length];
+        memcpy(binary, payload, length);
+        m_ota->Process_Firmware_Packet(request_id, binary, length);
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] binary;
+        binary = nullptr;
+      }
+      else {
+        uint8_t binary[length];
+        memcpy(binary, payload, length);
+        m_ota->Process_Firmware_Packet(request_id, binary, length);
+      }
     }
 
 #endif // THINGSBOARD_ENABLE_OTA
