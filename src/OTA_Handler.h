@@ -49,6 +49,7 @@ constexpr char FW_STATE_FAILED[] = "FAILED";
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware chunk";
+constexpr char RECEIVED_UNEXPECTED_CHUNK[] PROGMEM = "Received chunk (%u), not the same as requested chunk (%u)";
 constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Failed to initalize flash updater";
 constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary data to flash memory instead of expected (%u)";
 constexpr char UPDATING_HASH_FAILED[] PROGMEM = "Updating hash failed";
@@ -61,6 +62,7 @@ constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 #else
 constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
+constexpr char RECEIVED_UNEXPECTED_CHUNK[] = "Received chunk (%u), not the same as requested chunk (%u)";
 constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater";
 constexpr char ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data to flash memory instead of expected (%u)";
 constexpr char UPDATING_HASH_FAILED[] = "Updating hash failed";
@@ -79,9 +81,8 @@ template<typename Logger>
 class OTA_Handler {
   public:
     /// @brief Constructor
-    OTA_Handler(const OTA_Update_Callback *fw_callback, std::function<void(void)> reconnect_callback, std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm)
+    OTA_Handler(const OTA_Update_Callback *fw_callback, std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm)
         : m_fw_callback(fw_callback)
-        , m_reconnect_callback(reconnect_callback)
         , m_publish_callback(publish_callback)
         , m_send_fw_state_callback(send_fw_state_callback)
         , m_finish_callback(finish_callback)
@@ -93,14 +94,14 @@ class OTA_Handler {
         , m_total_chunks(0U)
         , m_requested_chunks(0U)
         , m_retries(0U)
-        , m_watchdog()
+        , m_watchdog(m_fw_callback->Get_Timeout(), std::bind(&OTA_Handler::Handle_Request_Timeout, this))
     {
       // Nothing to do.
     }
 
     /// @brief Starts the firmware update with requesting the first firmware packet and initalizes the underlying needed components
     inline void Start_Firmware_Update() {
-        if (!m_reconnect_callback || !m_publish_callback || !m_send_fw_state_callback || !m_finish_callback) {
+        if (!m_publish_callback || !m_send_fw_state_callback || !m_finish_callback) {
           Logger::log(OTA_CB_IS_NULL);
           (void)m_send_fw_state_callback(FW_STATE_FAILED, OTA_CB_IS_NULL);
             return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
@@ -110,16 +111,11 @@ class OTA_Handler {
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
         m_retries = m_fw_callback->Get_Chunk_Retries();
         m_hash.start(m_fw_checksum_algorithm);
-        m_watchdog.start(m_fw_callback->Get_Timeout() * 1000, std::bind(&OTA_Handler::Handle_Request_Timeout, this));
 #ifdef ESP32
         Update.abort();
 #endif
 
-        if (!m_publish_callback(0U)) {
-          Logger::log(UNABLE_TO_REQUEST_CHUNCKS);
-          (void)m_send_fw_state_callback(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
-            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
-        }
+        Request_Next_Firmware_Packet();
     }
 
     /// @brief Uses the given firmware packet data and process it. Starting with writing the given amount of bytes of the packet data into flash memory and
@@ -128,9 +124,16 @@ class OTA_Handler {
     /// @param payload Firmware packet data of the current chunk
     /// @param total_bytes Amount of bytes in the current firmware packet data
     inline void Process_Firmware_Packet(const uint32_t& current_chunk, uint8_t *payload, const uint32_t& total_bytes) {
-        m_watchdog.feed();
+        m_watchdog.detach();
 
         (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
+
+        if (current_chunk != m_requested_chunks) {
+          char message[Helper::detectSize(RECEIVED_UNEXPECTED_CHUNK, current_chunk, m_requested_chunks)];
+          snprintf_P(message, sizeof(message), RECEIVED_UNEXPECTED_CHUNK, current_chunk, m_requested_chunks);
+          Logger::log(message);
+          return;
+        }
 
         char message[Helper::detectSize(FW_CHUNK, current_chunk, total_bytes)];
         snprintf_P(message, sizeof(message), FW_CHUNK, current_chunk, total_bytes);
@@ -172,7 +175,6 @@ class OTA_Handler {
 
   private:
     const OTA_Update_Callback *m_fw_callback;
-    std::function<void(void)> m_reconnect_callback;
     std::function<bool(const uint32_t&)> m_publish_callback;
     std::function<bool(const char *, const char *)> m_send_fw_state_callback;
     std::function<bool(void)> m_finish_callback;
@@ -194,13 +196,14 @@ class OTA_Handler {
             return;
         }
 
-        if (m_publish_callback(m_requested_chunks)) {
-          return;
+        if (!m_publish_callback(m_requested_chunks)) {
+          Logger::log(UNABLE_TO_REQUEST_CHUNCKS);
+          (void)m_send_fw_state_callback(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
         }
 
-        Logger::log(UNABLE_TO_REQUEST_CHUNCKS);
-        (void)m_send_fw_state_callback(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
-        return Handle_Failure(OTA_Failure_Response::RETRY_CHUNK);
+        // Watchdog gets started no matter if publishing request was successfull or not in hopes,
+        // that after the given timeout the callback calls this method again and can then publish the request successfully.
+        m_watchdog.once();
     }
 
     inline void Finish_Firmware_Update() {
@@ -269,8 +272,7 @@ class OTA_Handler {
     }
 
     inline void Handle_Request_Timeout() {
-      m_reconnect_callback();
-      Handle_Failure(OTA_Failure_Response::RETRY_CHUNK);
+        return Handle_Failure(OTA_Failure_Response::RETRY_CHUNK);
     }
 };
 
