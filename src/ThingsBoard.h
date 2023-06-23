@@ -17,7 +17,6 @@
 #include "RPC_Callback.h"
 #include "RPC_Request_Callback.h"
 #include "Provision_Callback.h"
-#include "Argument_Cache.h"
 #include "OTA_Handler.h"
 
 #if THINGSBOARD_ENABLE_STL
@@ -286,8 +285,6 @@ constexpr char FROM_TOO[] PROGMEM = "(%s) => (%s)";
 constexpr char DOWNLOADING_FW[] PROGMEM = "Attempting to download over MQTT...";
 constexpr char NOT_ENOUGH_RAM[] PROGMEM = "Not enough RAM";
 constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
-constexpr char DISCONNECT_WHILE_UPDATING[] PROGMEM = "Disconnected from server while update was ongoing, attempting to reconnect";
-constexpr char NO_CONNECT_CACHE[] PROGMEM = "Reconnecting failed, because no connect arguments were cached. Ensure to call connect before starting an update";
 #else
 constexpr char NO_FW[] = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] = "Given firmware was NULL";
@@ -300,8 +297,6 @@ constexpr char FROM_TOO[] = "(%s) => (%s)";
 constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
 constexpr char NOT_ENOUGH_RAM[] = "Not enough RAM";
 constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
-constexpr char DISCONNECT_WHILE_UPDATING[] = "Disconnected from server while update was ongoing, attempting to reconnect";
-constexpr char NO_CONNECT_CACHE[] = "Reconnecting failed, because no connect arguments were cached. Ensure to call connect before starting an update";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 #endif // THINGSBOARD_ENABLE_OTA
@@ -370,8 +365,6 @@ class ThingsBoardSized {
       , m_fw_request_callback(m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fw_update_callback(m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_ota(nullptr)
-      , m_string_connect_arguments(nullptr)
-      , m_ip_connect_arguments(nullptr)
 #endif // THINGSBOARD_ENABLE_OTA
     {
 #if !THINGSBOARD_ENABLE_STL
@@ -387,10 +380,6 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_OTA
       delete m_ota;
       m_ota = nullptr;
-      delete m_ip_connect_arguments;
-      m_ip_connect_arguments = nullptr;
-      delete m_string_connect_arguments;
-      m_string_connect_arguments = nullptr;
 #endif // THINGSBOARD_ENABLE_OTA
     }
 
@@ -443,19 +432,11 @@ class ThingsBoardSized {
         return false;
       }
       m_client.setServer(host, port);
-#if THINGSBOARD_ENABLE_OTA
-      delete m_string_connect_arguments;
-      m_string_connect_arguments = new Argument_Cache<const char *, const char *, const uint16_t, const char *, const char *>(host, access_token, port, client_id, password);
-#endif // THINGSBOARD_ENABLE_OTA
       return connect_to_host(access_token, client_id, password);
     }
 
     inline bool connect(const IPAddress& host, const char *access_token = PROV_ACCESS_TOKEN, const uint16_t port = 1883, const char *client_id = DEFAULT_CLIENT_ID, const char *password = nullptr) {
       m_client.setServer(host, port);
-#if THINGSBOARD_ENABLE_OTA
-      delete m_ip_connect_arguments;
-      m_ip_connect_arguments = new Argument_Cache<const IPAddress&, const char *, const uint16_t, const char *, const char *>(host, access_token, port, client_id, password);
-#endif // THINGSBOARD_ENABLE_OTA
       return connect_to_host(access_token, client_id, password);
     }
 
@@ -1311,31 +1292,6 @@ class ThingsBoardSized {
       return m_client.publish(topic, size);
     }
 
-    /// @brief Attempts to reconnect, if the connection has been shut down, to the same session that was previously established, using the same arguments
-    inline void reconnect() {
-      if (loop()) {
-        return;
-      }
-
-      Logger::log(DISCONNECT_WHILE_UPDATING);
-
-      bool result = false;
-
-      if (m_string_connect_arguments != nullptr) {
-        auto args = m_string_connect_arguments->getArguments();
-        result = connect(std::get<0>(args), std::get<1>(args), std::get<2>(args), std::get<3>(args), std::get<4>(args));
-      }
-      else if (m_ip_connect_arguments != nullptr) {
-        auto args = m_ip_connect_arguments->getArguments();
-        result = connect(std::get<0>(args), std::get<1>(args), std::get<2>(args), std::get<3>(args), std::get<4>(args));
-      }
-
-      if (!result) {
-        Logger::log(NO_CONNECT_CACHE);
-        return;
-      }
-    }
-
 #endif // THINGSBOARD_ENABLE_OTA
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
@@ -1623,7 +1579,7 @@ class ThingsBoardSized {
         return;
       }
 
-      m_ota = new OTA_Handler<Logger>(m_fw_callback, std::bind(&ThingsBoardSized::reconnect, this), std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this), fw_size, fw_algorithm, fw_checksum, fw_checksum_algorithm);
+      m_ota = new OTA_Handler<Logger>(m_fw_callback, std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this), fw_size, fw_algorithm, fw_checksum, fw_checksum_algorithm);
       m_ota->Start_Firmware_Update();
     }
 
@@ -2280,8 +2236,6 @@ class ThingsBoardSized {
     const Attribute_Request_Callback m_fw_request_callback;
     const Shared_Attribute_Callback m_fw_update_callback;
     OTA_Handler<Logger>* m_ota;
-    const Argument_Cache<const char *, const char *, const uint16_t, const char *, const char *> *m_string_connect_arguments;
-    const Argument_Cache<const IPAddress&, const char *, const uint16_t, const char *, const char *> *m_ip_connect_arguments;
 
 #endif // THINGSBOARD_ENABLE_OTA
 

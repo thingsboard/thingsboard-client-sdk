@@ -25,9 +25,9 @@ constexpr char OTA_CB_IS_NULL[] = "OTA update callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // OTA default values.
-constexpr uint8_t CHUNK_RETRIES PROGMEM = 5U;
+constexpr uint8_t CHUNK_RETRIES PROGMEM = 12U;
 constexpr uint16_t CHUNK_SIZE PROGMEM = 4096U;
-constexpr uint16_t REQUEST_TIMEOUT PROGMEM = 3000U;
+constexpr uint16_t REQUEST_TIMEOUT PROGMEM = 5000U;
 
 /// @brief OTA firmware update callback wrapper
 class OTA_Update_Callback {
@@ -53,7 +53,7 @@ class OTA_Update_Callback {
     /// @param chunkSize Maximum size of OTA firmware update for each seperate chunk that should be downloaded,
     /// increased chunkSize might speed up the process by a little bit, but requires more heap memory,
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
-    /// @param timeout Maximum amount time for the OTA firmware update for each seperate chunk,
+    /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
     inline OTA_Update_Callback(endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT)
       : OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, chunkRetries, chunkSize, timeout) {  }
@@ -71,7 +71,7 @@ class OTA_Update_Callback {
     /// @param chunkSize Maximum size of OTA firmware update for each seperate chunk that should be downloaded,
     /// increased chunkSize might speed up the process by a little bit, but requires more heap memory,
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
-    /// @param timeout Maximum amount time for the OTA firmware update for each seperate chunk,
+    /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
     inline OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT)
       : m_progressCb(progressCb), m_endCb(endCb), m_fwTitel(currFwTitle), m_fwVersion(currFwVersion), m_retries(chunkRetries), m_size(chunkSize), m_timeout(timeout) {  }
@@ -174,7 +174,7 @@ class OTA_Update_Callback {
       m_size = chunkSize;
     }
 
-    /// @brief Gets the time in seconds we wait until we declare a single chunk we attempted to download as a failure
+    /// @brief Gets the time in milliseconds we wait until we declare a single chunk we attempted to download as a failure
     /// @return Gets the timeout time for each single chunk to be downloaded
     inline const uint16_t& Get_Timeout() const {
       return m_timeout;
