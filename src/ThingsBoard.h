@@ -325,7 +325,7 @@ class ThingsBoardSized {
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardSized(Client& client, const size_t& bufferSize = Default_Payload,const uint32_t& maxStackSize = Default_Max_Stack_Size)
+    inline ThingsBoardSized(Client& client, const size_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size)
       : ThingsBoardSized()
     {
       setMaximumStackSize(maxStackSize);
