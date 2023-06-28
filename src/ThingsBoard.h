@@ -322,18 +322,11 @@ class ThingsBoardSized {
   public:
     /// @brief Constructs a ThingsBoardSized instance with the given network client
     /// @param client Network client that should be used to establish the connection to ThingsBoard
-    /// @param enableQoS Whether the PubSubClient should use Quality of Service Level 1 or not,
-    /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
-    /// Level 2 however stores the given message we wanted to send until a response is received from the server,
-    /// meaning that the message has been sent at least once, but it could have been sent multiple times as well,
-    /// will not be a problem if the optional timestamp is added to the sent data,
-    /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
-    /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const bool& enableQoS = false, const uint32_t& maxStackSize = Default_Max_Stack_Size)
-      : ThingsBoardSized(enableQoS)
+    inline ThingsBoardSized(Client& client, const size_t& bufferSize = Default_Payload,const uint32_t& maxStackSize = Default_Max_Stack_Size)
+      : ThingsBoardSized()
     {
       setMaximumStackSize(maxStackSize);
       setBufferSize(bufferSize);
@@ -341,14 +334,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Constructs a ThingsBoardSized instance without a network client, meaning it has to be added later with the setClient() and setBufferSize() method
-    /// @param enableQoS Whether the PubSubClient should use Quality of Service Level 1 or not,
-    /// false means Level 0 is used, which means we simply send the data and hope it arrives if it is lost in transit it isn't resent.
-    /// Level 2 however stores the given message we wanted to send until a response is received from the server,
-    /// meaning that the message has been sent at least once, but it could have been sent multiple times as well,
-    /// will not be a problem if the optional timestamp is added to the sent data,
-    /// making duplicate sent data irrelevant because it simply overrides the data with the same timestamp,
-    /// see https://www.hivemq.com/blog/mqtt-essentials-part-6-mqtt-quality-of-service-levels/ for more information
-    inline ThingsBoardSized(const bool& enableQoS = false)
+    inline ThingsBoardSized()
       : m_client()
       , m_max_stack(Default_Max_Stack_Size)
       , m_rpc_callbacks()
@@ -415,7 +401,7 @@ class ThingsBoardSized {
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent
     /// @return Whether allocating the needed memory for the given bufferSize was successful or not.
-    inline bool setBufferSize(const uint16_t& bufferSize) {
+    inline bool setBufferSize(const size_t& bufferSize) {
       return m_client.setBufferSize(bufferSize);
     }
 
@@ -1279,7 +1265,7 @@ class ThingsBoardSized {
     inline bool Publish_Chunk_Request(const uint32_t& request_chunck) {
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const size_t& chunk_size = m_fw_callback->Get_Chunk_Size();
 
       // Convert the interger size into a readable string
       char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)];
@@ -1566,7 +1552,7 @@ class ThingsBoardSized {
 
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const size_t& chunk_size = m_fw_callback->Get_Chunk_Size();
 
       // Get the previous buffer size and cache it so the previous settings can be restored.
       m_previous_buffer_size = m_client.getBufferSize();
