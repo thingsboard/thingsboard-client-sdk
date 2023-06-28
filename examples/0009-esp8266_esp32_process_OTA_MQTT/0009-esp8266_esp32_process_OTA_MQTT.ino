@@ -49,9 +49,9 @@ constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 5U;
 // Size of each firmware chunck downloaded over MQTT,
 // increased packet size, might increase download speed
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
+constexpr size_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
 #else
-constexpr uint16_t FIRMWARE_PACKET_SIZE = 4096U;
+constexpr size_t FIRMWARE_PACKET_SIZE = 4096U;
 #endif
 
 // PROGMEM can only be added when using the ESP32 WiFiClient,
@@ -98,9 +98,9 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 512U;
+constexpr size_t MAX_MESSAGE_SIZE PROGMEM = 512U;
 #else
-constexpr uint32_t MAX_MESSAGE_SIZE = 512U;
+constexpr size_t MAX_MESSAGE_SIZE = 512U;
 #endif
 
 // Baud rate for the debugging serial connection
