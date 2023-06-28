@@ -73,7 +73,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    inline OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT)
+    inline OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const size_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT)
       : m_progressCb(progressCb), m_endCb(endCb), m_fwTitel(currFwTitle), m_fwVersion(currFwVersion), m_retries(chunkRetries), m_size(chunkSize), m_timeout(timeout) {  }
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
@@ -164,13 +164,13 @@ class OTA_Update_Callback {
 
     /// @brief Gets the size a single chunk of the OTA firmware binary file we attempt to download should have
     /// @return Size of each single chunk to be downloaded
-    inline const uint16_t& Get_Chunk_Size() const {
+    inline const size_t& Get_Chunk_Size() const {
       return m_size;
     }
 
     /// @brief Sets the size a single chunk of the OTA firmware binary file we attempt to download should have
     /// @param chunkSize Size of each single chunk to be downloaded
-    inline void Set_Chunk_Size(const uint16_t &chunkSize) {
+    inline void Set_Chunk_Size(const size_t &chunkSize) {
       m_size = chunkSize;
     }
 
@@ -192,7 +192,7 @@ class OTA_Update_Callback {
     const char      *m_fwTitel;      // Current firmware title of device
     const char      *m_fwVersion;    // Current firmware version of device
     uint8_t         m_retries;       // Maximum amount of retries
-    uint16_t        m_size;          // Maximum size of the chuncks we are downloading
+    size_t          m_size;          // Maximum size of the chuncks we are downloading
     uint16_t        m_timeout;       // How long we maximum wait for each chunck to arrive
 };
 
