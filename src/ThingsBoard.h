@@ -2216,7 +2216,7 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_OTA
     const OTA_Update_Callback *m_fw_callback;
-    uint16_t m_previous_buffer_size;
+    size_t m_previous_buffer_size;
     bool m_change_buffer_size;
     const std::vector<const char *> m_fw_shared_keys;
     const Attribute_Request_Callback m_fw_request_callback;
