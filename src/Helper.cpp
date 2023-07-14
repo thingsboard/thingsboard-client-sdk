@@ -3,14 +3,13 @@
 
 // Local includes.
 #include "Configuration.h"
-#include "Constants.h"
 
 // Library includes.
 #include <stdarg.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <pgmspace.h>
+#include <assert.h>
 
 uint8_t Helper::detectSize(const char *msg, ...) {
       va_list args;
@@ -19,13 +18,7 @@ uint8_t Helper::detectSize(const char *msg, ...) {
       // or if an error occured while creating the string a negative number is returned instead. TO ensure this will not crash the system
       // when creating an array with negative size we assert beforehand with a clear error message.
       const int32_t result = vsnprintf_P(nullptr, 0U, msg, args) + 1U;
-#if THINGSBOARD_ENABLE_STL
       assert(result >= 0);
-#else
-      if (result < 0) {
-        abort();
-      }
-#endif // THINGSBOARD_ENABLE_STL
       va_end(args);
       return result;
 

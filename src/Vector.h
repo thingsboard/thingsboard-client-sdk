@@ -7,10 +7,13 @@
 #ifndef Vector_h
 #define Vector_h
 
-// Local include
+// Local include.
 #include "Configuration.h"
 
 #if !THINGSBOARD_ENABLE_STL
+
+// Library includes.
+#include <assert.h>
 
 /// @brief Replacement data container for boards that do not support the C++ STL.
 /// @tparam T Type of the underlying data the list should point too.
@@ -59,9 +62,7 @@ class Vector {
     /// @brief Returns the last element of the vector
     /// @return Reference to the last element of the vector
     T& back() {
-        if (m_size == 0U) {
-          abort();
-        }
+        assert(m_size != 0U);
         return m_elements[m_size - 1U];
     }
 
@@ -129,9 +130,7 @@ class Vector {
     /// ensures the device crashes if we attempted to access in an invalid location
     /// @param index Index we want to get the corresponding element for
     T& at(const size_t& index) {
-        if (index >= m_size) {
-          abort();
-        }
+        assert(index < m_size);
         return m_elements[index];
     }
 

@@ -33,14 +33,14 @@
 // Enable the usage of OTA (Over the air) updates, only possible with STL base functionality and when using ESP8266 or the ESP32
 #  ifndef THINGSBOARD_ENABLE_OTA
 #    ifdef ESP8266
-#      ifdef THINGSBOARD_ENABLE_STL
+#      if THINGSBOARD_ENABLE_STL
 #        define THINGSBOARD_ENABLE_OTA 1
 #      else
 #        define THINGSBOARD_ENABLE_OTA 0
 #      endif
 #    else
 #      ifdef ESP32
-#        ifdef THINGSBOARD_ENABLE_STL
+#        if THINGSBOARD_ENABLE_STL
 #          define THINGSBOARD_ENABLE_OTA 1
 #        else
 #          define THINGSBOARD_ENABLE_OTA 0
