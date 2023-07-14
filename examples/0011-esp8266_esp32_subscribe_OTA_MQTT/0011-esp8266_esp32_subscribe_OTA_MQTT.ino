@@ -42,9 +42,9 @@ constexpr char FW_STATE_UPDATED[] = "UPDATED";
 
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
+constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 12U;
 #else
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 5U;
+constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
 #endif
 // Size of each firmware chunck downloaded over MQTT,
 // increased packet size, might increase download speed

@@ -1589,9 +1589,7 @@ class ThingsBoardSized {
       this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
       this->Attributes_Request_Unsubscribe(); // Cleanup all client-side or shared attributes requests
       this->Provision_Unsubscribe(); // Cleanup all provision subscriptions
-#if THINGSBOARD_ENABLE_OTA
-      this->Firmware_OTA_Unsubscribe(); // Cleanup all firmware subscriptions
-#endif // THINGSBOARD_ENABLE_OTA
+      // Firmware subscriptions are not cleaned up to ensure that it can be continued if the connection drops while the update is ongoing
       return connection_result;
     }
 
