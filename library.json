@@ -11,7 +11,7 @@
         "thingsboard/TBPubSubClient": "https://github.com/thingsboard/pubsubclient.git#v2.9.2",
         "arduino-libraries/ArduinoHttpClient" : "^0.4.0"
     },
-    "version": "0.10.2",
+    "version": "0.10.3",
     "examples": "examples/*/*.ino",
     "frameworks": "arduino",
     "license": "MIT"
