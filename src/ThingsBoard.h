@@ -9,6 +9,7 @@
 
 // Local includes.
 #include "Constants.h"
+#include "Helper.h"
 #include "Vector.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "Telemetry.h"
