@@ -124,8 +124,6 @@ class OTA_Handler {
     /// @param payload Firmware packet data of the current chunk
     /// @param total_bytes Amount of bytes in the current firmware packet data
     inline void Process_Firmware_Packet(const uint32_t& current_chunk, uint8_t *payload, const uint32_t& total_bytes) {
-        m_watchdog.detach();
-
         (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
 
         if (current_chunk != m_requested_chunks) {
@@ -134,6 +132,8 @@ class OTA_Handler {
           Logger::log(message);
           return;
         }
+
+        m_watchdog.detach();
 
         char message[Helper::detectSize(FW_CHUNK, current_chunk, total_bytes)];
         snprintf_P(message, sizeof(message), FW_CHUNK, current_chunk, total_bytes);
