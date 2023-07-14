@@ -487,8 +487,8 @@ class ThingsBoardSized {
 
     /// @brief Sends provisioning request for a new device, meaning we want to create a device that we can then connect over,
     /// where the given provision device key / secret decide which device profile is used to create the given device with.
-    /// Optionally a device name can be passed or be left empty (cloud will use the unqiue access token as a name instead).
-    /// The cloud then sends back json data containing our credentials, that the given callback, if creating the device was successful.
+    /// Optionally a device name can be passed or be left empty (cloud will use a random string as the name instead).
+    /// The cloud then sends back json data containing our credentials, that will call the given callback, if creating the device was successful.
     /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
     /// @param callback Callback method that will be called
     /// @return Whether sending the provisioning request was successful or not
