@@ -3,9 +3,11 @@
 
 // Local includes.
 #include "Configuration.h"
+#include "Constants.h"
 
 // Library includes.
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <pgmspace.h>
