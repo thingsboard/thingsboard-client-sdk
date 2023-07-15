@@ -351,7 +351,7 @@ class ThingsBoardSized {
       , m_fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
       , m_fw_request_callback(m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
       , m_fw_update_callback(m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
-      , m_ota(nullptr)
+      , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
 #endif // THINGSBOARD_ENABLE_OTA
     {
 #if !THINGSBOARD_ENABLE_STL
@@ -364,10 +364,7 @@ class ThingsBoardSized {
 
     /// @brief Destructor
     inline ~ThingsBoardSized() {
-#if THINGSBOARD_ENABLE_OTA
-      delete m_ota;
-      m_ota = nullptr;
-#endif // THINGSBOARD_ENABLE_OTA
+      // Nothing to do.
     }
 
     /// @brief Gets the currently connected PubSubClient as a reference,
@@ -1111,6 +1108,11 @@ class ThingsBoardSized {
       return Shared_Attributes_Request(m_fw_request_callback);
     }
 
+    /// @brief Stops the currently running firmware update, calls the finish callback with a failure if the update is running
+    inline void Stop_Firmware_Update() {
+      m_ota.Stop_Firmware_Update();
+    }
+
     /// @brief Subscribes for any assignment of firmware to the given device device,
     /// which will then start a firmware update
     /// @param callback Callback method that will be called
@@ -1458,8 +1460,6 @@ class ThingsBoardSized {
       }
       // Reset now not needed private member variables
       m_fw_callback = nullptr;
-      delete m_ota;
-      m_ota = nullptr;
       // Unsubscribe from the topic
       return m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
     }
@@ -1566,8 +1566,7 @@ class ThingsBoardSized {
         return;
       }
 
-      m_ota = new OTA_Handler<Logger>(m_fw_callback, std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this), fw_size, fw_algorithm, fw_checksum, fw_checksum_algorithm);
-      m_ota->Start_Firmware_Update();
+      m_ota.Start_Firmware_Update(m_fw_callback, fw_size, fw_algorithm, fw_checksum, fw_checksum_algorithm);
     }
 
 #endif // THINGSBOARD_ENABLE_OTA
@@ -1911,7 +1910,7 @@ class ThingsBoardSized {
       if (getMaximumStackSize() < length) {
         uint8_t* binary = new uint8_t[length];
         memcpy(binary, payload, length);
-        m_ota->Process_Firmware_Packet(request_id, binary, length);
+        m_ota.Process_Firmware_Packet(request_id, binary, length);
         // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
         // and set the pointer to null so we do not have a dangling reference.
         delete[] binary;
@@ -1920,7 +1919,7 @@ class ThingsBoardSized {
       else {
         uint8_t binary[length];
         memcpy(binary, payload, length);
-        m_ota->Process_Firmware_Packet(request_id, binary, length);
+        m_ota.Process_Firmware_Packet(request_id, binary, length);
       }
     }
 
@@ -2220,7 +2219,7 @@ class ThingsBoardSized {
     const std::vector<const char *> m_fw_shared_keys;
     const Attribute_Request_Callback m_fw_request_callback;
     const Shared_Attribute_Callback m_fw_update_callback;
-    OTA_Handler<Logger>* m_ota;
+    OTA_Handler<Logger> m_ota;
 
 #endif // THINGSBOARD_ENABLE_OTA
 
