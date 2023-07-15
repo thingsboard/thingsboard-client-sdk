@@ -59,6 +59,7 @@ constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
 constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
 constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
+constexpr char FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
 constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
 #else
 constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
@@ -72,6 +73,7 @@ constexpr char FW_CHUNK[] = "Receive chunk (%i), with size (%u) bytes";
 constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
 constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
+constexpr char FW_UPDATE_ABORTED[] = "Firmware update aborted";
 constexpr char FW_UPDATE_SUCCESS[] = "Update success";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
@@ -81,41 +83,59 @@ template<typename Logger>
 class OTA_Handler {
   public:
     /// @brief Constructor
-    OTA_Handler(const OTA_Update_Callback *fw_callback, std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm)
-        : m_fw_callback(fw_callback)
+    /// @param publish_callback Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
+    /// @param send_fw_state_callback Callback that is used to send information about the current state of the over the air update
+    /// @param finish_callback Callback that is called once the update has been finished and the user has been informed of the failure or success
+    OTA_Handler(std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback)
+        : m_fw_callback(nullptr)
         , m_publish_callback(publish_callback)
         , m_send_fw_state_callback(send_fw_state_callback)
         , m_finish_callback(finish_callback)
-        , m_fw_size(fw_size)
-        , m_fw_algorithm(fw_algorithm)
-        , m_fw_checksum(fw_checksum)
-        , m_fw_checksum_algorithm(fw_checksum_algorithm)
+        , m_fw_size(0U)
+        , m_fw_algorithm()
+        , m_fw_checksum()
+        , m_fw_checksum_algorithm()
         , m_hash()
         , m_total_chunks(0U)
         , m_requested_chunks(0U)
         , m_retries(0U)
-        , m_watchdog(m_fw_callback->Get_Timeout(), std::bind(&OTA_Handler::Handle_Request_Timeout, this))
+        , m_watchdog(std::bind(&OTA_Handler::Handle_Request_Timeout, this))
     {
       // Nothing to do.
     }
 
     /// @brief Starts the firmware update with requesting the first firmware packet and initalizes the underlying needed components
-    inline void Start_Firmware_Update() {
+    /// @param fw_callback Callback method that contains configuration information, about the over the air update
+    /// @param fw_size Complete size of the firmware binary that will be downloaded and flashed onto this device
+    /// @param fw_algorithm String of the algorithm used to hash the firmware binary
+    /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
+    /// @param fw_checksum_algorithm Algorithm used to hash the firmware binary
+    inline void Start_Firmware_Update(const OTA_Update_Callback *fw_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
+        m_fw_callback = fw_callback;
+        m_fw_size = fw_size;
+        m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
+        m_fw_algorithm = fw_algorithm;
+        m_fw_checksum = fw_checksum;
+        m_fw_checksum_algorithm = fw_checksum_algorithm;
+
         if (!m_publish_callback || !m_send_fw_state_callback || !m_finish_callback) {
           Logger::log(OTA_CB_IS_NULL);
           (void)m_send_fw_state_callback(FW_STATE_FAILED, OTA_CB_IS_NULL);
             return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
         }
+        Request_First_Firmware_Packet();
+    }
 
-        m_requested_chunks = 0U;
-        m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
-        m_retries = m_fw_callback->Get_Chunk_Retries();
-        m_hash.start(m_fw_checksum_algorithm);
+    /// @brief Stops the firmware update
+    inline void Stop_Firmware_Update() {
+        m_watchdog.detach();
 #ifdef ESP32
         Update.abort();
 #endif
-
-        Request_Next_Firmware_Packet();
+        Logger::log(FW_UPDATE_ABORTED);
+        (void)m_send_fw_state_callback(FW_STATE_FAILED, FW_UPDATE_ABORTED);
+        Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
+        m_fw_callback = nullptr;
     }
 
     /// @brief Uses the given firmware packet data and process it. Starting with writing the given amount of bytes of the packet data into flash memory and
@@ -168,6 +188,12 @@ class OTA_Handler {
         m_requested_chunks = current_chunk + 1;
         m_fw_callback->Call_Progress_Callback<Logger>(m_requested_chunks, m_total_chunks);
 
+        // Ensure to check if the update was cancelled during the progress callback,
+        // if it was the callback variable was reset and there is no need to request the next firmware packet
+        if (m_fw_callback == nullptr) {
+          return;
+        }
+
         // Reset retries as the current chunk has been downloaded and handled successfully
         m_retries = m_fw_callback->Get_Chunk_Retries();
         Request_Next_Firmware_Packet();
@@ -179,15 +205,26 @@ class OTA_Handler {
     std::function<bool(const char *, const char *)> m_send_fw_state_callback;
     std::function<bool(void)> m_finish_callback;
     // Allows for a binary size of up to theoretically 4 GB.
-    const uint32_t m_fw_size;
-    const std::string m_fw_algorithm;
-    const std::string m_fw_checksum;
-    const mbedtls_md_type_t m_fw_checksum_algorithm;
+    uint32_t m_fw_size;
+    std::string m_fw_algorithm;
+    std::string m_fw_checksum;
+    mbedtls_md_type_t m_fw_checksum_algorithm;
     HashGenerator m_hash;
     uint32_t m_total_chunks;
     uint32_t m_requested_chunks;
     uint8_t m_retries;
     Callback_Watchdog m_watchdog;
+
+    inline void Request_First_Firmware_Packet() {
+        m_requested_chunks = 0U;
+        m_retries = m_fw_callback->Get_Chunk_Retries();
+        m_hash.start(m_fw_checksum_algorithm);
+        m_watchdog.detach();
+#ifdef ESP32
+        Update.abort();
+#endif
+        Request_Next_Firmware_Packet();
+    }
 
     inline void Request_Next_Firmware_Packet() {
         // Check if we have already requested and handled the last remaining chunk
@@ -203,7 +240,7 @@ class OTA_Handler {
 
         // Watchdog gets started no matter if publishing request was successfull or not in hopes,
         // that after the given timeout the callback calls this method again and can then publish the request successfully.
-        m_watchdog.once();
+        m_watchdog.once(m_fw_callback->Get_Timeout());
     }
 
     inline void Finish_Firmware_Update() {
@@ -260,10 +297,11 @@ class OTA_Handler {
           Request_Next_Firmware_Packet();
           break;
         case OTA_Failure_Response::RETRY_UPDATE:
-          Start_Firmware_Update();
+          Request_First_Firmware_Packet();
           break;
         case OTA_Failure_Response::RETRY_NOTHING:
-          m_retries = 0;
+          m_fw_callback->Call_End_Callback<Logger>(false);
+          (void)m_finish_callback();
           break;
         default:
           // Nothing to do.

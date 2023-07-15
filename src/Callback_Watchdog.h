@@ -19,19 +19,18 @@
 class Callback_Watchdog {
   public:
     /// @brief Constructor
-    /// @param timeout_millis Amount of milliseconds until the feed method is excpected to have been called or the given callback method will be called
     /// @param callback Callback method that will be called if the timeout time passes without being fed
-    Callback_Watchdog(const uint32_t& timeout_millis, std::function<void(void)> callback)
-      : m_timeout_millis(timeout_millis)
-      , m_callback(callback)
+    Callback_Watchdog(std::function<void(void)> callback)
+      : m_callback(callback)
       , m_ticker()
     {
         m_instance = this;
     }
 
     /// @brief Starts the watchdog timer once for the initally given timeout
-    inline void once() {
-        m_ticker.once_ms(m_timeout_millis, &Callback_Watchdog::timerCallback);
+    /// @param timeout_millis Amount of milliseconds until the feed method is excpected to have been called or the given callback method will be called
+    inline void once(const uint32_t& timeout_millis) {
+        m_ticker.once_ms(timeout_millis, &Callback_Watchdog::timerCallback);
     }
 
     /// @brief Stops any currently ongoing watchdog timer
@@ -40,7 +39,6 @@ class Callback_Watchdog {
     }
 
   private:
-    uint32_t m_timeout_millis;
     std::function<void(void)> m_callback;
     Ticker m_ticker;
 
