@@ -1,6 +1,8 @@
 // Header include.
 #include "Callback_Watchdog.h"
 
+#if THINGSBOARD_ENABLE_OTA
+
 Callback_Watchdog *Callback_Watchdog::m_instance = nullptr;
 
 Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback) :
@@ -25,3 +27,5 @@ void Callback_Watchdog::timerCallback() {
 
     m_instance->m_callback();
 }
+
+#endif // THINGSBOARD_ENABLE_OTA

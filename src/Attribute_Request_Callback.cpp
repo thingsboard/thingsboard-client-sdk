@@ -2,10 +2,10 @@
 #include "Attribute_Request_Callback.h"
 
 Attribute_Request_Callback::Attribute_Request_Callback() :
+    Callback(nullptr, ATT_REQUEST_CB_IS_NULL),
     m_attributes(),
     m_request_id(0U),
-    m_attribute_key(nullptr),
-    m_cb(nullptr)
+    m_attribute_key(nullptr)
 {
     // Nothing to do
 }
@@ -22,10 +22,6 @@ Attribute_Request_Callback::Attribute_Request_Callback(const char *attributes, p
 }
 
 #endif // !THINGSBOARD_ENABLE_STL
-
-void Attribute_Request_Callback::Set_Callback(processFn cb) {
-    m_cb = cb;
-}
 
 const uint32_t& Attribute_Request_Callback::Get_Request_ID() const {
     return m_request_id;

@@ -1,14 +1,29 @@
 // Header include.
 #include "Provision_Callback.h"
 
+/// ---------------------------------
+/// Constant strings in flash memory.
+/// ---------------------------------
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char PROVISION_CB_IS_NULL[] PROGMEM = "Provisioning callback is NULL";
+constexpr char ACCESS_TOKEN_CRED_TYPE[] PROGMEM = "ACCESS_TOKEN";
+constexpr char MQTT_BASIC_CRED_TYPE[] PROGMEM = "MQTT_BASIC";
+constexpr char X509_CERTIFICATE_CRED_TYPE[] PROGMEM = "X509_CERTIFICATE";
+#else
+constexpr char PROVISION_CB_IS_NULL[] = "Provisioning callback is NULL";
+constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
+constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
+constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
 Provision_Callback::Provision_Callback() :
     Provision_Callback(Access_Token(), nullptr, nullptr, nullptr)
 {
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Access_Token, processFn cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *deviceName) :
-    m_cb(cb),
+Provision_Callback::Provision_Callback(Access_Token, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *deviceName) :
+    Callback(cb, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -22,8 +37,8 @@ Provision_Callback::Provision_Callback(Access_Token, processFn cb, const char *p
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Device_Access_Token, processFn cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *accessToken, const char *deviceName) :
-    m_cb(cb),
+Provision_Callback::Provision_Callback(Device_Access_Token, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *accessToken, const char *deviceName) :
+    Callback(cb, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -37,8 +52,8 @@ Provision_Callback::Provision_Callback(Device_Access_Token, processFn cb, const 
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, processFn cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *username, const char *password, const char *clientID, const char *deviceName) :
-    m_cb(cb),
+Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *username, const char *password, const char *clientID, const char *deviceName) :
+    Callback(cb, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -52,8 +67,8 @@ Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, processFn cb, con
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(X509_Certificate, processFn cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *hash, const char *deviceName) :
-    m_cb(cb),
+Provision_Callback::Provision_Callback(X509_Certificate, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *hash, const char *deviceName) :
+    Callback(cb, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -65,10 +80,6 @@ Provision_Callback::Provision_Callback(X509_Certificate, processFn cb, const cha
     m_credentialsType(X509_CERTIFICATE_CRED_TYPE)
 {
     // Nothing to do
-}
-
-void Provision_Callback::Set_Callback(processFn cb) {
-  m_cb = cb;
 }
 
 const char* Provision_Callback::Get_Device_Key() const {

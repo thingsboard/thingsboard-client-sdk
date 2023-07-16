@@ -277,13 +277,13 @@ class OTA_Handler {
         Logger::log(FW_UPDATE_SUCCESS);
         (void)m_send_fw_state_callback(FW_STATE_UPDATING, nullptr);
 
-        m_fw_callback->Call_End_Callback<Logger>(true);
+        m_fw_callback->Call_Callback<Logger>(true);
         (void)m_finish_callback();
     }
 
     inline void Handle_Failure(const OTA_Failure_Response& failure_response) {
       if (m_retries <= 0) {
-          m_fw_callback->Call_End_Callback<Logger>(false);
+          m_fw_callback->Call_Callback<Logger>(false);
           (void)m_finish_callback();
           return;
       }
@@ -300,7 +300,7 @@ class OTA_Handler {
           Request_First_Firmware_Packet();
           break;
         case OTA_Failure_Response::RETRY_NOTHING:
-          m_fw_callback->Call_End_Callback<Logger>(false);
+          m_fw_callback->Call_Callback<Logger>(false);
           (void)m_finish_callback();
           break;
         default:
