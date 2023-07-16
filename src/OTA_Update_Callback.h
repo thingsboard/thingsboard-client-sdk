@@ -14,6 +14,9 @@
 
 // Library includes.
 #include <functional>
+#if THINGSBOARD_ENABLE_PROGMEM
+#include <pgmspace.h>
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -25,9 +28,15 @@ constexpr char OTA_CB_IS_NULL[] = "OTA update callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // OTA default values.
+#if THINGSBOARD_ENABLE_PROGMEM
 constexpr uint8_t CHUNK_RETRIES PROGMEM = 12U;
 constexpr uint16_t CHUNK_SIZE PROGMEM = 4096U;
 constexpr uint16_t REQUEST_TIMEOUT PROGMEM = 5000U;
+#else
+constexpr uint8_t CHUNK_RETRIES = 12U;
+constexpr uint16_t CHUNK_SIZE = 4096U;
+constexpr uint16_t REQUEST_TIMEOUT = 5000U;
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 /// @brief OTA firmware update callback wrapper
 class OTA_Update_Callback {
@@ -40,8 +49,7 @@ class OTA_Update_Callback {
     using endFn = std::function<returnType(endArgumentType data)>;
 
     /// @brief Constructs empty callback, will result in never being called
-    inline OTA_Update_Callback()
-      : OTA_Update_Callback(nullptr, nullptr, nullptr, nullptr) {  }
+    OTA_Update_Callback();
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
     /// has been completly sent by the cloud, received by the client and written to the flash partition
@@ -55,8 +63,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    inline OTA_Update_Callback(endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT)
-      : OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, chunkRetries, chunkSize, timeout) {  }
+    OTA_Update_Callback(endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
     /// has been completly sent by the cloud, received by the client and written to the flash partition as well as callback
@@ -73,8 +80,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    inline OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const size_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT)
-      : m_progressCb(progressCb), m_endCb(endCb), m_fwTitel(currFwTitle), m_fwVersion(currFwVersion), m_retries(chunkRetries), m_size(chunkSize), m_timeout(timeout) {  }
+    OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const size_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -82,109 +88,85 @@ class OTA_Update_Callback {
     /// @param total Received data that shows the total progress until the update is completed
     template<typename Logger>
     inline returnType Call_Progress_Callback(progressArgumentType current, progressArgumentType total) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_progressCb) {
-        Logger::log(OTA_CB_IS_NULL);
-        return returnType();
-      }
-      return m_progressCb(current, total);
+        // Check if the callback is a nullptr,
+        // meaning it has not been assigned any valid callback method
+        if (!m_progressCb) {
+          Logger::log(OTA_CB_IS_NULL);
+          return returnType();
+        }
+        return m_progressCb(current, total);
     }
 
     /// @brief Sets the progress callback method that will be called every time our current progress of downloading the complete firmware data changed,
     /// this makes it possible to display a progress bar or signal easily how far we are in the current downloading process
     /// @param progressCb Progress callback method that will be called
-    inline void Set_Progress_Callback(progressFn progressCb) {
-      m_progressCb = progressCb;
-    }
+    void Set_Progress_Callback(progressFn progressCb);
 
     /// @brief Calls the end callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
     /// @param data Received data that shows, whether the update was successfull or not
     template<typename Logger>
     inline returnType Call_End_Callback(endArgumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_endCb) {
-        Logger::log(OTA_CB_IS_NULL);
-        return returnType();
-      }
-      return m_endCb(data);
+        // Check if the callback is a nullptr,
+        // meaning it has not been assigned any valid callback method
+        if (!m_endCb) {
+          Logger::log(OTA_CB_IS_NULL);
+          return returnType();
+        }
+        return m_endCb(data);
     }
 
     /// @brief Sets the end callback method that will be called as soon as the OTA firmware update, either finished successfully or failed
     /// @param endCb End callback method that will be called
-    inline void Set_End_Callback(endFn endCb) {
-      m_endCb = endCb;
-    }
+    void Set_End_Callback(endFn endCb);
 
     /// @brief Gets the current firmware title, used to decide if an OTA firmware update is actually installed,
     /// this is only done if the title of the update and the current firmware title are the same
     /// @return Current firmware title of the device
-    inline const char* Get_Firmware_Title() const {
-      return m_fwTitel;
-    }
+    const char* Get_Firmware_Title() const;
 
     /// @brief Sets the current firmware title, used to decide if an OTA firmware update is actually installed,
     /// this is only done if the title of the update and the current firmware title are the same
     /// @param currFwTitle Current firmware title of the device
-    inline void Set_Firmware_Title(const char *currFwTitle) {
-      m_fwTitel = currFwTitle;
-    }
+    void Set_Firmware_Title(const char *currFwTitle);
 
     /// @brief Gets the current firmware version, used to decide if an OTA firmware update is actually installed,
     /// this is only done if the version of the update and the current firmware title are different
     /// @return Current firmware version of the device
-    inline const char* Get_Firmware_Version() const {
-      return m_fwVersion;
-    }
+    const char* Get_Firmware_Version() const;
 
     /// @brief Sets the current firmware version, used to decide if an OTA firmware update is actually installed,
     /// this is only done if the version of the update and the current firmware title are different
     /// @param currFwVersion Current firmware version of the device
-    inline void Set_Firmware_Version(const char *currFwVersion) {
-      m_fwVersion = currFwVersion;
-    }
+    void Set_Firmware_Version(const char *currFwVersion);
 
     /// @brief Gets the amount of times we attempt to download each chunk of the OTA firmware binary file,
     /// if the download fails because it times out, doesn't let itself write into flash memory, ...
     /// the retries are decreased by 1 until we hit 0, if that is the case then we instead stop the OTA firmware update completly
     /// @return Amount of retries for each single chunk to be downloaded successfully
-    inline const uint8_t& Get_Chunk_Retries() const {
-      return m_retries;
-    }
+    const uint8_t& Get_Chunk_Retries() const;
 
     /// @brief Sets the amount of times we attempt to download each chunk of the OTA firmware binary file,
     /// if the download fails because it times out, doesn't let itself write into flash memory, ...
     /// the retries are decreased by 1 until we hit 0, if that is the case then we instead stop the OTA firmware update completly
     /// @param chunkRetries Amount of retries for each single chunk to be downloaded successfully
-    inline void Set_Chunk_Retries(const uint8_t &chunkRetries) {
-      m_retries = chunkRetries;
-    }
+    void Set_Chunk_Retries(const uint8_t &chunkRetries);
 
     /// @brief Gets the size a single chunk of the OTA firmware binary file we attempt to download should have
     /// @return Size of each single chunk to be downloaded
-    inline const size_t& Get_Chunk_Size() const {
-      return m_size;
-    }
+    const size_t& Get_Chunk_Size() const;
 
     /// @brief Sets the size a single chunk of the OTA firmware binary file we attempt to download should have
     /// @param chunkSize Size of each single chunk to be downloaded
-    inline void Set_Chunk_Size(const size_t &chunkSize) {
-      m_size = chunkSize;
-    }
+    void Set_Chunk_Size(const size_t &chunkSize);
 
     /// @brief Gets the time in milliseconds we wait until we declare a single chunk we attempted to download as a failure
     /// @return Gets the timeout time for each single chunk to be downloaded
-    inline const uint16_t& Get_Timeout() const {
-      return m_timeout;
-    }
+    const uint16_t& Get_Timeout() const;
 
     /// @brief Sets the time we wait until we decleare a single chunk we attempted to download as a timeout
     /// @param timeout Gets the timeout time for each single chunk to be downloaded
-    inline void Set_Timeout(const uint16_t &timeout) {
-      m_timeout = timeout;
-    }
+    void Set_Timeout(const uint16_t &timeout);
 
   private:
     progressFn      m_progressCb;    // Progress callback to call

@@ -20,23 +20,14 @@ class Callback_Watchdog {
   public:
     /// @brief Constructor
     /// @param callback Callback method that will be called if the timeout time passes without being fed
-    Callback_Watchdog(std::function<void(void)> callback)
-      : m_callback(callback)
-      , m_ticker()
-    {
-        m_instance = this;
-    }
+    Callback_Watchdog(std::function<void(void)> callback);
 
     /// @brief Starts the watchdog timer once for the initally given timeout
     /// @param timeout_millis Amount of milliseconds until the feed method is excpected to have been called or the given callback method will be called
-    inline void once(const uint32_t& timeout_millis) {
-        m_ticker.once_ms(timeout_millis, &Callback_Watchdog::timerCallback);
-    }
+    void once(const uint32_t& timeout_millis);
 
     /// @brief Stops any currently ongoing watchdog timer
-    inline void detach() {
-        m_ticker.detach();
-    }
+    void detach();
 
   private:
     std::function<void(void)> m_callback;
@@ -45,16 +36,8 @@ class Callback_Watchdog {
     static Callback_Watchdog *m_instance;
 
     /// @brief Static callback used to call the initally subscribed callback, if the internal watchdog has not been fed
-    inline static void timerCallback() {
-        if (m_instance == nullptr) {
-            return;
-        }
-
-        m_instance->m_callback();
-    }
+    static void timerCallback();
 };
-
-Callback_Watchdog *Callback_Watchdog::m_instance = nullptr;
 
 #endif // THINGSBOARD_ENABLE_OTA
 

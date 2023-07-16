@@ -43,8 +43,7 @@ class Attribute_Request_Callback {
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called
-    inline Attribute_Request_Callback()
-      : m_attributes(), m_request_id(0U), m_attribute_key(nullptr), m_cb(nullptr) {  }
+    Attribute_Request_Callback();
 
 #if THINGSBOARD_ENABLE_STL
 
@@ -57,7 +56,13 @@ class Attribute_Request_Callback {
     /// @param cb Callback method that will be called
     template<class InputIterator>
     inline Attribute_Request_Callback(const InputIterator &first_itr, const InputIterator &last_itr, processFn cb)
-      : m_attributes(first_itr, last_itr), m_request_id(0U), m_attribute_key(nullptr), m_cb(cb) {  }
+      : m_attributes(first_itr, last_itr)
+      , m_request_id(0U)
+      , m_attribute_key(nullptr)
+      , m_cb(cb)
+    {
+        // Nothing to do
+    }
 
 #else
 
@@ -65,8 +70,7 @@ class Attribute_Request_Callback {
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client
     /// @param attributes Comma seperated string containing all attributes we want to request (test1, test2, ...)
     /// @param cb Callback method that will be called
-    inline Attribute_Request_Callback(const char *attributes, processFn cb)
-      : m_attributes(attributes), m_request_id(0U), m_attribute_key(nullptr), m_cb(cb) {  }
+    Attribute_Request_Callback(const char *attributes, processFn cb);
 
 #endif // THINGSBOARD_ENABLE_STL
 
@@ -76,52 +80,42 @@ class Attribute_Request_Callback {
     /// the client-side or shared attributes that were requested and their current values
     template<typename Logger>
     inline returnType Call_Callback(argumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_cb) {
-        Logger::log(ATT_REQUEST_CB_IS_NULL);
-        return returnType();
-      }
-      return m_cb(data);
+        // Check if the callback is a nullptr,
+        // meaning it has not been assigned any valid callback method
+        if (!m_cb) {
+          Logger::log(ATT_REQUEST_CB_IS_NULL);
+          return returnType();
+        }
+        return m_cb(data);
     }
 
     /// @brief Sets the callback method that will be called
     /// @param cb Callback method that will be called
-    inline void Set_Callback(processFn cb) {
-      m_cb = cb;
-    }
+    void Set_Callback(processFn cb);
 
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @return Unique identifier connected to the requested client-side or shared attributes
-    inline const uint32_t& Get_Request_ID() const {
-      return m_request_id;
-    }
+    const uint32_t& Get_Request_ID() const;
 
     /// @brief Sets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @param request_id Unqiue identifier of the request for client-side or shared attributes
-    inline void Set_Request_ID(const uint32_t &request_id) {
-      m_request_id = request_id;
-    }
+    void Set_Request_ID(const uint32_t &request_id);
 
     /// @brief Gets the response key of the key-value pair,
     /// that we expect the client-side or shared attribute payload json data to be contained in
     /// @return Key that the data is saved into,
     /// client for client-side attributes and shared for shared attributes
-    inline const char* Get_Attribute_Key() const {
-      return m_attribute_key;
-    }
+    const char* Get_Attribute_Key() const;
 
     /// @brief Sets the response key of the key-value pair,
     /// that we expect the client-side or shared attribute payload json data to be contained in
     /// @param attribute_key Key that the data is saved into,
     /// client for client-side attributes and shared for shared attributes
-    inline void Set_Attribute_Key(const char *attribute_key) {
-      m_attribute_key = attribute_key;
-    }
+    void Set_Attribute_Key(const char *attribute_key);
 
 #if THINGSBOARD_ENABLE_STL
 
@@ -129,9 +123,7 @@ class Attribute_Request_Callback {
     /// in the subscribed method being called when the response with their current value
     // is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
-    inline const std::vector<const char *>& Get_Attributes() const {
-      return m_attributes;
-    }
+    const std::vector<const char *>& Get_Attributes() const;
 
     /// @brief Sets all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
@@ -142,7 +134,7 @@ class Attribute_Request_Callback {
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     template<class InputIterator>
     inline void Set_Attributes(const InputIterator &first_itr, const InputIterator &last_itr) {
-      m_attributes.assign(first_itr, last_itr);
+        m_attributes.assign(first_itr, last_itr);
     }
 
 #else
@@ -151,17 +143,13 @@ class Attribute_Request_Callback {
     /// in the subscribed method being called when the response with their current value
     // is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
-    inline const char* Get_Attributes() const {
-      return m_attributes;
-    }
+    const char* Get_Attributes() const;
 
     /// @brief Sets the string containing all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
     // is sent from the cloud and received by the client
     /// @param attributes Requested client-side or shared attributes
-    inline void Set_Attributes(const char *attributes) {
-      m_attributes = attributes;
-    }
+    void Set_Attributes(const char *attributes);
 
 #endif // THINGSBOARD_ENABLE_STL
 

@@ -86,7 +86,7 @@ class OTA_Handler {
     /// @param publish_callback Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
     /// @param send_fw_state_callback Callback that is used to send information about the current state of the over the air update
     /// @param finish_callback Callback that is called once the update has been finished and the user has been informed of the failure or success
-    OTA_Handler(std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback)
+    inline OTA_Handler(std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback)
         : m_fw_callback(nullptr)
         , m_publish_callback(publish_callback)
         , m_send_fw_state_callback(send_fw_state_callback)
@@ -101,7 +101,7 @@ class OTA_Handler {
         , m_retries(0U)
         , m_watchdog(std::bind(&OTA_Handler::Handle_Request_Timeout, this))
     {
-      // Nothing to do.
+      // Nothing to do
     }
 
     /// @brief Starts the firmware update with requesting the first firmware packet and initalizes the underlying needed components
@@ -304,7 +304,7 @@ class OTA_Handler {
           (void)m_finish_callback();
           break;
         default:
-          // Nothing to do.
+          // Nothing to do
           break;
       }
     }
