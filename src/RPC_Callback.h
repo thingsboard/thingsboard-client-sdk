@@ -41,14 +41,12 @@ class RPC_Callback {
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called
-    inline RPC_Callback()
-      : RPC_Callback(nullptr, nullptr) {  }
+    RPC_Callback();
 
     /// @brief Constructs callback, will be called upon RPC request arrival with the given methodName
     /// @param methodName Name we expect to be sent via. RPC so this callback will be called
     /// @param cb Callback method that will be called and should return a response if excpected
-    inline RPC_Callback(const char *methodName, processFn cb)
-      : m_methodName(methodName), m_cb(cb) {  }
+    RPC_Callback(const char *methodName, processFn cb);
 
     /// @brief Calls the callback that was subscribed
     /// @tparam Logger Logging class that should be used to print messages
@@ -57,32 +55,26 @@ class RPC_Callback {
     /// that the sending widget can use to display the gotten information (temperature etc.)
     template<typename Logger>
     inline returnType Call_Callback(argumentType data) const {
-      // Check if the callback is a nullptr,
-      // meaning it has not been assigned any valid callback method.
-      if (!m_cb) {
-        Logger::log(RPC_CB_NULL);
-        return returnType();
-      }
-      return m_cb(data);
+        // Check if the callback is a nullptr,
+        // meaning it has not been assigned any valid callback method
+        if (!m_cb) {
+          Logger::log(RPC_CB_NULL);
+          return returnType();
+        }
+        return m_cb(data);
     }
 
     /// @brief Sets the callback method that will be called
     /// @param cb Callback method that will be called
-    inline void Set_Callback(processFn cb) {
-      m_cb = cb;
-    }
+    void Set_Callback(processFn cb);
 
     /// @brief Gets the poiner to the underlying name
     /// @return Pointer to the passed methodName
-    inline const char* Get_Name() const {
-      return m_methodName;
-    }
+    const char* Get_Name() const;
 
     /// @brief Sets the poiner to the underlying name
     /// @param methodName Pointer to the passed methodName
-    inline void Set_Name(const char *methodName) {
-      m_methodName = methodName;
-    }
+    void Set_Name(const char *methodName);
 
   private:
     const char  *m_methodName;  // Method name

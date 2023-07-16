@@ -364,7 +364,7 @@ class ThingsBoardSized {
 
     /// @brief Destructor
     inline ~ThingsBoardSized() {
-      // Nothing to do.
+      // Nothing to do
     }
 
     /// @brief Gets the currently connected PubSubClient as a reference,

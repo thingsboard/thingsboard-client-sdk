@@ -91,7 +91,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Destructor
     inline ~ThingsBoardHttpSized() { 
-      // Nothing to do.
+      // Nothing to do
     }
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
