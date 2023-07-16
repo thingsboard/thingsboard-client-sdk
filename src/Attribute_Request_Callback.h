@@ -8,12 +8,11 @@
 #define Attribute_Request_Callback_h
 
 // Local includes.
-#include "Configuration.h"
+#include "Callback.h"
 
 // Library includes.
 #include <ArduinoJson.h>
 #if THINGSBOARD_ENABLE_STL
-#include <functional>
 #include <vector>
 #endif // THINGSBOARD_ENABLE_STL
 
@@ -31,17 +30,8 @@ constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute reque
 using Attribute_Data = const JsonObjectConst;
 
 /// @brief Client-side or shared attributes request callback wrapper
-class Attribute_Request_Callback {
+class Attribute_Request_Callback : public Callback<void, const Attribute_Data&> {
   public:
-    /// @brief Client-side or shared attributes callback signature
-    using returnType = void;
-    using argumentType = const Attribute_Data&;
-#if THINGSBOARD_ENABLE_STL
-    using processFn = std::function<returnType(argumentType data)>;
-#else
-    using processFn = returnType (*)(argumentType data);
-#endif // THINGSBOARD_ENABLE_STL
-
     /// @brief Constructs empty callback, will result in never being called
     Attribute_Request_Callback();
 
@@ -73,26 +63,6 @@ class Attribute_Request_Callback {
     Attribute_Request_Callback(const char *attributes, processFn cb);
 
 #endif // THINGSBOARD_ENABLE_STL
-
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
-    /// @tparam Logger Logging class that should be used to print messages
-    /// @param data Received client-side or shared attribute request data that include
-    /// the client-side or shared attributes that were requested and their current values
-    template<typename Logger>
-    inline returnType Call_Callback(argumentType data) const {
-        // Check if the callback is a nullptr,
-        // meaning it has not been assigned any valid callback method
-        if (!m_cb) {
-          Logger::log(ATT_REQUEST_CB_IS_NULL);
-          return returnType();
-        }
-        return m_cb(data);
-    }
-
-    /// @brief Sets the callback method that will be called
-    /// @param cb Callback method that will be called
-    void Set_Callback(processFn cb);
-
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
@@ -161,7 +131,6 @@ class Attribute_Request_Callback {
 #endif // THINGSBOARD_ENABLE_STL
     uint32_t                       m_request_id;      // Id the request was called with
     const char                     *m_attribute_key;  // Attribute key that we wil receive the response on ("client" or "shared")
-    processFn                      m_cb;              // Callback to call
 };
 
 #endif // Attribute_Request_Callback_h

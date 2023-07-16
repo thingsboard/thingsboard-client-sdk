@@ -7,22 +7,11 @@ Shared_Attribute_Callback::Shared_Attribute_Callback() :
     // Nothing to do
 }
 
-Shared_Attribute_Callback::Shared_Attribute_Callback(processFn cb) :
-    m_attributes(),
-    m_cb(cb)
+Shared_Attribute_Callback::Shared_Attribute_Callback(function cb) :
+    Callback(cb, ATT_CB_IS_NULL),
+    m_attributes()
 {
     // Nothing to do
-}
-
-#if !THINGSBOARD_ENABLE_STL
-
-Shared_Attribute_Callback::Shared_Attribute_Callback(const char *attributes, processFn cb)
-      : m_attributes(attributes), m_cb(cb) {  }
-
-#endif // !THINGSBOARD_ENABLE_STL
-
-void Shared_Attribute_Callback::Set_Callback(processFn cb) {
-    m_cb = cb;
 }
 
 #if THINGSBOARD_ENABLE_STL
@@ -32,6 +21,13 @@ const std::vector<const char *>& Shared_Attribute_Callback::Get_Attributes() con
 }
 
 #else
+
+Shared_Attribute_Callback::Shared_Attribute_Callback(const char *attributes, function cb) :
+    Callback(cb, ATT_CB_IS_NULL),
+    m_attributes(attributes)
+{
+    // Nothing to do
+}
 
 const char* Shared_Attribute_Callback::Get_Attributes() const {
     return m_attributes;

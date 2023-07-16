@@ -8,12 +8,11 @@
 #define OTA_Update_Callback_h
 
 // Local includes.
-#include "Configuration.h"
+#include "Callback.h"
 
 #if THINGSBOARD_ENABLE_OTA
 
 // Library includes.
-#include <functional>
 #if THINGSBOARD_ENABLE_PROGMEM
 #include <pgmspace.h>
 #endif // THINGSBOARD_ENABLE_PROGMEM
@@ -39,14 +38,12 @@ constexpr uint16_t REQUEST_TIMEOUT = 5000U;
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 /// @brief OTA firmware update callback wrapper
-class OTA_Update_Callback {
+class OTA_Update_Callback : public Callback<void, const bool&> {
   public:
     /// @brief OTA firmware update callback signature
     using returnType = void;
     using progressArgumentType = const uint32_t&;
-    using endArgumentType = const bool&;
     using progressFn = std::function<returnType(progressArgumentType current, progressArgumentType total)>;
-    using endFn = std::function<returnType(endArgumentType data)>;
 
     /// @brief Constructs empty callback, will result in never being called
     OTA_Update_Callback();
@@ -63,7 +60,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
     /// has been completly sent by the cloud, received by the client and written to the flash partition as well as callback
@@ -80,7 +77,7 @@ class OTA_Update_Callback {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const size_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const size_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -101,24 +98,6 @@ class OTA_Update_Callback {
     /// this makes it possible to display a progress bar or signal easily how far we are in the current downloading process
     /// @param progressCb Progress callback method that will be called
     void Set_Progress_Callback(progressFn progressCb);
-
-    /// @brief Calls the end callback that was subscribed, when this class instance was initally created
-    /// @tparam Logger Logging class that should be used to print messages
-    /// @param data Received data that shows, whether the update was successfull or not
-    template<typename Logger>
-    inline returnType Call_End_Callback(endArgumentType data) const {
-        // Check if the callback is a nullptr,
-        // meaning it has not been assigned any valid callback method
-        if (!m_endCb) {
-          Logger::log(OTA_CB_IS_NULL);
-          return returnType();
-        }
-        return m_endCb(data);
-    }
-
-    /// @brief Sets the end callback method that will be called as soon as the OTA firmware update, either finished successfully or failed
-    /// @param endCb End callback method that will be called
-    void Set_End_Callback(endFn endCb);
 
     /// @brief Gets the current firmware title, used to decide if an OTA firmware update is actually installed,
     /// this is only done if the title of the update and the current firmware title are the same
@@ -170,7 +149,6 @@ class OTA_Update_Callback {
 
   private:
     progressFn      m_progressCb;    // Progress callback to call
-    endFn           m_endCb;         // End callback to call
     const char      *m_fwTitel;      // Current firmware title of device
     const char      *m_fwVersion;    // Current firmware version of device
     uint8_t         m_retries;       // Maximum amount of retries

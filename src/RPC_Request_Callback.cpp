@@ -1,29 +1,34 @@
 // Header include.
 #include "RPC_Request_Callback.h"
 
+/// ---------------------------------
+/// Constant strings in flash memory.
+/// ---------------------------------
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char RPC_REQUEST_CB_NULL[] PROGMEM = "Client-side RPC request callback is NULL";
+#else
+constexpr char RPC_REQUEST_CB_NULL[] = "Client-side RPC request callback is NULL";
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
 RPC_Request_Callback::RPC_Request_Callback() :
     RPC_Request_Callback(nullptr, nullptr, nullptr)
 {
     // Nothing to do
 }
 
-RPC_Request_Callback::RPC_Request_Callback(const char *methodName, processFn cb) :
+RPC_Request_Callback::RPC_Request_Callback(const char *methodName, function cb) :
     RPC_Request_Callback(methodName, nullptr, cb)
 {
     // Nothing to do
 }
 
-RPC_Request_Callback::RPC_Request_Callback(const char *methodName, const JsonArray *parameteres, processFn cb) :
+RPC_Request_Callback::RPC_Request_Callback(const char *methodName, const JsonArray *parameteres, function cb) :
+    Callback(cb, RPC_REQUEST_CB_NULL),
     m_methodName(methodName),
     m_parameters(parameteres),
-    m_request_id(0U),
-    m_cb(cb)
+    m_request_id(0U)
 {
     // Nothing to do
-}
-
-void RPC_Request_Callback::Set_Callback(processFn cb) {
-    m_cb = cb;
 }
 
 const uint32_t& RPC_Request_Callback::Get_Request_ID() const {

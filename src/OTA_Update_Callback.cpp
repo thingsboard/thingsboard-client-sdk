@@ -1,30 +1,34 @@
 // Header include.
 #include "OTA_Update_Callback.h"
 
+#if THINGSBOARD_ENABLE_OTA
+
 OTA_Update_Callback::OTA_Update_Callback() :
     OTA_Update_Callback(nullptr, nullptr, nullptr, nullptr)
 {
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
+OTA_Update_Callback::OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
     OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, chunkRetries, chunkSize, timeout)
 {
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, endFn endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const size_t &chunkSize, const uint16_t &timeout) :
-    m_progressCb(progressCb), m_endCb(endCb), m_fwTitel(currFwTitle), m_fwVersion(currFwVersion), m_retries(chunkRetries), m_size(chunkSize), m_timeout(timeout)
+OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const size_t &chunkSize, const uint16_t &timeout) :
+    Callback(endCb, OTA_CB_IS_NULL),
+    m_progressCb(progressCb),
+    m_fwTitel(currFwTitle),
+    m_fwVersion(currFwVersion),
+    m_retries(chunkRetries),
+    m_size(chunkSize),
+    m_timeout(timeout)
 {
     // Nothing to do
 }
 
 void OTA_Update_Callback::Set_Progress_Callback(progressFn progressCb) {
     m_progressCb = progressCb;
-}
-
-void OTA_Update_Callback::Set_End_Callback(endFn endCb) {
-    m_endCb = endCb;
 }
 
 const char* OTA_Update_Callback::Get_Firmware_Title() const {
@@ -66,3 +70,5 @@ const uint16_t& OTA_Update_Callback::Get_Timeout() const {
 void OTA_Update_Callback::Set_Timeout(const uint16_t &timeout) {
     m_timeout = timeout;
 }
+
+#endif // THINGSBOARD_ENABLE_OTA
