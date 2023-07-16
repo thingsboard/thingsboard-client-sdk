@@ -45,11 +45,11 @@ class Attribute_Request_Callback : public Callback<void, const Attribute_Data&> 
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @param cb Callback method that will be called
     template<class InputIterator>
-    inline Attribute_Request_Callback(const InputIterator &first_itr, const InputIterator &last_itr, processFn cb)
-      : m_attributes(first_itr, last_itr)
+    inline Attribute_Request_Callback(const InputIterator &first_itr, const InputIterator &last_itr, function cb)
+      : Callback(cb, ATT_REQUEST_CB_IS_NULL)
+      , m_attributes(first_itr, last_itr)
       , m_request_id(0U)
       , m_attribute_key(nullptr)
-      , m_cb(cb)
     {
         // Nothing to do
     }
@@ -60,7 +60,7 @@ class Attribute_Request_Callback : public Callback<void, const Attribute_Data&> 
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client
     /// @param attributes Comma seperated string containing all attributes we want to request (test1, test2, ...)
     /// @param cb Callback method that will be called
-    Attribute_Request_Callback(const char *attributes, processFn cb);
+    Attribute_Request_Callback(const char *attributes, function cb);
 
 #endif // THINGSBOARD_ENABLE_STL
     /// @brief Gets the unique request identifier that is connected to the original request,

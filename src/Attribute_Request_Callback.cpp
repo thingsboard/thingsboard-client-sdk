@@ -12,11 +12,11 @@ Attribute_Request_Callback::Attribute_Request_Callback() :
 
 #if !THINGSBOARD_ENABLE_STL
 
-Attribute_Request_Callback::Attribute_Request_Callback(const char *attributes, processFn cb) :
+Attribute_Request_Callback::Attribute_Request_Callback(const char *attributes, function cb) :
+    Callback(cb, ATT_REQUEST_CB_IS_NULL),
     m_attributes(attributes),
     m_request_id(0U),
-    m_attribute_key(nullptr),
-    m_cb(cb)
+    m_attribute_key(nullptr)
 {
     // Nothing to do
 }
