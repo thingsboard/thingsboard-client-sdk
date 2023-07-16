@@ -172,6 +172,9 @@ constexpr char CLIENT_PASSWORD[] PROGMEM = "password";
 constexpr char CLIENT_USERNAME[] PROGMEM = "userName";
 constexpr char TEMPERATURE_KEY[] PROGMEM = "temperature";
 constexpr char HUMIDITY_KEY[] PROGMEM = "humidity";
+constexpr char ACCESS_TOKEN_CRED_TYPE[] PROGMEM = "ACCESS_TOKEN";
+constexpr char MQTT_BASIC_CRED_TYPE[] PROGMEM = "MQTT_BASIC";
+constexpr char X509_CERTIFICATE_CRED_TYPE[] PROGMEM = "X509_CERTIFICATE";
 #else
 constexpr char CREDENTIALS_TYPE[] = "credentialsType";
 constexpr char CREDENTIALS_VALUE[] = "credentialsValue";
@@ -180,6 +183,9 @@ constexpr char CLIENT_PASSWORD[] = "password";
 constexpr char CLIENT_USERNAME[] = "userName";
 constexpr char TEMPERATURE_KEY[] = "temperature";
 constexpr char HUMIDITY_KEY[] = "humidity";
+constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
+constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
+constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
 #endif
 
 
