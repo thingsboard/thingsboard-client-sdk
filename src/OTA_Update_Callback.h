@@ -77,7 +77,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const size_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -133,11 +133,11 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
 
     /// @brief Gets the size a single chunk of the OTA firmware binary file we attempt to download should have
     /// @return Size of each single chunk to be downloaded
-    const size_t& Get_Chunk_Size() const;
+    const uint16_t& Get_Chunk_Size() const;
 
     /// @brief Sets the size a single chunk of the OTA firmware binary file we attempt to download should have
     /// @param chunkSize Size of each single chunk to be downloaded
-    void Set_Chunk_Size(const size_t &chunkSize);
+    void Set_Chunk_Size(const uint16_t &chunkSize);
 
     /// @brief Gets the time in milliseconds we wait until we declare a single chunk we attempted to download as a failure
     /// @return Gets the timeout time for each single chunk to be downloaded
@@ -152,7 +152,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     const char      *m_fwTitel;      // Current firmware title of device
     const char      *m_fwVersion;    // Current firmware version of device
     uint8_t         m_retries;       // Maximum amount of retries
-    size_t          m_size;          // Maximum size of the chuncks we are downloading
+    uint16_t        m_size;          // Maximum size of the chuncks we are downloading
     uint16_t        m_timeout;       // How long we maximum wait for each chunck to arrive
 };
 
