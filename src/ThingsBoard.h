@@ -26,6 +26,7 @@
 
 // Library includes.
 #include <TBPubSubClient.h>
+#include <StreamUtils.h>
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -662,18 +663,11 @@ class ThingsBoardSized {
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
       if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
+        WriteBufferingPrint bufferedPrint(m_client, getMaximumStackSize());
         // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+        if (serializeJson(jsonVariant, bufferedPrint) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
-        else {
-          result = sendTelemetryJson(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
       }
       else {
         char json[jsonSize];
@@ -712,18 +706,11 @@ class ThingsBoardSized {
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
       if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
+        WriteBufferingPrint bufferedPrint(m_client, getMaximumStackSize());
         // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+        if (serializeJson(jsonVariant, bufferedPrint) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
-        else {
-          result = sendTelemetryJson(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
       }
       else {
         char json[jsonSize];
@@ -836,18 +823,11 @@ class ThingsBoardSized {
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
       if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
+        WriteBufferingPrint bufferedPrint(m_client, getMaximumStackSize());
         // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
+        if (serializeJson(jsonVariant, bufferedPrint) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
-        else {
-          result = sendAttributeJSON(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
       }
       else {
         char json[jsonSize];
@@ -886,18 +866,11 @@ class ThingsBoardSized {
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
       if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
+        WriteBufferingPrint bufferedPrint(m_client, getMaximumStackSize());
         // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+        if (serializeJson(jsonVariant, bufferedPrint) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
-        else {
-          result = sendAttributeJSON(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
       }
       else {
         char json[jsonSize];
@@ -1268,7 +1241,7 @@ class ThingsBoardSized {
     inline bool Publish_Chunk_Request(const uint32_t& request_chunck) {
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const uin16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
 
       // Convert the interger size into a readable string
       char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)];
@@ -1283,7 +1256,7 @@ class ThingsBoardSized {
 
 #endif // THINGSBOARD_ENABLE_OTA
 
-    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the StreamUtil library is used
     /// @return Maximum amount of bytes we want to allocate on the stack
     inline const uint32_t& getMaximumStackSize() const {
       return m_max_stack;
