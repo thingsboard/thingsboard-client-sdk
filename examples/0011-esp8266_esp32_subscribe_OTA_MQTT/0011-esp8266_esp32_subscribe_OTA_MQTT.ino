@@ -49,9 +49,9 @@ constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
 // Size of each firmware chunck downloaded over MQTT,
 // increased packet size, might increase download speed
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr size_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
+constexpr uint16_t FIRMWARE_PACKET_SIZE PROGMEM = 4096U;
 #else
-constexpr size_t FIRMWARE_PACKET_SIZE = 4096U;
+constexpr uint16_t FIRMWARE_PACKET_SIZE = 4096U;
 #endif
 
 // PROGMEM can only be added when using the ESP32 WiFiClient,

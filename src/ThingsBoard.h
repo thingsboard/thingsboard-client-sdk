@@ -326,7 +326,7 @@ class ThingsBoardSized {
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardSized(Client& client, const size_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size)
+    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size)
       : ThingsBoardSized()
     {
       setMaximumStackSize(maxStackSize);
@@ -399,7 +399,7 @@ class ThingsBoardSized {
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent
     /// @return Whether allocating the needed memory for the given bufferSize was successful or not.
-    inline bool setBufferSize(const size_t& bufferSize) {
+    inline bool setBufferSize(const uint16_t& bufferSize) {
       return m_client.setBufferSize(bufferSize);
     }
 
@@ -462,7 +462,7 @@ class ThingsBoardSized {
       }
       respObj[DURATION_KEY] = durationMs;
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
+      const size_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(respObj));
       char responsePayload[objectSize];
       if (currentBufferSize < objectSize) {
@@ -542,7 +542,7 @@ class ThingsBoardSized {
       requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
       requestObject[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
+      const size_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestObject));
       char requestPayload[objectSize];
       if (currentBufferSize < objectSize) {
@@ -624,8 +624,8 @@ class ThingsBoardSized {
         return false;
       }
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t jsonSize = JSON_STRING_SIZE(strlen(json));
+      const size_t currentBufferSize = m_client.getBufferSize();
+      const size_t jsonSize = JSON_STRING_SIZE(strlen(json));
 
       if (currentBufferSize < jsonSize) {
         char message[Helper::detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
@@ -798,8 +798,8 @@ class ThingsBoardSized {
         return false;
       }
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t jsonSize = JSON_STRING_SIZE(strlen(json));
+      const size_t currentBufferSize = m_client.getBufferSize();
+      const size_t jsonSize = JSON_STRING_SIZE(strlen(json));
 
       if (currentBufferSize < jsonSize) {
         char message[Helper::detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
@@ -1061,7 +1061,7 @@ class ThingsBoardSized {
         requestVariant[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
       }
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
+      const size_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
       char buffer[objectSize];
       if (currentBufferSize < objectSize) {
@@ -1268,7 +1268,7 @@ class ThingsBoardSized {
     inline bool Publish_Chunk_Request(const uint32_t& request_chunck) {
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const size_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const uin16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
 
       // Convert the interger size into a readable string
       char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)];
@@ -1358,7 +1358,7 @@ class ThingsBoardSized {
       requestVariant[attributeRequestKey] = request;
 #endif // THINGSBOARD_ENABLE_STL
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
+      const size_t currentBufferSize = m_client.getBufferSize();
       const size_t objectSize = JSON_STRING_SIZE(measureJson(requestVariant));
       char buffer[objectSize];
       if (currentBufferSize < objectSize) {
@@ -1553,7 +1553,7 @@ class ThingsBoardSized {
 
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const size_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
 
       // Get the previous buffer size and cache it so the previous settings can be restored.
       m_previous_buffer_size = m_client.getBufferSize();
@@ -1846,8 +1846,8 @@ class ThingsBoardSized {
         return;
       }
 
-      const uint16_t currentBufferSize = m_client.getBufferSize();
-      const uint32_t jsonSize = JSON_STRING_SIZE(measureJson(respVariant));
+      const size_t currentBufferSize = m_client.getBufferSize();
+      const size_t jsonSize = JSON_STRING_SIZE(measureJson(respVariant));
 
       if (currentBufferSize < jsonSize) {
         char message[Helper::detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
@@ -2214,7 +2214,7 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_OTA
     const OTA_Update_Callback *m_fw_callback;
-    size_t m_previous_buffer_size;
+    uint16_t m_previous_buffer_size;
     bool m_change_buffer_size;
     const std::vector<const char *> m_fw_shared_keys;
     const Attribute_Request_Callback m_fw_request_callback;

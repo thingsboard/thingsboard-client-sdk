@@ -15,7 +15,7 @@ OTA_Update_Callback::OTA_Update_Callback(function endCb, const char *currFwTitle
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const size_t &chunkSize, const uint16_t &timeout) :
+OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
     Callback(endCb, OTA_CB_IS_NULL),
     m_progressCb(progressCb),
     m_fwTitel(currFwTitle),
@@ -55,11 +55,11 @@ void OTA_Update_Callback::Set_Chunk_Retries(const uint8_t &chunkRetries) {
     m_retries = chunkRetries;
 }
 
-const size_t& OTA_Update_Callback::Get_Chunk_Size() const {
+const uint16_t& OTA_Update_Callback::Get_Chunk_Size() const {
   return m_size;
 }
 
-void OTA_Update_Callback::Set_Chunk_Size(const size_t &chunkSize) {
+void OTA_Update_Callback::Set_Chunk_Size(const uint16_t &chunkSize) {
     m_size = chunkSize;
 }
 
