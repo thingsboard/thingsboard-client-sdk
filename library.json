@@ -10,7 +10,7 @@
         "bblanchon/ArduinoJson": "^6.21.2",
         "thingsboard/TBPubSubClient": "https://github.com/thingsboard/pubsubclient.git#v2.9.2",
         "arduino-libraries/ArduinoHttpClient" : "^0.4.0",
-        "bblanchon/ArduinoStreamUtils" : "^1.7.3"
+        "bblanchon/StreamUtils" : "^1.7.3"
     },
     "version": "0.10.3",
     "examples": "examples/*/*.ino",
