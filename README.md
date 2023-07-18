@@ -86,7 +86,7 @@ To remove the need for the `MaxFieldsAmt` template argument in the constructor a
 The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not send data, if the size of it is bigger than the size originally passed in the constructor as a template argument (`PayLoadSize`). Respective logs in the `"Serial Monitor"` window will indicate the condition:
 
 ```
-[TB] Buffer size (64) to small for the given payloads size (83), increase with setBufferSize accordingly
+[TB] Buffer size (64) to small for the given payloads size (83), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard
 ```
 
 If that's a case, the buffer size for serialization should be increased. To do so, `setBufferSize()` method can be used or alternatively the `bufferSize` passed to the constructor can be increased as illustrated below:
@@ -105,6 +105,19 @@ void setup() {
   // Increase internal buffer size after inital creation.
   tb.setBufferSize(128);
 }
+```
+
+Alternatively it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM_UTILS` option, which sends messages that are bigger than the given buffer size with a method that skips the internal buffer, be aware tough this only works for sent messages. The internal buffer size still has to be big enough to receive the biggest possible message received by the client that is sent by the server.
+
+```cpp
+// Enable skipping usage of the buffer for sends that are bigger than the internal buffer size
+#define THINGSBOARD_ENABLE_STREAM_UTILS 1
+
+// For the sake of example
+WiFiEspClient espClient;
+
+// The SDK setup with 64 bytes for JSON buffer
+ThingsBoard tb(espClient);
 ```
 
 ### Too much data fields must be serialized

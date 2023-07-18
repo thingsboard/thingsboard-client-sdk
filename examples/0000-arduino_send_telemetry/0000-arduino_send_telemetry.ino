@@ -180,8 +180,8 @@ void loop() {
   // Uploads new telemetry to ThingsBoard using MQTT.
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api
   // for more details
-  tb.sendTelemetryInt(TEMPERATURE_KEY, random(10, 31));
-  tb.sendTelemetryInt(HUMIDITY_KEY, random(40, 90));
+  tb.sendTelemetryData(TEMPERATURE_KEY, random(10, 31));
+  tb.sendTelemetryData(HUMIDITY_KEY, random(40, 90));
 
   tb.loop();
 }
