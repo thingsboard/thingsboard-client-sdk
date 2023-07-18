@@ -12,7 +12,7 @@
         "arduino-libraries/ArduinoHttpClient" : "^0.4.0",
         "bblanchon/StreamUtils" : "^1.7.3"
     },
-    "version": "0.10.3",
+    "version": "0.11.0",
     "examples": "examples/*/*.ino",
     "frameworks": "arduino",
     "license": "MIT"

@@ -113,38 +113,6 @@ class ThingsBoardHttpSized {
       return sendKeyValue(key, value);
     }
 
-    /// @brief Attempts to send integer telemetry data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendTelemetryInt(const char *key, int value) {
-      return sendKeyValue(key, value);
-    }
-
-    /// @brief Attempts to send boolean telemetry data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendTelemetryBool(const char *key, bool value) {
-      return sendKeyValue(key, value);
-    }
-
-    /// @brief Attempts to send float telemetry data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendTelemetryFloat(const char *key, float value) {
-      return sendKeyValue(key, value);
-    }
-
-    /// @brief Attempts to send string telemetry data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendTelemetryString(const char *key, const char *value) {
-      return sendKeyValue(key, value);
-    }
-
     /// @brief Attempts to send aggregated telemetry data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
@@ -157,13 +125,7 @@ class ThingsBoardHttpSized {
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
     inline bool sendTelemetryJson(const char *json) {
-      if (json == nullptr || m_token == nullptr) {
-        return false;
-      }
-
-      char path[Helper::detectSize(HTTP_TELEMETRY_TOPIC, m_token)];
-      snprintf_P(path, sizeof(path), HTTP_TELEMETRY_TOPIC, m_token);
-      return postMessage(path, json);
+      return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
     }
 
     /// @brief Attempts to send custom telemetry JsonObject
@@ -171,49 +133,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Whetherr sending the data was successful or not
     inline bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      // Check if allocating needed memory failed when trying to create the JsonObject,
-      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
-      if (jsonObject.isNull()) {
-        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
-        return false;
-      }
-#if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t jsonObjectSize = jsonObject.size();
-      if (MaxFieldsAmt < jsonObjectSize) {
-        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-      bool result = false;
-
-      // Check if the remaining stack size of the current task would overflow the stack,
-      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        }
-        else {
-          result = sendTelemetryJson(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
-      }
-      else {
-        char json[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-          return result;
-        }
-        result = sendTelemetryJson(json);
-      }
-      return result;
+      return Send_Json(HTTP_TELEMETRY_TOPIC, jsonObject, jsonSize);
     }
 
     /// @brief Attempts to send custom telemetry JsonVariant
@@ -221,49 +141,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Whetherr sending the data was successful or not
     inline bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
-      // Check if allocating needed memory failed when trying to create the JsonObject,
-      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
-      if (jsonVariant.isNull()) {
-        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
-        return false;
-      }
-#if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t jsonVariantSize = jsonVariant.size();
-      if (MaxFieldsAmt < jsonVariantSize) {
-        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-      bool result = false;
-
-      // Check if the remaining stack size of the current task would overflow the stack,
-      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        }
-        else {
-          result = sendTelemetryJson(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
-      }
-      else {
-        char json[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-          return result;
-        }
-        result = sendTelemetryJson(json);
-      }
-      return result;
+      return Send_Json(HTTP_TELEMETRY_TOPIC, jsonVariant, jsonSize);
     }
 
     /// @brief Attempts to send a GET request over HTTP or HTTPS
@@ -296,38 +174,6 @@ class ThingsBoardHttpSized {
       return sendKeyValue(key, value, false);
     }
 
-    /// @brief Attempts to send integer attribute data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendAttributeInt(const char *key, int value) {
-      return sendKeyValue(key, value, false);
-    }
-
-    /// @brief Attempts to send boolean attribute data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendAttributeBool(const char *key, bool value) {
-      return sendKeyValue(key, value, false);
-    }
-
-    /// @brief Attempts to send float attribute data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendAttributeFloat(const char *key, float value) {
-      return sendKeyValue(key, value, false);
-    }
-
-    /// @brief Attempts to send string attribute data with the given key and value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    inline bool sendAttributeString(const char *key, const char *value) {
-      return sendKeyValue(key, value, false);
-    }
-
     /// @brief Attempts to send aggregated attribute data
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
@@ -340,13 +186,7 @@ class ThingsBoardHttpSized {
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
     inline bool sendAttributeJSON(const char *json) {
-      if (json == nullptr || m_token == nullptr) {
-        return false;
-      }
-
-      char path[Helper::detectSize(HTTP_ATTRIBUTES_TOPIC, m_token)];
-      snprintf_P(path, sizeof(path), HTTP_ATTRIBUTES_TOPIC, m_token);
-      return postMessage(path, json);
+      return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
     }
 
     /// @brief Attempts to send custom attribute JsonObject
@@ -354,49 +194,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonObject
     /// @return Whetherr sending the data was successful or not
     inline bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      // Check if allocating needed memory failed when trying to create the JsonObject,
-      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonobject/isnull/ for more information.
-      if (jsonObject.isNull()) {
-        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
-        return false;
-      }
-#if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t jsonObjectSize = jsonObject.size();
-      if (MaxFieldsAmt < jsonObjectSize) {
-        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonObjectSize, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-      bool result = false;
-
-      // Check if the remaining stack size of the current task would overflow the stack,
-      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-      if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        }
-        else {
-          result = sendAttributeJSON(json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
-      }
-      else {
-        char json[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonObject, json, jsonSize) < jsonSize - 1) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-          return result;
-        }
-        result = sendAttributeJSON(json);
-      }
-      return result;
+      return Send_Json(HTTP_ATTRIBUTES_TOPIC, jsonObject, jsonSize);
     }
 
     /// @brief Attempts to send custom attribute JsonVariant
@@ -404,33 +202,43 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the JsonVariant
     /// @return Whetherr sending the data was successful or not
     inline bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
+      return Send_Json(HTTP_ATTRIBUTES_TOPIC, jsonVariant, jsonSize);
+    }
+
+  private:
+
+    /// @brief Attempts to send custom attribute source
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param topic Topic we want to send the data over
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
+    /// @return Whether sending the data was successful or not
+    template <typename TSource>
+    inline bool Send_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
-      if (jsonVariant.isNull()) {
+      if (source.isNull()) {
         Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
       }
 #if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t jsonVariantSize = jsonVariant.size();
-      if (MaxFieldsAmt < jsonVariantSize) {
-        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, jsonVariantSize, MaxFieldsAmt);
+      const uint32_t amount = source.size();
+      if (MaxFieldsAmt < amount) {
+        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt);
         Logger::log(message);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       bool result = false;
 
-      // Check if the remaining stack size of the current task would overflow the stack,
-      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
       if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+        if (serializeJson(source, json, jsonSize) < jsonSize) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
-          result = sendAttributeJSON(json);
+          result = Send_Json_String(topic, json);
         }
         // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
         // and set the pointer to null so we do not have a dangling reference.
@@ -439,19 +247,31 @@ class ThingsBoardHttpSized {
       }
       else {
         char json[jsonSize];
-        // Serialize json does not include size of the string null terminator
-        if (serializeJson(jsonVariant, json, jsonSize) < jsonSize - 1) {
+        if (serializeJson(source, json, jsonSize) < jsonSize) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
           return result;
         }
-        result = sendAttributeJSON(json);
+        result = Send_Json_String(topic, json);
       }
+
       return result;
     }
 
-  private:
+    /// @brief Attempts to send custom json attribute string
+    /// @param topic Topic we want to send the data over
+    /// @param json String containing our json key value pairs we want to attempt to send
+    /// @return Whether sending the data was successful or not
+    inline bool Send_Json_String(const char* topic, const char* json) {
+      if (json == nullptr || m_token == nullptr) {
+        return false;
+      }
 
-    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+      char path[Helper::detectSize(topic, m_token)];
+      snprintf_P(path, sizeof(path), topic, m_token);
+      return postMessage(path, json);
+    }
+
+    /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
     inline const uint32_t& getMaximumStackSize() const {
       return m_max_stack;
@@ -539,7 +359,7 @@ class ThingsBoardHttpSized {
       requestBuffer.shrinkToFit();
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
+      return telemetry ? sendTelemetryJson(object, measureJson(object)) : sendAttributeJSON(object, measureJson(object));
     }
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
@@ -563,7 +383,7 @@ class ThingsBoardHttpSized {
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, JSON_STRING_SIZE(measureJson(object))) : sendAttributeJSON(object, JSON_STRING_SIZE(measureJson(object)));
+      return telemetry ? sendTelemetryJson(object, measureJson(object)) : sendAttributeJSON(object, measureJson(object));
     }
 
     HttpClient m_client; // HttpClient instance

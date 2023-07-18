@@ -374,8 +374,8 @@ void loop() {
 #else
       Serial.println("Sending telemetry...");
 #endif
-      tb.sendTelemetryInt(TEMPERATURE_KEY, 22);
-      tb.sendTelemetryFloat(HUMIDITY_KEY, 42.5);
+      tb.sendTelemetryData(TEMPERATURE_KEY, 22);
+      tb.sendTelemetryData(HUMIDITY_KEY, 42.5);
     }
   }
 

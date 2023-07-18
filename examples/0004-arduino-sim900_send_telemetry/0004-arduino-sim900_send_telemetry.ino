@@ -213,14 +213,14 @@ void loop() {
 #else
   Serial.println("Sending temperature data...");
 #endif
-  tb.sendTelemetryInt(TEMPERATURE_KEY, random(10, 31));
+  tb.sendTelemetryData(TEMPERATURE_KEY, random(10, 31));
 
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Sending humidity data..."));
 #else
   Serial.println("Sending humidity data...");
 #endif
-  tb.sendTelemetryFloat(HUMIDITY_KEY, random(40, 90));
+  tb.sendTelemetryData(HUMIDITY_KEY, random(40, 90));
 
   tb.loop();
 }

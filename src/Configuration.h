@@ -71,6 +71,14 @@
 #    define THINGSBOARD_ENABLE_DYNAMIC 0
 #  endif
 
+// Enables the usage of an additonal library as a fallback, to directly serialize a json message that is sent to the cloud,
+// if the size of that message would be bigger than the internal buffer size of the client.
+// Allows sending much bigger messages than would otherwise be possible, and without much decrease stack or heap requirements, but at the cost of increased send times.
+// See https://arduinojson.org/v6/how-to/use-arduinojson-with-pubsubclient/#serializing-a-json-document-into-an-mqtt-message for the main difference int he underlying code.
+#  ifndef THINGSBOARD_ENABLE_STREAM_UTILS
+#    define THINGSBOARD_ENABLE_STREAM_UTILS 0
+#  endif
+
 // Enables the ThingsBoard class to save the allocated memory of the DynamicJsonDocument into psram instead of onto the sram.
 // Enabled by default if THINGSBOARD_ENABLE_DYNAMIC has been set, because it requries DynamicJsonDocument to work.
 // If enabled the program might be slightly slower and all the memory will be placed onto psram instead of sram.
