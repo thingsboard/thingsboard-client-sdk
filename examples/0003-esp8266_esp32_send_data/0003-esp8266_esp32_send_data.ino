@@ -21,6 +21,11 @@
 // which might not be avaialable on lower end devices.
 #define ENCRYPTED false
 
+// Enables sending messages that are bigger than the predefined message size,
+// where the message will be sent byte by byte as a fallback instead.
+// Requires an additional library, see https://github.com/bblanchon/ArduinoStreamUtils for more information.
+#define THINGSBOARD_ENABLE_STREAM_UTILS 1
+
 
 #if USING_HTTPS
 #include <ThingsBoardHttp.h>

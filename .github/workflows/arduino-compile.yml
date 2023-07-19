@@ -33,6 +33,7 @@ jobs:
         - name: ArduinoJson
         - name: WiFiEsp
         - name: TinyGSM
+        - name: StreamUtils
 
     steps:
       - uses: actions/checkout@v3
