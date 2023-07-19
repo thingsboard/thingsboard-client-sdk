@@ -71,6 +71,13 @@
 #    define THINGSBOARD_ENABLE_DYNAMIC 0
 #  endif
 
+// Enables the ThingsBoard class to print all received and sent messages and their topic, from and to the server,
+// additionally some more debug messages will be printed. Requires more flash memory, and more Serial calls requiring more performance.
+// Recommended to disable when building for release.
+#  ifndef THINGSBOARD_ENABLE_DEBUG
+#    define THINGSBOARD_ENABLE_DEBUG 0
+#  endif
+
 // Enables the usage of an additonal library as a fallback, to directly serialize a json message that is sent to the cloud,
 // if the size of that message would be bigger than the internal buffer size of the client.
 // Allows sending much bigger messages than would otherwise be possible, and without much decrease stack or heap requirements, but at the cost of increased send times.

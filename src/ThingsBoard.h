@@ -9,20 +9,14 @@
 
 // Local includes.
 #include "Constants.h"
-#include "Helper.h"
 #include "Vector.h"
 #include "ThingsBoardDefaultLogger.h"
-#include "Telemetry.h"
 #include "Shared_Attribute_Callback.h"
 #include "Attribute_Request_Callback.h"
 #include "RPC_Callback.h"
 #include "RPC_Request_Callback.h"
 #include "Provision_Callback.h"
 #include "OTA_Handler.h"
-
-#if THINGSBOARD_ENABLE_STL
-#include <assert.h>
-#endif // THINGSBOARD_ENABLE_STL
 
 // Library includes.
 #include <TBPubSubClient.h>
@@ -136,24 +130,21 @@ constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attr
 constexpr char COMMA PROGMEM = ',';
 constexpr char COLON PROGMEM = ':';
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
-constexpr char RECEIVED_RPC_LOG_MESSAGE[] PROGMEM = "Received RPC:";
 constexpr char RPC_METHOD_NULL[] PROGMEM = "RPC methodName is NULL";
 constexpr char NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, passing null JSON";
-constexpr char CALLING_RPC[] PROGMEM = "Calling RPC:";
-constexpr char RECEIVED_ATT_UPDATE[] PROGMEM = "Received shared attribute update";
 constexpr char NOT_FOUND_ATT_UPDATE[] PROGMEM = "Shared attribute update key not found";
-constexpr char ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
+constexpr char ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
 constexpr char ATT_IS_NULL[] PROGMEM = "Subscribed shared attribute update key is NULL";
-constexpr char ATT_IN_ARRAY[] PROGMEM = "Shared attribute update key: (%s) is subscribed";
 constexpr char ATT_NO_CHANGE[] PROGMEM = "No keys that we subscribed too were changed, skipping callback";
-constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
-constexpr char RECEIVED_ATT[] PROGMEM = "Received shared attribute request";
-constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
-constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
-constexpr char CB_ON_MESSAGE[] PROGMEM = "Callback onMQTTMessage from topic: (%s)";
 constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic failed";
-constexpr char PROV_RESPONSE[] PROGMEM = "Process provisioning response";
-constexpr char RECEIVED_PROV_RESPONSE[] PROGMEM = "Received provision response";
+constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
+#if THINGSBOARD_ENABLE_DEBUG
+constexpr char CALLING_RPC_CB[] PROGMEM = "Calling subscribed callback for rpc with methodname (%s)";
+constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
+constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
+constexpr char RECEIVE_MESSAGE[] PROGMEM = "Received data from server over topic: (%s) with data (%s)";
+constexpr char SEND_MESSAGE[] PROGMEM = "Sending data to server over topic (%s) with data (%s)";
+#endif // THINGSBOARD_ENABLE_DEBUG
 #else
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (%s)";
 constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
@@ -167,24 +158,22 @@ constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute re
 constexpr char COMMA = ',';
 constexpr char COLON = ':';
 constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
-constexpr char RECEIVED_RPC_LOG_MESSAGE[] = "Received RPC:";
 constexpr char RPC_METHOD_NULL[] = "RPC methodName is NULL";
 constexpr char NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
-constexpr char CALLING_RPC[] = "Calling RPC:";
-constexpr char RECEIVED_ATT_UPDATE[] = "Received shared attribute update";
 constexpr char NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
-constexpr char ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes (assumed to be subscribed to every possible key)";
+constexpr char ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
 constexpr char ATT_IS_NULL[] = "Subscribed shared attribute update key is NULL";
-constexpr char ATT_IN_ARRAY[] = "Shared attribute update key: (%s) is subscribed";
 constexpr char ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
-constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
-constexpr char RECEIVED_ATT[] = "Received shared attribute request";
-constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
-constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for response id (%u)";
-constexpr char CB_ON_MESSAGE[] = "Callback onMQTTMessage from topic: (%s)";
 constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
-constexpr char PROV_RESPONSE[] = "Process provisioning response";
-constexpr char RECEIVED_PROV_RESPONSE[] = "Received provision response";
+constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
+#if THINGSBOARD_ENABLE_DEBUG
+constexpr char CALLING_RPC_CB[] = "Calling subscribed callback for rpc with methodname (%s)";
+constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
+constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for request with response id (%u)";
+constexpr char RECEIVE_MESSAGE[] = "Received data from server over topic (%s) with data (%s)";
+constexpr char SEND_MESSAGE[] = "Sending data to server over topic: (%s) with data (%s)";
+constexpr char SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped"
+#endif // THINGSBOARD_ENABLE_DEBUG
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim topics.
@@ -277,24 +266,28 @@ constexpr char EMPTY_FW[] PROGMEM = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
 constexpr char FW_NOT_FOR_US[] PROGMEM = "Firmware is not for us (title is different)";
 constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
+constexpr char NOT_ENOUGH_RAM[] PROGMEM = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
+constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#if THINGSBOARD_ENABLE_DEBUG
 constexpr char PAGE_BREAK[] PROGMEM = "=================================";
 constexpr char NEW_FW[] PROGMEM = "A new Firmware is available:";
 constexpr char FROM_TOO[] PROGMEM = "(%s) => (%s)";
 constexpr char DOWNLOADING_FW[] PROGMEM = "Attempting to download over MQTT...";
-constexpr char NOT_ENOUGH_RAM[] PROGMEM = "Not enough RAM";
-constexpr char RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#endif // THINGSBOARD_ENABLE_DEBUG
 #else
 constexpr char NO_FW[] = "No new firmware assigned on the given device";
 constexpr char EMPTY_FW[] = "Given firmware was NULL";
 constexpr char FW_UP_TO_DATE[] = "Firmware is already up to date";
 constexpr char FW_NOT_FOR_US[] = "Firmware is not for us (title is different)";
 constexpr char FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
+constexpr char NOT_ENOUGH_RAM[] = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
+constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#if THINGSBOARD_ENABLE_DEBUG
 constexpr char PAGE_BREAK[] = "=================================";
 constexpr char NEW_FW[] = "A new Firmware is available:";
 constexpr char FROM_TOO[] = "(%s) => (%s)";
 constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
-constexpr char NOT_ENOUGH_RAM[] = "Not enough RAM";
-constexpr char RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
+#endif // THINGSBOARD_ENABLE_DEBUG
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 #endif // THINGSBOARD_ENABLE_OTA
@@ -438,6 +431,99 @@ class ThingsBoardSized {
       return m_client.loop();
     }
 
+    /// @brief Attempts to send key value pairs from custom source over the given topic to the server
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param topic Topic we want to send the data over
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
+    /// @return Whether sending the data was successful or not
+    template <typename TSource>
+    inline bool Send_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
+      // Check if allocating needed memory failed when trying to create the JsonObject,
+      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
+      if (source.isNull()) {
+        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
+        return false;
+      }
+#if !THINGSBOARD_ENABLE_DYNAMIC
+      const uint32_t amount = source.size();
+      if (MaxFieldsAmt < amount) {
+        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt)];
+        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt);
+        Logger::log(message);
+        return false;
+      }
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
+      bool result = false;
+
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+      // Check if the size of the given message would be too big for the actual client,
+      // if it is utilize the serialize json work around, so that the internal client buffer can be circumvented
+      if (m_client.getBufferSize() < jsonSize)  {
+#if THINGSBOARD_ENABLE_DEBUG
+        char message[JSON_STRING_SIZE(strlen(SEND_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + JSON_STRING_SIZE(strlen(SEND_SERIALIZED))];
+        snprintf_P(message, sizeof(message), SEND_MESSAGE, topic, SEND_SERIALIZED);
+        Logger::log(message);
+#endif // THINGSBOARD_ENABLE_DEBUG
+        result = Serialize_Json(topic, source, jsonSize);
+      }
+      // Check if the remaining stack size of the current task would overflow the stack,
+      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs
+      else
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
+      if (getMaximumStackSize() < jsonSize) {
+        char* json = new char[jsonSize];
+        if (serializeJson(source, json, jsonSize) < jsonSize) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+        }
+        else {
+          result = Send_Json_String(topic, json);
+        }
+        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+        // and set the pointer to null so we do not have a dangling reference.
+        delete[] json;
+        json = nullptr;
+      }
+      else {
+        char json[jsonSize];
+        if (serializeJson(source, json, jsonSize) < jsonSize) {
+          Logger::log(UNABLE_TO_SERIALIZE_JSON);
+          return result;
+        }
+        result = Send_Json_String(topic, json);
+      }
+
+      return result;
+    }
+
+    /// @brief Attempts to send custom json string over the given topic to the server
+    /// @param topic Topic we want to send the data over
+    /// @param json String containing our json key value pairs we want to attempt to send
+    /// @return Whether sending the data was successful or not
+    inline bool Send_Json_String(const char* topic, const char* json) {
+      if (json == nullptr) {
+        return false;
+      }
+
+      const size_t currentBufferSize = m_client.getBufferSize();
+      const size_t jsonSize = strlen(json);
+
+      if (currentBufferSize < jsonSize) {
+        char message[Helper::detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
+        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
+        Logger::log(message);
+        return false;
+      }
+
+#if THINGSBOARD_ENABLE_DEBUG
+      char message[JSON_STRING_SIZE(strlen(SEND_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + JSON_STRING_SIZE(jsonSize)];
+      snprintf_P(message, sizeof(message), SEND_MESSAGE, topic, json);
+      Logger::log(message);
+#endif // THINGSBOARD_ENABLE_DEBUG
+
+      return m_client.publish(TELEMETRY_TOPIC, json, jsonSize);
+    }
+
     //----------------------------------------------------------------------------
     // Claiming API
 
@@ -557,20 +643,14 @@ class ThingsBoardSized {
       return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
-    /// @brief Attempts to send custom telemetry JsonObject
-    /// @param jsonObject JsonObject containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonObject
+    /// @brief Attempts to send telemetry key value pairs from custom source to the server
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    inline bool sendTelemetryJson(const JsonObject jsonObject, const uint32_t& jsonSize) {
-      return Send_Json(TELEMETRY_TOPIC, jsonObject, jsonSize);
-    }
-
-    /// @brief Attempts to send custom telemetry JsonVariant
-    /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Whether sending the data was successful or not
-    inline bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
-      return Send_Json(TELEMETRY_TOPIC, jsonVariant, jsonSize);
+    template <typename TSource>
+    inline bool sendTelemetryJson(const TSource& source, const uint32_t& jsonSize) {
+      return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
     }
 
     //----------------------------------------------------------------------------
@@ -601,20 +681,14 @@ class ThingsBoardSized {
       return Send_Json_String(ATTRIBUTE_TOPIC, json);
     }
 
-    /// @brief Attempts to send custom attribute JsonObject
-    /// @param jsonObject JsonObject containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonObject
+    /// @brief Attempts to send attribute key value pairs from custom source to the server
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    inline bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      return Send_Json(ATTRIBUTE_TOPIC, jsonObject, jsonSize);
-    }
-
-    /// @brief Attempts to send custom attribute JsonVariant
-    /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Whether sending the data was successful or not
-    inline bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
-      return Send_Json(ATTRIBUTE_TOPIC, jsonVariant, jsonSize);
+    template <typename TSource>
+    inline bool sendAttributeJSON(const TSource& source, const uint32_t& jsonSize) {
+      return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
     }
 
     /// @brief Requests one client-side attribute calllback,
@@ -974,88 +1048,6 @@ class ThingsBoardSized {
 
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
-    /// @brief Attempts to send custom attribute source
-    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
-    /// @param topic Topic we want to send the data over
-    /// @param source Data source containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the source
-    /// @return Whether sending the data was successful or not
-    template <typename TSource>
-    inline bool Send_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
-      // Check if allocating needed memory failed when trying to create the JsonObject,
-      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
-      if (source.isNull()) {
-        Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
-        return false;
-      }
-#if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t amount = source.size();
-      if (MaxFieldsAmt < amount) {
-        char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt)];
-        snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt);
-        Logger::log(message);
-        return false;
-      }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-      bool result = false;
-
-#if THINGSBOARD_ENABLE_STREAM_UTILS
-      // Check if the size of the given message would be too big for the actual client,
-      // if it is utilize the serialize json work around, so that the internal client buffer can be circumvented
-      if (m_client.getBufferSize() < jsonSize)  {
-        result = Serialize_Json(topic, source, jsonSize);
-      }
-      // Check if the remaining stack size of the current task would overflow the stack,
-      // if it would allocate the memory on the heap instead to ensure no stack overflow occurs
-      else
-#endif // THINGSBOARD_ENABLE_STREAM_UTILS
-      if (getMaximumStackSize() < jsonSize) {
-        char* json = new char[jsonSize];
-        if (serializeJson(source, json, jsonSize) < jsonSize) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-        }
-        else {
-          result = Send_Json_String(topic, json);
-        }
-        // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-        // and set the pointer to null so we do not have a dangling reference.
-        delete[] json;
-        json = nullptr;
-      }
-      else {
-        char json[jsonSize];
-        if (serializeJson(source, json, jsonSize) < jsonSize) {
-          Logger::log(UNABLE_TO_SERIALIZE_JSON);
-          return result;
-        }
-        result = Send_Json_String(topic, json);
-      }
-
-      return result;
-    }
-
-    /// @brief Attempts to send custom json attribute string
-    /// @param topic Topic we want to send the data over
-    /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Whether sending the data was successful or not
-    inline bool Send_Json_String(const char* topic, const char* json) {
-      if (json == nullptr) {
-        return false;
-      }
-
-      const size_t currentBufferSize = m_client.getBufferSize();
-      const size_t jsonSize = strlen(json);
-
-      if (currentBufferSize < jsonSize) {
-        char message[Helper::detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
-        snprintf_P(message, sizeof(message), INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
-        Logger::log(message);
-        return false;
-      }
-
-      return m_client.publish(TELEMETRY_TOPIC, json, jsonSize);
-    }
-
 #if THINGSBOARD_ENABLE_OTA
 
     /// @brief Publishes a request via MQTT to request the given firmware chunk
@@ -1307,12 +1299,14 @@ class ThingsBoardSized {
         return;
       }
 
+#if THINGSBOARD_ENABLE_DEBUG
       Logger::log(PAGE_BREAK);
       Logger::log(NEW_FW);
       char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))];
       snprintf_P(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
       Logger::log(firmware);
       Logger::log(DOWNLOADING_FW);
+#endif // THINGSBOARD_ENABLE_DEBUG
 
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
@@ -1460,34 +1454,8 @@ class ThingsBoardSized {
     /// @brief Process callback that will be called upon client-side RPC response arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    inline void process_rpc_request_message(char *topic, uint8_t *payload, const uint32_t length) {
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
-      // Data structure size depends on the amount of key value pairs received.
-      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
-      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
-#else
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
-      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
-      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
-      if (error) {
-          char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-          snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-          Logger::log(message);
-          return;
-      }
-      // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
-      // but it does not change the actual content of the JsonDocument, we don't want that because it already contents content
-      // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonVariantConst instead.
-      const JsonVariantConst data = jsonBuffer.template as<JsonVariantConst>();
-
+    /// @param data Payload sent by the server over our given topic, that contains our key value pairs
+    inline void process_rpc_request_message(char *topic, const JsonObjectConst& data) {
       // Remove the not needed part of the topic
       const size_t index = strlen(RPC_RESPONSE_TOPIC) + 1U;
 #if THINGSBOARD_ENABLE_STL
@@ -1508,9 +1476,11 @@ class ThingsBoardSized {
           continue;
         }
 
+#if THINGSBOARD_ENABLE_DEBUG
         char message[Helper::detectSize(CALLING_REQUEST_CB, responseId)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, responseId);
         Logger::log(message);
+#endif // THINGSBOARD_ENABLE_DEBUG
 
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
@@ -1535,60 +1505,38 @@ class ThingsBoardSized {
     /// @brief Process callback that will be called upon server-side RPC request arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    inline void process_rpc_message(char *topic, uint8_t *payload, const uint32_t length) {
-      RPC_Response respVariant;
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
-      // Data structure size depends on the amount of key value pairs received.
-      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
-      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
-#else
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
-      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
-      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
-      if (error) {
-        char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-        Logger::log(message);
-        return;
-      }
-
-      const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
+    /// @param data Payload sent by the server over our given topic, that contains our key value pairs
+    inline void process_rpc_message(char *topic, const JsonObjectConst& data) {
       const char *methodName = data[RPC_METHOD_KEY].as<const char *>();
 
-      if (methodName != nullptr) {
-        Logger::log(RECEIVED_RPC_LOG_MESSAGE);
-        Logger::log(methodName);
-      } else {
+      if (methodName == nullptr) {
         Logger::log(RPC_METHOD_NULL);
         return;
       }
-
+ 
+      RPC_Response respVariant;
       for (const RPC_Callback& callback : m_rpc_callbacks) {
         const char *subscribedMethodName = callback.Get_Name();
         if (subscribedMethodName == nullptr) {
           Logger::log(RPC_METHOD_NULL);
           continue;
         }
-        // Strncmp returns the ascis value difference of the ascii characters that are different,
+        // Strncmp returns the ascii value difference of the ascii characters that are different,
         // meaning 0 is the same string and less and more than 0 is the difference in ascci values between the 2 chararacters.
         else if (strncmp(subscribedMethodName, methodName, strlen(subscribedMethodName)) != 0) {
           continue;
         }
 
-        Logger::log(CALLING_RPC);
-        Logger::log(methodName);
         // Do not inform client, if parameter field is missing for some reason
         if (!data.containsKey(RPC_PARAMS_KEY)) {
           Logger::log(NO_RPC_PARAMS_PASSED);
         }
+
+#if THINGSBOARD_ENABLE_DEBUG
+        char message[JSON_STRING_SIZE(strlen(CALLING_RPC_CB)) + JSON_STRING_SIZE(strlen(methodName))];
+        snprintf_P(message, sizeof(message), CALLING_RPC_CB, methodName);
+        Logger::log(message);
+#endif // THINGSBOARD_ENABLE_DEBUG
 
         const JsonVariantConst param = data[RPC_PARAMS_KEY].as<JsonVariantConst>();
         respVariant = callback.Call_Callback<Logger>(param);
@@ -1664,37 +1612,13 @@ class ThingsBoardSized {
     /// @brief Process callback that will be called upon shared attribute update arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    inline void process_shared_attribute_update_message(char *topic, uint8_t *payload, const uint32_t length) {
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
-      // Data structure size depends on the amount of key value pairs received.
-      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
-      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
-#else
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
-      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
-      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
-      if (error) {
-        char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-        Logger::log(message);
-        return;
-      }
-      JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
-
+    /// @param data Payload sent by the server over our given topic, that contains our key value pairs
+    inline void process_shared_attribute_update_message(char *topic, JsonObjectConst& data) {
       if (!data) {
         Logger::log(NOT_FOUND_ATT_UPDATE);
         return;
       }
 
-      Logger::log(RECEIVED_ATT_UPDATE);
       if (data.containsKey(SHARED_RESPONSE_KEY)) {
         data = data[SHARED_RESPONSE_KEY];
       }
@@ -1741,9 +1665,6 @@ class ThingsBoardSized {
           containsKey = containsKey || data.containsKey(att);
           // Break early if the key was requested from this callback.
           if (containsKey) {
-            char contained_message[JSON_STRING_SIZE(strlen(ATT_IN_ARRAY)) + JSON_STRING_SIZE(strlen(att))];
-            snprintf_P(contained_message, sizeof(contained_message), ATT_IN_ARRAY, att);
-            Logger::log(contained_message);
             requested_att = att;
             break;
           }
@@ -1761,9 +1682,12 @@ class ThingsBoardSized {
           continue;
         }
 
+#if THINGSBOARD_ENABLE_DEBUG
         char calling_message[JSON_STRING_SIZE(strlen(CALLING_ATT_CB)) + JSON_STRING_SIZE(strlen(requested_att))];
         snprintf_P(calling_message, sizeof(calling_message), CALLING_ATT_CB, requested_att);
         Logger::log(calling_message);
+#endif // THINGSBOARD_ENABLE_DEBUG
+
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         callback.Call_Callback<Logger>(data);
@@ -1773,31 +1697,8 @@ class ThingsBoardSized {
     /// @brief Process callback that will be called upon client-side or shared attribute request arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    inline void process_attribute_request_message(char *topic, uint8_t *payload, const uint32_t length) {
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
-      // Data structure size depends on the amount of key value pairs received.
-      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
-      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
-#else
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
-      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
-      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
-      if (error) {
-        char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-        Logger::log(message);
-        return;
-      }
-      JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
-
+    /// @param data Payload sent by the server over our given topic, that contains our key value pairs
+    inline void process_attribute_request_message(char *topic, JsonObjectConst& data) {
       // Remove the not needed part of the topic
       const size_t index = strlen(ATTRIBUTE_RESPONSE_TOPIC) + 1U;
 #if THINGSBOARD_ENABLE_STL
@@ -1811,7 +1712,6 @@ class ThingsBoardSized {
       // Convert the remaining text to an integer
       const uint32_t response_id = atoi(response.c_str());
 
-      char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
       for (size_t i = 0; i < m_attribute_request_callbacks.size(); i++) {
         const Attribute_Request_Callback& callback = m_attribute_request_callbacks.at(i);
 
@@ -1828,13 +1728,16 @@ class ThingsBoardSized {
           goto delete_callback;
         }
 
-        Logger::log(RECEIVED_ATT);
         if (data.containsKey(attributeResponseKey)) {
           data = data[attributeResponseKey];
         }
 
+#if THINGSBOARD_ENABLE_DEBUG
+      char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, response_id);
         Logger::log(message);
+#endif // THINGSBOARD_ENABLE_DEBUG
+
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
         callback.Call_Callback<Logger>(data);
@@ -1861,36 +1764,9 @@ class ThingsBoardSized {
     /// @brief Process callback that will be called upon provision response arrival
     /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
     /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    inline void process_provisioning_response(char *topic, uint8_t *payload, const uint32_t length) {
-      Logger::log(PROV_RESPONSE);
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
-      // Data structure size depends on the amount of key value pairs received.
-      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
-      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
-#else
-      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
-      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
-      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
-      if (error) {
-        char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-        Logger::log(message);
-        return;
-      }
-      const JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
-
-      Logger::log(RECEIVED_PROV_RESPONSE);
+    /// @param data Payload sent by the server over our given topic, that contains our key value pairs
+    inline void process_provisioning_response(char *topic, const JsonObjectConst& data) {
       m_provision_callback.Call_Callback<Logger>(data);
-
       // Unsubscribe from the provision response topic,
       // Will be resubscribed if another request is sent anyway
       Provision_Unsubscribe();
@@ -1964,20 +1840,47 @@ class ThingsBoardSized {
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
     inline void onMQTTMessage(char *topic, uint8_t *payload, uint32_t length) {
-      char message[JSON_STRING_SIZE(strlen(CB_ON_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
-      snprintf_P(message, sizeof(message), CB_ON_MESSAGE, topic);
+#if THINGSBOARD_ENABLE_DEBUG
+      char message[JSON_STRING_SIZE(strlen(RECEIVE_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + JSON_STRING_SIZE(length)];
+      snprintf_P(message, sizeof(message), RECEIVE_MESSAGE, topic, reinterpret_cast<char*>(payload));
       Logger::log(message);
+#endif // THINGSBOARD_ENABLE_DEBUG
+
+#if THINGSBOARD_ENABLE_DYNAMIC
+      // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+      // Data structure size depends on the amount of key value pairs received.
+      // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
+      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
+      TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
+#else
+      StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
+
+      // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
+      // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
+      // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
+      const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
+      if (error) {
+          char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
+          snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
+          Logger::log(message);
+          return;
+      }
+      // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
+      // but it does not change the actual content of the JsonDocument, we don't want that because it already contents content
+      // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonObjectConst instead.
+      JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
       if (strncmp_P(RPC_RESPONSE_TOPIC, topic, strlen(RPC_RESPONSE_TOPIC)) == 0) {
-        process_rpc_request_message(topic, payload, length);
+        process_rpc_request_message(topic, data);
       } else if (strncmp_P(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0) {
-        process_rpc_message(topic, payload, length);
+        process_rpc_message(topic, data);
       } else if (strncmp_P(ATTRIBUTE_RESPONSE_TOPIC, topic, strlen(ATTRIBUTE_RESPONSE_TOPIC)) == 0) {
-        process_attribute_request_message(topic, payload, length);
+        process_attribute_request_message(topic, data);
       } else if (strncmp_P(ATTRIBUTE_TOPIC, topic, strlen(ATTRIBUTE_TOPIC)) == 0) {
-        process_shared_attribute_update_message(topic, payload, length);
+        process_shared_attribute_update_message(topic, data);
       } else if (strncmp_P(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
-        process_provisioning_response(topic, payload, length);
+        process_provisioning_response(topic, data);
       } else if (strncmp_P(FIRMWARE_RESPONSE_TOPIC, topic, strlen(FIRMWARE_RESPONSE_TOPIC)) == 0) {
 #if THINGSBOARD_ENABLE_OTA
         process_firmware_response(topic, payload, length);
