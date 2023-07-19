@@ -100,113 +100,6 @@ class ThingsBoardHttpSized {
       m_max_stack = maxStackSize;
     }
 
-    //----------------------------------------------------------------------------
-    // Telemetry API
-
-    /// @brief Attempts to send telemetry data with the given key and value of the given type
-    /// @tparam T Type of the passed value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    template<typename T>
-    inline bool sendTelemetryData(const char *key, T value) {
-      return sendKeyValue(key, value);
-    }
-
-    /// @brief Attempts to send aggregated telemetry data
-    /// @param data Array containing all the data we want to send
-    /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
-      return sendDataArray(data, data_count);
-    }
-
-    /// @brief Attempts to send custom json telemetry string
-    /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendTelemetryJson(const char *json) {
-      return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
-    }
-
-    /// @brief Attempts to send custom telemetry JsonObject
-    /// @param jsonObject JsonObject containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonObject
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendTelemetryJson(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      return Send_Json(HTTP_TELEMETRY_TOPIC, jsonObject, jsonSize);
-    }
-
-    /// @brief Attempts to send custom telemetry JsonVariant
-    /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendTelemetryJson(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
-      return Send_Json(HTTP_TELEMETRY_TOPIC, jsonVariant, jsonSize);
-    }
-
-    /// @brief Attempts to send a GET request over HTTP or HTTPS
-    /// @param path API path we want to get data from (example: /api/v1/$TOKEN/rpc)
-    /// @param response String the GET response will be copied into,
-    /// will not be changed if the GET request wasn't successful
-    /// @return Whetherr sending the GET request was successful or not
-    inline bool sendGetRequest(const char* path, String& response) {
-      return getMessage(path, response);
-    }
-
-    /// @brief Attempts to send a POST request over HTTP or HTTPS
-    /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
-    /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Whetherr sending the POST request was successful or not
-    inline bool sendPostRequest(const char* path, const char* json) {
-      return postMessage(path, json);
-    }
-
-    //----------------------------------------------------------------------------
-    // Attribute API
-
-    /// @brief Attempts to send attribute data with the given key and value of the given type
-    /// @tparam T Type of the passed value
-    /// @param key Key of the key value pair we want to send
-    /// @param value Value of the key value pair we want to send
-    /// @return Whether sending the data was successful or not
-    template<typename T>
-    inline bool sendAttributeData(const char *key, T value) {
-      return sendKeyValue(key, value, false);
-    }
-
-    /// @brief Attempts to send aggregated attribute data
-    /// @param data Array containing all the data we want to send
-    /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributes(const Attribute *data, size_t data_count) {
-      return sendDataArray(data, data_count, false);
-    }
-
-    /// @brief Attempts to send custom json attribute string
-    /// @param json String containing our json key value pairs we want to attempt to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeJSON(const char *json) {
-      return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
-    }
-
-    /// @brief Attempts to send custom attribute JsonObject
-    /// @param jsonObject JsonObject containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonObject
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeJSON(const JsonObject& jsonObject, const uint32_t& jsonSize) {
-      return Send_Json(HTTP_ATTRIBUTES_TOPIC, jsonObject, jsonSize);
-    }
-
-    /// @brief Attempts to send custom attribute JsonVariant
-    /// @param jsonVariant JsonVariant containing our json key value pairs we want to send
-    /// @param jsonSize Size of the data inside the JsonVariant
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeJSON(const JsonVariant& jsonVariant, const uint32_t& jsonSize) {
-      return Send_Json(HTTP_ATTRIBUTES_TOPIC, jsonVariant, jsonSize);
-    }
-
-  private:
-
     /// @brief Attempts to send custom attribute source
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param topic Topic we want to send the data over
@@ -257,7 +150,7 @@ class ThingsBoardHttpSized {
       return result;
     }
 
-    /// @brief Attempts to send custom json attribute string
+    /// @brief Attempts to send custom json string over the given topic to the server
     /// @param topic Topic we want to send the data over
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
@@ -270,6 +163,101 @@ class ThingsBoardHttpSized {
       snprintf_P(path, sizeof(path), topic, m_token);
       return postMessage(path, json);
     }
+
+    //----------------------------------------------------------------------------
+    // Telemetry API
+
+    /// @brief Attempts to send telemetry data with the given key and value of the given type
+    /// @tparam T Type of the passed value
+    /// @param key Key of the key value pair we want to send
+    /// @param value Value of the key value pair we want to send
+    /// @return Whether sending the data was successful or not
+    template<typename T>
+    inline bool sendTelemetryData(const char *key, T value) {
+      return sendKeyValue(key, value);
+    }
+
+    /// @brief Attempts to send aggregated telemetry data
+    /// @param data Array containing all the data we want to send
+    /// @param data_count Amount of data entries in the array that we want to send
+    /// @return Whetherr sending the data was successful or not
+    inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
+      return sendDataArray(data, data_count);
+    }
+
+    /// @brief Attempts to send custom json telemetry string
+    /// @param json String containing our json key value pairs we want to attempt to send
+    /// @return Whetherr sending the data was successful or not
+    inline bool sendTelemetryJson(const char *json) {
+      return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
+    }
+
+    /// @brief Attempts to send telemetry key value pairs from custom source to the server
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
+    /// @return Whether sending the data was successful or not
+    template <typename TSource>
+    inline bool sendTelemetryJson(const TSource& source, const uint32_t& jsonSize) {
+      return Send_Json(HTTP_TELEMETRY_TOPIC, source, jsonSize);
+    }
+
+    /// @brief Attempts to send a GET request over HTTP or HTTPS
+    /// @param path API path we want to get data from (example: /api/v1/$TOKEN/rpc)
+    /// @param response String the GET response will be copied into,
+    /// will not be changed if the GET request wasn't successful
+    /// @return Whetherr sending the GET request was successful or not
+    inline bool sendGetRequest(const char* path, String& response) {
+      return getMessage(path, response);
+    }
+
+    /// @brief Attempts to send a POST request over HTTP or HTTPS
+    /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
+    /// @param json String containing our json key value pairs we want to attempt to send
+    /// @return Whetherr sending the POST request was successful or not
+    inline bool sendPostRequest(const char* path, const char* json) {
+      return postMessage(path, json);
+    }
+
+    //----------------------------------------------------------------------------
+    // Attribute API
+
+    /// @brief Attempts to send attribute data with the given key and value of the given type
+    /// @tparam T Type of the passed value
+    /// @param key Key of the key value pair we want to send
+    /// @param value Value of the key value pair we want to send
+    /// @return Whether sending the data was successful or not
+    template<typename T>
+    inline bool sendAttributeData(const char *key, T value) {
+      return sendKeyValue(key, value, false);
+    }
+
+    /// @brief Attempts to send aggregated attribute data
+    /// @param data Array containing all the data we want to send
+    /// @param data_count Amount of data entries in the array that we want to send
+    /// @return Whetherr sending the data was successful or not
+    inline bool sendAttributes(const Attribute *data, size_t data_count) {
+      return sendDataArray(data, data_count, false);
+    }
+
+    /// @brief Attempts to send custom json attribute string
+    /// @param json String containing our json key value pairs we want to attempt to send
+    /// @return Whetherr sending the data was successful or not
+    inline bool sendAttributeJSON(const char *json) {
+      return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
+    }
+
+    /// @brief Attempts to send attribute key value pairs from custom source to the server
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
+    /// @return Whether sending the data was successful or not
+    template <typename TSource>
+    inline bool sendAttributeJSON(const TSource& source, const uint32_t& jsonSize) {
+      return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
+    }
+
+  private:
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
