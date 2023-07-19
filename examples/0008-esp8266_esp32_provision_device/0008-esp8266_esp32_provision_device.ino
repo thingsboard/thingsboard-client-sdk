@@ -265,7 +265,7 @@ void setup() {
 }
 
 void processProvisionResponse(const Provision_Data &data) {
-  int jsonSize = JSON_STRING_SIZE(measureJson(data));
+  const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
   Serial.printf("Received device provision response (%s)\n", buffer);

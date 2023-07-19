@@ -233,7 +233,7 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
     Serial.println(it->value().as<const char*>());
   }
 
-  int jsonSize = JSON_STRING_SIZE(measureJson(data));
+  const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
   Serial.println(buffer);
