@@ -127,7 +127,7 @@ class ThingsBoardHttpSized {
 
       if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
-        if (serializeJson(source, json, jsonSize) < jsonSize) {
+        if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
@@ -140,7 +140,7 @@ class ThingsBoardHttpSized {
       }
       else {
         char json[jsonSize];
-        if (serializeJson(source, json, jsonSize) < jsonSize) {
+        if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
           return result;
         }
@@ -347,7 +347,7 @@ class ThingsBoardHttpSized {
       requestBuffer.shrinkToFit();
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
-      return telemetry ? sendTelemetryJson(object, measureJson(object)) : sendAttributeJSON(object, measureJson(object));
+      return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
@@ -371,7 +371,7 @@ class ThingsBoardHttpSized {
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, measureJson(object)) : sendAttributeJSON(object, measureJson(object));
+      return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
 
     HttpClient m_client; // HttpClient instance

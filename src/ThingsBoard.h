@@ -142,8 +142,9 @@ constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
 constexpr char CALLING_RPC_CB[] PROGMEM = "Calling subscribed callback for rpc with methodname (%s)";
 constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
 constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
-constexpr char RECEIVE_MESSAGE[] PROGMEM = "Received data from server over topic: (%s) with data (%s)";
+constexpr char RECEIVE_MESSAGE[] PROGMEM = "Received data from server over topic: (%s)";
 constexpr char SEND_MESSAGE[] PROGMEM = "Sending data to server over topic (%s) with data (%s)";
+constexpr char SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
 #else
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (%s)";
@@ -172,7 +173,7 @@ constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated share
 constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for request with response id (%u)";
 constexpr char RECEIVE_MESSAGE[] = "Received data from server over topic (%s) with data (%s)";
 constexpr char SEND_MESSAGE[] = "Sending data to server over topic: (%s) with data (%s)";
-constexpr char SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped"
+constexpr char SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
@@ -473,7 +474,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
       if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
-        if (serializeJson(source, json, jsonSize) < jsonSize) {
+        if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
@@ -486,7 +487,7 @@ class ThingsBoardSized {
       }
       else {
         char json[jsonSize];
-        if (serializeJson(source, json, jsonSize) < jsonSize) {
+        if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
           Logger::log(UNABLE_TO_SERIALIZE_JSON);
           return result;
         }
@@ -516,12 +517,12 @@ class ThingsBoardSized {
       }
 
 #if THINGSBOARD_ENABLE_DEBUG
-      char message[JSON_STRING_SIZE(strlen(SEND_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + JSON_STRING_SIZE(jsonSize)];
+      char message[JSON_STRING_SIZE(strlen(SEND_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + jsonSize];
       snprintf_P(message, sizeof(message), SEND_MESSAGE, topic, json);
       Logger::log(message);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-      return m_client.publish(TELEMETRY_TOPIC, json, jsonSize);
+      return m_client.publish(topic, reinterpret_cast<const uint8_t*>(json), jsonSize, false);
     }
 
     //----------------------------------------------------------------------------
@@ -545,7 +546,7 @@ class ThingsBoardSized {
       }
       respObj[DURATION_KEY] = durationMs;
 
-      const size_t objectSize = measureJson(respObj);
+      const size_t objectSize = Helper::Measure_Json(respObj);
       return Send_Json(CLAIM_TOPIC, respObj, objectSize);
     }
 
@@ -611,7 +612,7 @@ class ThingsBoardSized {
       requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
       requestObject[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
 
-      const size_t objectSize = measureJson(requestObject);
+      const size_t objectSize = Helper::Measure_Json(requestObject);
       return Send_Json(PROV_REQUEST_TOPIC, requestObject, objectSize);
     }
 
@@ -847,7 +848,7 @@ class ThingsBoardSized {
       char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)];
       snprintf_P(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
 
-      const size_t objectSize = measureJson(requestBuffer);
+      const size_t objectSize = Helper::Measure_Json(requestBuffer);
       return Send_Json(topic, requestBuffer, objectSize);
     }
 
@@ -898,7 +899,7 @@ class ThingsBoardSized {
 
       currentFirmwareInfoObject[CURR_FW_TITLE_KEY] = currFwTitle;
       currentFirmwareInfoObject[CURR_FW_VER_KEY] = currFwVersion;
-      return sendTelemetryJson(currentFirmwareInfoObject, measureJson(currentFirmwareInfoObject));
+      return sendTelemetryJson(currentFirmwareInfoObject, Helper::Measure_Json(currentFirmwareInfoObject));
     }
 
     /// @brief Sends the given firmware state to the cloud
@@ -917,7 +918,7 @@ class ThingsBoardSized {
         currentFirmwareStateObject[FW_ERROR_KEY] = fwError;
       }
       currentFirmwareStateObject[FW_STATE_KEY] = currFwState;
-      return sendTelemetryJson(currentFirmwareStateObject, measureJson(currentFirmwareStateObject));
+      return sendTelemetryJson(currentFirmwareStateObject, Helper::Measure_Json(currentFirmwareStateObject));
     }
 
 #endif // THINGSBOARD_ENABLE_OTA
@@ -1067,7 +1068,7 @@ class ThingsBoardSized {
       char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)];
       snprintf_P(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
 
-      return m_client.publish(topic, size, jsonSize);
+      return m_client.publish(topic, reinterpret_cast<uint8_t*>(size), jsonSize, false);
     }
 
 #endif // THINGSBOARD_ENABLE_OTA
@@ -1154,7 +1155,7 @@ class ThingsBoardSized {
       char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)];
       snprintf_P(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
 
-      const size_t objectSize = measureJson(requestBuffer);
+      const size_t objectSize = Helper::Measure_Json(requestBuffer);
       return Send_Json(topic, requestBuffer, objectSize);
     }
 
@@ -1448,7 +1449,7 @@ class ThingsBoardSized {
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, measureJson(object)) : sendAttributeJSON(object, measureJson(object));
+      return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
 
     /// @brief Process callback that will be called upon client-side RPC response arrival
@@ -1564,7 +1565,7 @@ class ThingsBoardSized {
       char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)];
       snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
 
-      const size_t jsonSize = measureJson(respVariant);
+      const size_t jsonSize = Helper::Measure_Json(respVariant);
       Send_Json(responseTopic, respVariant, jsonSize);
     }
 
@@ -1712,6 +1713,9 @@ class ThingsBoardSized {
       // Convert the remaining text to an integer
       const uint32_t response_id = atoi(response.c_str());
 
+#if THINGSBOARD_ENABLE_DEBUG
+      char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
+#endif // THINGSBOARD_ENABLE_DEBUG
       for (size_t i = 0; i < m_attribute_request_callbacks.size(); i++) {
         const Attribute_Request_Callback& callback = m_attribute_request_callbacks.at(i);
 
@@ -1733,7 +1737,6 @@ class ThingsBoardSized {
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-      char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
         snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, response_id);
         Logger::log(message);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -1797,7 +1800,7 @@ class ThingsBoardSized {
         }
       }
 
-      return telemetry ? sendTelemetryJson(object, measureJson(object)) : sendAttributeJSON(object, measureJson(object));
+      return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
 
     PubSubClient m_client; // PubSub MQTT client instance.
@@ -1841,8 +1844,8 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void onMQTTMessage(char *topic, uint8_t *payload, uint32_t length) {
 #if THINGSBOARD_ENABLE_DEBUG
-      char message[JSON_STRING_SIZE(strlen(RECEIVE_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + JSON_STRING_SIZE(length)];
-      snprintf_P(message, sizeof(message), RECEIVE_MESSAGE, topic, reinterpret_cast<char*>(payload));
+      char message[JSON_STRING_SIZE(strlen(RECEIVE_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
+      snprintf_P(message, sizeof(message), RECEIVE_MESSAGE, topic);
       Logger::log(message);
 #endif // THINGSBOARD_ENABLE_DEBUG
 

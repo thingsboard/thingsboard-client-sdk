@@ -9,6 +9,7 @@
 
 // Library include.
 #include <stdint.h>
+#include <ArduinoJson.h>
 
 /// @brief Static helper class that includes some uniliterally used functionalities in multiple places
 class Helper {
@@ -25,6 +26,16 @@ class Helper {
     /// @param symbol Symbols we want to search for
     /// @return Amount of occurences of the given symbol
     static uint32_t getOccurences(const char *str, char symbol);
+
+    /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
+    /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
+    /// @param source Data source containing our json key value pairs we want to measure
+    /// @return Total size of the string produced by serializeJson + 1
+    template <typename TSource>
+    inline static size_t Measure_Json(const TSource& source) {
+      return JSON_STRING_SIZE(measureJson(source));
+    }
 };
 
 #endif // Helper
