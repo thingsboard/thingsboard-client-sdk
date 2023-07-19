@@ -10,6 +10,7 @@
 // Local includes.
 #include "Constants.h"
 #include "Vector.h"
+#include "Helper.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "Shared_Attribute_Callback.h"
 #include "Attribute_Request_Callback.h"
