@@ -15,6 +15,7 @@
 #include "Configuration.h"
 
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
+#define Default_Buffering_Size 64
 #define Default_Payload 64
 #define Default_Fields_Amt 8
 class ThingsBoardDefaultLogger;
