@@ -142,8 +142,8 @@ constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
 #if THINGSBOARD_ENABLE_DEBUG
 constexpr char CALLING_RPC_CB[] PROGMEM = "Calling subscribed callback for rpc with methodname (%s)";
 constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
-constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for response id (%u)";
-constexpr char RECEIVE_MESSAGE[] PROGMEM = "Received data from server over topic: (%s)";
+constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for request with response id (%u)";
+constexpr char RECEIVE_MESSAGE[] PROGMEM = "Received data from server over topic (%s)";
 constexpr char SEND_MESSAGE[] PROGMEM = "Sending data to server over topic (%s) with data (%s)";
 constexpr char SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -172,8 +172,8 @@ constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
 constexpr char CALLING_RPC_CB[] = "Calling subscribed callback for rpc with methodname (%s)";
 constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
 constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for request with response id (%u)";
-constexpr char RECEIVE_MESSAGE[] = "Received data from server over topic (%s) with data (%s)";
-constexpr char SEND_MESSAGE[] = "Sending data to server over topic: (%s) with data (%s)";
+constexpr char RECEIVE_MESSAGE[] = "Received data from server over topic (%s)";
+constexpr char SEND_MESSAGE[] = "Sending data to server over topic (%s) with data (%s)";
 constexpr char SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
 #endif // THINGSBOARD_ENABLE_PROGMEM
@@ -318,10 +318,14 @@ class ThingsBoardSized {
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size)
+    /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size
+    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
       : ThingsBoardSized()
     {
       setMaximumStackSize(maxStackSize);
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+      setBufferingSize(bufferingSize);
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
       setBufferSize(bufferSize);
       setClient(client);
     }
@@ -330,6 +334,7 @@ class ThingsBoardSized {
     inline ThingsBoardSized()
       : m_client()
       , m_max_stack(Default_Max_Stack_Size)
+      , m_buffering_size(Default_Buffering_Size)
       , m_rpc_callbacks()
       , m_rpc_request_callbacks()
       , m_shared_attribute_update_callbacks()
@@ -386,6 +391,17 @@ class ThingsBoardSized {
     inline void setMaximumStackSize(const uint32_t& maxStackSize) {
       m_max_stack = maxStackSize;
     }
+
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+
+    /// @brief Sets the amount of bytes that can be allocated to speed up fall back serialization with the StreamUtils class
+    /// See https://github.com/bblanchon/ArduinoStreamUtils for more information on the underlying class used
+    /// @param bufferingSize Amount of bytes allocated to speed up serialization
+    inline void setBufferingSize(const size_t& bufferingSize) {
+      m_buffering_size = bufferingSize;
+    }
+
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
     /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
@@ -1033,13 +1049,13 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool Serialize_Json(const char* topic, const TSource& destination, const uint32_t& jsonSize) {
+    inline bool Serialize_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
       if (!m_client.beginPublish(topic, jsonSize, false)) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return false;
       }
-      BufferingPrint buffered_print(m_client, 32U);
-      const size_t bytes_serialized = serializeJson(destination, buffered_print);
+      BufferingPrint buffered_print(m_client, getBufferingSize());
+      const size_t bytes_serialized = serializeJson(source, buffered_print);
       if (bytes_serialized < jsonSize) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return false;
@@ -1079,6 +1095,17 @@ class ThingsBoardSized {
     inline const uint32_t& getMaximumStackSize() const {
       return m_max_stack;
     }
+
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+
+    /// @brief Returns the amount of bytes that can be allocated to speed up fall back serialization with the StreamUtils class
+    /// See https://github.com/bblanchon/ArduinoStreamUtils for more information on the underlying class used
+    /// @return Amount of bytes allocated to speed up serialization
+    inline const size_t& getBufferingSize() const {
+      return m_buffering_size;
+    }
+
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
     /// @brief Requests one client-side or shared attribute calllback,
     /// that will be called if the key-value pair from the server for the given client-side or shared attributes is received
@@ -1806,6 +1833,7 @@ class ThingsBoardSized {
 
     PubSubClient m_client; // PubSub MQTT client instance.
     uint32_t m_max_stack; // Maximum stack size we allocate at once.
+    size_t m_buffering_size; // Buffering size used to serialize directly into client.
 
 #if THINGSBOARD_ENABLE_STL
     // Vectors hold copy of the actual passed data, this is to ensure they stay valid,
