@@ -1,7 +1,7 @@
 # Letting devices create themselves on the cloud (Provisioning)
 
 ## Devices
-| Supported Devcies |
+| Supported Devices |
 |-------------------|
 |  ESP32            |
 |  ESP8266          |

@@ -1,7 +1,7 @@
 # Passive OTA firmware update (not immediate)
 
 ## Devices
-| Supported Devcies |
+| Supported Devices |
 |-------------------|
 |  ESP32            |
 |  ESP8266          |
@@ -13,4 +13,4 @@
 ## Feature
 Subscribing to changes of the firmware shared attributes, which then start an OTA firmware update,
 as soon as they have been updated and include the same title,
-but a different version number then the one that was passed initally
+but a different version number then the one that was passed initially

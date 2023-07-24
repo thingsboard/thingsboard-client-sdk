@@ -1,7 +1,7 @@
 # Requesting the newest value of client-side or shared attributes
 
 ## Devices
-| Supported Devcies |
+| Supported Devices |
 |-------------------|
 |  ESP32            |
 |  ESP8266          |
@@ -12,4 +12,4 @@
 
 ## Feature
 Requesting the client-side or shared attributes with the given keys, from the cloud and sending them to the device.
-Allows for a maximum of MaxFieldsAmt attributes requested at once
+Allows for a maximum of `MaxFieldsAmt` attributes requested at once
