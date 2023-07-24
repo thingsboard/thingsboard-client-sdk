@@ -1,7 +1,7 @@
 # Calling methods from the cloud on this device (Server-side RPC)
 
 ## Devices
-| Supported Devcies |
+| Supported Devices |
 |-------------------|
 |  Arduino Uno      |
 |  ESP8266          |

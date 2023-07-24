@@ -1,7 +1,7 @@
 # Calling methods on the cloud on this device (Client-side RPC)
 
 ## Devices
-| Supported Devcies |
+| Supported Devices |
 |-------------------|
 |  ESP32            |
 |  ESP8266          |
