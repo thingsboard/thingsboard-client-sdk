@@ -12,6 +12,9 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
+// Local includes.
+#include "IUpdater.h"
+
 // Library includes.
 #if THINGSBOARD_ENABLE_PROGMEM
 #include <pgmspace.h>
@@ -53,6 +56,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     /// @param endCb End callback method that will be called as soon as the OTA firmware update, either finished successfully or failed
     /// @param currFwTitle Firmware title the device has choosen, is used to only allow updates with the same given title, other updates will be canceled
     /// @param currFwVersion Firmware version the device is currently on, is used to decide to inform the cloud about the previous version we updatet from
+    /// @param updater Updater implementation that writes the given firmware data
     /// @param chunkRetries Amount of retries the OTA firmware update has to download each seperate chunk with a given size,
     /// before the complete download is stopped and registered as failed
     /// @param chunkSize Maximum size of OTA firmware update for each seperate chunk that should be downloaded,
@@ -60,7 +64,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
     /// has been completly sent by the cloud, received by the client and written to the flash partition as well as callback
@@ -70,6 +74,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     /// @param endCb End callback method that will be called as soon as the OTA firmware update, either finished successfully or failed
     /// @param currFwTitle Firmware title the device has choosen, is used to only allow updates with the same given title, other updates will be canceled
     /// @param currFwVersion Firmware version the device is currently on, is used to decide to inform the cloud about the previous version we updatet from
+    /// @param updater Updater implementation that writes the given firmware data
     /// @param chunkRetries Amount of retries the OTA firmware update has to download each seperate chunk with a given size,
     /// before the complete download is stopped and registered as failed
     /// @param chunkSize Maximum size of OTA firmware update for each seperate chunk that should be downloaded,
@@ -77,7 +82,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -119,6 +124,15 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     /// @param currFwVersion Current firmware version of the device
     void Set_Firmware_Version(const char *currFwVersion);
 
+    /// @brief Gets the updater implementation, used to write the actual firmware data into the needed memory location,
+    /// so it can be used to reboot the given device with that new flashed firmware
+    /// @return Updater implementation that writes the given firmware data
+    IUpdater* Get_Updater() const;
+
+    /// @brief Sets the updater implementation
+    /// @param updater Updater implementation that writes the given firmware data
+    void Set_Updater(IUpdater *updater);
+
     /// @brief Gets the amount of times we attempt to download each chunk of the OTA firmware binary file,
     /// if the download fails because it times out, doesn't let itself write into flash memory, ...
     /// the retries are decreased by 1 until we hit 0, if that is the case then we instead stop the OTA firmware update completly
@@ -151,6 +165,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     progressFn      m_progressCb;    // Progress callback to call
     const char      *m_fwTitel;      // Current firmware title of device
     const char      *m_fwVersion;    // Current firmware version of device
+    IUpdater        *m_updater;      // Updater implementation used to write firmware data
     uint8_t         m_retries;       // Maximum amount of retries
     uint16_t        m_size;          // Maximum size of the chuncks we are downloading
     uint16_t        m_timeout;       // How long we maximum wait for each chunck to arrive

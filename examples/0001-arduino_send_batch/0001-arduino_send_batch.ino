@@ -96,7 +96,7 @@ void InitWiFi() {
   // Attempting to establish a connection to the given WiFi network
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
-    // Delay 500ms until a connection has been succesfully established
+    // Delay 500ms until a connection has been successfully established
     delay(500);
 #if THINGSBOARD_ENABLE_PROGMEM
     Serial.print(F("."));
