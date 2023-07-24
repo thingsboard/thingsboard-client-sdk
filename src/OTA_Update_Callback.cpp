@@ -4,22 +4,23 @@
 #if THINGSBOARD_ENABLE_OTA
 
 OTA_Update_Callback::OTA_Update_Callback() :
-    OTA_Update_Callback(nullptr, nullptr, nullptr, nullptr)
+    OTA_Update_Callback(nullptr, nullptr, nullptr, nullptr, nullptr)
 {
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
-    OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, chunkRetries, chunkSize, timeout)
+OTA_Update_Callback::OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
+    OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, updater, chunkRetries, chunkSize, timeout)
 {
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
+OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint16_t &timeout) :
     Callback(endCb, OTA_CB_IS_NULL),
     m_progressCb(progressCb),
     m_fwTitel(currFwTitle),
     m_fwVersion(currFwVersion),
+    m_updater(updater),
     m_retries(chunkRetries),
     m_size(chunkSize),
     m_timeout(timeout)
@@ -45,6 +46,14 @@ const char* OTA_Update_Callback::Get_Firmware_Version() const {
 
 void OTA_Update_Callback::Set_Firmware_Version(const char *currFwVersion) {
     m_fwVersion = currFwVersion;
+}
+
+IUpdater* OTA_Update_Callback::Get_Updater() const {
+    return m_updater;
+}
+
+void OTA_Update_Callback::Set_Updater(IUpdater* updater) {
+    m_updater = updater;
 }
 
 const uint8_t& OTA_Update_Callback::Get_Chunk_Retries() const {

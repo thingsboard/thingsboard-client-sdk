@@ -205,7 +205,7 @@ class OTA_Handler {
     std::function<bool(const char *, const char *)> m_send_fw_state_callback;
     std::function<bool(void)> m_finish_callback;
     // Allows for a binary size of up to theoretically 4 GB.
-    uint32_t m_fw_size;
+    size_t m_fw_size;
     std::string m_fw_algorithm;
     std::string m_fw_checksum;
     mbedtls_md_type_t m_fw_checksum_algorithm;

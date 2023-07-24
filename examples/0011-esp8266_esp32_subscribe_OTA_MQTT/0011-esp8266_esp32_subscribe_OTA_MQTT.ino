@@ -1,5 +1,6 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include <ESP8266_Updater.h>
 // Disable PROGMEM because the ESP8266WiFi library,
 // does not support flash strings.
 #define THINGSBOARD_ENABLE_PROGMEM 0
@@ -7,6 +8,7 @@
 #ifdef ESP32
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <ESP32_Updater.h>
 #endif // ESP32
 #endif // ESP8266
 
@@ -210,7 +212,7 @@ void InitWiFi() {
   // Attempting to establish a connection to the given WiFi network
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
-    // Delay 500ms until a connection has been succesfully established
+    // Delay 500ms until a connection has been successfully established
     delay(500);
 #if THINGSBOARD_ENABLE_PROGMEM
     Serial.print(F("."));
@@ -243,7 +245,7 @@ bool reconnect() {
 }
 
 /// @brief Updated callback that will be called as soon as the firmware update finishes
-/// @param success Either true (update succesfull) or false (update failed)
+/// @param success Either true (update successful) or false (update failed)
 void updatedCallback(const bool& success) {
   if (success) {
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -275,7 +277,15 @@ void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks
   Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
 }
 
-const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+#ifdef ESP8266
+ESP8266_Updater updater;
+#else
+#ifdef ESP32
+ESP32_Updater updater;
+#endif // ESP32
+#endif // ESP8266
+
+const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
 
 void setup() {
   // Initalize serial connection for debugging

@@ -30,22 +30,12 @@
 #    endif
 #  endif
 
-// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality and when using ESP8266 or the ESP32
+// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality
 #  ifndef THINGSBOARD_ENABLE_OTA
-#    ifdef ESP8266
-#      if THINGSBOARD_ENABLE_STL
-#        define THINGSBOARD_ENABLE_OTA 1
-#      else
-#        define THINGSBOARD_ENABLE_OTA 0
-#      endif
+#    if THINGSBOARD_ENABLE_STL
+#      define THINGSBOARD_ENABLE_OTA 1
 #    else
-#      ifdef ESP32
-#        if THINGSBOARD_ENABLE_STL
-#          define THINGSBOARD_ENABLE_OTA 1
-#        else
-#          define THINGSBOARD_ENABLE_OTA 0
-#        endif
-#      endif
+#      define THINGSBOARD_ENABLE_OTA 0
 #    endif
 #  endif
 

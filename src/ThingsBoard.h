@@ -1278,7 +1278,7 @@ class ThingsBoardSized {
       const char *fw_version = data[FW_VER_KEY].as<const char *>();
       const std::string fw_checksum = data[FW_CHKS_KEY].as<std::string>();
       const std::string fw_algorithm = data[FW_CHKS_ALGO_KEY].as<std::string>();
-      const uint32_t fw_size = data[FW_SIZE_KEY].as<const uint32_t>();
+      const size_t fw_size = data[FW_SIZE_KEY].as<const size_t>();
 
       const char *curr_fw_title = m_fw_callback->Get_Firmware_Title();
       const char *curr_fw_version = m_fw_callback->Get_Firmware_Version();
