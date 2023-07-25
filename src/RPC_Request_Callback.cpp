@@ -51,6 +51,6 @@ const JsonArray* RPC_Request_Callback::Get_Parameters() const {
     return m_parameters;
 }
 
-void RPC_Request_Callback::Get_Parameters(const JsonArray *parameteres) {
+void RPC_Request_Callback::Set_Parameters(const JsonArray *parameteres) {
     m_parameters = parameteres;
 }
