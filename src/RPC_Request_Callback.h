@@ -59,7 +59,7 @@ class RPC_Request_Callback : public Callback<void, const JsonVariantConst&> {
 
     /// @brief Sets the pointer to the underlying paramaters
     /// @param parameteres Pointer to the passed parameters
-    void Get_Parameters(const JsonArray *parameteres);
+    void Set_Parameters(const JsonArray *parameteres);
 
   private:
     const char        *m_methodName;  // Method name
