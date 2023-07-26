@@ -99,7 +99,7 @@ class Vector {
 
     /// @brief Inserts the given element at the end of the underlying data container
     /// @param element Element that should be inserted at the end
-    inline void push_back(T element) {
+    inline void push_back(const T& element) {
         if (m_size == m_capacity) {
             m_capacity = (m_capacity == 0) ? 1 : 2 * m_capacity;
             T* newElements = new T[m_capacity];
