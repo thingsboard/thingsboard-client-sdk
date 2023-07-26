@@ -100,9 +100,9 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr size_t MAX_MESSAGE_SIZE PROGMEM = 512U;
+constexpr uint16_t MAX_MESSAGE_SIZE PROGMEM = 512U;
 #else
-constexpr size_t MAX_MESSAGE_SIZE = 512U;
+constexpr uint16_t MAX_MESSAGE_SIZE = 512U;
 #endif
 
 // Baud rate for the debugging serial connection

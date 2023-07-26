@@ -319,22 +319,20 @@ class ThingsBoardSized {
     /// and if we attempt to send data that is bigger, it will not be sent, can be changed later with the setBufferSize() method
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size
-    inline ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
-      : ThingsBoardSized()
+    inline explicit ThingsBoardSized(Client& client, const uint16_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
+      : ThingsBoardSized(maxStackSize, bufferingSize)
     {
-      setMaximumStackSize(maxStackSize);
-#if THINGSBOARD_ENABLE_STREAM_UTILS
-      setBufferingSize(bufferingSize);
-#endif // THINGSBOARD_ENABLE_STREAM_UTILS
       setBufferSize(bufferSize);
       setClient(client);
     }
 
     /// @brief Constructs a ThingsBoardSized instance without a network client, meaning it has to be added later with the setClient() and setBufferSize() method
-    inline ThingsBoardSized()
+    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
+    /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size
+    inline ThingsBoardSized(const uint32_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
       : m_client()
-      , m_max_stack(Default_Max_Stack_Size)
-      , m_buffering_size(Default_Buffering_Size)
+      , m_max_stack(maxStackSize)
+      , m_buffering_size(bufferingSize)
       , m_rpc_callbacks()
       , m_rpc_request_callbacks()
       , m_shared_attribute_update_callbacks()
@@ -1499,9 +1497,9 @@ class ThingsBoardSized {
       const uint32_t responseId = atoi(response.c_str());
 
       for (size_t i = 0; i < m_rpc_request_callbacks.size(); i++) {
-        const RPC_Request_Callback& callback = m_rpc_request_callbacks.at(i);
+        const RPC_Request_Callback& rpc_request = m_rpc_request_callbacks.at(i);
 
-        if (callback.Get_Request_ID() != responseId) {
+        if (rpc_request.Get_Request_ID() != responseId) {
           continue;
         }
 
@@ -1513,7 +1511,7 @@ class ThingsBoardSized {
 
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-        callback.Call_Callback<Logger>(data);
+        rpc_request.Call_Callback<Logger>(data);
         // Delete callback because the changes have been requested and the callback is no longer needed
 #if THINGSBOARD_ENABLE_STL
         m_rpc_request_callbacks.erase(std::next(m_rpc_request_callbacks.begin(), i));
@@ -1543,9 +1541,10 @@ class ThingsBoardSized {
         return;
       }
  
-      RPC_Response respVariant;
-      for (const RPC_Callback& callback : m_rpc_callbacks) {
-        const char *subscribedMethodName = callback.Get_Name();
+      RPC_Response response;
+
+      for (const RPC_Callback& rpc : m_rpc_callbacks) {
+        const char *subscribedMethodName = rpc.Get_Name();
         if (subscribedMethodName == nullptr) {
           Logger::log(RPC_METHOD_NULL);
           continue;
@@ -1568,11 +1567,11 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         const JsonVariantConst param = data[RPC_PARAMS_KEY].as<JsonVariantConst>();
-        respVariant = callback.Call_Callback<Logger>(param);
+        response = rpc.Call_Callback<Logger>(param);
         break;
       }
 
-      if (respVariant.isNull()) {
+      if (response.isNull()) {
         // Message is ignored and not sent at all.
         return;
       }
@@ -1593,8 +1592,8 @@ class ThingsBoardSized {
       char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)];
       snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
 
-      const size_t jsonSize = Helper::Measure_Json(respVariant);
-      Send_Json(responseTopic, respVariant, jsonSize);
+      const size_t jsonSize = Helper::Measure_Json(response);
+      Send_Json(responseTopic, response, jsonSize);
     }
 
 #if THINGSBOARD_ENABLE_OTA
@@ -1652,15 +1651,15 @@ class ThingsBoardSized {
         data = data[SHARED_RESPONSE_KEY];
       }
 
-      for (const Shared_Attribute_Callback& callback : m_shared_attribute_update_callbacks) {
+      for (const Shared_Attribute_Callback& shared_attribute : m_shared_attribute_update_callbacks) {
 #if THINGSBOARD_ENABLE_STL
-        if (callback.Get_Attributes().empty()) {
+        if (shared_attribute.Get_Attributes().empty()) {
 #else
-        if (callback.Get_Attributes() == nullptr) {
+        if (shared_attribute.Get_Attributes() == nullptr) {
 #endif // THINGSBOARD_ENABLE_STL
           Logger::log(ATT_CB_NO_KEYS);
-          // No specifc keys were subscribed so we call the callback anyway.
-          callback.Call_Callback<Logger>(data);
+          // No specifc keys were subscribed so we call the callback anyway
+          shared_attribute.Call_Callback<Logger>(data);
           continue;
         }
 
@@ -1668,9 +1667,9 @@ class ThingsBoardSized {
         const char *requested_att = nullptr;
 
 #if THINGSBOARD_ENABLE_STL
-        for (const char *att : callback.Get_Attributes()) {
+        for (const char *att : shared_attribute.Get_Attributes()) {
 #else
-        String stringToSplit = callback.Get_Attributes();
+        String stringToSplit = shared_attribute.Get_Attributes();
         int32_t previousIndex = 0;
         int32_t currentIndex = 0;
 
@@ -1719,7 +1718,7 @@ class ThingsBoardSized {
 
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-        callback.Call_Callback<Logger>(data);
+        shared_attribute.Call_Callback<Logger>(data);
       }
     }
 
@@ -1745,12 +1744,12 @@ class ThingsBoardSized {
       char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
 #endif // THINGSBOARD_ENABLE_DEBUG
       for (size_t i = 0; i < m_attribute_request_callbacks.size(); i++) {
-        const Attribute_Request_Callback& callback = m_attribute_request_callbacks.at(i);
+        const Attribute_Request_Callback& attribute_request = m_attribute_request_callbacks.at(i);
 
-        if (callback.Get_Request_ID() != response_id) {
+        if (attribute_request.Get_Request_ID() != response_id) {
           continue;
         }
-        const char *attributeResponseKey = callback.Get_Attribute_Key();
+        const char *attributeResponseKey = attribute_request.Get_Attribute_Key();
         if (attributeResponseKey == nullptr) {
           Logger::log(ATT_KEY_NOT_FOUND);
           goto delete_callback;
@@ -1771,7 +1770,7 @@ class ThingsBoardSized {
 
         // Getting non-existing field from JSON should automatically
         // set JSONVariant to null
-        callback.Call_Callback<Logger>(data);
+        attribute_request.Call_Callback<Logger>(data);
 
         delete_callback:
 #if THINGSBOARD_ENABLE_STL

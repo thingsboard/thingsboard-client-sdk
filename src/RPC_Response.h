@@ -17,11 +17,11 @@ class RPC_Response : public JsonVariant {
 
     /// @brief Constructor
     /// @param variant JsonVariant object the internal data should be copied from
-    RPC_Response(JsonVariant variant);
+    explicit RPC_Response(JsonVariant variant);
 
     /// @brief Constructor
     /// @param telemetry Telemetry object the internal data should be copied from
-    RPC_Response(Telemetry telemetry);
+    explicit RPC_Response(Telemetry telemetry);
 
     /// @brief Constructor
     /// @tparam T Type of the passed value

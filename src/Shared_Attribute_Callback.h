@@ -38,7 +38,7 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     /// @brief Constructs callback, will be called upon shared attribute update arrival,
     /// of any existing or new shared attribute on the given device
     /// @param cb Callback method that will be called
-    Shared_Attribute_Callback(function cb);
+    explicit Shared_Attribute_Callback(function cb);
 
 #if THINGSBOARD_ENABLE_STL
 
