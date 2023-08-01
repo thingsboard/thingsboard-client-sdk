@@ -7,6 +7,11 @@
 #ifndef Configuration_h
 #define Configuration_h
 
+// Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
+// See https://arduinojson.org/v6/api/config/use_long_long/ for more information
+#define ARDUINOJSON_USE_LONG_LONG 1
+#define ARDUINOJSON_USE_DOUBLE 1
+
 // Enable the usage of the STL library, depending on if needed STL base functionality is supported
 #  ifdef __has_include
 #    if __has_include(<string>) && __has_include(<functional>) && __has_include(<vector>) && __has_include(<iterator>)

@@ -7,6 +7,9 @@
 #ifndef Helper_h
 #define Helper_h
 
+// Local includes.
+#include "Configuration.h"
+
 // Library include.
 #include <stdint.h>
 #include <ArduinoJson.h>

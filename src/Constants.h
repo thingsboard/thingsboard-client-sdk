@@ -7,12 +7,12 @@
 #ifndef Constants_h
 #define Constants_h
 
+// Local includes.
+#include "Configuration.h"
+
 // Library includes.
 #include <Arduino.h>
 #include <ArduinoJson.h>
-
-// Local includes.
-#include "Configuration.h"
 
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
 #define Default_Buffering_Size 64
