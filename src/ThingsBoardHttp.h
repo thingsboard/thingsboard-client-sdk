@@ -7,15 +7,15 @@
 #ifndef ThingsBoard_Http_h
 #define ThingsBoard_Http_h
 
-// Library includes.
-#include <stdarg.h>
-#include <ArduinoHttpClient.h>
-
 // Local includes.
 #include "Constants.h"
 #include "ThingsBoardDefaultLogger.h"
 #include "Telemetry.h"
 #include "Helper.h"
+
+// Library includes.
+#include <stdarg.h>
+#include <ArduinoHttpClient.h>
 
 /// ---------------------------------
 /// Constant strings in flash memory.
