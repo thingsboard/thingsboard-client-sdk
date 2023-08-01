@@ -16,14 +16,6 @@ Telemetry::Telemetry(const char *key, bool val)	:
         m_value.boolean = val;	
 }
 
-Telemetry::Telemetry(const char *key, float value) :
-    m_type(DataType::TYPE_REAL),
-    m_key(key),
-    m_value()
-{
-    m_value.real = value;
-}
-
 Telemetry::Telemetry(const char *key, const char *value) :
     m_type(DataType::TYPE_STR),
     m_key(key),

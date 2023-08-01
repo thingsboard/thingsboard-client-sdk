@@ -1,6 +1,5 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-#include <ESP8266_Updater.h>
 // Disable PROGMEM because the ESP8266WiFi library,
 // does not support flash strings.
 #define THINGSBOARD_ENABLE_PROGMEM 0
@@ -8,11 +7,18 @@
 #ifdef ESP32
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <ESP32_Updater.h>
 #endif // ESP32
 #endif // ESP8266
 
 #include <ThingsBoard.h>
+
+#ifdef ESP8266
+#include <ESP8266_Updater.h>
+#else
+#ifdef ESP32
+#include <ESP32_Updater.h>
+#endif // ESP32
+#endif // ESP8266
 
 
 // Whether the given script is using encryption or not,

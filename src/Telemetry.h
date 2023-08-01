@@ -22,14 +22,14 @@ class Telemetry {
     /// @brief Creates an empty Telemetry record containg neither a key nor value
     Telemetry();
 
-    /// @brief Constructs telemetry record from integer value
+    /// @brief Constructs telemetry record from integral value
     /// @tparam T Type of the passed value, is required to be integral,
     /// to ensure this constructor isn't used instead of the float one by mistake
     /// @param key Key of the key value pair we want to create
     /// @param value Value of the key value pair we want to create
     template <typename T,
 #if THINGSBOARD_ENABLE_STL
-              // Standard library is_integral, includes bool, char, signed char, unsigned char, short, unsigned short, int, unsigned int, long, unsigned long, long long, and unsigned long longy
+              // Standard library is_integral, includes bool, char, signed char, unsigned char, short, unsigned short, int, unsigned int, long, unsigned long, long long, and unsigned long long
               typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 #else
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
@@ -43,15 +43,31 @@ class Telemetry {
         m_value.integer = value;
     }
 
+    /// @brief Constructs telemetry record from floating point value
+    /// @tparam T Type of the passed value, is required to be a floating point,
+    /// to ensure this constructor isn't used instead of the boolean one by mistake
+    /// @param key Key of the key value pair we want to create
+    /// @param value Value of the key value pair we want to create
+    template <typename T,
+#if THINGSBOARD_ENABLE_STL
+              // Standard library is_floating_point, includes float and double
+              typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
+#else
+              // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_floating_point declarations, previously accessible with ARDUINOJSON_NAMESPACE
+              typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_floating_point<T>::value>::type* = nullptr>
+#endif // THINGSBOARD_ENABLE_STL
+    Telemetry(const char *key, T value)
+      : m_type(DataType::TYPE_REAL),
+      m_key(key),
+      m_value()
+    {
+      m_value.real = value;
+    }
+
     /// @brief Constructs telemetry record from boolean value	
     /// @param key Key of the key value pair we want to create	
     /// @param val Value of the key value pair we want to create	
     Telemetry(const char *key, bool val);
-
-    /// @brief Constructs telemetry record from float value
-    /// @param key Key of the key value pair we want to create
-    /// @param value Value of the key value pair we want to create
-    Telemetry(const char *key, float value);
 
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
@@ -72,8 +88,8 @@ class Telemetry {
     union Data {
         const char  *str;
         bool        boolean;
-        int         integer;
-        float       real;
+        int64_t     integer;
+        double      real;
     };
 
     // Data type inside a container
