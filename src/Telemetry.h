@@ -43,6 +43,11 @@ class Telemetry {
         m_value.integer = value;
     }
 
+    /// @brief Constructs telemetry record from boolean value	
+    /// @param key Key of the key value pair we want to create	
+    /// @param val Value of the key value pair we want to create	
+    Telemetry(const char *key, bool val);
+
     /// @brief Constructs telemetry record from float value
     /// @param key Key of the key value pair we want to create
     /// @param value Value of the key value pair we want to create
@@ -66,6 +71,7 @@ class Telemetry {
     // Data container
     union Data {
         const char  *str;
+        bool        boolean;
         int         integer;
         float       real;
     };
@@ -73,6 +79,7 @@ class Telemetry {
     // Data type inside a container
     enum class DataType: const uint8_t {
         TYPE_NONE,
+        TYPE_BOOL,
         TYPE_INT,
         TYPE_REAL,
         TYPE_STR
