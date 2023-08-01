@@ -211,7 +211,7 @@ void loop() {
   // Static_cast, helps the Telemetry constructor which type is wanted exactly, because if this is not given
   // conversion between float and bool can cause compile time failure with ambiguity which constructor is exactly wanted
   Attribute attributes[attribute_items] = {
-    { DEVICE_TYPE_KEY,  static_cast<char*>(SENSOR_VALUE) },
+    { DEVICE_TYPE_KEY,  static_cast<const char*>(SENSOR_VALUE) },
     { ACTIVE_KEY,       static_cast<bool>(true) },
   };
 
