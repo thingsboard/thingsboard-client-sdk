@@ -180,11 +180,9 @@ void loop() {
 #endif
 
   const uint8_t data_items = 2U;
-  // Static_cast, helps the Telemetry constructor which type is wanted exactly, because if this is not given
-  // conversion between float and bool can cause compile time failure with ambiguity which constructor is exactly wanted
   Telemetry data[data_items] = {
-    { TEMPERATURE_KEY, static_cast<float>(42.2) },
-    { HUMIDITY_KEY,    static_cast<int>(80) },
+    { TEMPERATURE_KEY, 42.2 },
+    { HUMIDITY_KEY,    80 },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
@@ -207,17 +205,15 @@ void loop() {
   Serial.println("Sending attributes data...");
 #endif
 
-  const uint8_t attribute_items = 2;
-  // Static_cast, helps the Telemetry constructor which type is wanted exactly, because if this is not given
-  // conversion between float and bool can cause compile time failure with ambiguity which constructor is exactly wanted
+  const int attribute_items = 2;
   Attribute attributes[attribute_items] = {
-    { DEVICE_TYPE_KEY,  static_cast<char*>(SENSOR_VALUE) },
-    { ACTIVE_KEY,       static_cast<bool>(true) },
+    { DEVICE_TYPE_KEY,  SENSOR_VALUE },
+    { ACTIVE_KEY,       true     },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
-  Attribute attributes[attribute_items] = {
+  Attribute attributes[data_items] = {
     Attribute( DEVICE_TYPE_KEY,  SENSOR_VALUE ),
     Attribute( ACTIVE_KEY,       true     ),
   };

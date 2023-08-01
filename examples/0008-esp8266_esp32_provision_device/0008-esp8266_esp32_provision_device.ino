@@ -374,12 +374,8 @@ void loop() {
 #else
       Serial.println("Sending telemetry...");
 #endif
-      // Uploads new telemetry to ThingsBoard using MQTT.
-      // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api for more details.
-      // Static_cast, helps the Telemetry constructor which type is wanted exactly, because if this is not given
-      // conversion between float and bool can cause compile time failure with ambiguity which constructor is exactly wanted
-      tb.sendTelemetryData(TEMPERATURE_KEY, static_cast<int>(22));
-      tb.sendTelemetryData(HUMIDITY_KEY, static_cast<float>(42.5));
+      tb.sendTelemetryData(TEMPERATURE_KEY, 22);
+      tb.sendTelemetryData(HUMIDITY_KEY, 42.5);
     }
   }
 
