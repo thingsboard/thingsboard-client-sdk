@@ -1289,13 +1289,13 @@ class ThingsBoardSized {
       // If firmware version and title is the same, we do not initiate an update, because we expect the binary to be the same one we are currently using
       else if (strncmp_P(curr_fw_title, fw_title, JSON_STRING_SIZE(strlen(curr_fw_title))) == 0 && strncmp_P(curr_fw_version, fw_version, JSON_STRING_SIZE(strlen(curr_fw_version))) == 0) {
         Logger::log(FW_UP_TO_DATE);
-        Firmware_Send_State(FW_STATE_FAILED, FW_UP_TO_DATE);
+        Firmware_Send_State(FW_STATE_UPDATED, FW_UP_TO_DATE);
         return;
       }
       // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another device type 
       else if (strncmp_P(curr_fw_title, fw_title, JSON_STRING_SIZE(strlen(curr_fw_title))) != 0) {
         Logger::log(FW_NOT_FOR_US);
-        Firmware_Send_State(FW_STATE_FAILED, FW_NOT_FOR_US);
+        Firmware_Send_State(FW_STATE_UPDATED, FW_NOT_FOR_US);
         return;
       }
 
