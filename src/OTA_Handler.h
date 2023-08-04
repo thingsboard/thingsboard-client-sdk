@@ -37,12 +37,14 @@ constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
 constexpr char FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
 constexpr char FW_STATE_VERIFIED[] PROGMEM = "VERIFIED";
 constexpr char FW_STATE_UPDATING[] PROGMEM = "UPDATING";
+constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
 constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
 #else
 constexpr char FW_STATE_DOWNLOADING[] = "DOWNLOADING";
 constexpr char FW_STATE_DOWNLOADED[] = "DOWNLOADED";
 constexpr char FW_STATE_VERIFIED[] = "VERIFIED";
 constexpr char FW_STATE_UPDATING[] = "UPDATING";
+constexpr char FW_STATE_UPDATED[] = "UPDATED";
 constexpr char FW_STATE_FAILED[] = "FAILED";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
