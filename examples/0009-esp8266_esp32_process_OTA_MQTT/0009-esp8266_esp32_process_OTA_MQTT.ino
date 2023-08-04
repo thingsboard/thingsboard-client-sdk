@@ -38,16 +38,6 @@ constexpr char CURRENT_FIRMWARE_TITLE[] = "TEST";
 constexpr char CURRENT_FIRMWARE_VERSION[] = "1.0.0";
 #endif
 
-// Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
-// especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
-// if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
-// to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
-#if THINGSBOARD_ENABLE_PROGMEM
-constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
-#else
-constexpr char FW_STATE_UPDATED[] = "UPDATED";
-#endif
-
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 12U;
@@ -322,6 +312,10 @@ void loop() {
   }
 
   if (!currentFWSent) {
+    // Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
+    // especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
+    // if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
+    // to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
     currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && tb.Firmware_Send_State(FW_STATE_UPDATED);
   }
 
