@@ -120,7 +120,9 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (%s)";
+#if !THINGSBOARD_ENABLE_STREAM_UTILS
 constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+#endif // !THINGSBOARD_ENABLE_STREAM_UTILS
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 #if !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -149,7 +151,9 @@ constexpr char SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger 
 #endif // THINGSBOARD_ENABLE_DEBUG
 #else
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (%s)";
+#if !THINGSBOARD_ENABLE_STREAM_UTILS
 constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+#endif // !THINGSBOARD_ENABLE_STREAM_UTILS
 constexpr char NUMBER_PRINTF[] = "%u";
 #if !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char MAX_RPC_EXCEEDED[] = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
@@ -521,6 +525,7 @@ class ThingsBoardSized {
         return false;
       }
 
+#if !THINGSBOARD_ENABLE_STREAM_UTILS
       const size_t currentBufferSize = m_client.getBufferSize();
       const size_t jsonSize = strlen(json);
 
@@ -530,6 +535,7 @@ class ThingsBoardSized {
         Logger::log(message);
         return false;
       }
+#endif // !THINGSBOARD_ENABLE_STREAM_UTILS
 
 #if THINGSBOARD_ENABLE_DEBUG
       char message[JSON_STRING_SIZE(strlen(SEND_MESSAGE)) + JSON_STRING_SIZE(strlen(topic)) + jsonSize];
