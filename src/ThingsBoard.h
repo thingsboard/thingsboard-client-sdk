@@ -525,9 +525,9 @@ class ThingsBoardSized {
         return false;
       }
 
+      const size_t jsonSize = strlen(json);
 #if !THINGSBOARD_ENABLE_STREAM_UTILS
       const size_t currentBufferSize = m_client.getBufferSize();
-      const size_t jsonSize = strlen(json);
 
       if (currentBufferSize < jsonSize) {
         char message[Helper::detectSize(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize)];
