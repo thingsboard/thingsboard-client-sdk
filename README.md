@@ -59,7 +59,7 @@ Example implementations for all base features, mentioned above, can be found in 
 
 ### No PROGMEM support causing crashes
 
-All constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that simply add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
+If the device is crashing with an `Exception` especially `Exception (3)`, more specifically `LoadStoreError` or `LoadStoreErrorCause` this might be because, all constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that simply add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
 
 ```c++
 // If not set otherwise the value is 1 per default if the pgmspace include exists,
