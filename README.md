@@ -95,11 +95,14 @@ If that's a case, the buffer size for serialization should be increased. To do s
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 64 bytes for JSON buffer
-// ThingsBoard tb(espClient);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON buffer
-ThingsBoard tb(espClient, 128);
+ThingsBoard tb(mqttClient, 128);
 
 void setup() {
   // Increase internal buffer size after inital creation.
@@ -116,8 +119,11 @@ Alternatively it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM_
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 64 bytes for JSON buffer
-ThingsBoard tb(espClient);
+ThingsBoard tb(mqttClient);
 ```
 
 ### Too much data fields must be serialized
@@ -134,11 +140,14 @@ The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 8 fields for JSON object
-// ThingsBoard tb(espClient);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<32> tb(espClient, 128);
+ThingsBoardSized<32> tb(mqttClient, 128);
 ```
 
 ## Tips and Tricks
@@ -165,11 +174,14 @@ After that, you can use it in place of regular `ThingsBoard` class. **Note that 
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 8 fields for JSON object
-// ThingsBoard tb(espClient);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<32, CustomLogger> tb(espClient, 128);
+ThingsBoardSized<32, CustomLogger> tb(mqttClient, 128);
 ```
 
 ## Have a question or proposal?

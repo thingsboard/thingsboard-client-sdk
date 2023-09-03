@@ -31,7 +31,7 @@
 /// This allows sending data that is very big without requiring to allocate that much memory, because it is sent in smaller packets.
 /// To support this feature, however this interface needs to additionally implement the Print interface, because that is required by the wrapper class BufferingPrint
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-class IMQTT_Client : Print {
+class IMQTT_Client : public Print {
 #else
 class IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
