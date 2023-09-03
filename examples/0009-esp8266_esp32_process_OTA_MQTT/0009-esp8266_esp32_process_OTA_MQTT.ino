@@ -12,6 +12,14 @@
 
 #include <ThingsBoard.h>
 
+#ifdef ESP8266
+#include <ESP8266_Updater.h>
+#else
+#ifdef ESP32
+#include <ESP32_Updater.h>
+#endif // ESP32
+#endif // ESP8266
+
 
 // Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
@@ -30,21 +38,11 @@ constexpr char CURRENT_FIRMWARE_TITLE[] = "TEST";
 constexpr char CURRENT_FIRMWARE_VERSION[] = "1.0.0";
 #endif
 
-// Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
-// especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
-// if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
-// to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
-#if THINGSBOARD_ENABLE_PROGMEM
-constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
-#else
-constexpr char FW_STATE_UPDATED[] = "UPDATED";
-#endif
-
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 5U;
+constexpr uint8_t FIRMWARE_FAILURE_RETRIES PROGMEM = 12U;
 #else
-constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 5U;
+constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
 #endif
 // Size of each firmware chunck downloaded over MQTT,
 // increased packet size, might increase download speed
@@ -98,9 +96,9 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 512U;
+constexpr uint16_t MAX_MESSAGE_SIZE PROGMEM = 512U;
 #else
-constexpr uint32_t MAX_MESSAGE_SIZE = 512U;
+constexpr uint16_t MAX_MESSAGE_SIZE = 512U;
 #endif
 
 // Baud rate for the debugging serial connection
@@ -210,7 +208,7 @@ void InitWiFi() {
   // Attempting to establish a connection to the given WiFi network
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
-    // Delay 500ms until a connection has been succesfully established
+    // Delay 500ms until a connection has been successfully established
     delay(500);
 #if THINGSBOARD_ENABLE_PROGMEM
     Serial.print(F("."));
@@ -243,7 +241,7 @@ bool reconnect() {
 }
 
 /// @brief Updated callback that will be called as soon as the firmware update finishes
-/// @param success Either true (update succesfull) or false (update failed)
+/// @param success Either true (update successful) or false (update failed)
 void updatedCallback(const bool& success) {
   if (success) {
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -275,7 +273,15 @@ void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks
   Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
 }
 
-const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+#ifdef ESP8266
+ESP8266_Updater updater;
+#else
+#ifdef ESP32
+ESP32_Updater updater;
+#endif // ESP32
+#endif // ESP8266
+
+const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
 
 void setup() {
   // Initalize serial connection for debugging
@@ -306,6 +312,10 @@ void loop() {
   }
 
   if (!currentFWSent) {
+    // Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
+    // especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
+    // if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
+    // to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
     currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && tb.Firmware_Send_State(FW_STATE_UPDATED);
   }
 

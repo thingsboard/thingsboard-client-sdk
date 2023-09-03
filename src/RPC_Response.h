@@ -7,31 +7,31 @@
 #ifndef RPC_RESPONSE_H
 #define RPC_RESPONSE_H
 
-#include <Telemetry.h>
+// Local includes.
+#include "Telemetry.h"
 
 class RPC_Response : public JsonVariant {
-public:
+  public:
+    /// @brief Constructor
+    RPC_Response();
 
-    RPC_Response()
-      : JsonVariant() {
-    }
+    /// @brief Constructor
+    /// @param variant JsonVariant object the internal data should be copied from
+    explicit RPC_Response(JsonVariant variant);
 
-    RPC_Response(JsonVariant variant)
-      : JsonVariant(variant) {
-    }
+    /// @brief Constructor
+    /// @param telemetry Telemetry object the internal data should be copied from
+    explicit RPC_Response(Telemetry telemetry);
 
-    RPC_Response(Telemetry telemetry) {
-        StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
-        const JsonVariant object = jsonBuffer.to<JsonVariant>();
-        if (!telemetry.SerializeKeyValue(object)) {
-            return;
-        }
-        this->set(object);
-    }
-
+    /// @brief Constructor
+    /// @tparam T Type of the passed value
+    /// @param key Key of the key value pair we want to create
+    /// @param value Value of the key value pair we want to create
     template <typename T>
-    RPC_Response(const char *key, T value)
-      : RPC_Response(Telemetry(key, value)) {
+    RPC_Response(const char *key, T value) :
+        RPC_Response(Telemetry(key, value))
+    {
+        // Nothing to do
     }
 };
 

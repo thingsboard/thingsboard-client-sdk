@@ -20,106 +20,85 @@
 class Telemetry {
   public:
     /// @brief Creates an empty Telemetry record containg neither a key nor value
-    inline Telemetry()
-      : m_type(DataType::TYPE_NONE), m_key(NULL), m_value() { }
+    Telemetry();
 
-    /// @brief Constructs telemetry record from integer value
-    /// @brief Constructs telemetry record from integer value
+    /// @brief Constructs telemetry record from integral value
     /// @tparam T Type of the passed value, is required to be integral,
     /// to ensure this constructor isn't used instead of the float one by mistake
     /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
+    /// @param value Value of the key value pair we want to create
     template <typename T,
 #if THINGSBOARD_ENABLE_STL
-              // Standard library is_integral, includes bool, char, signed char, unsigned char, short, unsigned short, int, unsigned int, long, unsigned long, long long, and unsigned long longy
+              // Standard library is_integral, includes bool, char, signed char, unsigned char, short, unsigned short, int, unsigned int, long, unsigned long, long long, and unsigned long long
               typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 #else
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    inline Telemetry(const char *key, T val)
-            : m_type(DataType::TYPE_INT), m_key(key), m_value()   {
-        m_value.integer = val;
+    inline Telemetry(const char *key, T value)
+      : m_type(DataType::TYPE_INT),
+      m_key(key),
+      m_value()
+    {
+        m_value.integer = value;
     }
 
-    /// @brief Constructs telemetry record from float value
+    /// @brief Constructs telemetry record from floating point value
+    /// @tparam T Type of the passed value, is required to be a floating point,
+    /// to ensure this constructor isn't used instead of the boolean one by mistake
     /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(const char *key, float val)
-      : m_type(DataType::TYPE_REAL), m_key(key), m_value()  {
-      m_value.real = val;
+    /// @param value Value of the key value pair we want to create
+    template <typename T,
+#if THINGSBOARD_ENABLE_STL
+              // Standard library is_floating_point, includes float and double
+              typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
+#else
+              // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_floating_point declarations, previously accessible with ARDUINOJSON_NAMESPACE
+              typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_floating_point<T>::value>::type* = nullptr>
+#endif // THINGSBOARD_ENABLE_STL
+    Telemetry(const char *key, T value)
+      : m_type(DataType::TYPE_REAL),
+      m_key(key),
+      m_value()
+    {
+      m_value.real = value;
     }
+
+    /// @brief Constructs telemetry record from boolean value	
+    /// @param key Key of the key value pair we want to create	
+    /// @param val Value of the key value pair we want to create	
+    Telemetry(const char *key, bool val);
 
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
-    /// @param val Value of the key value pair we want to create
-    inline Telemetry(const char *key, const char *val)
-            : m_type(DataType::TYPE_STR), m_key(key), m_value()   {
-        m_value.str = val;
-    }
+    /// @param value Value of the key value pair we want to create
+    Telemetry(const char *key, const char *value);
 
     /// @brief Whether this record is empty or not
     /// @return Whether there is any data in this record or not
-    inline bool IsEmpty() const {
-      return !m_key && m_type == DataType::TYPE_NONE;
-    }
+    bool IsEmpty() const;
 
     /// @brief Serializes the key-value pair depending on the constructor used
     /// @param jsonObj Object the value will be copied into with the given key
     /// @return Whether serializing was successfull or not
-    inline bool SerializeKeyValue(const JsonVariant &jsonObj) const {
-      if (m_key) {
-        switch (m_type) {
-          case DataType::TYPE_INT:
-            jsonObj[m_key] = m_value.integer;
-            return true;
-            break;
-          case DataType::TYPE_REAL:
-            jsonObj[m_key] = m_value.real;
-            return true;
-            break;
-          case DataType::TYPE_STR:
-            jsonObj[m_key] = m_value.str;
-            return true;
-            break;
-          default:
-            // Nothing to do.
-            break;
-        }
-        return false;
-      }
-
-      switch (m_type) {
-        case DataType::TYPE_INT:
-          return jsonObj.set(m_value.integer);
-          break;
-        case DataType::TYPE_REAL:
-          return jsonObj.set(m_value.real);
-          break;
-        case DataType::TYPE_STR:
-          return jsonObj.set(m_value.str);
-          break;
-        default:
-            // Nothing to do.
-          break;
-      }
-      return false;
-    }
+    bool SerializeKeyValue(const JsonVariant &jsonObj) const;
 
   private:
     // Data container
     union Data {
-      const char  *str;
-      int         integer;
-      float       real;
+        const char  *str;
+        bool        boolean;
+        int64_t     integer;
+        double      real;
     };
 
     // Data type inside a container
     enum class DataType: const uint8_t {
-      TYPE_NONE,
-      TYPE_INT,
-      TYPE_REAL,
-      TYPE_STR
+        TYPE_NONE,
+        TYPE_BOOL,
+        TYPE_INT,
+        TYPE_REAL,
+        TYPE_STR
     };
 
     DataType     m_type;  // Data type flag

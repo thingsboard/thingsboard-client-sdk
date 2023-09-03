@@ -69,9 +69,9 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr uint32_t MAX_MESSAGE_SIZE PROGMEM = 128U;
+constexpr uint16_t MAX_MESSAGE_SIZE PROGMEM = 128U;
 #else
-constexpr uint32_t MAX_MESSAGE_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_SIZE = 128U;
 #endif
 
 // Baud rate for the debugging serial connection
@@ -198,7 +198,7 @@ void InitWiFi() {
   // Attempting to establish a connection to the given WiFi network
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
-    // Delay 500ms until a connection has been succesfully established
+    // Delay 500ms until a connection has been successfully established
     delay(500);
 #if THINGSBOARD_ENABLE_PROGMEM
     Serial.print(F("."));
