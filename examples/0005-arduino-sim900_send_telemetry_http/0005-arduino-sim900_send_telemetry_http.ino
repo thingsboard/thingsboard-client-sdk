@@ -16,10 +16,9 @@
 // #define TINY_GSM_MODEM_M590
 // #define TINY_GSM_MODEM_ESP8266
 
-#include <Arduino_MQTT_Client.h>
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
-#include <Arduino_MQTT_Client.h>
+#include <Arduino_HTTP_Client.h>
 #include <ThingsBoardHttp.h>
 
 
@@ -91,10 +90,10 @@ SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
 TinyGsmClient client(modem);
 
 // Initalize the Mqtt client instance
-Arduino_MQTT_Client mqttClient(client);
+Arduino_HTTP_Client httpClient(client, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 
 // Initialize ThingsBoard instance
-ThingsBoardHttp tb(mqttClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(httpClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 
 // Set to true, if modem is connected
 bool modemConnected = false;

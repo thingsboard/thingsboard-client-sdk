@@ -422,7 +422,7 @@ class ThingsBoardSized {
     }
 
     /// @brief Receives / sends any outstanding messages from and to the MQTT broker
-    /// @return Wether sending or receiving the oustanding the messages was successfull or not
+    /// @return Whether sending or receiving the oustanding the messages was successful or not
     inline bool loop() {
       return m_client.loop();
     }
@@ -1048,7 +1048,7 @@ class ThingsBoardSized {
 
     /// @brief Publishes a request via MQTT to request the given firmware chunk
     /// @param request_chunck Chunk index that should be requested from the server
-    /// @return Wether publishing the message was successfull or not
+    /// @return Whether publishing the message was successful or not
     inline bool Publish_Chunk_Request(const uint32_t& request_chunck) {
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary

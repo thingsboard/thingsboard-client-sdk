@@ -229,7 +229,7 @@ class OTA_Handler {
           (void)m_send_fw_state_callback(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
         }
 
-        // Watchdog gets started no matter if publishing request was successfull or not in hopes,
+        // Watchdog gets started no matter if publishing request was successful or not in hopes,
         // that after the given timeout the callback calls this method again and can then publish the request successfully.
         m_watchdog.once(m_fw_callback->Get_Timeout());
     }

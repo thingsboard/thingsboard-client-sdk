@@ -21,7 +21,7 @@ class IUpdater {
   public:
     /// @brief Initalizes the writing of the given data
     /// @param firmware_size Total size of the data that should be written, is done in multiple packets
-    /// @return Wether initalizing the update was successfull or not
+    /// @return Whether initalizing the update was successful or not
     virtual bool begin(const size_t& firmware_size) = 0;
   
     /// @brief Writes the given amount of bytes of the packet data
@@ -34,7 +34,7 @@ class IUpdater {
     virtual void reset() = 0;
   
     /// @brief Ends the update and returns wheter it was successfully completed
-    /// @return Wether the complete amount of bytes initally given was successfully written or not
+    /// @return Whether the complete amount of bytes initally given was successfully written or not
     virtual bool end() = 0;
 };
 

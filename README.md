@@ -152,6 +152,175 @@ ThingsBoardSized<32> tb(mqttClient, 128);
 
 ## Tips and Tricks
 
+### Custom Updater Instance
+
+When using the `ThingsBoard` class instance, the class used to flash the binary data onto the device is not hard coded,
+but instead the `OTA_Update_Callback` class expects an optional argument, the `IUpdater` implementation.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning as long as the device can flash binary data and supports the C++ STL it supports OTA updates, with the `ThingsBoard` library.
+
+Currently, implemented in the library itself are the `ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and the `ESP8266_Updater` which is used with the `ESP8266`.
+If another device wants to be supported, a custom interface implementation needs to be created. For that a `class` that inherits the `IUpdater` interface needs to be created and `override` the needed methods.
+
+```c++
+#include <IUpdater.h>
+
+class Custom_Updater : public IUpdater {
+  public:
+    bool begin(const size_t& firmware_size) override {
+        return true;
+    }
+  
+    size_t write(uint8_t* payload, const size_t& total_bytes) override {
+        return total_bytes;
+    }
+  
+    void reset() override {
+        // Nothing to do
+    }
+  
+    bool end() override {
+        return true;
+    }
+};
+```
+
+### Custom HTTP Instance
+
+When using the `ThingsBoardHttp` class instance, the protocol used to send the data to the HTTP broker is not hard coded,
+but instead the `ThingsBoardHttp` class expects the argument to a `IHTTP_Client` implementation.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning the underlying HTTP client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
+
+Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which is simply a wrapper around the [`ArduinoHttpClient`](https://github.com/arduino-libraries/ArduinoHttpClient), see [dependencies](https://github.com/arduino-libraries/ArduinoHttpClient?tab=readme-ov-file#dependencies) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` that inherits the `IHTTP_Client` interface needs to be created and `override` the needed methods.
+
+
+```c++
+#include <IHTTP_Client.h>
+
+class Custom_HTTP_Client : public IHTTP_Client {
+  public:
+    void set_keep_alive(const bool& keep_alive) override {
+        // Nothing to do
+    }
+
+    int connect(const char *host, const uint16_t& port) override {
+        return 0;
+    }
+
+    void stop() override {
+        // Nothing to do
+    }
+
+    int post(const char *url_path, const char *content_type, const char *request_body) override {
+        return 0;
+    }
+
+    int get_response_status_code() override {
+        return 200;
+    }
+
+    int get(const char *url_path) override{
+        return 0;
+    }
+
+    String get_response_body() override{
+        return String();
+    }
+};
+```
+
+### Custom MQTT Instance
+
+When using the `ThingsBoard` class instance, the protocol used to send the data to the MQTT broker is not hard coded,
+but instead the `ThingsBoard` class expects the argument to a `IMQTT_Client` implementation.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning the underlying MQTT client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
+
+Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`TBPubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` that inherits the `IMQTT_Client` interface needs to be created and `override` the needed methods.
+
+```c++
+#include <IMQTT_Client.h>
+
+class Custom_MQTT_Client : public IMQTT_Client {
+  public:
+    void set_callback(function cb) override {
+        // Nothing to do
+    }
+
+    bool set_buffer_size(const uint16_t& buffer_size) override{
+        return true;
+    }
+
+    uint16_t get_buffer_size() override  {
+        return 0U;
+    }
+
+    void set_server(const char *domain, const uint16_t& port) override {
+        // Nothing to do
+    }
+
+    bool connect(const char *client_id, const char *user_name, const char *password) override {
+        return true;
+    }
+
+    void disconnect() override {
+        // Nothing to do
+    }
+
+    bool loop() override {
+        return true;
+    }
+
+    bool publish(const char *topic, const uint8_t *payload, const uint32_t& length) override {
+        return true;
+    }
+
+    bool subscribe(const char *topic) override {
+        return true;
+    }
+
+    bool unsubscribe(const char *topic) override {
+        return true;
+    }
+
+    bool connected() override {
+        return true;
+    }
+
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+
+    bool begin_publish(const char *topic, const uint32_t& length) override {
+        return true;
+    }
+
+    bool end_publish() override {
+        return true;
+    }
+
+    //----------------------------------------------------------------------------
+    // Print interface
+    //----------------------------------------------------------------------------
+
+    size_t write(uint8_t payload_byte) override {
+        return 1U;
+    }
+
+    size_t write(const uint8_t *buffer, size_t size) override {
+        return size;
+    }
+
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
+};
+```
+
+### Custom Logger Instance
+
 To use your own logger you have to create a class and pass it as second template parameter `Logger` to your `ThingsBoardSized` class instance.
 
 **For example:**
