@@ -1028,7 +1028,7 @@ class ThingsBoardSized {
     /// @return Whether sending the data was successful or not
     template <typename TSource>
     inline bool Serialize_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
-      if (!m_client.begin_publish(topic, jsonSize, false)) {
+      if (!m_client.begin_publish(topic, jsonSize)) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return false;
       }

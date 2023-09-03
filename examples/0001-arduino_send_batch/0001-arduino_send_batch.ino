@@ -85,7 +85,7 @@ WiFiEspClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 
 /// @brief Initalizes WiFi connection,
