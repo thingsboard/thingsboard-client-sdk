@@ -23,7 +23,7 @@ class ESP8266_Updater : public IUpdater {
   
     size_t write(uint8_t* payload, const size_t& total_bytes) override;
 
-    bool reset() override;
+    void reset() override;
   
     bool end() override;
 };

@@ -16,9 +16,8 @@ size_t ESP32_Updater::write(uint8_t* payload, const size_t& total_bytes) {
     return Update.write(payload, total_bytes);
 }
 
-bool ESP32_Updater::reset() {
+void ESP32_Updater::reset() {
     Update.abort();
-    return true;
 }
 
 bool ESP32_Updater::end() {
