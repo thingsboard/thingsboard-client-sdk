@@ -32,6 +32,7 @@ jobs:
         - name: ArduinoHttpClient
         - name: ArduinoJson
         - name: Seeed_Arduino_mbedtls
+        - name: StreamUtils
 
     strategy:
       matrix:

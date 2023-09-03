@@ -1,7 +1,7 @@
 # Claiming devices as a cloud user
 
 ## Devices
-| Supported Devcies |
+| Supported Devices |
 |-------------------|
 |  ESP32            |
 |  ESP8266          |

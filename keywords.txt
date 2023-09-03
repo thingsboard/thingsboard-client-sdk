@@ -6,20 +6,113 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-ThingsBoard	KEYWORD1
+ThingsBoard KEYWORD1
+ThingsBoardHttp KEYWORD1
+Attribute_Request_Callback  KEYWORD1
+OTA_Update_Callback KEYWORD1
+Provision_Callback  KEYWORD1
+RPC_Callback    KEYWORD1
+RPC_Request_Callback    KEYWORD1
+Shared_Attribute_Callback   KEYWORD1
+Callback    KEYWORD1
+Telemetry   KEYWORD1
+Helper  KEYWORD1
+ESP32_Updater   KEYWORD1
+ESP8266_Updater KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-connect 	KEYWORD2
-connected 	KEYWORD2
-sendInt 	KEYWORD2
-sendFloat 	KEYWORD2
-sendString 	KEYWORD2
-sendJson 	KEYWORD2
-loop	KEYWORD2
+getClient   KEYWORD2
+setClient   KEYWORD2
+setMaximumStackSize KEYWORD2
+setBufferingSize    KEYWORD2
+connect KEYWORD2
+disconnect  KEYWORD2
+connected   KEYWORD2
+loop    KEYWORD2
+Send_Json   KEYWORD2
+Send_Json_String    KEYWORD2
+Claim_Request   KEYWORD2
+Provision_Request   KEYWORD2
+sendTelemetryData   KEYWORD2
+sendTelemetry   KEYWORD2
+sendTelemetryJson   KEYWORD2
+sendAttributeData   KEYWORD2
+sendAttributes  KEYWORD2
+sendAttributeJSON   KEYWORD2
+Client_Attributes_Request   KEYWORD2
+RPC_Subscribe   KEYWORD2
+RPC_Request KEYWORD2
+Start_Firmware_Update   KEYWORD2
+Stop_Firmware_Update    KEYWORD2
+Subscribe_Firmware_Update   KEYWORD2
+Firmware_Send_Info  KEYWORD2
+Firmware_Send_State KEYWORD2
+Shared_Attributes_Request   KEYWORD2
+Shared_Attributes_Subscribe KEYWORD2
+IsEmpty KEYWORD2
+SerializeKeyValue   KEYWORD2
+Get_Attributes  KEYWORD2
+Set_Attributes  KEYWORD2
+Get_Request_ID  KEYWORD2
+Set_Request_ID  KEYWORD2
+Get_Name    KEYWORD2
+Set_Name    KEYWORD2
+Get_Parameters  KEYWORD2
+Set_Parameters  KEYWORD2
+Get_Device_Key  KEYWORD2
+Set_Device_Key  KEYWORD2
+Get_Device_Secret   KEYWORD2
+Set_Device_Secret   KEYWORD2
+Get_Device_Name KEYWORD2
+Set_Device_Name KEYWORD2
+Get_Device_Access_Token KEYWORD2
+Set_Device_Access_Token KEYWORD2
+Get_Credentials_Username    KEYWORD2
+Set_Credentials_Username    KEYWORD2
+Get_Credentials_Password    KEYWORD2
+Set_Credentials_Password    KEYWORD2
+Get_Credentials_Client_ID   KEYWORD2
+Set_Credentials_Client_ID   KEYWORD2
+Get_Certificate_Hash    KEYWORD2
+Set_Certificate_Hash    KEYWORD2
+Get_Credentials_Type    KEYWORD2
+Call_Progress_Callback  KEYWORD2
+Set_Progress_Callback   KEYWORD2
+Get_Firmware_Title  KEYWORD2
+Set_Firmware_Title  KEYWORD2
+Get_Firmware_Version    KEYWORD2
+Set_Firmware_Version    KEYWORD2
+Get_Updater KEYWORD2
+Set_Updater KEYWORD2
+Get_Chunk_Retries   KEYWORD2
+Set_Chunk_Retries   KEYWORD2
+Get_Chunk_Size  KEYWORD2
+Set_Chunk_Size  KEYWORD2
+Get_Timeout KEYWORD2
+Set_Timeout KEYWORD2
+Call_Callback   KEYWORD2
+Set_Callback    KEYWORD2
+begin   KEYWORD2
+write   KEYWORD2
+reset   KEYWORD2
+end KEYWORD2
+Get_Attribute_Key   KEYWORD2
+Set_Attribute_Key   KEYWORD2
+detectSize  KEYWORD2
+getOccurences   KEYWORD2
+Measure_Json    KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+THINGSBOARD_ENABLE_STL	LITERAL1
+THINGSBOARD_ENABLE_OTA  LITERAL1
+THINGSBOARD_ENABLE_PROGMEM  LITERAL1
+THINGSBOARD_ENABLE_DYNAMIC  LITERAL1
+THINGSBOARD_ENABLE_DEBUG    LITERAL1
+THINGSBOARD_ENABLE_STREAM_UTILS LITERAL1
+THINGSBOARD_ENABLE_PSRAM    LITERAL1

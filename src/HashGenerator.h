@@ -25,11 +25,14 @@
 class HashGenerator {
   public:
     /// @brief Constructor
-    /// @param type Supported type of hash that should be generated from this class
-    HashGenerator(const mbedtls_md_type_t& type);
+    HashGenerator(void);
 
     /// @brief Destructor
     ~HashGenerator(void);
+
+    /// @brief Start the hashing process
+    /// @param type Supported type of hash that should be generated from this class
+    void start(const mbedtls_md_type_t& type);
 
     /// @brief Update the current hash value with new data
     /// @param data Data that should be added to generate the hash
@@ -41,7 +44,7 @@ class HashGenerator {
     /// @return String containing the final hash value for the passed bytes
     std::string get_hash_string();
 
-private:
+  private:
     /// @brief Calculates the final hash value
     /// @param hash Output byte array that the hash value will be copied into
     void finish(unsigned char *hash);
