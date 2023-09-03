@@ -18,6 +18,7 @@
 
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
 
@@ -92,8 +93,11 @@ TinyGsm modem(serialGsm);
 // Initialize GSM client
 TinyGsmClient client(modem);
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(client);
+
 // Initialize ThingsBoard instance
-ThingsBoard tb(client, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
