@@ -24,7 +24,7 @@
 /// In this case the main use case of the seperation is to both support Espressif IDF and Arduino with the following libraries as recommendations.
 /// The default MQTT Client for Arduino is the PubSubClient forked from ThingsBoard (https://github.com/thingsboard/pubsubclient),
 /// it includes fixes to solve issues with using std::function callbacks for non ESP boards.
-/// For Espressif IDF however the default MQTT Client is the esp-mqtt (https://github.com/espressif/esp-mqtt) component.
+/// For Espressif IDF however the default MQTT Client is the esp-mqtt (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html) component.
 /// When using an implementation that does not allow for Arduino it is additional important to disable support for THINGSBOARD_ENABLE_STREAM_UTILS,
 /// because this feature relies on Arduino as it improves the underlying data streams to directly write the data into the MQTT Client,
 /// but wrirting each byte one by one, would be too slow, therefore the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library is used to buffer thoose calls into bigger packets.
@@ -77,14 +77,14 @@ class IMQTT_Client {
     /// @param id Client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker
     /// @param user Client usernam that is used to authenticate, who is connecting over MQTT
     /// @param pass Client password that isused to authenticate, who is connecting over MQTT
-    /// @return Wether the client could establish the connection successfully or not
+    /// @return Whether the client could establish the connection successfully or not
     virtual bool connect(const char *client_id, const char *user_name, const char *password) = 0;
 
     /// @brief Disconnects from a previously connected server and should release all used resources
     virtual void disconnect() = 0;
   
     /// @brief Receives and sends any outstanding messages from and to the MQTT broker
-    /// @return Wether sending or receiving the oustanding the messages was successfull or not,
+    /// @return Whether sending or receiving the oustanding the messages was successful or not,
     /// should return false if an internal error occured or the connection has been lost
     virtual bool loop() = 0;
 
@@ -92,7 +92,7 @@ class IMQTT_Client {
     /// @param topic Topic that the message is sent over, where different MQTT topics expect a different kind of payload
     /// @param payload Payload containg the json data that should be sent
     /// @param length Length of the payload in bytes
-    /// @return Wether publishing the payload on the given topic was successfull or not
+    /// @return Whether publishing the payload on the given topic was successful or not
     virtual bool publish(const char *topic, const uint8_t *payload, const uint32_t& length) = 0;
 
     /// @brief Subscribes to MQTT message on the given topic, which will cause an internal callback to be called for each message received on that topic from the server,
@@ -120,11 +120,11 @@ class IMQTT_Client {
     /// To use this feature first call begin_publish(), followed by multiple calls to write() and then ending with a call to end_publish()
     /// @param topic Topic that the message is sent over, where different MQTT topics expect a different kind of payload
     /// @param length Length of the payload in bytes
-    /// @return Wether starting to publish on the given topic was successfull or not
+    /// @return Whether starting to publish on the given topic was successful or not
     virtual bool begin_publish(const char *topic, const uint32_t& length) = 0;
 
     /// @brief Finishes any publish message started with begin_publish()
-    /// @return Wether the complete packet was sent successfully or not
+    /// @return Whether the complete packet was sent successfully or not
     virtual bool end_publish() = 0;
 
     //----------------------------------------------------------------------------

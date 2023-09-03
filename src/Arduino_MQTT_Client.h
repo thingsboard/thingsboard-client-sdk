@@ -14,7 +14,7 @@
 #include <TBPubSubClient.h>
 
 /// @brief MQTT Client interface imnplementation that uses the PubSubClient forked from ThingsBoard (https://github.com/thingsboard/pubsubclient),
-/// under the hood to establis and communicate over a MQTT connection. The fork includes fixes to solve issues with using std::function callbacks for non ESP boards
+/// under the hood to establish and communicate over a MQTT connection. The fork includes fixes to solve issues with using std::function callbacks for non ESP boards
 class Arduino_MQTT_Client : public IMQTT_Client {
   public:
     /// @brief Constructs a IMQTT_Client implementation without a network client, meaning it has to be added later with the set_client() and set_buffer_size() method
