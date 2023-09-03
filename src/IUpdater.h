@@ -31,8 +31,7 @@ class IUpdater {
     virtual size_t write(uint8_t* payload, const size_t& total_bytes) = 0;
   
     /// @brief Resets the writing of the given data so it can be restarted with begin
-    /// @return Wether reseting was successful or not
-    virtual bool reset() = 0;
+    virtual void reset() = 0;
   
     /// @brief Ends the update and returns wheter it was successfully completed
     /// @return Wether the complete amount of bytes initally given was successfully written or not

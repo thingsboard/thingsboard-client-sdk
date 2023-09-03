@@ -16,8 +16,8 @@ size_t ESP8266_Updater::write(uint8_t* payload, const size_t& total_bytes) {
     return Update.write(payload, total_bytes);
 }
 
-bool ESP8266_Updater::reset() {
-    return true;
+void ESP8266_Updater::reset() {
+    // Nothing to do
 }
 
 bool ESP8266_Updater::end() {
