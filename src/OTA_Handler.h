@@ -145,7 +145,7 @@ class OTA_Handler {
     /// @param current_chunk Index of the chunk we recieved the binary data for
     /// @param payload Firmware packet data of the current chunk
     /// @param total_bytes Amount of bytes in the current firmware packet data
-    inline void Process_Firmware_Packet(const uint32_t& current_chunk, uint8_t *payload, const uint32_t& total_bytes) {
+    inline void Process_Firmware_Packet(const uint32_t& current_chunk, uint8_t *payload, const unsigned int& total_bytes) {
         (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
 
         if (current_chunk != m_requested_chunks) {

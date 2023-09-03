@@ -1583,7 +1583,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    inline void process_firmware_response(char *topic, uint8_t *payload, const uint32_t length) {
+    inline void process_firmware_response(char *topic, uint8_t *payload, const unsigned int& length) {
       // Remove the not needed part of the topic
       const size_t index = strlen(FIRMWARE_RESPONSE_TOPIC) + 1U;
 #if THINGSBOARD_ENABLE_STL
@@ -1850,7 +1850,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over 
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    inline void onMQTTMessage(char *topic, uint8_t *payload, uint32_t length) {
+    inline void onMQTTMessage(char *topic, uint8_t *payload, unsigned int length) {
 #if THINGSBOARD_ENABLE_DEBUG
       char message[JSON_STRING_SIZE(strlen(RECEIVE_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
       snprintf_P(message, sizeof(message), RECEIVE_MESSAGE, topic);
