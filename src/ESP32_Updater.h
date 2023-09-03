@@ -14,8 +14,8 @@
 
 #ifdef ESP32
 
-// Library include.
-#include <IUpdater.h>
+// Local include.
+#include "IUpdater.h"
 
 class ESP32_Updater : public IUpdater {
   public:

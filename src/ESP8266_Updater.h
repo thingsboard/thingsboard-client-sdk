@@ -14,8 +14,8 @@
 
 #ifdef ESP8266
 
-// Library include.
-#include <IUpdater.h>
+// Local include.
+#include "IUpdater.h"
 
 class ESP8266_Updater : public IUpdater {
   public:

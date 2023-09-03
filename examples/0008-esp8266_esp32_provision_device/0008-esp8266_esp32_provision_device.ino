@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
 
@@ -195,8 +196,10 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 uint32_t previous_processing_time = 0U;
 
