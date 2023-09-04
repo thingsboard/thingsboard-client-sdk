@@ -31,17 +31,12 @@ jobs:
         - name: TBPubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
-        - name: Seeed_Arduino_mbedtls
-        - name: StreamUtils
-        - name: Ticker
-        - name: WiFiEsp
-        - name: TinyGSM
 
     strategy:
       matrix:
         board:
-          - fqbn: "arduino:renesas_uno:unor4wifi"
-            platform-name: arduino:renesas_uno
+          - fqbn: "arduino:uno"
+            platform-name: uno
 
     steps:
       - uses: actions/checkout@v3
