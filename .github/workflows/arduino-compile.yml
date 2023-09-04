@@ -35,7 +35,7 @@ jobs:
         - name: StreamUtils
         - name: Ticker
         - name: WiFiEsp
-        - name: TinyGsmClient
+        - name: TinyGSM
 
     strategy:
       matrix:
