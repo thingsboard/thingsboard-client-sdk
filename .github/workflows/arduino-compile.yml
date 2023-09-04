@@ -31,6 +31,9 @@ jobs:
         - name: TBPubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
+        - name: StreamUtils
+        - name: WiFiEsp
+        - name: TinyGSM
 
     strategy:
       matrix:
