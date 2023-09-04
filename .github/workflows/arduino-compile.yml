@@ -22,7 +22,7 @@ env:
 
 jobs:
   build:
-    name: Arduino Uno
+    name: ${{ matrix.board.fqbn }}
     runs-on: ubuntu-latest
     env:
       LIBRARIES: |
@@ -31,9 +31,13 @@ jobs:
         - name: TBPubSubClient
         - name: ArduinoHttpClient
         - name: ArduinoJson
-        - name: WiFiEsp
-        - name: TinyGSM
         - name: StreamUtils
+
+    strategy:
+      matrix:
+        board:
+          - fqbn: "arduino:renesas_uno:unor4wifi"
+            platform-name: arduino:renesas_uno
 
     steps:
       - uses: actions/checkout@v3
@@ -41,6 +45,8 @@ jobs:
       - name: Compile examples
         uses: arduino/compile-sketches@v1
         with:
+          platforms: ${{ matrix.platforms }}
+          fqbn: ${{ matrix.board.fqbn }}
           libraries: ${{ env.LIBRARIES }}
           enable-deltas-report: true
           sketch-paths: |
