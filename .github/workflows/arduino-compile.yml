@@ -35,8 +35,8 @@ jobs:
     strategy:
       matrix:
         board:
-          - fqbn: "arduino:uno"
-            platform-name: uno
+          - fqbn: "arduino:avr:nano"
+            platform-name: avr:nano
 
     steps:
       - uses: actions/checkout@v3
