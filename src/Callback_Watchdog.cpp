@@ -5,7 +5,9 @@
 
 // Library includes.
 #include <esp_timer.h>
-#include <Arduino.h>
+#if THINGSBOARD_ENABLE_PROGMEM
+#include <pgmspace.h>
+#endif // THINGSBOARD_ENABLE_PROGMEM
 
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char WATCHDOG_TIMER_NAME[] PROGMEM = "watchdog_timer";

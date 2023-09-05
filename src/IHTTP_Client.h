@@ -8,7 +8,11 @@
 #define IHTTP_Client_h
 
 // Library include.
+#if THINGSBOARD_ENABLE_STL
 #include <WString.h>
+#else
+#include <string>
+#endif // THINGSBOARD_ENABLE_STL
 
 
 /// @brief HTTP Client interface that contains the method that a class that can be used to send and receive data over an HTTP conection should implement.
@@ -53,11 +57,15 @@ class IHTTP_Client {
     /// @return hether the request was successful or not, returns 0 if successful or if not the internal error code
     virtual int get(const char *url_path) = 0;
 
-    /// @brief Returns the response body of a previously sent message as a String object,
+    /// @brief Returns the response body of a previously sent message as a string object,
     /// skips any response headers if they have not been read already,
     /// should be called after calling get_response_status_code() and ensuring the request was successful
     /// @return Response body of a request
+#if THINGSBOARD_ENABLE_STL
     virtual String get_response_body() = 0;
+#else
+    virtual std::string get_response_body() = 0;
+#endif // THINGSBOARD_ENABLE_STL
 };
 
 #endif // IHTTP_Client_h

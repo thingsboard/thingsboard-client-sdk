@@ -40,7 +40,11 @@ class Arduino_HTTP_Client : public IHTTP_Client {
 
     int get(const char *url_path) override;
 
+#if THINGSBOARD_ENABLE_STL
     String get_response_body() override;
+#else
+    std::string get_response_body() override;
+#endif // THINGSBOARD_ENABLE_STL
 
   private:
     HttpClient m_http_client;

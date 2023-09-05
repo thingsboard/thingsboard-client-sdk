@@ -114,9 +114,9 @@
 #  endif
 
 // Enables the ThingsBoard class to save the allocated memory of the DynamicJsonDocument into psram instead of onto the sram.
-// Enabled by default if THINGSBOARD_ENABLE_DYNAMIC has been set, because it requries DynamicJsonDocument to work.
-// If enabled the program might be slightly slower and all the memory will be placed onto psram instead of sram.
-// See https://arduinojson.org/v6/api/basicjsondocument/ for the main difference in the underlying code.
+// Enabled by default if THINGSBOARD_ENABLE_DYNAMIC has been set and the esp_heap_caps header exists, because it requries DynamicJsonDocument to work.
+// If enabled the program might be slightly slower, but all the memory will be placed onto psram instead of sram, meaning the sram can be allocated for other things.
+// See https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/ and https://arduinojson.org/v6/api/basicjsondocument/ for for the main difference in the underlying code.
 #  ifdef __has_include
 #    if  THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
 #      ifndef THINGSBOARD_ENABLE_PSRAM
