@@ -13,12 +13,13 @@
 #if THINGSBOARD_ENABLE_OTA
 
 // Library includes.
-#ifdef ESP32
+#if THINGSBOARD_USE_MBED_TLS
 #include <mbedtls/md.h>
 #else
 #include <Seeed_mbedtls.h>
-#endif // ESP32
+#endif // THINGSBOARD_USE_MBED_TLS
 #include <string>
+
 
 /// @brief Allows generating a hash of the given type
 /// with partial data and then retreiving the completed hash once it has been completed

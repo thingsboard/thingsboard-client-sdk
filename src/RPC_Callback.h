@@ -11,8 +11,10 @@
 #include "Callback.h"
 #include "RPC_Response.h"
 
+
 // JSON variant const (read only twice as small as JSON variant), is used to communicate RPC parameters to the client
 using RPC_Data = const JsonVariantConst;
+
 
 /// @brief RPC callback wrapper
 class RPC_Callback : public Callback<RPC_Response, RPC_Data&> {

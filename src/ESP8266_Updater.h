@@ -17,6 +17,7 @@
 // Local include.
 #include "IUpdater.h"
 
+
 class ESP8266_Updater : public IUpdater {
   public:
     bool begin(const size_t& firmware_size) override;
