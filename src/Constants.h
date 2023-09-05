@@ -14,6 +14,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
 #define Default_Buffering_Size 64
 #define Default_Payload 64
@@ -30,6 +31,7 @@ class ThingsBoardDefaultLogger;
 #define vsnprintf_P   vsnprintf
 #endif // vsnprintf_P
 #endif // THINGSBOARD_ENABLE_PROGMEM
+
 
 /// ---------------------------------
 /// Constant strings in flash memory,
@@ -53,6 +55,7 @@ constexpr char CONNECT_FAILED[] = "Connecting to server failed";
 constexpr char UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
+
 
 #if THINGSBOARD_ENABLE_PSRAM
   #include <esp_heap_caps.h>

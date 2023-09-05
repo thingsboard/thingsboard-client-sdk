@@ -16,6 +16,7 @@
 #include <vector>
 #endif // THINGSBOARD_ENABLE_STL
 
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
@@ -28,6 +29,7 @@ constexpr char ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
 // Convenient aliases
 // JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes and Provision Data to the client
 using Shared_Attribute_Data = const JsonObjectConst;
+
 
 /// @brief Shared attributes callback wrapper
 class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_Data&>  {

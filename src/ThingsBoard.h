@@ -25,6 +25,7 @@
 #include <StreamUtils.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
@@ -293,6 +294,7 @@ constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 #endif // THINGSBOARD_ENABLE_OTA
+
 
 #if THINGSBOARD_ENABLE_DYNAMIC
 /// @brief Wrapper around any arbitrary MQTT Client implementing the IMQTT_Client interface, to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol.

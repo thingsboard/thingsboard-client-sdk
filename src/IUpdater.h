@@ -16,6 +16,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
 /// @brief Updater interface that contains the method that a class that can be used to flash given binary data onto a device has to implement
 class IUpdater {
   public:

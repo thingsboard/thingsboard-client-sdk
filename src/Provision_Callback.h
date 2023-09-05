@@ -13,6 +13,7 @@
 // Library includes.
 #include <ArduinoJson.h>
 
+
 // Convenient aliases
 using Provision_Data = const JsonObjectConst;
 
@@ -21,6 +22,7 @@ struct Access_Token{};
 struct Device_Access_Token{};
 struct Basic_MQTT_Credentials{};
 struct X509_Certificate{};
+
 
 /// @brief Provisioning callback wrapper
 class Provision_Callback : public Callback<void, const Provision_Data&> {

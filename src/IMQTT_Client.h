@@ -19,6 +19,7 @@
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #include <stdint.h>
 
+
 /// @brief MQTT Client interface that contains the method that a class that can be used to send and receive data over an MQTT connection should implement.
 /// Seperates the specific implementation used from the ThingsBoard client, allows to use differnt clients depending on different needs.
 /// In this case the main use case of the seperation is to both support Espressif IDF and Arduino with the following libraries as recommendations.

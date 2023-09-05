@@ -10,6 +10,7 @@
 // Library include.
 #include <stdint.h>
 
+
 enum class OTA_Failure_Response : const uint8_t {
     RETRY_CHUNK,
     RETRY_UPDATE,

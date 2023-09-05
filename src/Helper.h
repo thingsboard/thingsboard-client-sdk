@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <ArduinoJson.h>
 
+
 /// @brief Static helper class that includes some uniliterally used functionalities in multiple places
 class Helper {
   public:

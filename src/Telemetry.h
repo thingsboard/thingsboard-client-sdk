@@ -16,6 +16,7 @@
 #include <type_traits>
 #endif // THINGSBOARD_ENABLE_STL
 
+
 /// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
   public:

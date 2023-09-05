@@ -44,6 +44,38 @@
 #    endif
 #  endif
 
+// Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
+// because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
+#  ifdef __has_include
+#    if  __has_include(<esp_timer.h>)
+#      ifndef THINGSBOARD_USE_ESP_TIMER
+#        define THINGSBOARD_USE_ESP_TIMER 1
+#      endif
+#    else
+#      ifndef THINGSBOARD_USE_ESP_TIMER
+#        define THINGSBOARD_USE_ESP_TIMER 0
+#      endif
+#    endif
+#  else
+#    define THINGSBOARD_USE_ESP_TIMER 0
+#  endif
+
+// Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
+// because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
+#  ifdef __has_include
+#    if  __has_include(<mbedtls/md.h>)
+#      ifndef THINGSBOARD_USE_MBED_TLS
+#        define THINGSBOARD_USE_MBED_TLS 1
+#      endif
+#    else
+#      ifndef THINGSBOARD_USE_MBED_TLS
+#        define THINGSBOARD_USE_MBED_TLS 0
+#      endif
+#    endif
+#  else
+#    define THINGSBOARD_USE_MBED_TLS 0
+#  endif
+
 // Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
 #  ifdef __has_include
 #    if  __has_include(<pgmspace.h>)

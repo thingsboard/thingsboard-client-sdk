@@ -13,6 +13,7 @@
 // Library includes.
 #include <ArduinoJson.h>
 
+
 /// @brief RPC request callback wrapper
 class RPC_Request_Callback : public Callback<void, const JsonVariantConst&> {
   public:

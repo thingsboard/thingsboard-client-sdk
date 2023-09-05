@@ -14,6 +14,10 @@
 
 // Library includes.
 #include <functional>
+#if !THINGSBOARD_USE_ESP_TIMER
+#include <Ticker.h>
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
 
 /// @brief Wrapper class around the esp_timer, allowing to start and stop timers. Is meant to be started with once(),
 /// which will then call the registered callback after timeout if the detach() method has not been called before the time passed.
@@ -37,13 +41,21 @@ class Callback_Watchdog {
 
   private:
     std::function<void(void)> m_callback;
+#if THINGSBOARD_USE_ESP_TIMER
     void *m_oneshot_timer;
+#else
+    Ticker m_oneshot_timer;
+#endif // THINGSBOARD_USE_ESP_TIMER
 
     static Callback_Watchdog *m_instance;
 
     /// @brief Static callback used to call the initally subscribed callback, if the internal watchdog has not been fed with detach()
+#if THINGSBOARD_USE_ESP_TIMER
     /// @param arg Possible argument passed to the timer callback
     static void oneshot_timer_callback(void *arg);
+#else
+    static void oneshot_timer_callback();
+#endif // THINGSBOARD_USE_ESP_TIMER
 };
 
 #endif // THINGSBOARD_ENABLE_OTA

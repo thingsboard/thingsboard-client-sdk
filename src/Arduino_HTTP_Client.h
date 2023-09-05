@@ -13,6 +13,7 @@
 // Local includes.
 #include "IHTTP_Client.h"
 
+
 /// @brief HTTP Client interface imnplementation that uses the ArduinoHttpClient (https://github.com/arduino-libraries/ArduinoHttpClient),
 /// under the hood to establish and communicate over a HTTP connection
 class Arduino_HTTP_Client : public IHTTP_Client {
