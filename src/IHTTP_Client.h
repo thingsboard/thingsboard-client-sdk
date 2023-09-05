@@ -9,9 +9,9 @@
 
 // Library include.
 #if THINGSBOARD_ENABLE_STL
-#include <WString.h>
-#else
 #include <string>
+#else
+#include <WString.h>
 #endif // THINGSBOARD_ENABLE_STL
 
 
@@ -62,9 +62,9 @@ class IHTTP_Client {
     /// should be called after calling get_response_status_code() and ensuring the request was successful
     /// @return Response body of a request
 #if THINGSBOARD_ENABLE_STL
-    virtual String get_response_body() = 0;
-#else
     virtual std::string get_response_body() = 0;
+#else
+    virtual String get_response_body() = 0;
 #endif // THINGSBOARD_ENABLE_STL
 };
 
