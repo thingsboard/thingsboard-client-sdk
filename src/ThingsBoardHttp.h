@@ -199,7 +199,11 @@ class ThingsBoardHttpSized {
     /// @param response String the GET response will be copied into,
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
+#if THINGSBOARD_ENABLE_STL
+    inline bool sendGetRequest(const char* path, std::string& response) {
+#else
     inline bool sendGetRequest(const char* path, String& response) {
+#endif // THINGSBOARD_ENABLE_STL
       return getMessage(path, response);
     }
 
@@ -289,7 +293,11 @@ class ThingsBoardHttpSized {
     /// @param response String the GET response will be copied into,
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
+#if THINGSBOARD_ENABLE_STL
+    inline bool getMessage(const char* path, std::string& response) {
+#else
     inline bool getMessage(const char* path, String& response) {
+#endif // THINGSBOARD_ENABLE_STL
       bool result = true;
 
       const bool success = m_client.get(path);

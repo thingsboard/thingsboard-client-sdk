@@ -11,8 +11,12 @@
 #include "Configuration.h"
 
 // Library includes.
-#include <Arduino.h>
+#if THINGSBOARD_ENABLE_PROGMEM
+#include <pgmspace.h>
+#endif // THINGSBOARD_ENABLE_PROGMEM
+#if THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 #include <ArduinoJson.h>
+#endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 
 
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
@@ -75,7 +79,7 @@ constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocu
   };
 
   using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
-#else
+#elif THINGSBOARD_ENABLE_DYNAMIC
   using TBJsonDocument = DynamicJsonDocument;
 #endif
 
