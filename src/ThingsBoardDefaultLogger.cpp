@@ -10,10 +10,15 @@
 #endif // THINGSBOARD_ENABLE_PROGMEM
 #include <cstdio>
 
-void ThingsBoardDefaultLogger::log(const char *msg) {
+
+// Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
-    printf(F("[TB] %s \r\n"), msg);
+constexpr char LOG_MESSAGE_FORMAT[] PROGMEM = "[TB] %s\n";
 #else
-    printf("[TB] %s \r\n", msg);
+constexpr char LOG_MESSAGE_FORMAT[] = "[TB] %s\n";
 #endif // THINGSBOARD_ENABLE_PROGMEM
+
+
+void ThingsBoardDefaultLogger::log(const char *msg) {
+    printf(LOG_MESSAGE_FORMAT, msg);
 }
