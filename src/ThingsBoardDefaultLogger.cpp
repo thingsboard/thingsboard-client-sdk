@@ -8,13 +8,12 @@
 #if THINGSBOARD_ENABLE_PROGMEM
 #include <WString.h>
 #endif // THINGSBOARD_ENABLE_PROGMEM
-#include <HardwareSerial.h>
+#include <cstdio>
 
 void ThingsBoardDefaultLogger::log(const char *msg) {
 #if THINGSBOARD_ENABLE_PROGMEM
-    Serial.print(F("[TB] "));
+    printf(F("[TB] %s \r\n"), msg);
 #else
-    Serial.print("[TB] ");
+    printf("[TB] %s \r\n", msg);
 #endif // THINGSBOARD_ENABLE_PROGMEM
-    Serial.println(msg);
 }

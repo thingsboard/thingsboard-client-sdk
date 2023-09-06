@@ -34,6 +34,9 @@ class ThingsBoardDefaultLogger;
 #ifndef vsnprintf_P
 #define vsnprintf_P   vsnprintf
 #endif // vsnprintf_P
+#ifndef strncmp_P
+#define strncmp_P   strncmp
+#endif // strncmp_P
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 
