@@ -23,11 +23,12 @@ ThingsBoard SDK can be installed directly from the [Arduino Library manager](htt
 Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
- - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`.
  - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — for dealing with `JSON` files.
- - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with ThingsBoard using `HTTP/S`.
+
 
 **Needs to be installed manually:**
+ - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`.
+ - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`.
  - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
  - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` in combination with a `ESP8266`.
 
