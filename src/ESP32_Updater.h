@@ -12,7 +12,7 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-#ifdef ESP32 && ARDUINO
+#if defined(ESP32) && defined(ARDUINO)
 
 // Local include.
 #include "IUpdater.h"
@@ -29,7 +29,7 @@ class ESP32_Updater : public IUpdater {
     bool end() override;
 };
 
-#endif // ESP32 && ARDUINO
+#endif // defined(ESP32) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA
 

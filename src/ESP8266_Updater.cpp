@@ -3,7 +3,7 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-#ifdef ESP8266 && ARDUINO
+#if defined(ESP8266) && defined(ARDUINO)
 
 // Library include.
 #include <Updater.h>
@@ -24,6 +24,6 @@ bool ESP8266_Updater::end() {
     return Update.end();
 }
 
-#endif // ESP8266 && ARDUINO
+#endif // defined(ESP8266) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA
