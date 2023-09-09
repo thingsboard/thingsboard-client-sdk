@@ -29,7 +29,10 @@ Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback) :
 #if THINGSBOARD_USE_ESP_TIMER
     const esp_timer_create_args_t oneshot_timer_args = {
             .callback = &oneshot_timer_callback,
-            .name = WATCHDOG_TIMER_NAME
+            .arg = nullptr,
+            .dispatch_method = esp_timer_dispatch_t::ESP_TIMER_TASK,
+            .name = WATCHDOG_TIMER_NAME,
+            .skip_unhandled_events = false,
     };
     // Temporary handle is used, because it allows using a void* as the actual oneshot_timer,
     // allowing us to only include the esp_timer header in the defintion (.cpp) file,

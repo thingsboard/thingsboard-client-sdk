@@ -12,7 +12,7 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-#ifdef ESP8266 && ARDUINO
+#if defined(ESP8266) && defined(ARDUINO)
 
 // Local include.
 #include "IUpdater.h"
@@ -29,7 +29,7 @@ class ESP8266_Updater : public IUpdater {
     bool end() override;
 };
 
-#endif // ESP8266 && ARDUINO
+#endif // defined(ESP8266) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA
 
