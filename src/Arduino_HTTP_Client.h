@@ -7,6 +7,8 @@
 #ifndef Arduino_HTTP_Client_h
 #define Arduino_HTTP_Client_h
 
+#ifdef ARDUINO
+
 // Library includes.
 #include <ArduinoHttpClient.h>
 
@@ -49,5 +51,7 @@ class Arduino_HTTP_Client : public IHTTP_Client {
   private:
     HttpClient m_http_client;
 };
+
+#endif // ARDUINO
 
 #endif // Arduino_HTTP_Client_h

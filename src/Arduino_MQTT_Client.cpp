@@ -1,6 +1,8 @@
 // Header include.
 #include "Arduino_MQTT_Client.h"
 
+#ifdef ARDUINO
+
 Arduino_MQTT_Client::Arduino_MQTT_Client() :
     m_mqtt_client()
 {
@@ -78,5 +80,7 @@ size_t Arduino_MQTT_Client::write(uint8_t payload_byte) {
 size_t Arduino_MQTT_Client::write(const uint8_t *buffer, size_t size) {
     return m_mqtt_client.write(buffer, size);
 }
+
+#endif // ARDUINO
 
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
