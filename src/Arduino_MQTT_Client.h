@@ -7,6 +7,8 @@
 #ifndef Arduino_MQTT_Client_h
 #define Arduino_MQTT_Client_h
 
+#ifdef ARDUINO
+
 // Local includes.
 #include "IMQTT_Client.h"
 
@@ -72,5 +74,7 @@ class Arduino_MQTT_Client : public IMQTT_Client {
   private:
     PubSubClient m_mqtt_client;
 };
+
+#endif // ARDUINO
 
 #endif // Arduino_MQTT_Client_h

@@ -1,6 +1,8 @@
 // Header include.
 #include "Arduino_HTTP_Client.h"
 
+#ifdef ARDUINO
+
 Arduino_HTTP_Client::Arduino_HTTP_Client(Client& transport_client, const char *host, const uint16_t& port) :
     m_http_client(transport_client, host, port)
 {
@@ -41,3 +43,5 @@ String Arduino_HTTP_Client::get_response_body() {
     return m_http_client.responseBody();
 #endif // THINGSBOARD_ENABLE_STL
 }
+
+#endif // ARDUINO
