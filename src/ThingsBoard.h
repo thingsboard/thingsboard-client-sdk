@@ -1027,11 +1027,11 @@ class ThingsBoardSized {
     }
 
     /// @brief Clears all currently subscribed callbacks and unsubscribed from all
-    /// currently subscribed MQTT topics, any response that will stil be received for a sent request is discarded
+    /// currently subscribed MQTT topics, any response that will stil be received is discarded
     /// and any ongoing firmware update is aborted and will not be finished.
     /// Was previously done automatically in the connect() method, but is not done anymore,
-    /// because the MQTT topic subscription is still kept even if a device reconnects,
-    /// therefore there is no need to discard all previously subscribed events
+    /// because connect() method now reconencts to all previously subscribed MQTT topics instead,
+    /// therefore there is no need anymore to discard all previously subscribed callbacks and letting the user resubscribe
     inline void Cleanup_Subscriptions() {
       // Cleanup all server-side RPC subscriptions
       this->RPC_Unsubscribe();
@@ -1041,7 +1041,7 @@ class ThingsBoardSized {
       this->Shared_Attributes_Unsubscribe();
       // Cleanup all client-side or shared attributes requests
       this->Attributes_Request_Unsubscribe();
-      // Cleanup all provision subscriptions
+      // Cleanup all provision requests
       this->Provision_Unsubscribe();
       // Stop any ongoing Firmware update,
       // which will in turn cleanup the internal member variables of the OTAHandler class
@@ -1049,7 +1049,7 @@ class ThingsBoardSized {
       // and inform the user of the failed firmware update
       this->Stop_Firmware_Update();
     }
-
+  
   private:
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -1381,9 +1381,25 @@ class ThingsBoardSized {
       
       if (!connection_result) {
         Logger::log(CONNECT_FAILED);
+        return connection_result;
       }
 
+      // Only attempt to resubscribe if we connected successfully
+      Resubscribe_Topics();
       return connection_result;
+    }
+
+    /// @brief Resubscribes to topics that establish a permanent connection with MQTT, meaning they may receive more than one event over their lifetime,
+    /// whereas other events that are only ever called once and then deleted after they have been handled are not resubscribed.
+    /// This is done, because the chance of disconnecting the moment when a request event (provisioning, attribute request, client-side rpc) was sent
+    /// and then reconnecting and resubscribing to that topic fast enough to still receive the message is not feasible
+    inline void Resubscribe_Topics() {
+      if (!m_rpc_callbacks.empty()) {
+        m_client.subscribe(RPC_SUBSCRIBE_TOPIC);
+      }
+      if (!m_shared_attribute_update_callbacks.empty()) {
+        m_client.subscribe(ATTRIBUTE_TOPIC);
+      }
     }
 
 #if !THINGSBOARD_ENABLE_DYNAMIC
