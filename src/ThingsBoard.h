@@ -1041,6 +1041,30 @@ class ThingsBoardSized {
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
     }
 
+    /// @brief Clears all currently subscribed callbacks and unsubscribed from all
+    /// currently subscribed MQTT topics, any response that will stil be received for a sent request is discarded
+    /// and any ongoing firmware update is aborted and will not be finished.
+    /// Was previously done automatically in the connect() method, but is not done anymore,
+    /// because the MQTT topic subscription is still kept even if a device reconnects,
+    /// therefore there is no need to discard all previously subscribed events
+    inline void Cleanup_Subscriptions() {
+      // Cleanup all server-side RPC subscriptions
+      this->RPC_Unsubscribe();
+      // Cleanup all client-side RPC requests
+      this->RPC_Request_Unsubscribe();
+      // Cleanup all shared attributes subscriptions
+      this->Shared_Attributes_Unsubscribe();
+      // Cleanup all client-side or shared attributes requests
+      this->Attributes_Request_Unsubscribe();
+      // Cleanup all provision subscriptions
+      this->Provision_Unsubscribe();
+      // Stop any ongoing Firmware update,
+      // which will in turn cleanup the internal member variables of the OTAHandler class
+      // as well as all firmware subscriptions
+      // and inform the user of the failed firmware update
+      this->Stop_Firmware_Update();
+    }
+
   private:
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -1369,17 +1393,11 @@ class ThingsBoardSized {
     /// @return Whether connecting to ThingsBoard was successful or not
     inline bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
       const bool connection_result = m_client.connect(client_id, access_token, password);
+      
       if (!connection_result) {
         Logger::log(CONNECT_FAILED);
-        return connection_result;
       }
 
-      this->RPC_Unsubscribe(); // Cleanup all server-side RPC subscriptions
-      this->RPC_Request_Unsubscribe(); // Cleanup all client-side RPC requests
-      this->Shared_Attributes_Unsubscribe(); // Cleanup all shared attributes subscriptions
-      this->Attributes_Request_Unsubscribe(); // Cleanup all client-side or shared attributes requests
-      this->Provision_Unsubscribe(); // Cleanup all provision subscriptions
-      // Firmware subscriptions are not cleaned up to ensure that it can be continued if the connection drops while the update is ongoing
       return connection_result;
     }
 
