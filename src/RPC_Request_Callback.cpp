@@ -31,11 +31,11 @@ RPC_Request_Callback::RPC_Request_Callback(const char *methodName, const JsonArr
     // Nothing to do
 }
 
-const uint32_t& RPC_Request_Callback::Get_Request_ID() const {
+const size_t& RPC_Request_Callback::Get_Request_ID() const {
     return m_request_id;
 }
 
-void RPC_Request_Callback::Set_Request_ID(const uint32_t &request_id) {
+void RPC_Request_Callback::Set_Request_ID(const size_t &request_id) {
     m_request_id = request_id;
 }
 

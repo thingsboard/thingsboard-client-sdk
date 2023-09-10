@@ -75,7 +75,7 @@ class ThingsBoardHttpSized {
     /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     inline ThingsBoardHttpSized(IHTTP_Client& client, const char *access_token,
-                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const uint32_t& maxStackSize = Default_Max_Stack_Size)
+                                const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const size_t& maxStackSize = Default_Max_Stack_Size)
       : m_client(client)
       , m_max_stack(maxStackSize)
       , m_host(host)
@@ -88,7 +88,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
-    inline void setMaximumStackSize(const uint32_t& maxStackSize) {
+    inline void setMaximumStackSize(const size_t& maxStackSize) {
       m_max_stack = maxStackSize;
     }
 
@@ -99,7 +99,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool Send_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
+    inline bool Send_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
       if (source.isNull()) {
@@ -107,7 +107,7 @@ class ThingsBoardHttpSized {
         return false;
       }
 #if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t amount = source.size();
+      const size_t amount = source.size();
       if (MaxFieldsAmt < amount) {
         char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt);
@@ -190,7 +190,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendTelemetryJson(const TSource& source, const uint32_t& jsonSize) {
+    inline bool sendTelemetryJson(const TSource& source, const size_t& jsonSize) {
       return Send_Json(HTTP_TELEMETRY_TOPIC, source, jsonSize);
     }
 
@@ -249,7 +249,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendAttributeJSON(const TSource& source, const uint32_t& jsonSize) {
+    inline bool sendAttributeJSON(const TSource& source, const size_t& jsonSize) {
       return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
     }
 
@@ -257,7 +257,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
-    inline const uint32_t& getMaximumStackSize() const {
+    inline const size_t& getMaximumStackSize() const {
       return m_max_stack;
     }
 
@@ -328,7 +328,7 @@ class ThingsBoardHttpSized {
       // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
       // Data structure size depends on the amount of key value pairs passed.
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
+      const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
       TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -375,7 +375,7 @@ class ThingsBoardHttpSized {
     }
 
     IHTTP_Client& m_client; // HttpClient instance
-    uint32_t m_max_stack; // Maximum stack size we allocate at once on the stack.
+    size_t m_max_stack; // Maximum stack size we allocate at once on the stack.
     const char *m_host; // Host address we connect too
     const uint16_t m_port; // Port we connect over
     const char *m_token; // Access token used to connect with

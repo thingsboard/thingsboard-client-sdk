@@ -49,7 +49,7 @@ constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary d
 constexpr char UPDATING_HASH_FAILED[] PROGMEM = "Updating hash failed";
 constexpr char ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
 constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
-constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%i), with size (%u) bytes";
+constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%u), with size (%u) bytes";
 constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
 constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
@@ -63,7 +63,7 @@ constexpr char ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data to f
 constexpr char UPDATING_HASH_FAILED[] = "Updating hash failed";
 constexpr char ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
 constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
-constexpr char FW_CHUNK[] = "Receive chunk (%i), with size (%u) bytes";
+constexpr char FW_CHUNK[] = "Receive chunk (%u), with size (%u) bytes";
 constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
 constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
@@ -81,7 +81,7 @@ class OTA_Handler {
     /// @param publish_callback Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
     /// @param send_fw_state_callback Callback that is used to send information about the current state of the over the air update
     /// @param finish_callback Callback that is called once the update has been finished and the user has been informed of the failure or success
-    inline OTA_Handler(std::function<bool(const uint32_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback)
+    inline OTA_Handler(std::function<bool(const size_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback)
         : m_fw_callback(nullptr)
         , m_publish_callback(publish_callback)
         , m_send_fw_state_callback(send_fw_state_callback)
@@ -105,7 +105,7 @@ class OTA_Handler {
     /// @param fw_algorithm String of the algorithm used to hash the firmware binary
     /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
     /// @param fw_checksum_algorithm Algorithm used to hash the firmware binary
-    inline void Start_Firmware_Update(const OTA_Update_Callback *fw_callback, const uint32_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
+    inline void Start_Firmware_Update(const OTA_Update_Callback *fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
         m_fw_callback = fw_callback;
         m_fw_size = fw_size;
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
@@ -137,7 +137,7 @@ class OTA_Handler {
     /// @param current_chunk Index of the chunk we recieved the binary data for
     /// @param payload Firmware packet data of the current chunk
     /// @param total_bytes Amount of bytes in the current firmware packet data
-    inline void Process_Firmware_Packet(const uint32_t& current_chunk, uint8_t *payload, const unsigned int& total_bytes) {
+    inline void Process_Firmware_Packet(const size_t& current_chunk, uint8_t *payload, const size_t& total_bytes) {
         (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
 
         if (current_chunk != m_requested_chunks) {
@@ -195,7 +195,7 @@ class OTA_Handler {
 
   private:
     const OTA_Update_Callback *m_fw_callback;
-    std::function<bool(const uint32_t&)> m_publish_callback;
+    std::function<bool(const size_t&)> m_publish_callback;
     std::function<bool(const char *, const char *)> m_send_fw_state_callback;
     std::function<bool(void)> m_finish_callback;
     // Allows for a binary size of up to theoretically 4 GB.
@@ -205,8 +205,8 @@ class OTA_Handler {
     mbedtls_md_type_t m_fw_checksum_algorithm;
     IUpdater *m_fw_updater;
     HashGenerator m_hash;
-    uint32_t m_total_chunks;
-    uint32_t m_requested_chunks;
+    size_t m_total_chunks;
+    size_t m_requested_chunks;
     uint8_t m_retries;
     Callback_Watchdog m_watchdog;
 
