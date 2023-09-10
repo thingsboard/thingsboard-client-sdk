@@ -1396,8 +1396,10 @@ class ThingsBoardSized {
       
       if (!connection_result) {
         Logger::log(CONNECT_FAILED);
+        return connection_result;
       }
 
+      // Only attempt to resubscribe if we connected successfully
       Resubscribe_Topics();
       return connection_result;
     }
