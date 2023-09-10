@@ -1895,7 +1895,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over 
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    inline void onMQTTMessage(char *topic, uint8_t *payload, size_t length) {
+    inline void onMQTTMessage(char *topic, uint8_t *payload, unsigned int length) {
 #if THINGSBOARD_ENABLE_DEBUG
       char message[JSON_STRING_SIZE(strlen(RECEIVE_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
       snprintf_P(message, sizeof(message), RECEIVE_MESSAGE, topic);
@@ -1951,7 +1951,7 @@ class ThingsBoardSized {
     // To be able to forward event to an instance, rather than to a function, this pointer exists.
     static ThingsBoardSized *m_subscribedInstance;
 
-    static void onStaticMQTTMessage(char *topic, uint8_t *payload, size_t length) {
+    static void onStaticMQTTMessage(char *topic, uint8_t *payload, unsigned int length) {
       if (m_subscribedInstance == nullptr) {
         return;
       }
