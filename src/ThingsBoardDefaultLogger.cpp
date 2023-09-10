@@ -8,7 +8,7 @@
 #if THINGSBOARD_ENABLE_PROGMEM
 #include <WString.h>
 #endif // THINGSBOARD_ENABLE_PROGMEM
-#include <cstdio>
+#include <stdio.h>
 
 
 // Log messages.
