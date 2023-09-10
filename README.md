@@ -279,7 +279,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return true;
     }
 
-    bool publish(const char *topic, const uint8_t *payload, const uint32_t& length) override {
+    bool publish(const char *topic, const uint8_t *payload, const size_t& length) override {
         return true;
     }
 
@@ -297,7 +297,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 
-    bool begin_publish(const char *topic, const uint32_t& length) override {
+    bool begin_publish(const char *topic, const size_t& length) override {
         return true;
     }
 

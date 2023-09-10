@@ -330,7 +330,7 @@ class ThingsBoardSized {
     /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger, default = Default_Payload
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size
-    inline ThingsBoardSized(IMQTT_Client& client, const uint16_t& bufferSize = Default_Payload, const uint32_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
+    inline ThingsBoardSized(IMQTT_Client& client, const uint16_t& bufferSize = Default_Payload, const size_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
       : m_client(client)
       , m_max_stack(maxStackSize)
       , m_buffering_size(bufferingSize)
@@ -381,7 +381,7 @@ class ThingsBoardSized {
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
-    inline void setMaximumStackSize(const uint32_t& maxStackSize) {
+    inline void setMaximumStackSize(const size_t& maxStackSize) {
       m_max_stack = maxStackSize;
     }
 
@@ -445,7 +445,7 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool Send_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
+    inline bool Send_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
       if (source.isNull()) {
@@ -453,7 +453,7 @@ class ThingsBoardSized {
         return false;
       }
 #if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t amount = source.size();
+      const size_t amount = source.size();
       if (MaxFieldsAmt < amount) {
         char message[Helper::detectSize(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt)];
         snprintf_P(message, sizeof(message), TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmt);
@@ -541,7 +541,7 @@ class ThingsBoardSized {
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
     /// @param durationMs Total time in milliseconds the user has to claim their device as their own
     /// @return Whether sending the claiming request was successful or not
-    inline bool Claim_Request(const char *secretKey, const uint32_t& durationMs) {
+    inline bool Claim_Request(const char *secretKey, const size_t& durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
       const JsonObject respObj = requestBuffer.to<JsonObject>();
 
@@ -656,7 +656,7 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendTelemetryJson(const TSource& source, const uint32_t& jsonSize) {
+    inline bool sendTelemetryJson(const TSource& source, const size_t& jsonSize) {
       return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
     }
 
@@ -694,7 +694,7 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendAttributeJSON(const TSource& source, const uint32_t& jsonSize) {
+    inline bool sendAttributeJSON(const TSource& source, const size_t& jsonSize) {
       return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
     }
 
@@ -722,7 +722,7 @@ class ThingsBoardSized {
     template<class InputIterator>
     inline bool RPC_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t size = std::distance(first_itr, last_itr);
+      const size_t size = std::distance(first_itr, last_itr);
       if (m_rpc_callbacks.size() + size > m_rpc_callbacks.capacity()) {
         Logger::log(MAX_RPC_EXCEEDED);
         return false;
@@ -825,7 +825,7 @@ class ThingsBoardSized {
       // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
       // Data structure size depends on the amount of key value pairs passed + the default methodName and params key needed for the request.
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
+      const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
       TBJsonDocument requestBuffer(dataStructureMemoryUsage);
 #else
       // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
@@ -952,7 +952,7 @@ class ThingsBoardSized {
     template<class InputIterator>
     inline bool Shared_Attributes_Subscribe(const InputIterator& first_itr, const InputIterator& last_itr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
-      const uint32_t size = std::distance(first_itr, last_itr);
+      const size_t size = std::distance(first_itr, last_itr);
       if (m_shared_attribute_update_callbacks.size() + size > m_shared_attribute_update_callbacks.capacity()) {
         Logger::log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
@@ -1062,7 +1062,7 @@ class ThingsBoardSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool Serialize_Json(const char* topic, const TSource& source, const uint32_t& jsonSize) {
+    inline bool Serialize_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       if (!m_client.begin_publish(topic, jsonSize)) {
         Logger::log(UNABLE_TO_SERIALIZE_JSON);
         return false;
@@ -1084,7 +1084,7 @@ class ThingsBoardSized {
     /// @brief Publishes a request via MQTT to request the given firmware chunk
     /// @param request_chunck Chunk index that should be requested from the server
     /// @return Whether publishing the message was successful or not
-    inline bool Publish_Chunk_Request(const uint32_t& request_chunck) {
+    inline bool Publish_Chunk_Request(const size_t& request_chunck) {
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
       const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
@@ -1105,7 +1105,7 @@ class ThingsBoardSized {
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
-    inline const uint32_t& getMaximumStackSize() const {
+    inline const size_t& getMaximumStackSize() const {
       return m_max_stack;
     }
 
@@ -1160,7 +1160,7 @@ class ThingsBoardSized {
       // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
       // Data structure size depends on the amount of key value pairs passed + the default clientKeys or sharedKeys
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      constexpr uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(1U);
+      constexpr size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(1U);
       StaticJsonDocument<dataStructureMemoryUsage> requestBuffer;
       // The .template variant of createing the JsonVariant has to be used,
       // because we are passing a template to the StaticJsonDocument template list
@@ -1521,18 +1521,18 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
       // Convert the remaining text after the topic to an integer, because it should now contain only the response id
-      const uint32_t responseId = atoi(response.c_str());
+      const size_t response_id = atoi(response.c_str());
 
       for (size_t i = 0; i < m_rpc_request_callbacks.size(); i++) {
         const RPC_Request_Callback& rpc_request = m_rpc_request_callbacks.at(i);
 
-        if (rpc_request.Get_Request_ID() != responseId) {
+        if (rpc_request.Get_Request_ID() != response_id) {
           continue;
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        char message[Helper::detectSize(CALLING_REQUEST_CB, responseId)];
-        snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, responseId);
+        char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
+        snprintf_P(message, sizeof(message), CALLING_REQUEST_CB, response_id);
         Logger::log(message);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
@@ -1613,7 +1613,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
       // Convert the remaining text after the topic to an integer, because it should now contain only the request id
-      const uint32_t request_id = atoi(request.c_str());
+      const size_t request_id = atoi(request.c_str());
 
       char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)];
       snprintf_P(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
@@ -1629,7 +1629,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    inline void process_firmware_response(char *topic, uint8_t *payload, const unsigned int& length) {
+    inline void process_firmware_response(char *topic, uint8_t *payload, const size_t& length) {
       // Remove the not needed part of the received topic string, which is everything before the request id,
       // therefore we remove the section before that which is the topic + an additional "/" character, that seperates the topic from the request id.
       // Meaning the index we want to get the substring from is the length of the topic + 1 for the additonal "/" character
@@ -1643,7 +1643,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
       // Convert the remaining text after the topic to an integer, because it should now contain only the request id
-      const uint32_t request_id = atoi(request.c_str());
+      const size_t request_id = atoi(request.c_str());
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
@@ -1768,7 +1768,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
       // Convert the remaining text after the topic to an integer, because it should now contain only the response id
-      const uint32_t response_id = atoi(response.c_str());
+      const size_t response_id = atoi(response.c_str());
 
 #if THINGSBOARD_ENABLE_DEBUG
       char message[Helper::detectSize(CALLING_REQUEST_CB, response_id)];
@@ -1837,7 +1837,7 @@ class ThingsBoardSized {
       // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
       // Data structure size depends on the amount of key value pairs passed.
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
+      const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
       TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -1856,7 +1856,7 @@ class ThingsBoardSized {
     }
 
     IMQTT_Client& m_client; // MQTT client instance.
-    uint32_t m_max_stack; // Maximum stack size we allocate at once.
+    size_t m_max_stack; // Maximum stack size we allocate at once.
     size_t m_buffering_size; // Buffering size used to serialize directly into client.
 
 #if THINGSBOARD_ENABLE_STL
@@ -1878,7 +1878,7 @@ class ThingsBoardSized {
 #endif
 
     Provision_Callback m_provision_callback; // Provision response callback
-    uint32_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0
+    size_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0
 
 #if THINGSBOARD_ENABLE_OTA
     const OTA_Update_Callback *m_fw_callback;
@@ -1895,7 +1895,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over 
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    inline void onMQTTMessage(char *topic, uint8_t *payload, unsigned int length) {
+    inline void onMQTTMessage(char *topic, uint8_t *payload, size_t length) {
 #if THINGSBOARD_ENABLE_DEBUG
       char message[JSON_STRING_SIZE(strlen(RECEIVE_MESSAGE)) + JSON_STRING_SIZE(strlen(topic))];
       snprintf_P(message, sizeof(message), RECEIVE_MESSAGE, topic);
@@ -1906,7 +1906,7 @@ class ThingsBoardSized {
       // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
       // Data structure size depends on the amount of key value pairs received.
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const uint32_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
+      const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char*>(payload), COLON));
       TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmt)> jsonBuffer;
@@ -1951,7 +1951,7 @@ class ThingsBoardSized {
     // To be able to forward event to an instance, rather than to a function, this pointer exists.
     static ThingsBoardSized *m_subscribedInstance;
 
-    static void onStaticMQTTMessage(char *topic, uint8_t *payload, unsigned int length) {
+    static void onStaticMQTTMessage(char *topic, uint8_t *payload, size_t length) {
       if (m_subscribedInstance == nullptr) {
         return;
       }

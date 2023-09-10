@@ -38,13 +38,13 @@ class RPC_Request_Callback : public Callback<void, const JsonVariantConst&> {
     /// and will be later used to verifiy which RPC_Request_Callback
     /// is connected to which received RPC response
     /// @return Unique identifier connected to the request for client side rpc
-    const uint32_t& Get_Request_ID() const;
+    const size_t& Get_Request_ID() const;
 
     /// @brief Sets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which RPC_Request_Callback
     /// is connected to which received RPC response
     /// @param request_id Unique identifier connected to the request for client side rpc
-    void Set_Request_ID(const uint32_t &request_id);
+    void Set_Request_ID(const size_t &request_id);
 
     /// @brief Gets the poiner to the underlying name
     /// @return Pointer to the passed methodName
@@ -65,7 +65,7 @@ class RPC_Request_Callback : public Callback<void, const JsonVariantConst&> {
   private:
     const char        *m_methodName;  // Method name
     const JsonArray   *m_parameters;  // Parameter json
-    uint32_t          m_request_id;   // Id the request was called with
+    size_t            m_request_id;   // Id the request was called with
 };
 
 #endif // RPC_Request_Callback_h

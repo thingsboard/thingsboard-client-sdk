@@ -47,7 +47,7 @@ bool Arduino_MQTT_Client::loop() {
     return m_mqtt_client.loop();
 }
 
-bool Arduino_MQTT_Client::publish(const char *topic, const uint8_t *payload, const uint32_t& length) {
+bool Arduino_MQTT_Client::publish(const char *topic, const uint8_t *payload, const size_t& length) {
     return m_mqtt_client.publish(topic, payload, length, false);
 }
 
@@ -65,7 +65,7 @@ bool Arduino_MQTT_Client::connected() {
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 
-bool Arduino_MQTT_Client::begin_publish(const char *topic, const uint32_t& length) {
+bool Arduino_MQTT_Client::begin_publish(const char *topic, const size_t& length) {
     return m_mqtt_client.beginPublish(topic, length, false);
 }
 

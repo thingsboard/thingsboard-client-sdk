@@ -22,12 +22,12 @@ uint8_t Helper::detectSize(const char *msg, ...) {
       return result;
 }
 
-uint32_t Helper::getOccurences(const char *str, char symbol) {
-    uint32_t count = 0;
+size_t Helper::getOccurences(const char *str, char symbol) {
+    size_t count = 0;
     if (str == nullptr) {
       return count;
     }
-    for (uint32_t i = 0; i < strlen(str); i++) {
+    for (size_t i = 0; i < strlen(str); i++) {
       if (str[i] != symbol) {
         continue;
       }

@@ -32,7 +32,7 @@ class Helper {
     /// @param str String that we want to check the symbol in
     /// @param symbol Symbols we want to search for
     /// @return Amount of occurences of the given symbol
-    static uint32_t getOccurences(const char *str, char symbol);
+    static size_t getOccurences(const char *str, char symbol);
 
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
     /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used

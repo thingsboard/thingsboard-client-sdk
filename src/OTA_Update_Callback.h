@@ -47,7 +47,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
   public:
     /// @brief OTA firmware update callback signature
     using returnType = void;
-    using progressArgumentType = const uint32_t&;
+    using progressArgumentType = const size_t&;
     using progressFn = std::function<returnType(progressArgumentType current, progressArgumentType total)>;
 
     /// @brief Constructs empty callback, will result in never being called

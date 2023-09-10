@@ -69,13 +69,13 @@ class Attribute_Request_Callback : public Callback<void, const Attribute_Data&> 
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @return Unique identifier connected to the requested client-side or shared attributes
-    const uint32_t& Get_Request_ID() const;
+    const size_t& Get_Request_ID() const;
 
     /// @brief Sets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @param request_id Unqiue identifier of the request for client-side or shared attributes
-    void Set_Request_ID(const uint32_t &request_id);
+    void Set_Request_ID(const size_t &request_id);
 
     /// @brief Gets the response key of the key-value pair,
     /// that we expect the client-side or shared attribute payload json data to be contained in
@@ -131,7 +131,7 @@ class Attribute_Request_Callback : public Callback<void, const Attribute_Data&> 
 #else
     const char                     *m_attributes;     // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_STL
-    uint32_t                       m_request_id;      // Id the request was called with
+    size_t                         m_request_id;      // Id the request was called with
     const char                     *m_attribute_key;  // Attribute key that we wil receive the response on ("client" or "shared")
 };
 

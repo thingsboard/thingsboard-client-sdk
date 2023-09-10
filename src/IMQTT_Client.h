@@ -39,9 +39,9 @@ class IMQTT_Client {
   public:
       /// @brief Callback signature
 #if THINGSBOARD_ENABLE_STL
-    using function = std::function<void(char *topic, uint8_t *payload, unsigned int length)>;
+    using function = std::function<void(char *topic, uint8_t *payload, size_t length)>;
 #else
-    using function = void (*)(char *topic, uint8_t *payload, unsigned int length);
+    using function = void (*)(char *topic, uint8_t *payload, size_t length);
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
@@ -94,7 +94,7 @@ class IMQTT_Client {
     /// @param payload Payload containg the json data that should be sent
     /// @param length Length of the payload in bytes
     /// @return Whether publishing the payload on the given topic was successful or not
-    virtual bool publish(const char *topic, const uint8_t *payload, const uint32_t& length) = 0;
+    virtual bool publish(const char *topic, const uint8_t *payload, const size_t& length) = 0;
 
     /// @brief Subscribes to MQTT message on the given topic, which will cause an internal callback to be called for each message received on that topic from the server,
     /// it should then, call the previously configured callback with set_callback() with the received data
@@ -122,7 +122,7 @@ class IMQTT_Client {
     /// @param topic Topic that the message is sent over, where different MQTT topics expect a different kind of payload
     /// @param length Length of the payload in bytes
     /// @return Whether starting to publish on the given topic was successful or not
-    virtual bool begin_publish(const char *topic, const uint32_t& length) = 0;
+    virtual bool begin_publish(const char *topic, const size_t& length) = 0;
 
     /// @brief Finishes any publish message started with begin_publish()
     /// @return Whether the complete packet was sent successfully or not
