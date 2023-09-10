@@ -15,6 +15,7 @@
 // Library includes.
 #include <assert.h>
 
+
 /// @brief Replacement data container for boards that do not support the C++ STL.
 /// @tparam T Type of the underlying data the list should point too.
 template <typename T>
@@ -116,12 +117,13 @@ class Vector {
     /// @brief Removes the element at the given index, has to move all element one to the left if the index is not at the end of the array
     /// @param index Index the element should be removed at from the underlying data container
     inline void erase(const size_t& index) {
+        // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left
             for (size_t i = index; i < m_size - 1; i++) {
                 m_elements[i] = m_elements[i + 1];
             }
-            // Decrease the size of the vector
+            // Decrease the size of the vector to remove the last element, because either it was moved one index to the left or was the element we wanted to delete
             m_size--;
         }
     }

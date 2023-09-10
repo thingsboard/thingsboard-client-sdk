@@ -16,12 +16,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
 /// @brief Updater interface that contains the method that a class that can be used to flash given binary data onto a device has to implement
 class IUpdater {
   public:
     /// @brief Initalizes the writing of the given data
     /// @param firmware_size Total size of the data that should be written, is done in multiple packets
-    /// @return Wheter initalizing the update was successfull or not
+    /// @return Whether initalizing the update was successful or not
     virtual bool begin(const size_t& firmware_size) = 0;
   
     /// @brief Writes the given amount of bytes of the packet data
@@ -31,11 +32,10 @@ class IUpdater {
     virtual size_t write(uint8_t* payload, const size_t& total_bytes) = 0;
   
     /// @brief Resets the writing of the given data so it can be restarted with begin
-    /// @return Wheter reseting was successful or not
-    virtual bool reset() = 0;
+    virtual void reset() = 0;
   
     /// @brief Ends the update and returns wheter it was successfully completed
-    /// @return Wheter the complete amount of bytes initally given was successfully written or not
+    /// @return Whether the complete amount of bytes initally given was successfully written or not
     virtual bool end() = 0;
 };
 

@@ -10,6 +10,7 @@
 // Local includes.
 #include "Telemetry.h"
 
+
 class RPC_Response : public JsonVariant {
   public:
     /// @brief Constructor

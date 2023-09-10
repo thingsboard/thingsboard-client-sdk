@@ -16,6 +16,7 @@
 #include <type_traits>
 #endif // THINGSBOARD_ENABLE_STL
 
+
 /// @brief Telemetry record class, allows to store different data using a common interface.
 class Telemetry {
   public:
@@ -80,7 +81,7 @@ class Telemetry {
 
     /// @brief Serializes the key-value pair depending on the constructor used
     /// @param jsonObj Object the value will be copied into with the given key
-    /// @return Whether serializing was successfull or not
+    /// @return Whether serializing was successful or not
     bool SerializeKeyValue(const JsonVariant &jsonObj) const;
 
   private:

@@ -12,10 +12,7 @@
 #include "ThingsBoardDefaultLogger.h"
 #include "Telemetry.h"
 #include "Helper.h"
-
-// Library includes.
-#include <stdarg.h>
-#include <ArduinoHttpClient.h>
+#include "IHTTP_Client.h"
 
 /// ---------------------------------
 /// Constant strings in flash memory.
@@ -25,12 +22,14 @@
 constexpr char HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";
 constexpr char HTTP_ATTRIBUTES_TOPIC[] PROGMEM = "/api/v1/%s/attributes";
 constexpr char HTTP_POST_PATH[] PROGMEM = "application/json";
-constexpr int HTTP_RESPONSE_SUCCESS_CODE PROGMEM = 200;
+constexpr int HTTP_RESPONSE_SUCCESS_RANGE_START PROGMEM = 200;
+constexpr int HTTP_RESPONSE_SUCCESS_RANGE_END PROGMEM = 299;
 #else
 constexpr char HTTP_TELEMETRY_TOPIC[] = "/api/v1/%s/telemetry";
 constexpr char HTTP_ATTRIBUTES_TOPIC[] = "/api/v1/%s/attributes";
 constexpr char HTTP_POST_PATH[] = "application/json";
-constexpr int HTTP_RESPONSE_SUCCESS_CODE = 200;
+constexpr int HTTP_RESPONSE_SUCCESS_RANGE_START = 200;
+constexpr int HTTP_RESPONSE_SUCCESS_RANGE_END = 299;
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
@@ -75,23 +74,16 @@ class ThingsBoardHttpSized {
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardHttpSized(Client &client, const char *access_token,
+    inline ThingsBoardHttpSized(IHTTP_Client& client, const char *access_token,
                                 const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const uint32_t& maxStackSize = Default_Max_Stack_Size)
-      : m_client(client, host, port)
+      : m_client(client)
       , m_max_stack(maxStackSize)
       , m_host(host)
       , m_port(port)
       , m_token(access_token)
     {
-      if (keepAlive) {
-        m_client.connectionKeepAlive();
-      }
+      m_client.set_keep_alive(keepAlive);
       m_client.connect(m_host, m_port);
-    }
-
-    /// @brief Destructor
-    inline ~ThingsBoardHttpSized() { 
-      // Nothing to do
     }
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
@@ -207,7 +199,11 @@ class ThingsBoardHttpSized {
     /// @param response String the GET response will be copied into,
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
+#if THINGSBOARD_ENABLE_STL
+    inline bool sendGetRequest(const char* path, std::string& response) {
+#else
     inline bool sendGetRequest(const char* path, String& response) {
+#endif // THINGSBOARD_ENABLE_STL
       return getMessage(path, response);
     }
 
@@ -279,9 +275,9 @@ class ThingsBoardHttpSized {
       bool result = true;
 
       const int success = m_client.post(path, HTTP_POST_PATH, json);
-      const int status = m_client.responseStatusCode();
+      const int status = m_client.get_response_status_code();
 
-      if (success != HTTP_SUCCESS || status != HTTP_RESPONSE_SUCCESS_CODE) {
+      if (!success || status < HTTP_RESPONSE_SUCCESS_RANGE_START || status > HTTP_RESPONSE_SUCCESS_RANGE_END) {
         char message[Helper::detectSize(HTTP_FAILED, POST, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, POST, status);
         Logger::log(message);
@@ -297,13 +293,17 @@ class ThingsBoardHttpSized {
     /// @param response String the GET response will be copied into,
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
+#if THINGSBOARD_ENABLE_STL
+    inline bool getMessage(const char* path, std::string& response) {
+#else
     inline bool getMessage(const char* path, String& response) {
+#endif // THINGSBOARD_ENABLE_STL
       bool result = true;
 
       const bool success = m_client.get(path);
-      const int status = m_client.responseStatusCode();
+      const int status = m_client.get_response_status_code();
 
-      if (!success || status != HTTP_SUCCESS) {
+      if (!success || status < HTTP_RESPONSE_SUCCESS_RANGE_START || status > HTTP_RESPONSE_SUCCESS_RANGE_END) {
         char message[Helper::detectSize(HTTP_FAILED, GET, status)];
         snprintf_P(message, sizeof(message), HTTP_FAILED, GET, status);
         Logger::log(message);
@@ -311,7 +311,7 @@ class ThingsBoardHttpSized {
         goto cleanup;
       }
 
-      response = m_client.responseBody();
+      response = m_client.get_response_body();
 
       cleanup:
       clearConnection();
@@ -374,7 +374,7 @@ class ThingsBoardHttpSized {
       return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
 
-    HttpClient m_client; // HttpClient instance
+    IHTTP_Client& m_client; // HttpClient instance
     uint32_t m_max_stack; // Maximum stack size we allocate at once on the stack.
     const char *m_host; // Host address we connect too
     const uint16_t m_port; // Port we connect over

@@ -15,6 +15,7 @@
 #include <functional>
 #endif // THINGSBOARD_ENABLE_STL
 
+
 /// @brief General purpose callback wrapper
 /// @tparam returnType Type the given callback method should return
 /// @tparam argumentTypes Types the given callback method should receive

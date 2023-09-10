@@ -3,7 +3,7 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-#ifdef ESP32
+#if defined(ESP32) && defined(ARDUINO)
 
 // Library include.
 #include <Update.h>
@@ -16,15 +16,14 @@ size_t ESP32_Updater::write(uint8_t* payload, const size_t& total_bytes) {
     return Update.write(payload, total_bytes);
 }
 
-bool ESP32_Updater::reset() {
+void ESP32_Updater::reset() {
     Update.abort();
-    return true;
 }
 
 bool ESP32_Updater::end() {
     return Update.end();
 }
 
-#endif // ESP32
+#endif // defined(ESP32) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA
