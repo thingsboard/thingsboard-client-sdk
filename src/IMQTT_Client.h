@@ -17,7 +17,7 @@
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #include <Print.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-#include <stdint.h>
+#include <stddef.h>
 
 
 /// @brief MQTT Client interface that contains the method that a class that can be used to send and receive data over an MQTT connection should implement.
