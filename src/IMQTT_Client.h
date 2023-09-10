@@ -17,6 +17,7 @@
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #include <Print.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
+#include <stdint.h>
 #include <stddef.h>
 
 
