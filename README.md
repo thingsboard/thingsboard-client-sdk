@@ -23,13 +23,14 @@ ThingsBoard SDK can be installed directly from the [Arduino Library manager](htt
 Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
- - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`.
- - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — for dealing with `JSON` files.
- - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with ThingsBoard using `HTTP/S`.
+ - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — needed for dealing with the `JSON` payload that is sent to and received by `ThingsBoard`
 
 **Needs to be installed manually:**
+ - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`.
+ - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`.
  - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
  - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` in combination with a `ESP8266`.
+ - [StreamUtils](https://github.com/bblanchon/StreamUtils) — needed if `#define THINGSBOARD_ENABLE_STREAM_UTILS 1` is set, it allows sending arbitrary amount of payload even if the buffer size is too small to hold that complete payload
 
 ## Supported ThingsBoard Features
 
@@ -41,6 +42,7 @@ All possible features are implemented over `MQTT`
  - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server)
  - [Server-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#server-side-rpc)
  - [Client-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#client-side-rpc)
+ - [Request attribute values](https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server)
  - [Attribute update subscription](https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server)
  - [Device provisioning](https://thingsboard.io/docs/reference/mqtt-api/#device-provisioning)
  - [Device claiming](https://thingsboard.io/docs/reference/mqtt-api/#claiming-devices)
@@ -95,11 +97,14 @@ If that's a case, the buffer size for serialization should be increased. To do s
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 64 bytes for JSON buffer
-// ThingsBoard tb(espClient);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON buffer
-ThingsBoard tb(espClient, 128);
+ThingsBoard tb(mqttClient, 128);
 
 void setup() {
   // Increase internal buffer size after inital creation.
@@ -116,8 +121,11 @@ Alternatively it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM_
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 64 bytes for JSON buffer
-ThingsBoard tb(espClient);
+ThingsBoard tb(mqttClient);
 ```
 
 ### Too much data fields must be serialized
@@ -134,14 +142,186 @@ The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 8 fields for JSON object
-// ThingsBoard tb(espClient);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<32> tb(espClient, 128);
+ThingsBoardSized<32> tb(mqttClient, 128);
 ```
 
 ## Tips and Tricks
+
+### Custom Updater Instance
+
+When using the `ThingsBoard` class instance, the class used to flash the binary data onto the device is not hard coded,
+but instead the `OTA_Update_Callback` class expects an optional argument, the `IUpdater` implementation.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning as long as the device can flash binary data and supports the C++ STL it supports OTA updates, with the `ThingsBoard` library.
+
+Currently, implemented in the library itself are the `ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and the `ESP8266_Updater` which is used with the `ESP8266`.
+If another device wants to be supported, a custom interface implementation needs to be created. For that a `class` that inherits the `IUpdater` interface needs to be created and `override` the needed methods.
+
+```c++
+#include <IUpdater.h>
+
+class Custom_Updater : public IUpdater {
+  public:
+    bool begin(const size_t& firmware_size) override {
+        return true;
+    }
+  
+    size_t write(uint8_t* payload, const size_t& total_bytes) override {
+        return total_bytes;
+    }
+  
+    void reset() override {
+        // Nothing to do
+    }
+  
+    bool end() override {
+        return true;
+    }
+};
+```
+
+### Custom HTTP Instance
+
+When using the `ThingsBoardHttp` class instance, the protocol used to send the data to the HTTP broker is not hard coded,
+but instead the `ThingsBoardHttp` class expects the argument to a `IHTTP_Client` implementation.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning the underlying HTTP client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
+
+Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which is simply a wrapper around the [`ArduinoHttpClient`](https://github.com/arduino-libraries/ArduinoHttpClient), see [dependencies](https://github.com/arduino-libraries/ArduinoHttpClient?tab=readme-ov-file#dependencies) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` that inherits the `IHTTP_Client` interface needs to be created and `override` the needed methods.
+
+
+```c++
+#include <IHTTP_Client.h>
+
+class Custom_HTTP_Client : public IHTTP_Client {
+  public:
+    void set_keep_alive(const bool& keep_alive) override {
+        // Nothing to do
+    }
+
+    int connect(const char *host, const uint16_t& port) override {
+        return 0;
+    }
+
+    void stop() override {
+        // Nothing to do
+    }
+
+    int post(const char *url_path, const char *content_type, const char *request_body) override {
+        return 0;
+    }
+
+    int get_response_status_code() override {
+        return 200;
+    }
+
+    int get(const char *url_path) override{
+        return 0;
+    }
+
+    String get_response_body() override{
+        return String();
+    }
+};
+```
+
+### Custom MQTT Instance
+
+When using the `ThingsBoard` class instance, the protocol used to send the data to the MQTT broker is not hard coded,
+but instead the `ThingsBoard` class expects the argument to a `IMQTT_Client` implementation.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning the underlying MQTT client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
+
+Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`TBPubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` that inherits the `IMQTT_Client` interface needs to be created and `override` the needed methods.
+
+```c++
+#include <IMQTT_Client.h>
+
+class Custom_MQTT_Client : public IMQTT_Client {
+  public:
+    void set_callback(function cb) override {
+        // Nothing to do
+    }
+
+    bool set_buffer_size(const uint16_t& buffer_size) override{
+        return true;
+    }
+
+    uint16_t get_buffer_size() override  {
+        return 0U;
+    }
+
+    void set_server(const char *domain, const uint16_t& port) override {
+        // Nothing to do
+    }
+
+    bool connect(const char *client_id, const char *user_name, const char *password) override {
+        return true;
+    }
+
+    void disconnect() override {
+        // Nothing to do
+    }
+
+    bool loop() override {
+        return true;
+    }
+
+    bool publish(const char *topic, const uint8_t *payload, const uint32_t& length) override {
+        return true;
+    }
+
+    bool subscribe(const char *topic) override {
+        return true;
+    }
+
+    bool unsubscribe(const char *topic) override {
+        return true;
+    }
+
+    bool connected() override {
+        return true;
+    }
+
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+
+    bool begin_publish(const char *topic, const uint32_t& length) override {
+        return true;
+    }
+
+    bool end_publish() override {
+        return true;
+    }
+
+    //----------------------------------------------------------------------------
+    // Print interface
+    //----------------------------------------------------------------------------
+
+    size_t write(uint8_t payload_byte) override {
+        return 1U;
+    }
+
+    size_t write(const uint8_t *buffer, size_t size) override {
+        return size;
+    }
+
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
+};
+```
+
+### Custom Logger Instance
 
 To use your own logger you have to create a class and pass it as second template parameter `Logger` to your `ThingsBoardSized` class instance.
 
@@ -165,11 +345,14 @@ After that, you can use it in place of regular `ThingsBoard` class. **Note that 
 // For the sake of example
 WiFiEspClient espClient;
 
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
 // The SDK setup with 8 fields for JSON object
-// ThingsBoard tb(espClient);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<32, CustomLogger> tb(espClient, 128);
+ThingsBoardSized<32, CustomLogger> tb(mqttClient, 128);
 ```
 
 ## Have a question or proposal?

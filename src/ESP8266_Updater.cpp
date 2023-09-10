@@ -3,7 +3,7 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-#ifdef ESP8266
+#if defined(ESP8266) && defined(ARDUINO)
 
 // Library include.
 #include <Updater.h>
@@ -16,14 +16,14 @@ size_t ESP8266_Updater::write(uint8_t* payload, const size_t& total_bytes) {
     return Update.write(payload, total_bytes);
 }
 
-bool ESP8266_Updater::reset() {
-    return true;
+void ESP8266_Updater::reset() {
+    // Nothing to do
 }
 
 bool ESP8266_Updater::end() {
     return Update.end();
 }
 
-#endif // ESP8266
+#endif // defined(ESP8266) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA

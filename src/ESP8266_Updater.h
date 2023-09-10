@@ -12,10 +12,11 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-#ifdef ESP8266
+#if defined(ESP8266) && defined(ARDUINO)
 
-// Library include.
-#include <IUpdater.h>
+// Local include.
+#include "IUpdater.h"
+
 
 class ESP8266_Updater : public IUpdater {
   public:
@@ -23,12 +24,12 @@ class ESP8266_Updater : public IUpdater {
   
     size_t write(uint8_t* payload, const size_t& total_bytes) override;
 
-    bool reset() override;
+    void reset() override;
   
     bool end() override;
 };
 
-#endif // ESP8266
+#endif // defined(ESP8266) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA
 

@@ -20,6 +20,7 @@
 #include <pgmspace.h>
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
@@ -32,13 +33,14 @@ constexpr char OTA_CB_IS_NULL[] = "OTA update callback is NULL";
 // OTA default values.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr uint8_t CHUNK_RETRIES PROGMEM = 12U;
-constexpr uint16_t CHUNK_SIZE PROGMEM = 4096U;
-constexpr uint16_t REQUEST_TIMEOUT PROGMEM = 5000U;
+constexpr uint16_t CHUNK_SIZE PROGMEM = (4U * 1024U);
+constexpr uint64_t REQUEST_TIMEOUT PROGMEM = (5U * 1000U * 1000U);
 #else
 constexpr uint8_t CHUNK_RETRIES = 12U;
-constexpr uint16_t CHUNK_SIZE = 4096U;
-constexpr uint16_t REQUEST_TIMEOUT = 5000U;
+constexpr uint16_t CHUNK_SIZE = (4U * 1024U);
+constexpr uint64_t REQUEST_TIMEOUT = (5U * 1000U * 1000U);
 #endif // THINGSBOARD_ENABLE_PROGMEM
+
 
 /// @brief OTA firmware update callback wrapper
 class OTA_Update_Callback : public Callback<void, const bool&> {
@@ -64,7 +66,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint64_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
     /// has been completly sent by the cloud, received by the client and written to the flash partition as well as callback
@@ -82,7 +84,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     // because the whole chunk is saved into the heap before it can be processed and is then cleared again
     /// @param timeout Maximum amount of time in millseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
-    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint16_t &timeout = REQUEST_TIMEOUT);
+    OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries = CHUNK_RETRIES, const uint16_t &chunkSize = CHUNK_SIZE, const uint64_t &timeout = REQUEST_TIMEOUT);
 
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
     /// @tparam Logger Logging class that should be used to print messages
@@ -153,13 +155,13 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     /// @param chunkSize Size of each single chunk to be downloaded
     void Set_Chunk_Size(const uint16_t &chunkSize);
 
-    /// @brief Gets the time in milliseconds we wait until we declare a single chunk we attempted to download as a failure
+    /// @brief Gets the time in microseconds we wait until we declare a single chunk we attempted to download as a failure
     /// @return Gets the timeout time for each single chunk to be downloaded
-    const uint16_t& Get_Timeout() const;
+    const uint64_t& Get_Timeout() const;
 
-    /// @brief Sets the time we wait until we decleare a single chunk we attempted to download as a timeout
-    /// @param timeout Gets the timeout time for each single chunk to be downloaded
-    void Set_Timeout(const uint16_t &timeout);
+    /// @brief Sets the time in microseconds we wait until we decleare a single chunk we attempted to download as a timeout
+    /// @param timeout_microseconds Gets the timeout time for each single chunk to be downloaded
+    void Set_Timeout(const uint64_t &timeout_microseconds);
 
   private:
     progressFn      m_progressCb;    // Progress callback to call
@@ -168,7 +170,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     IUpdater        *m_updater;      // Updater implementation used to write firmware data
     uint8_t         m_retries;       // Maximum amount of retries
     uint16_t        m_size;          // Maximum size of the chuncks we are downloading
-    uint16_t        m_timeout;       // How long we maximum wait for each chunck to arrive
+    uint64_t        m_timeout;       // How long we maximum wait for each chunck to arrive
 };
 
 #endif // THINGSBOARD_ENABLE_OTA

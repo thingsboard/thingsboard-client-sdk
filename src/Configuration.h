@@ -44,6 +44,38 @@
 #    endif
 #  endif
 
+// Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
+// because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
+#  ifdef __has_include
+#    if  __has_include(<esp_timer.h>)
+#      ifndef THINGSBOARD_USE_ESP_TIMER
+#        define THINGSBOARD_USE_ESP_TIMER 1
+#      endif
+#    else
+#      ifndef THINGSBOARD_USE_ESP_TIMER
+#        define THINGSBOARD_USE_ESP_TIMER 0
+#      endif
+#    endif
+#  else
+#    define THINGSBOARD_USE_ESP_TIMER 0
+#  endif
+
+// Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
+// because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
+#  ifdef __has_include
+#    if  __has_include(<mbedtls/md.h>)
+#      ifndef THINGSBOARD_USE_MBED_TLS
+#        define THINGSBOARD_USE_MBED_TLS 1
+#      endif
+#    else
+#      ifndef THINGSBOARD_USE_MBED_TLS
+#        define THINGSBOARD_USE_MBED_TLS 0
+#      endif
+#    endif
+#  else
+#    define THINGSBOARD_USE_MBED_TLS 0
+#  endif
+
 // Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
 #  ifdef __has_include
 #    if  __has_include(<pgmspace.h>)
@@ -82,9 +114,9 @@
 #  endif
 
 // Enables the ThingsBoard class to save the allocated memory of the DynamicJsonDocument into psram instead of onto the sram.
-// Enabled by default if THINGSBOARD_ENABLE_DYNAMIC has been set, because it requries DynamicJsonDocument to work.
-// If enabled the program might be slightly slower and all the memory will be placed onto psram instead of sram.
-// See https://arduinojson.org/v6/api/basicjsondocument/ for the main difference in the underlying code.
+// Enabled by default if THINGSBOARD_ENABLE_DYNAMIC has been set and the esp_heap_caps header exists, because it requries DynamicJsonDocument to work.
+// If enabled the program might be slightly slower, but all the memory will be placed onto psram instead of sram, meaning the sram can be allocated for other things.
+// See https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/ and https://arduinojson.org/v6/api/basicjsondocument/ for for the main difference in the underlying code.
 #  ifdef __has_include
 #    if  THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
 #      ifndef THINGSBOARD_ENABLE_PSRAM

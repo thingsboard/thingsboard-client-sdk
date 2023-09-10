@@ -13,12 +13,13 @@
 #if THINGSBOARD_ENABLE_OTA
 
 // Library includes.
-#ifdef ESP32
+#if THINGSBOARD_USE_MBED_TLS
 #include <mbedtls/md.h>
 #else
 #include <Seeed_mbedtls.h>
-#endif // ESP32
+#endif // THINGSBOARD_USE_MBED_TLS
 #include <string>
+
 
 /// @brief Allows generating a hash of the given type
 /// with partial data and then retreiving the completed hash once it has been completed
@@ -37,7 +38,7 @@ class HashGenerator {
     /// @brief Update the current hash value with new data
     /// @param data Data that should be added to generate the hash
     /// @param len Length of data entered
-    /// @return Whether updating the hash for the given bytes was successfull or not
+    /// @return Whether updating the hash for the given bytes was successful or not
     bool update(const uint8_t* data, const size_t& len);
 
     /// @brief Returns the final hash value as a string

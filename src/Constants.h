@@ -11,8 +11,13 @@
 #include "Configuration.h"
 
 // Library includes.
-#include <Arduino.h>
+#if THINGSBOARD_ENABLE_PROGMEM
+#include <pgmspace.h>
+#endif // THINGSBOARD_ENABLE_PROGMEM
+#if THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 #include <ArduinoJson.h>
+#endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
+
 
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
 #define Default_Buffering_Size 64
@@ -29,7 +34,11 @@ class ThingsBoardDefaultLogger;
 #ifndef vsnprintf_P
 #define vsnprintf_P   vsnprintf
 #endif // vsnprintf_P
+#ifndef strncmp_P
+#define strncmp_P   strncmp
+#endif // strncmp_P
 #endif // THINGSBOARD_ENABLE_PROGMEM
+
 
 /// ---------------------------------
 /// Constant strings in flash memory,
@@ -54,6 +63,7 @@ constexpr char UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
+
 #if THINGSBOARD_ENABLE_PSRAM
   #include <esp_heap_caps.h>
 
@@ -72,7 +82,7 @@ constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocu
   };
 
   using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
-#else
+#elif THINGSBOARD_ENABLE_DYNAMIC
   using TBJsonDocument = DynamicJsonDocument;
 #endif
 
