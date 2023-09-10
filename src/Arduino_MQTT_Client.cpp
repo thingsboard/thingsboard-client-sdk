@@ -81,6 +81,6 @@ size_t Arduino_MQTT_Client::write(const uint8_t *buffer, size_t size) {
     return m_mqtt_client.write(buffer, size);
 }
 
-#endif // ARDUINO
-
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
+
+#endif // ARDUINO

@@ -13,6 +13,9 @@
 // Library include.
 #include <stdint.h>
 #include <ArduinoJson.h>
+#ifdef THINGSBOARD_ENABLE_STL
+#include <iterator>
+#endif // THINGSBOARD_ENABLE_STL
 
 
 /// @brief Static helper class that includes some uniliterally used functionalities in multiple places
@@ -39,6 +42,24 @@ class Helper {
     template <typename TSource>
     inline static size_t Measure_Json(const TSource& source) {
       return JSON_STRING_SIZE(measureJson(source));
+    }
+
+    /// @brief Removes the element with the given index using the given iterator, which allows to use data containers that do not have a random-access iterator.
+    /// The user is also cautioned that this function only erases the element, and that if the element is itself a pointer,
+    /// the pointed-to memory is not touched in any way. Managing the pointer is the user's responsibility.
+    /// See https://stackoverflow.com/questions/875103/how-do-i-erase-an-element-from-stdvector-by-index for more information
+    /// @tparam DataContainer Class which allows to pass any arbitrary data container that contains the cbegin() and erase() method
+    /// @param container Data container holding the elements we want to remove an element from
+    /// @param index Index we want to delete the element at
+    template<class DataContainer>
+    inline static void remove(DataContainer& container, const size_t& index) {
+#if THINGSBOARD_ENABLE_STL
+        auto iterator = container.cbegin();
+        std::advance(iterator, index);
+        container.erase(iterator);
+#else
+        container.erase(index);
+#endif // THINGSBOARD_ENABLE_STL
     }
 };
 
