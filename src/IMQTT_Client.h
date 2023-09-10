@@ -70,7 +70,7 @@ class IMQTT_Client {
     /// The latter is recommended if relevant data is sent or if the client receives and handles Remote Procedure Calls or Shared Attribute Update Callbacks from the server,
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways.
     /// However if Over the Air udpates are enabled secure communication should definetly be enabled, because if that is not done a 3rd party might impersonate the server sending a malicious payload,
-    /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or it make it otherwise unusable.
+    /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or make it otherwise unusable.
     /// See https://stackoverflow.blog/2020/12/14/security-considerations-for-ota-software-updates-for-iot-gateway-devices/ for more information on the aforementioned security risk
     virtual void set_server(const char *domain, const uint16_t& port) = 0;
 
