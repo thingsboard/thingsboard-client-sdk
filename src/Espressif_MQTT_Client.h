@@ -10,7 +10,7 @@
 // Local include.
 #include "Configuration.h"
 
-#ifdef THINGSBOARD_USE_ESP_MQTT
+#if THINGSBOARD_USE_ESP_MQTT
 
 // Local includes.
 #include "IMQTT_Client.h"

@@ -1,7 +1,7 @@
 // Header include.
 #include "Espressif_MQTT_Client.h"
 
-#ifdef THINGSBOARD_USE_ESP_MQTT
+#if THINGSBOARD_USE_ESP_MQTT
 
 // Library include
 #include <esp_log.h>
