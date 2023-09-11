@@ -7,8 +7,12 @@
 #ifndef Configuration_h
 #define Configuration_h
 
-// Library includes.
-#include <sdkconfig.h>
+// Include sdkconfig file it it exists to allow overwriting of some defines with the configuration entered in the ESP IDF menuconfig
+#  ifdef __has_include
+#    if __has_include(<sdkconfig.h>)
+#      include <sdkconfig.h>
+#    endif
+#  endif
 
 
 // Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
