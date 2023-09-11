@@ -60,6 +60,22 @@
 #    define THINGSBOARD_USE_ESP_TIMER 0
 #  endif
 
+// Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists,
+// to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_HTTP_Client
+#  ifdef __has_include
+#    if  __has_include(<mqtt_client.h>)
+#      ifndef THINGSBOARD_USE_ESP_MQTT
+#        define THINGSBOARD_USE_ESP_MQTT 1
+#      endif
+#    else
+#      ifndef THINGSBOARD_USE_ESP_MQTT
+#        define THINGSBOARD_USE_ESP_MQTT 0
+#      endif
+#    endif
+#  else
+#    define THINGSBOARD_USE_ESP_MQTT 0
+#  endif
+
 // Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
 // because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
 #  ifdef __has_include
