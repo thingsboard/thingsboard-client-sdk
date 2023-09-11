@@ -6,6 +6,10 @@
 |  ESP32            |
 |  ESP8266          |
 
+## Framework
+
+Arduino
+
 ## ThingsBoard API
 [OTA Firmware updates](https://thingsboard.io/docs/user-guide/ota-updates/)
 [Shared Attributes](https://thingsboard.io/docs/user-guide/attributes/#shared-attributes)

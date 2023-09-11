@@ -6,6 +6,10 @@
 |  Arduino Uno         |
 |  GSM Modem (SIM9000) |
 
+## Framework
+
+Arduino
+
 ## ThingsBoard API
 [Telemetry](https://thingsboard.io/docs/user-guide/telemetry/)
 

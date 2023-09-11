@@ -19,7 +19,8 @@
 #include <mqtt_client.h>
 
 /// @brief MQTT Client interface implementation that uses the offical ESP MQTT client from Espressif (https://github.com/espressif/esp-mqtt),
-/// under the hood to establish and communicate over a MQTT connection.
+/// under the hood to establish and communicate over a MQTT connection. This component works with both Espressif IDF v4.X and v5.X, meaning it is version idependent, this is the case
+/// because depending on the used version the implementation automatically adjusts to still initalize the client correctly.
 /// Documentation about the specific use and caviates of the ESP MQTT client can be found here https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html.
 class Espressif_MQTT_Client : public IMQTT_Client {
   public:
@@ -27,7 +28,8 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     Espressif_MQTT_Client();
 
     /// @brief Configured the server certificate, which allows to connected to the MQTT broker over a secure TLS / SSL conenction instead of the default unencrypted channel.
-    /// The first option is recommended if relevant data is sent or if the client receives and handles Remote Procedure Calls or Shared Attribute Update Callbacks from the server,
+    /// Has to be called before initally calling connect() on the client to ensure the certificate is set before the connection is established, if that is not done the connection will not be encrypted.
+    /// Encryption is recommended if relevant data is sent or if the client receives and handles Remote Procedure Calls or Shared Attribute Update Callbacks from the server,
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways.
     /// However if Over the Air udpates are enabled secure communication should definetly be enabled, because if that is not done a 3rd party might impersonate the server sending a malicious payload,
     /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or make it otherwise unusable.
@@ -57,13 +59,6 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 
     bool connected() override;
 
-    /// @brief Event handler registered to receive MQTT events. Is called by the MQTT client event loop, whenever a new event occurs.
-    /// @param handler_args User data registered to the event
-    /// @param base Event base for the handler
-    /// @param event_id The id for the received event
-    /// @param event_data The data for the event, esp_mqtt_event_handle_t
-    void mqtt_event_handler(void *handler_args, esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data);
-
 private:
     function m_received_data_callback;
     bool m_connected;
@@ -71,6 +66,18 @@ private:
     esp_mqtt_client_handle_t m_mqtt_client;
 
     static Espressif_MQTT_Client *m_instance;
+
+    /// @brief Is internalyl used to allow changes to the underlying configuration of the esp_mqtt_client_handle_t after it has connected,
+    /// to for example increase the buffer size or increase the timeouts or stack size
+    /// @return Whether updating the configuration with the changed settings was successfull or not.
+    bool update_configuration();
+
+    /// @brief Event handler registered to receive MQTT events. Is called by the MQTT client event loop, whenever a new event occurs
+    /// @param handler_args User data registered to the event
+    /// @param base Event base for the handler
+    /// @param event_id The id for the received event
+    /// @param event_data The data for the event, esp_mqtt_event_handle_t
+    void mqtt_event_handler(void *handler_args, esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data);
 
     static void static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 };

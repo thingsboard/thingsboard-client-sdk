@@ -4,11 +4,10 @@
 | Supported Devices |
 |-------------------|
 |  ESP32            |
-|  ESP8266          |
 
 ## Framework
 
-Arduino
+Espressif IDF
 
 ## ThingsBoard API
 [Telemetry](https://thingsboard.io/docs/user-guide/telemetry/)
