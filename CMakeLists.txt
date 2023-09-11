@@ -33,8 +33,8 @@ if(ESP_PLATFORM)
 	# Build ThingsBoard Arduino SDK as an ESP-IDF component
 	idf_component_register(
 		SRCS ${srcs}
-		INCLUDE_DIRS "."
-        PRIV_INCLUDE_DIRS "."
+		INCLUDE_DIRS "src"
+        PRIV_INCLUDE_DIRS "src"
 		REQUIRES ${dependencies}
 		PRIV_REQUIRES ${private_dependencies}
 	)
