@@ -6,6 +6,10 @@
 |  ESP32            |
 |  ESP8266          |
 
+## Framework
+
+Arduino
+
 ## ThingsBoard API
 [Provisioning devices](https://thingsboard.io/docs/user-guide/device-provisioning/)
 

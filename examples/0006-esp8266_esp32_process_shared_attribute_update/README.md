@@ -6,6 +6,10 @@
 |  ESP32            |
 |  ESP8266          |
 
+## Framework
+
+Arduino
+
 ## ThingsBoard API
 [Shared Attributes](https://thingsboard.io/docs/user-guide/attributes/#shared-attributes)
 
