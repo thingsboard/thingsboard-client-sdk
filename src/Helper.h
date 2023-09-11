@@ -13,7 +13,7 @@
 // Library include.
 #include <stdint.h>
 #include <ArduinoJson.h>
-#ifdef THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_STL
 #include <iterator>
 #endif // THINGSBOARD_ENABLE_STL
 
