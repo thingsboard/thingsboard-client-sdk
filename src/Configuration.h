@@ -7,6 +7,10 @@
 #ifndef Configuration_h
 #define Configuration_h
 
+// Library includes.
+#include <sdkconfig.h>
+
+
 // Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
 // See https://arduinojson.org/v6/api/config/use_long_long/ for more information
 #define ARDUINOJSON_USE_LONG_LONG 1
@@ -110,15 +114,27 @@
 // Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
 // If enabled the program might be slightly slower and all the memory will be placed onto the heap instead of the stack.
 // See https://arduinojson.org/v6/api/dynamicjsondocument/ for the main difference in the underlying code.
+// Can also optionally be configured via the ESP-IDF menuconfig, if that is the done the value is set to the value entered in the menuconfig,
+// if the value is manually overriden tough with a #define before including ThingsBoard then the hardcoded value takes precendence.
 #  ifndef THINGSBOARD_ENABLE_DYNAMIC
-#    define THINGSBOARD_ENABLE_DYNAMIC 0
+#    ifndef CONFIG_THINGSBOARD_ENABLE_DYNAMIC
+#      define THINGSBOARD_ENABLE_DYNAMIC 0
+#    else
+#      define THINGSBOARD_ENABLE_DYNAMIC CONFIG_THINGSBOARD_ENABLE_DYNAMIC
+#    endif
 #  endif
 
 // Enables the ThingsBoard class to print all received and sent messages and their topic, from and to the server,
 // additionally some more debug messages will be printed. Requires more flash memory, and more Serial calls requiring more performance.
 // Recommended to disable when building for release.
+// Can also optionally be configured via the ESP-IDF menuconfig, if that is the done the value is set to the value entered in the menuconfig,
+// if the value is manually overriden tough with a #define before including ThingsBoard then the hardcoded value takes precendence.
 #  ifndef THINGSBOARD_ENABLE_DEBUG
-#    define THINGSBOARD_ENABLE_DEBUG 0
+#    ifndef CONFIG_THINGSBOARD_ENABLE_DEBUG
+#      define THINGSBOARD_ENABLE_DEBUG 0
+#    else
+#      define THINGSBOARD_ENABLE_DEBUG CONFIG_THINGSBOARD_ENABLE_DEBUG
+#    endif
 #  endif
 
 // Enables the usage of an additonal library as a fallback, to directly serialize a json message that is sent to the cloud,
@@ -132,7 +148,7 @@
 // Enables the ThingsBoard class to save the allocated memory of the DynamicJsonDocument into psram instead of onto the sram.
 // Enabled by default if THINGSBOARD_ENABLE_DYNAMIC has been set and the esp_heap_caps header exists, because it requries DynamicJsonDocument to work.
 // If enabled the program might be slightly slower, but all the memory will be placed onto psram instead of sram, meaning the sram can be allocated for other things.
-// See https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/ and https://arduinojson.org/v6/api/basicjsondocument/ for for the main difference in the underlying code.
+// See https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/ and https://arduinojson.org/v6/api/basicjsondocument/ for the main difference in the underlying code.
 #  ifdef __has_include
 #    if  THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
 #      ifndef THINGSBOARD_ENABLE_PSRAM
