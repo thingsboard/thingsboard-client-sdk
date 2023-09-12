@@ -30,6 +30,9 @@ bool Espressif_Updater::begin(const size_t& firmware_size) {
         return false;
     }
 
+    // Temporary handle is used, because it allows using a void* as the actual ota_handle,
+    // allowing us to only include the esp_ota_ops header in the defintion (.cpp) file,
+    // instead of also needing to declare it in the declaration (.h) header file
     esp_ota_handle_t ota_handle;
     const esp_err_t error = esp_ota_begin(update_partition, firmware_size, &ota_handle);
 
