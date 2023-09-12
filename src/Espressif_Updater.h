@@ -18,9 +18,7 @@
 #include "IUpdater.h"
 
 
-constexpr size_t SPI_FLASH_HEADER_SIZE = 16U;
-
-
+/// @brief IUpdater implementation, which uses the Over the Air Update API of Espressif in the background, see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/ota.html for more information
 class Espressif_Updater : public IUpdater {
   public:
     Espressif_Updater();
@@ -32,33 +30,10 @@ class Espressif_Updater : public IUpdater {
     void reset() override;
   
     bool end() override;
-  
-  private:
-    uint8_t *m_data_buffer;
-    // First 16 bytes are seperated so a partially written firmware is not bootable,
-    // is written back at the correct place in flash memory at the successfull end of the update.
-    uint8_t m_start_data_buffer[SPI_FLASH_HEADER_SIZE];
-    size_t m_written_bytes_amount;
-    size_t m_total_bytes_amount;
-    size_t m_buffer_length;
-    const void *m_ota_partition;
 
-    bool write_buffer();
-
-    bool verify_end();
-
-    bool started_update() const;
-    
-    size_t remaining_bytes() const;
-
-    bool is_partition_bootable() const;
-
-    bool write_start_data() const;
-
-    bool is_finished() const;
-
-    bool check_if_block_is_empty(const uint8_t* payload, const size_t& total_bytes) const;
-
+    private:
+      uint32_t m_ota_handle;
+      const void *m_update_partition;
 };
 
 #endif // THINGSBOARD_USE_ESP_PARTITION

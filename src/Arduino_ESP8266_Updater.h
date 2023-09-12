@@ -18,6 +18,7 @@
 #include "IUpdater.h"
 
 
+/// @brief IUpdater implementation using the Arduino Updater class in the background, all calls are simply forwarded directly
 class Arduino_ESP8266_Updater : public IUpdater {
   public:
     bool begin(const size_t& firmware_size) override;
