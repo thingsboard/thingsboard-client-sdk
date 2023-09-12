@@ -7,7 +7,14 @@
 
 // Library include.
 #include <esp_ota_ops.h>
+#include <esp_idf_version.h>
+// ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the old esp_spi_flash.h header has been deprecated and spi_flash_mmap should be used instead.
+#if ESP_IDF_VERSION_MAJOR < 5
 #include <esp_spi_flash.h>
+#else
+#include <spi_flash_mmap.h>
+#endif // ESP_IDF_VERSION_MAJOR < 5
+#include <esp_app_format.h>
 #include <string.h>
 
 
