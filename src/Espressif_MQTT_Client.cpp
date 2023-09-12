@@ -16,15 +16,78 @@ Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_instance = this;
 }
 
-void Espressif_MQTT_Client::set_server_certificate(const char *server_certificate_pem) {
-    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+bool Espressif_MQTT_Client::set_server_certificate(const char *server_certificate_pem) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely.
+    // Because PEM format is expected for the server certificate we do not need to set the certificate_len,
+    // because the PEM format expects a null-terminated string.
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.cert_pem = server_certificate_pem;
 #else
-    // Because PEM format is expected for the server certificate we do not need to set the certificate_len,
-    // because the PEM format expects a null-terminated string.
     m_mqtt_configuration.broker.verification.certificate = server_certificate_pem;
 #endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
+bool Espressif_MQTT_Client::set_keep_alive_timeout(const uint16_t& keep_alive_timeout_seconds) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.keepalive = keep_alive_timeout_seconds;
+#else
+    m_mqtt_configuration.session.keepalive = keep_alive_timeout_seconds;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
+bool Espressif_MQTT_Client::set_disable_keep_alive(const bool& disable_keep_alive) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.disable_keepalive = disable_keep_alive;
+#else
+    m_mqtt_configuration.session.disable_keepalive = disable_keep_alive;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
+bool Espressif_MQTT_Client::set_disable_auto_reconnect(const bool& disable_auto_reconnect) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.disable_auto_reconnect = disable_auto_reconnect;
+#else
+    m_mqtt_configuration.network.disable_auto_reconnect = disable_auto_reconnect;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
+bool Espressif_MQTT_Client::set_mqtt_task_configuration(const uint8_t& priority, const uint16_t& stack_size) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.task_prio = priority;
+    m_mqtt_configuration.task_stack = stack_size;
+#else
+    m_mqtt_configuration.task.priority = priority;
+    m_mqtt_configuration.task.stack_size = stack_size;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
+bool Espressif_MQTT_Client::set_reconnect_timeout(const uint16_t& reconnect_timeout_milliseconds) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.reconnect_timeout_ms = reconnect_timeout_milliseconds;
+#else
+    m_mqtt_configuration.network.reconnect_timeout_ms = reconnect_timeout_milliseconds;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
+bool Espressif_MQTT_Client::set_network_timeout(const uint16_t& network_timeout_milliseconds) {
+    // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.network_timeout_ms = network_timeout_milliseconds;
+#else
+    m_mqtt_configuration.network.timeout_ms = network_timeout_milliseconds;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
 }
 
 void Espressif_MQTT_Client::set_callback(function cb) {
