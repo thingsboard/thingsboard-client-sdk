@@ -1,5 +1,5 @@
 // Header include.
-#include "ESP8266_Updater.h"
+#include "Arduino_ESP8266_Updater.h"
 
 #if THINGSBOARD_ENABLE_OTA
 
@@ -8,19 +8,19 @@
 // Library include.
 #include <Updater.h>
 
-bool ESP8266_Updater::begin(const size_t& firmware_size) {
+bool Arduino_ESP8266_Updater::begin(const size_t& firmware_size) {
     return Update.begin(firmware_size);
 }
 
-size_t ESP8266_Updater::write(uint8_t* payload, const size_t& total_bytes) {
+size_t Arduino_ESP8266_Updater::write(uint8_t* payload, const size_t& total_bytes) {
     return Update.write(payload, total_bytes);
 }
 
-void ESP8266_Updater::reset() {
+void Arduino_ESP8266_Updater::reset() {
     // Nothing to do
 }
 
-bool ESP8266_Updater::end() {
+bool Arduino_ESP8266_Updater::end() {
     return Update.end();
 }
 

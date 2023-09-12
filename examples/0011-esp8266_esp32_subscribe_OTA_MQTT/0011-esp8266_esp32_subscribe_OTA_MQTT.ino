@@ -14,10 +14,10 @@
 #include <ThingsBoard.h>
 
 #ifdef ESP8266
-#include <ESP8266_Updater.h>
+#include <Arduino_ESP8266_Updater.h>
 #else
 #ifdef ESP32
-#include <ESP32_Updater.h>
+#include <Arduino_ESP32_Updater.h>
 #endif // ESP32
 #endif // ESP8266
 
@@ -272,15 +272,15 @@ void updatedCallback(const bool& success) {
 /// @brief Progress callback that will be called every time we downloaded a new chunk successfully
 /// @param currentChunk 
 /// @param totalChuncks 
-void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks) {
+void progressCallback(const size_t& currentChunk, const size_t& totalChuncks) {
   Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
 }
 
 #ifdef ESP8266
-ESP8266_Updater updater;
+Arduino_ESP8266_Updater updater;
 #else
 #ifdef ESP32
-ESP32_Updater updater;
+Arduino_ESP32_Updater updater;
 #endif // ESP32
 #endif // ESP8266
 

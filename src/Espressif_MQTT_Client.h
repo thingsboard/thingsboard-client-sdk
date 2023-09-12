@@ -35,7 +35,48 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or make it otherwise unusable.
     /// See https://stackoverflow.blog/2020/12/14/security-considerations-for-ota-software-updates-for-iot-gateway-devices/ for more information on the aforementioned security risk
     /// @param server_certificate_pem Null-terminated string containg the root certificate in PEM format, of the server we are attempting to send to and receive MQTT data from
-    void set_server_certificate(const char *server_certificate_pem);
+    /// @return Whether chaing the internal server certificate was successful or not, ensure to disconnect and reconnect to actually apply the change.
+    bool set_server_certificate(const char *server_certificate_pem);
+
+    /// @brief Sets the keep alive timeout in seconds, if the value is 0 then the default of 120 seconds is used instead to disable the keep alive mechanism use set_disable_keep_alive() instead.
+    /// The default timeout value ThingsBoard expectes to receive any message including a keep alive to not show the device as inactive can be found here https://thingsboard.io/docs/user-guide/install/config/#mqtt-server-parameters
+    /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning a value bigger than 300 seconds with the default config defeats the purpose of the keep alive alltogether
+    /// @param keep_alive_timeout_seconds Timeout until we send another PINGREQ control packets to the broker to establish that we are still connected
+    /// @return Whether changing the internal keep alive timeout was successful or not
+    bool set_keep_alive_timeout(const uint16_t& keep_alive_timeout_seconds);
+
+    /// @brief Whether to disable or enable the keep alive mechanism, meaning we do not send any PINGREQ control packets to the broker anymore, meaning if we do not send other packet the device will be marked as inactive.
+    /// The default value is false meaning the keep alive mechanism is enabled.
+    /// The default timeout value ThingsBoard expectes to receive any message including a keep alive to not show the device as inactive can be found here https://thingsboard.io/docs/user-guide/install/config/#mqtt-server-parameters
+    /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning if we disable the keep alive mechanism and do not send a packet atleast every 300 seconds with the default config then the device will change states between active and inactive
+    /// @param disable_keep_alive Whether to enable or disable the internal keep alive mechanism, which sends PINGREQ control packets every keep alive timeout seconds, configurable in set_keep_alive_timeout()
+    /// @return Whether enabling or disabling the internal keep alive mechanism was successful or not
+    bool set_disable_keep_alive(const bool& disable_keep_alive);
+
+    /// @brief Wheter to disable or enable that the MQTT client will reconnect to the server automatically if it errors or disconnects. The default is false meaning we will automatially reconnect
+    /// @param disable_auto_reconnect Whether to automatically reconnect if the the client errors or disconnects
+    /// @return Whether enabling or disabling the internal auto reconnect mechanism was successful or not
+    bool set_disable_auto_reconnect(const bool& disable_auto_reconnect);
+
+    /// @brief Sets the priority of the MQTT task running in the background and handling the receiving and sending of any outstanding MQTT messages to or from the broker.
+    /// The default value for the priority is 5 and can also be changed in the ESp IDF menuconfig and the default value for the stack size 
+    /// @param priority Task priority with which the MQTT task should run, higher priority means it takes more precedence over other tasks, making it more important, default value is 5 and can be changed in the ESP IDF menuconfig
+    /// @param stack_size Task stack size meaning how much stack size the MQTT task can use before the device crashes with a StackOverflow, default value is 6144 bytes, can be changed in the ESP IDF menuconfig
+    /// @return Whether changing the internal MQTT task configurations were successfull or not
+    bool set_mqtt_task_configuration(const uint8_t& priority, const uint16_t& stack_size);
+
+    /// @brief Sets the amount of time in milliseconds that we wait before we automatically reconnect to the MQTT broker if the connection has been lost. The default value is 10 seconds.
+    /// Will be ignored if set_disable_auto_reconnect() has been set to true, because we will not reconnect automatically anymore, instead that would have to be done by the user
+    /// @param reconnect_timeout_milliseconds Time in milliseconds until we automatically reconnect to the MQTT broker
+    /// @return Whether changing the internal reconnect timeout was successfull or not
+    bool set_reconnect_timeout(const uint16_t& reconnect_timeout_milliseconds);
+
+    /// @brief Sets the amount of time in millseconds that we wait until we expect a netowrk operation on the MQTT client to have successfully finished. The defalt value is 10 seconds.
+    /// If that is not the case then the network operation will be aborted, might be useful to increase for devices that perform other high priority tasks and do not have enough CPU resources,
+    /// to send bigger messages to the MQTT broker in time, which can cause disconnects and the sent message being discarded
+    /// @param network_timeout_milliseconds Time in milliseconds that we wait until we abort the network operation if it has not completed yet
+    /// @return Whether changing the internal network timeout was successfull or not
+    bool set_network_timeout(const uint16_t& network_timeout_milliseconds);
 
     void set_callback(function cb) override;
 

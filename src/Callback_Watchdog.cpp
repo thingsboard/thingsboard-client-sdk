@@ -32,7 +32,7 @@ Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback) :
             .arg = nullptr,
             .dispatch_method = esp_timer_dispatch_t::ESP_TIMER_TASK,
             .name = WATCHDOG_TIMER_NAME,
-            .skip_unhandled_events = false,
+            .skip_unhandled_events = false
     };
     // Temporary handle is used, because it allows using a void* as the actual oneshot_timer,
     // allowing us to only include the esp_timer header in the defintion (.cpp) file,

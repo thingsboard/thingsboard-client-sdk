@@ -1,24 +1,24 @@
 /*
-  ESP32_Updater.h - Library API for sending data to the ThingsBoard
+  Arduino_ESP8266_Updater.h - Library API for sending data to the ThingsBoard
   Based on PubSub MQTT library.
   Created by Olender M. Oct 2018.
   Released into the public domain.
 */
-#ifndef ESP32_Updater_h
-#define ESP32_Updater_h
+#ifndef Arduino_ESP8266_Updater_h
+#define Arduino_ESP8266_Updater_h
 
 // Local include.
 #include "Configuration.h"
 
 #if THINGSBOARD_ENABLE_OTA
 
-#if defined(ESP32) && defined(ARDUINO)
+#if defined(ESP8266) && defined(ARDUINO)
 
 // Local include.
 #include "IUpdater.h"
 
 
-class ESP32_Updater : public IUpdater {
+class Arduino_ESP8266_Updater : public IUpdater {
   public:
     bool begin(const size_t& firmware_size) override;
   
@@ -29,8 +29,8 @@ class ESP32_Updater : public IUpdater {
     bool end() override;
 };
 
-#endif // defined(ESP32) && defined(ARDUINO)
+#endif // defined(ESP8266) && defined(ARDUINO)
 
 #endif // THINGSBOARD_ENABLE_OTA
 
-#endif // ESP32_Updater_h
+#endif // Arduino_ESP8266_Updater_h

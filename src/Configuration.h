@@ -69,7 +69,7 @@
 #  endif
 
 // Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists,
-// to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client
+// to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client.
 #  ifdef __has_include
 #    if  __has_include(<mqtt_client.h>)
 #      ifndef THINGSBOARD_USE_ESP_MQTT
@@ -98,6 +98,22 @@
 #    endif
 #  else
 #    define THINGSBOARD_USE_MBED_TLS 0
+#  endif
+
+// Use the espressif partitions header internally for handling the writing of ota update data, as long as the header exists,
+// to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
+#  ifdef __has_include
+#    if  __has_include(<esp_ota_ops.h>) &&  __has_include(<esp_spi_flash.h>)
+#      ifndef THINGSBOARD_USE_ESP_PARTITION
+#        define THINGSBOARD_USE_ESP_PARTITION 1
+#      endif
+#    else
+#      ifndef THINGSBOARD_USE_ESP_PARTITION
+#        define THINGSBOARD_USE_ESP_PARTITION 0
+#      endif
+#    endif
+#  else
+#    define THINGSBOARD_USE_ESP_PARTITION 0
 #  endif
 
 // Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
