@@ -120,7 +120,7 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
 
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (%s)";
+constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -149,7 +149,7 @@ constexpr char SEND_MESSAGE[] PROGMEM = "Sending data to server over topic (%s) 
 constexpr char SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
 #else
-constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (%s)";
+constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
 constexpr char NUMBER_PRINTF[] = "%u";
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -1902,6 +1902,15 @@ class ThingsBoardSized {
       Logger::log(message);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
+#if THINGSBOARD_ENABLE_OTA
+      // When receiving the ota binary payload we do not want to deserialize it into json, because it only contains
+      // firmware bytes that should be directly writtin into flash, therefore we can skip that step and directly process those bytes
+      if (strncmp_P(FIRMWARE_RESPONSE_TOPIC, topic, strlen(FIRMWARE_RESPONSE_TOPIC)) == 0) {
+        process_firmware_response(topic, payload, length);
+        return;
+      }
+#endif // THINGSBOARD_ENABLE_OTA
+
 #if THINGSBOARD_ENABLE_DYNAMIC
       // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
       // Data structure size depends on the amount of key value pairs received.
@@ -1937,10 +1946,6 @@ class ThingsBoardSized {
         process_shared_attribute_update_message(topic, data);
       } else if (strncmp_P(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
         process_provisioning_response(topic, data);
-      } else if (strncmp_P(FIRMWARE_RESPONSE_TOPIC, topic, strlen(FIRMWARE_RESPONSE_TOPIC)) == 0) {
-#if THINGSBOARD_ENABLE_OTA
-        process_firmware_response(topic, payload, length);
-#endif // THINGSBOARD_ENABLE_OTA
       }
     }
 
