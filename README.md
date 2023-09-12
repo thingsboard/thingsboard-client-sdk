@@ -17,9 +17,59 @@ This library provides access to ThingsBoard platform over the `MQTT` protocol or
 The SDK comes with a number of example sketches. See **Files --> Examples --> ThingsBoard** within the Arduino application.
 Please review the complete guide for `ESP32` Pico Kit `GPIO` control and `DHT22` sensor monitoring available [here](https://thingsboard.io/docs/samples/esp32/gpio-control-pico-kit-dht22-sensor/).
 
+## Supported Frameworks
+
+`ThingsBoardArduinoSDK` does not directly depend on any specific `MQTT Client` or `HTTP Client` implementation, instead any implementation of the `IMQTT_Client` or `IHTTP Client` can be used. Because there are no further dependencies on `Arduino`, besides the client that communicates it allows us to use this library with `Arduino`, when using the `Arduino_MQTT_Client` or with `Espressif IDF` when using the `Espressif_MQTT_Client`.
+
+Example usage for `Espressif` can be found in the `examples/0014-espressif_esp32_send_data` folder, all other code portions can be implemented the same way only initialization of the needed dependencies is slightly different. Meaning internal call to `ThingsBoard` works the same on both `Espressif` and `Arduino`.
+
+This is also the case, because the only always used dependency that is remaining, is [`ArduinoJson`](https://arduinojson.org/), which despite its name does not require any `Arduino` component.
+
 ## Installation
 
-ThingsBoard SDK can be installed directly from the [Arduino Library manager](https://docs.arduino.cc/software/ide-v1/tutorials/installing-libraries) or [PlattformIO](https://registry.platformio.org/).
+This project can be built with either [PlatformIO](https://platformio.org/), [`ESP IDF Extension`](https://www.espressif.com/) or [Arduino IDE](https://www.arduino.cc/en/software).
+
+The project can be found in the [PlatformIO Registry](https://registry.platformio.org/libraries/thingsboard/ThingsBoard), [ESP Component registry](https://components.espressif.com/components/thingsboard/thingsboard) or the [Arduino libraries](https://www.arduino.cc/reference/en/libraries/thingsboard/).
+
+A description on how to include the library in you project can be found below for each of the aforementioned possible methods of integrating the project.
+
+#### PlatformIO
+
+To add an external library, the most important portion is the [`lib_deps`](https://docs.platformio.org/en/latest/projectconf/sections/env/options/library/lib_deps.html) specification, simply add `thingsboard/ThingsBoard`.
+There are multiple ways to define the version that should be fetched, but the most basic is simply getting the last released version, with the aforementioned line, to learn more see [Package Specifications](https://docs.platformio.org/en/latest/core/userguide/pkg/cmd_install.html#package-specifications).
+
+```
+lib_deps=
+    thingsboard/ThingsBoard
+```
+
+#### ESP IDF Extension
+
+To add an external library, what needs to be done differs between versions. If an [ESP-IDF](https://github.com/espressif/esp-idf) version after and including `v3.2.0` is used
+then the project can simply be added over the [Component Manager](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-component-manager.html).
+
+To do that we can simply call `idf.py add-dependency <DEPENDENCY>`, with the name of the dependency as an argument. Similar to `PlatformIO` there are a multiple way to define the version that should be fetched, but the method below is the most basic to simply get the last released version, to learn more see [Using Component Manager with a Project](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-component-manager.html#using-with-a-project).
+
+```
+idf.py add-dependency "thingsboard/ThingsBoard"
+```
+
+If an [ESP-IDF](https://github.com/espressif/esp-idf) version prior to `v3.2.0` is used then the component has to be added as a `git submodule`.
+Meaning the repository has to first be a `git` project, if that is not the case already simply install `git` and call `git init` in the folder containing your project.
+
+Similar to the other call there are a multiple way to define the version that should be fetched, but the method below is the most basic to simply get the last released version, to learn more see [Git Submodule Help page](https://git-scm.com/docs/git-submodule).
+
+```
+git submodule add https://github.com/thingsboard/thingsboard-arduino-sdk.git components/ThingsBoard
+```
+
+#### Arduino IDE
+
+To add an external library, we simply have to open `Tools` -> `Manage Libraries` and then search for `ThingsBoard` then press the `install` button for the wanted version. See [how to install library on Arduino IDE](https://arduinogetstarted.com/faq/how-to-install-library-on-arduino-ide) for more detailed information and some troubleshooting if the aforementioned method does not work.
+
+
+## Dependencies
+
 Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
@@ -48,7 +98,7 @@ All possible features are implemented over `MQTT`
  - [Device claiming](https://thingsboard.io/docs/reference/mqtt-api/#claiming-devices)
  - [Firmware OTA update](https://thingsboard.io/docs/reference/mqtt-api/#firmware-api)
 
-Over `HTTP\S`:
+### Over `HTTP\S`:
 
 Remaining features have to be implemented by hand with the `sendGetRequest` or `sendPostRequest` method, see the [ThingsBoard Documentation](https://thingsboard.io/docs/reference/http-api) on how these features could be implemented.
 
@@ -57,15 +107,9 @@ Remaining features have to be implemented by hand with the `sendGetRequest` or `
 
 Example implementations for all base features, mentioned above, can be found in the `examples` folder. See the according `README.md`, to see which boards are supported and which functionality the example shows.
 
-## Supported Frameworks
-
-`ThingsBoardArduinoSDK` does not directly depend on any specific `MQTT Client` or `HTTP Client` implementation, instead any implementation of the `IMQTT_Client` or `IHTTP Client` can be used. Because there are no further dependencies on `Arduino`, besides the client that communicates it allows us to use this library with `Arduino`, when using the `Arduino_MQTT_Client` or with `Espressif IDF` when using the `Espressif_MQTT_Client`.
-
-Example usage for `Espressif` can be found in the `examples/0014-espressif_esp32_send_data` folder, all other code portions can be implemented the same way only initialization of the needed dependencies is slightly different. Meaning internal call to `ThingsBoard` works the same on both `Espressif` and `Arduino`.
-
-This is also the case, because the only always used dependency that is remaining, is [`ArduinoJson`](https://arduinojson.org/), which despite its name does not require any `Arduino` component.
-
 ## Troubleshooting
+
+This troubleshooting guide contains common issues that are well known and can occur if the library is used wrongly. Ensure to read this section before creating a new `GitHub Issue`.
 
 ### No PROGMEM support causing crashes
 
