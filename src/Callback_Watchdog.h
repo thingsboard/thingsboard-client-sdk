@@ -49,6 +49,11 @@ class Callback_Watchdog {
 
     static Callback_Watchdog *m_instance;
 
+#if THINGSBOARD_USE_ESP_TIMER
+    /// @brief Creates and initally configures the timer, has to be done once before either esp_timer_start_once or esp_timer_stop is called.
+    void create_timer();
+#endif // THINGSBOARD_USE_ESP_TIMER
+
     /// @brief Static callback used to call the initally subscribed callback, if the internal watchdog has not been fed with detach()
 #if THINGSBOARD_USE_ESP_TIMER
     /// @param arg Possible argument passed to the timer callback
