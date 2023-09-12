@@ -351,15 +351,15 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_OTA
     {
       setBufferSize(bufferSize);
+
       // Initalize callback.
 #if THINGSBOARD_ENABLE_STL
       m_client.set_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 #else
       m_client.set_callback(ThingsBoardSized::onStaticMQTTMessage);
-#endif // THINGSBOARD_ENABLE_STL
-#if !THINGSBOARD_ENABLE_STL
       m_subscribedInstance = this;
-#endif // !THINGSBOARD_ENABLE_STL
+#endif // THINGSBOARD_ENABLE_STL
+
 #if !THINGSBOARD_ENABLE_DYNAMIC
       reserve_callback_size(MaxFieldsAmt);
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

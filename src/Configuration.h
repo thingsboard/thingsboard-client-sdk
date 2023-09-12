@@ -100,10 +100,10 @@
 #    define THINGSBOARD_USE_MBED_TLS 0
 #  endif
 
-// Use the espressif partitions header internally for handling the writing of ota update data, as long as the header exists,
+// Use the esp_ota_ops header internally for handling the writing of ota update data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
 #  ifdef __has_include
-#    if  __has_include(<esp_ota_ops.h>) &&  (__has_include(<esp_spi_flash.h>) || __has_include(<spi_flash_mmap.h>)) && __has_include(<esp_app_format.h>)
+#    if  __has_include(<esp_ota_ops.h>)
 #      ifndef THINGSBOARD_USE_ESP_PARTITION
 #        define THINGSBOARD_USE_ESP_PARTITION 1
 #      endif
