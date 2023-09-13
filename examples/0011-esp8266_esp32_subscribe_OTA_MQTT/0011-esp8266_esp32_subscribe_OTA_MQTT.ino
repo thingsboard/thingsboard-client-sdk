@@ -17,7 +17,16 @@
 #include <Arduino_ESP8266_Updater.h>
 #else
 #ifdef ESP32
-#include <Arduino_ESP32_Updater.h>
+// We do theoretically have an Arduino_ESP32_Updater component, which has dependencies on Arduino and used the UpdaterClass,
+// but it makes not sense to use that component atleast currently, because it simply implements writing to partitions
+// in a very suboptimal way, allocatng 4KB on the heap and even causing undefined behaviour and even memory leaks.
+// See https://github.com/espressif/arduino-esp32/issues/7984#issuecomment-1717151822 for more information on the issues with the UpdaterClass.
+// Therefore instead it is recommended to use the Epsressif_Updater which directly uses the headers, which are included in the UpdaterClass anyway,
+// but because it directly use the OTA Update API see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/ota.html for more information,
+// it is more efficient and does not have any of the aforementioned issues.
+// Thanks to those issues it is highly recommended to use the Espressif_Updater as long as the issue has not been resolved on a Arduino level, additional the same is the case
+// if an older version of Arduino is used that might not contain the possible fixes yet.
+#include <Espressif_Updater.h>
 #endif // ESP32
 #endif // ESP8266
 
@@ -280,7 +289,7 @@ void progressCallback(const size_t& currentChunk, const size_t& totalChuncks) {
 Arduino_ESP8266_Updater updater;
 #else
 #ifdef ESP32
-Arduino_ESP32_Updater updater;
+Espressif_Updater updater;
 #endif // ESP32
 #endif // ESP8266
 
