@@ -1,23 +1,21 @@
-# Passive OTA firmware update (not immediate)
+# Active OTA firmware update (immediate)
 
 ## Devices
 | Supported Devices |
 |-------------------|
 |  ESP32            |
-|  ESP8266          |
 
 ## Framework
 
-Arduino
+Espressif IDF
 
 ## ThingsBoard API
 [OTA Firmware updates](https://thingsboard.io/docs/user-guide/ota-updates/)
 [Shared Attributes](https://thingsboard.io/docs/user-guide/attributes/#shared-attributes)
 
 ## Feature
-Subscribing to changes of the firmware shared attributes, which then start an OTA firmware update,
-as soon as they have been updated and include the same title,
-but a different version number then the one that was passed initially
+Requests the current firmware shared attributes which then start an OTA firmware update immediately,
+if the received shared attributes include the same title but a different version number then the one that was passed initially
 
 ## Remarks
 Custom Updater implementation can be used to flash any firmware device as long as it supports the STL base functionality.

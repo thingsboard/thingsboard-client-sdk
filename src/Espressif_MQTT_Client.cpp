@@ -101,6 +101,13 @@ bool Espressif_MQTT_Client::set_buffer_size(const uint16_t& buffer_size) {
 #else
     m_mqtt_configuration.buffer.size = buffer_size;
 #endif // ESP_IDF_VERSION_MAJOR < 5
+
+    // Calls esp_mqtt_set_config(), which should adjust the underlying mqtt client to the changed values.
+    // Which it does but not for the buffer_size, this results in the buffer size only being able to be changed when initally creating the mqtt client.
+    // If the mqtt client is reinitalized this causes disconnected and reconnects tough and the connection becomes unstable.
+    // Therefore this workaround can also not be used. Instead we expect the esp_mqtt_set_config(), to do what the name implies and therefore still call it
+    // and created an issue revolving around the aformentioned problem so it might get fixed in future version of the esp_mqtt client.
+    // See https://github.com/espressif/esp-mqtt/issues/267 for more information on the issue 
     return update_configuration();
 }
 
@@ -150,6 +157,16 @@ bool Espressif_MQTT_Client::connect(const char *client_id, const char *user_name
     m_mqtt_configuration.credentials.username = user_name;
     m_mqtt_configuration.credentials.authentication.password = password;
 #endif // ESP_IDF_VERSION_MAJOR < 5
+    // Update configuration is called to ensure that if we connected previously and call connect again with other credentials,
+    // then we also update the client_id, username and password we connect with. Especially important for the provisioning workflow to work correctly
+    update_configuration();
+
+    // Check wheter the client has been initalzed before already, it it has we do not want to reinitalize,
+    // but simply force reconnection with the client because it has lost that connection
+    if (m_mqtt_client != nullptr) {
+        const esp_err_t error = esp_mqtt_client_reconnect(m_mqtt_client);
+        return error == ESP_OK;
+    }
 
     // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
     // additionally before we attempt to connect with the client we have to ensure it is configued by then.
