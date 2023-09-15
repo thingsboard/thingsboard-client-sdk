@@ -266,8 +266,8 @@ void processClientAttributeRequest(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-const Attribute_Request_Callback sharedCallback(REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend(), &processSharedAttributeRequest);
-const Attribute_Request_Callback clientCallback(REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend(), &processClientAttributeRequest);
+const Attribute_Request_Callback sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
+const Attribute_Request_Callback clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
 
 void setup() {
   // Initalize serial connection for debugging
