@@ -61,7 +61,7 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @param ...args Arguments that will be forwarded into the overloaded vector constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
-    inline Attribute_Request_Callback(function callback, Args... args)
+    inline Shared_Attribute_Callback(function callback, Args... args)
       : Callback(callback, ATT_CB_IS_NULL)
       , m_attributes(std::forward<Args>(args)...)
     {

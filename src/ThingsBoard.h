@@ -352,8 +352,8 @@ class ThingsBoardSized {
       , m_previous_buffer_size(0U)
       , m_change_buffer_size(false)
       , m_fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
-      , m_fw_request_callback(m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
-      , m_fw_update_callback(m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend(), std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1))
+      , m_fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend())
+      , m_fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend())
       , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
 #endif // THINGSBOARD_ENABLE_OTA
     {
@@ -1217,7 +1217,9 @@ class ThingsBoardSized {
       for (const char *att : attributes) {
         // Check if the given attribute is null, if it is skip it
         if (att == nullptr) {
+#if THINGSBOARD_ENABLE_DEBUG
           Logger::log(ATT_IS_NULL);
+#endif // THINGSBOARD_ENABLE_DEBUG
           continue;
         }
 
