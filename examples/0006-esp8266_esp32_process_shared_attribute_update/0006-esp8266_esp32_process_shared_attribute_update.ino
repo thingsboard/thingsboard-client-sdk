@@ -242,7 +242,7 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-const Shared_Attribute_Callback callback(SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend(), processSharedAttributeUpdate);
+const Shared_Attribute_Callback callback(&processSharedAttributeUpdate, SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend());
 
 void setup() {
   // Initalize serial connection for debugging
