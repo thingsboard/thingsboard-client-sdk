@@ -17,7 +17,8 @@
 #endif // THINGSBOARD_ENABLE_STL
 
 
-/// @brief Telemetry record class, allows to store different data using a common interface.
+/// @brief Telemetry record class, allows to store different data using a common interface,
+/// is used to allow to easily create a key-value pair of multiple different types that can then be deserialized into a json message
 class Telemetry {
   public:
     /// @brief Creates an empty Telemetry record containg neither a key nor value
@@ -62,7 +63,7 @@ class Telemetry {
       m_key(key),
       m_value()
     {
-      m_value.real = value;
+        m_value.real = value;
     }
 
     /// @brief Constructs telemetry record from boolean value	
@@ -93,18 +94,18 @@ class Telemetry {
         double      real;
     };
 
-    // Data type inside a container
+    // Data type that is set inside the container
     enum class DataType: const uint8_t {
-        TYPE_NONE,
-        TYPE_BOOL,
-        TYPE_INT,
-        TYPE_REAL,
-        TYPE_STR
+        TYPE_NONE, // Telemetry instance is empty and has not been assigned a value
+        TYPE_BOOL, // Telemetry instance is a key value-pair with a boolean value
+        TYPE_INT, // Telemetry instance is a key value-pair with an integral value
+        TYPE_REAL, // Telemetry instance is a key value-pair with a real (float, double) value
+        TYPE_STR // Telemetry isntance is a key value-pair with a string value
     };
 
-    DataType     m_type;  // Data type flag
-    const char   *m_key;  // Data key
-    Data         m_value; // Data value
+    DataType     m_type;  // Data type flag, showing which value is saved in the class instance
+    const char   *m_key;  // Data key of the key-value pair
+    Data         m_value; // Data value of the key-value pair
 };
 
 // Convenient aliases

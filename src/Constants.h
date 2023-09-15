@@ -65,25 +65,25 @@ constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocu
 
 
 #if THINGSBOARD_ENABLE_PSRAM
-  #include <esp_heap_caps.h>
+#include <esp_heap_caps.h>
 
-  struct SpiRamAllocator {
-    void* allocate(size_t size) {
-      return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
-    }
+struct SpiRamAllocator {
+  void* allocate(size_t size) {
+    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+  }
 
-    void deallocate(void* pointer) {
-      heap_caps_free(pointer);
-    }
+  void deallocate(void* pointer) {
+    heap_caps_free(pointer);
+  }
 
-    void* reallocate(void* ptr, size_t new_size) {
-      return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
-    }
-  };
+  void* reallocate(void* ptr, size_t new_size) {
+    return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
+  }
+};
 
-  using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
+using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
 #elif THINGSBOARD_ENABLE_DYNAMIC
-  using TBJsonDocument = DynamicJsonDocument;
+using TBJsonDocument = DynamicJsonDocument;
 #endif
 
 #endif // Constants_h

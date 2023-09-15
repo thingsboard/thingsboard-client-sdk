@@ -22,16 +22,18 @@
 
 
 /// @brief MQTT Client interface that contains the method that a class that can be used to send and receive data over an MQTT connection should implement.
-/// Seperates the specific implementation used from the ThingsBoard client, allows to use differnt clients depending on different needs.
+/// Seperates the specific implementation used from the ThingsBoard client, allows to use different clients depending on different needs.
 /// In this case the main use case of the seperation is to both support Espressif IDF and Arduino with the following libraries as recommendations.
 /// The default MQTT Client for Arduino is the PubSubClient forked from ThingsBoard (https://github.com/thingsboard/pubsubclient),
 /// it includes fixes to solve issues with using std::function callbacks for non ESP boards.
 /// For Espressif IDF however the default MQTT Client is the esp-mqtt (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html) component.
-/// When using an implementation that does not allow for Arduino it is additional important to disable support for THINGSBOARD_ENABLE_STREAM_UTILS,
+/// The aforementioned recommendations are already implemented in the library and can can simply be used and included when using the library, for Arduino we can simply include Arduino_MQTT_Client
+/// and for Espressif IDF we can simply include the Espressif_MQTT_Client, the implementations have been tested and should be compatible when used in conjunction with the ThingsBoard client.
+/// However when using an implementation that does not allow for Arduino it is additional important to disable support for THINGSBOARD_ENABLE_STREAM_UTILS,
 /// because this feature relies on Arduino as it improves the underlying data streams to directly write the data into the MQTT Client,
-/// but wrirting each byte one by one, would be too slow, therefore the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library is used to buffer thoose calls into bigger packets.
+/// but writing each byte one by one, would be too slow, therefore the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library is used to buffer those calls into bigger packets.
 /// This allows sending data that is very big without requiring to allocate that much memory, because it is sent in smaller packets.
-/// To support this feature, however this interface needs to additionally implement the Print interface, because that is required by the wrapper class BufferingPrint
+/// To support this feature, however this interface needs to additionally implement the Print interface, because that is required by the wrapper class BufferingPrint.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 class IMQTT_Client : public Print {
 #else
@@ -47,8 +49,8 @@ class IMQTT_Client {
 
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
     /// as well as the payload data and the size of that payload data
-    /// @param cb Method that should be called on received MQTT response
-    virtual void set_callback(function cb) = 0;
+    /// @param callback Method that should be called on received MQTT response
+    virtual void set_callback(function callback) = 0;
 
     /// @brief Changes the size of the buffer for sent and received MQTT messages,
     /// using a bigger value than uint16_t for passing the buffer size does not make any sense because the maximum message size received
@@ -77,14 +79,14 @@ class IMQTT_Client {
 
     /// @brief Connects to the previously with set_server configured server instance that should be connected to over the previously defined port
     /// @param id Client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker
-    /// @param user Client usernam that is used to authenticate, who is connecting over MQTT
-    /// @param pass Client password that isused to authenticate, who is connecting over MQTT
+    /// @param user Client username that is used to authenticate, who is connecting over MQTT
+    /// @param pass Client password that is used to authenticate, who is connecting over MQTT
     /// @return Whether the client could establish the connection successfully or not
     virtual bool connect(const char *client_id, const char *user_name, const char *password) = 0;
 
     /// @brief Disconnects from a previously connected server and should release all used resources
     virtual void disconnect() = 0;
-  
+
     /// @brief Receives and sends any outstanding messages from and to the MQTT broker
     /// @return Whether sending or receiving the oustanding the messages was successful or not,
     /// should return false if an internal error occured or the connection has been lost
@@ -137,16 +139,13 @@ class IMQTT_Client {
     /// Once the complete payload has been written ensure to call end_publish() to send any remaining bytes.
     /// Because payload bytes are sent one by one this method is extremly inefficient,
     /// if possible package the payload into bigger chunks and use the write() method with arrays instead
-    /// @param payload_byte Byte containg part of the payload that should be sent
+    /// @param payload_byte Byte containing part of the payload that should be sent
     /// @return The amount of bytes successfully written
     virtual size_t write(uint8_t payload_byte) = 0;
 
-    // Write size bytes from buffer into the payload (only to be used with beginPublish/endPublish)
-    // Returns the number of bytes written
-
-    /// @brief Sends a buffer containg multiple bytes of payload to be published, is meant to be used after having calling begin_publish()
+    /// @brief Sends a buffer containing multiple bytes of payload to be published, is meant to be used after having calling begin_publish()
     /// Once the complete payload has been written ensure to call end_publish() to send any remaining bytes
-    /// @param buffer Buffer containg part of the payload that should be sent
+    /// @param buffer Buffer containing part of the payload that should be sent
     /// @param size Amount of bytes contained in the buffer that should be sent
     /// @return The amount of bytes successfully written
     virtual size_t write(const uint8_t *buffer, size_t size) = 0;

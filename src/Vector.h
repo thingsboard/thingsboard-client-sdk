@@ -155,9 +155,9 @@ class Vector {
     }
 
   private:
-    T* m_elements;
-    size_t m_capacity;
-    size_t m_size;
+    T* m_elements;      // Pointer to the start of our elements
+    size_t m_capacity;  // Allocated capacity that shows how many elements we could hold
+    size_t m_size;      // Used size that shows how many elements we entered
 };
 
 #endif // !THINGSBOARD_ENABLE_STL

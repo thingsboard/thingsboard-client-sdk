@@ -18,7 +18,7 @@
 #endif // THINGSBOARD_ENABLE_STL
 
 
-/// @brief Static helper class that includes some uniliterally used functionalities in multiple places
+/// @brief Static helper class that includes some uniliterally used functionalities in multiple places, especially the ThingsBoardHttp and ThingsBoard implementations
 class Helper {
   public:
     /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
@@ -38,7 +38,7 @@ class Helper {
     /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param source Data source containing our json key value pairs we want to measure
-    /// @return Total size of the string produced by serializeJson + 1
+    /// @return Total size of the string produced by serializeJson + 1 byte for the string null terminator
     template <typename TSource>
     inline static size_t Measure_Json(const TSource& source) {
       return JSON_STRING_SIZE(measureJson(source));

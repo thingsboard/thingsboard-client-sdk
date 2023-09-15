@@ -122,25 +122,28 @@ constexpr char RPC_EMPTY_PARAMS_VALUE[] = "{}";
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 constexpr char INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+#if THINGSBOARD_ENABLE_OTA
 constexpr char NUMBER_PRINTF[] PROGMEM = "%u";
+#endif // THINGSBOARD_ENABLE_OTA
 #if !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char MAX_RPC_EXCEEDED[] PROGMEM = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] PROGMEM = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] PROGMEM = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
+#else
+constexpr char COLON PROGMEM = ':';
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char COMMA PROGMEM = ',';
-constexpr char COLON PROGMEM = ':';
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
 constexpr char RPC_METHOD_NULL[] PROGMEM = "RPC methodName is NULL";
+constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic failed";
+#if THINGSBOARD_ENABLE_DEBUG
 constexpr char NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, passing null JSON";
 constexpr char NOT_FOUND_ATT_UPDATE[] PROGMEM = "Shared attribute update key not found";
+constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
 constexpr char ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
 constexpr char ATT_IS_NULL[] PROGMEM = "Subscribed shared attribute update key is NULL";
 constexpr char ATT_NO_CHANGE[] PROGMEM = "No keys that we subscribed too were changed, skipping callback";
-constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic failed";
-constexpr char ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
-#if THINGSBOARD_ENABLE_DEBUG
 constexpr char CALLING_RPC_CB[] PROGMEM = "Calling subscribed callback for rpc with methodname (%s)";
 constexpr char CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
 constexpr char CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for request with response id (%u)";
@@ -151,25 +154,28 @@ constexpr char SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger 
 #else
 constexpr char UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 constexpr char INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+#if THINGSBOARD_ENABLE_OTA
 constexpr char NUMBER_PRINTF[] = "%u";
+#endif // THINGSBOARD_ENABLE_OTA
 #if !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char MAX_RPC_EXCEEDED[] = "Too many server-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_RPC_REQUEST_EXCEEDED[] = "Too many client-side RPC subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_UPDATE_EXCEEDED[] = "Too many shared attribute update callback subscriptions, increase MaxFieldsAmt or unsubscribe";
 constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute request callback subscriptions, increase MaxFieldsAmt";
+#else
+constexpr char COLON = ':';
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char COMMA = ',';
-constexpr char COLON = ':';
 constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
 constexpr char RPC_METHOD_NULL[] = "RPC methodName is NULL";
+constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
+#if THINGSBOARD_ENABLE_DEBUG
 constexpr char NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
 constexpr char NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
+constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
 constexpr char ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
 constexpr char ATT_IS_NULL[] = "Subscribed shared attribute update key is NULL";
 constexpr char ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
-constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
-constexpr char ATT_KEY_NOT_FOUND[] = "Attribute key not found";
-#if THINGSBOARD_ENABLE_DEBUG
 constexpr char CALLING_RPC_CB[] = "Calling subscribed callback for rpc with methodname (%s)";
 constexpr char CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
 constexpr char CALLING_REQUEST_CB[] = "Calling subscribed callback for request with response id (%u)";
@@ -298,18 +304,18 @@ constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
 
 #if THINGSBOARD_ENABLE_DYNAMIC
 /// @brief Wrapper around any arbitrary MQTT Client implementing the IMQTT_Client interface, to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol.
-/// BufferSize of the underlying data buffer as well as the maximum amount of data points that can ever be sent are either dynamic or can be changed during runtime.
-/// If this feature is not needed and the values can be sent once as template arguements it is recommended to use the static ThingsBoard instance instead.
+/// BufferSize of the underlying data buffer can be changed during the runtime and the maximum amount of data points that can ever be sent or received are automatically deduced at runtime
+/// If this feature of automatic deduction, is not needed, or not wanted because it allocates memory on the heap, then the values can be set once as template arguements.
 /// Simply set THINGSBOARD_ENABLE_DYNAMIC to 0, before including ThingsBoard.h
-/// @tparam Logger Logging class that should be used to print messages generated by ThingsBoard, default = ThingsBoardDefaultLogger
+/// @tparam Logger Logging class that should be used to print messages generated by internal processes, default = ThingsBoardDefaultLogger
 template<typename Logger = ThingsBoardDefaultLogger>
 #else
 /// @brief Wrapper around any arbitrary MQTT Client implementing the IMQTT_Client interface, to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol.
-/// BufferSize of the underlying data buffer as well as the maximum amount of data points that can ever be sent have to defined as template arguments.
-/// Changing is only possible if a new instance of this class is created. If these values should be changeable and dynamic instead.
-/// Simply set THINGSBOARD_ENABLE_DYNAMIC to 1, before including ThingsBoard.h
-/// @tparam MaxFieldsAmt Maximum amount of key value pair that we will be able to sent to ThingsBoard in one call, default = 8
-/// @tparam Logger Logging class that should be used to print messages generated by ThingsBoard, default = ThingsBoardDefaultLogger
+/// BufferSize of the underlying data buffer can be changed during the runtime and the maximum amount of data points that can ever be can be set once as template arguements.
+/// Changing is only possible if a new instance of this class is created. If these values should be automatically deduced at runtime instead then,
+/// simply set THINGSBOARD_ENABLE_DYNAMIC to 1, before including ThingsBoard.h
+/// @tparam MaxFieldsAmt Maximum amount of key value pair that we will be able to sent or received by ThingsBoard in one call, default = 8
+/// @tparam Logger Logging class that should be used to print messages generated by internal processes, default = ThingsBoardDefaultLogger
 template<size_t MaxFieldsAmt = Default_Fields_Amt,
          typename Logger = ThingsBoardDefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
@@ -319,7 +325,7 @@ class ThingsBoardSized {
     /// @param client MQTT Client implementation that should be used to establish the connection to ThingsBoard
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
-    /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the PubSubClient
+    /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
     /// can be theoretically set to only be as big as the biggest message we should every receive from ThingsBoard,
     /// this will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal buffer,
     /// which needs more time than sending a message directly but has the advantage of requiring less memory.
@@ -327,7 +333,8 @@ class ThingsBoardSized {
     /// and decrease the internal buffer size of the mqtt client to what is needed to receive all MQTT messages,
     /// that size can vary but if all ThingsBoard features are used a buffer size of 256 bytes should suffice for receiving most responses.
     /// If the aforementioned feature is not enabled the buffer size might need to be much bigger though,
-    /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger, default = Default_Payload
+    /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger.
+    /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it, default = Default_Payload
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
     /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size
     inline ThingsBoardSized(IMQTT_Client& client, const uint16_t& bufferSize = Default_Payload, const size_t& maxStackSize = Default_Max_Stack_Size, const size_t& bufferingSize = Default_Buffering_Size)
@@ -379,7 +386,7 @@ class ThingsBoardSized {
       return m_client;
     }
 
-    /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before allocating on the heap instead
+    /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
     inline void setMaximumStackSize(const size_t& maxStackSize) {
       m_max_stack = maxStackSize;
@@ -398,16 +405,50 @@ class ThingsBoardSized {
 
     /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
-    /// and if we attempt to send data that is bigger, it will not be sent
-    /// @return Whether allocating the needed memory for the given bufferSize was successful or not.
+    /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
+    /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
+    /// can be theoretically set to only be as big as the biggest message we should every receive from ThingsBoard,
+    /// this will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal buffer,
+    /// which needs more time than sending a message directly but has the advantage of requiring less memory.
+    /// So if that is a problem on the board it might be useful to enable the THINGSBOARD_ENABLE_STREAM_UTILS option
+    /// and decrease the internal buffer size of the mqtt client to what is needed to receive all MQTT messages,
+    /// that size can vary but if all ThingsBoard features are used a buffer size of 256 bytes should suffice for receiving most responses.
+    /// If the aforementioned feature is not enabled the buffer size might need to be much bigger though,
+    /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger.
+    /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it
+    /// @return Whether allocating the needed memory for the given bufferSize was successful or not
     inline bool setBufferSize(const uint16_t& bufferSize) {
       return m_client.set_buffer_size(bufferSize);
+    }
+
+    /// @brief Clears all currently subscribed callbacks and unsubscribed from all
+    /// currently subscribed MQTT topics, any response that will stil be received is discarded
+    /// and any ongoing firmware update is aborted and will not be finished.
+    /// Was previously done automatically in the connect() method, but is not done anymore,
+    /// because connect() method now reconencts to all previously subscribed MQTT topics instead,
+    /// therefore there is no need anymore to discard all previously subscribed callbacks and letting the user resubscribe
+    inline void Cleanup_Subscriptions() {
+      // Cleanup all server-side RPC subscriptions
+      this->RPC_Unsubscribe();
+      // Cleanup all client-side RPC requests
+      this->RPC_Request_Unsubscribe();
+      // Cleanup all shared attributes subscriptions
+      this->Shared_Attributes_Unsubscribe();
+      // Cleanup all client-side or shared attributes requests
+      this->Attributes_Request_Unsubscribe();
+      // Cleanup all provision requests
+      this->Provision_Unsubscribe();
+      // Stop any ongoing Firmware update,
+      // which will in turn cleanup the internal member variables of the OTAHandler class
+      // as well as all firmware subscriptions
+      // and inform the user of the failed firmware update
+      this->Stop_Firmware_Update();
     }
 
     /// @brief Connects to the specified ThingsBoard server over the given port as the given device
     /// @param host ThingsBoard server instance we want to connect to
     /// @param access_token Access token that connects this device with a created device on the ThingsBoard server,
-    /// can be "provision", if the device creates itself instead
+    /// can be "provision", if the device creates itself instead. See https://thingsboard.io/docs/user-guide/device-provisioning/?mqttprovisioning=without#provision-device-apis for more information
     /// @param port Port that will be used to establish a connection and send / receive data from ThingsBoard over
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
@@ -447,7 +488,7 @@ class ThingsBoardSized {
     template <typename TSource>
     inline bool Send_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
-      // if it did the method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information.
+      // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
       if (source.isNull()) {
         Logger::log(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
@@ -536,7 +577,8 @@ class ThingsBoardSized {
 
     /// @brief Sends a claiming request for the given device, allowing any given user on the cloud to assign the device as their own (claim),
     /// as long as they enter the given device name and secret key in the given amount of time.
-    /// Optionally a secret key can be passed or be left empty (cloud will allow any user to claim the device for the given amount of time)
+    /// Optionally a secret key can be passed or be left empty (cloud will allow any user to claim the device for the given amount of time).
+    /// See https://thingsboard.io/docs/user-guide/claiming-devices/ for more information
     /// @param secretKey Password the user additionaly to the device name needs to enter to claim it as their own,
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
     /// @param durationMs Total time in milliseconds the user has to claim their device as their own
@@ -563,8 +605,9 @@ class ThingsBoardSized {
     /// where the given provision device key / secret decide which device profile is used to create the given device with.
     /// Optionally a device name can be passed or be left empty (cloud will use a random string as the name instead).
     /// The cloud then sends back json data containing our credentials, that will call the given callback, if creating the device was successful.
-    /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device
-    /// @param callback Callback method that will be called
+    /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device.
+    /// See https://thingsboard.io/docs/user-guide/device-provisioning/ for more information
+    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @return Whether sending the provisioning request was successful or not
     inline bool Provision_Request(const Provision_Callback& callback) {
       StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
@@ -592,8 +635,8 @@ class ThingsBoardSized {
       // Make the key-value pairs we don't want to send optional,
       // meaning if it is an empty string or null instead we don't send it at all.
       // Deciding which underlying provisioning method is restricted, by the Provision_Callback class.
-      // Meaning only the key-value pairs that are needed for the given provisionign method are set,
-      // meaning the rest will not be sent and therefore the provisoning request has the correct formatting
+      // Meaning only the key-value pairs that are needed for the given provisioning method are set,
+      // meaning the rest will not be sent and therefore the provisioning request has the correct formatting
       if (deviceName != nullptr && deviceName[0] != '\0') {
         requestObject[DEVICE_NAME_KEY] = deviceName;
       }
@@ -625,7 +668,8 @@ class ThingsBoardSized {
     //----------------------------------------------------------------------------
     // Telemetry API
 
-    /// @brief Attempts to send telemetry data with the given key and value of the given type
+    /// @brief Attempts to send telemetry data with the given key and value of the given type.
+    /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @tparam T Type of the passed value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
@@ -635,7 +679,8 @@ class ThingsBoardSized {
       return sendKeyValue(key, value);
     }
 
-    /// @brief Attempts to send aggregated telemetry data
+    /// @brief Attempts to send aggregated telemetry data.
+    /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
     /// @return Whether sending the data was successful or not
@@ -643,14 +688,16 @@ class ThingsBoardSized {
       return sendDataArray(data, data_count);
     }
 
-    /// @brief Attempts to send custom json telemetry string
+    /// @brief Attempts to send custom json telemetry string.
+    /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
     inline bool sendTelemetryJson(const char *json) {
       return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
-    /// @brief Attempts to send telemetry key value pairs from custom source to the server
+    /// @brief Attempts to send telemetry key value pairs from custom source to the server.
+    /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param source Data source containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the source
@@ -663,7 +710,8 @@ class ThingsBoardSized {
     //----------------------------------------------------------------------------
     // Attribute API
 
-    /// @brief Attempts to send attribute data with the given key and value of the given type
+    /// @brief Attempts to send attribute data with the given key and value of the given type.
+    /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @tparam T Type of the passed value
     /// @param key Key of the key value pair we want to send
     /// @param value Value of the key value pair we want to send
@@ -673,7 +721,8 @@ class ThingsBoardSized {
       return sendKeyValue(key, value, false);
     }
 
-    /// @brief Attempts to send aggregated attribute data
+    /// @brief Attempts to send aggregated attribute data.
+    /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param data Array containing all the data we want to send
     /// @param data_count Amount of data entries in the array that we want to send
     /// @return Whether sending the data was successful or not
@@ -681,14 +730,16 @@ class ThingsBoardSized {
       return sendDataArray(data, data_count, false);
     }
 
-    /// @brief Attempts to send custom json attribute string
+    /// @brief Attempts to send custom json attribute string.
+    /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
     inline bool sendAttributeJSON(const char *json) {
       return Send_Json_String(ATTRIBUTE_TOPIC, json);
     }
 
-    /// @brief Attempts to send attribute key value pairs from custom source to the server
+    /// @brief Attempts to send attribute key value pairs from custom source to the server.
+    /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param source Data source containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the source
@@ -699,7 +750,8 @@ class ThingsBoardSized {
     }
 
     /// @brief Requests one client-side attribute calllback,
-    /// that will be called if the key-value pair from the server for the given client-side attributes is received
+    /// that will be called if the key-value pair from the server for the given client-side attributes is received.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
     inline bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
@@ -709,11 +761,11 @@ class ThingsBoardSized {
     //----------------------------------------------------------------------------
     // Server-side RPC API
 
-
 #if THINGSBOARD_ENABLE_STL
 
     /// @brief Subscribes multiple server-side RPC callbacks,
-    /// that will be called if a request from the server for the method with the given name is received
+    /// that will be called if a request from the server for the method with the given name is received.
+    /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
     /// of the given data container, allows for using / passing either std::vector or std::array
     /// @param first_itr Iterator pointing to the first element in the data container
@@ -741,7 +793,8 @@ class ThingsBoardSized {
 #else
 
     /// @brief Subscribes multiple server-side RPC callbacks,
-    /// that will be called if a request from the server for the method with the given name is received
+    /// that will be called if a request from the server for the method with the given name is received.
+    /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @param callbacks Pointer to the c-style array
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
@@ -767,7 +820,8 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Subscribe one server-side RPC callback,
-    /// that will be called if a request from the server for the method with the given name is received
+    /// that will be called if a request from the server for the method with the given name is received.
+    /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
     inline bool RPC_Subscribe(const RPC_Callback& callback) {
@@ -787,7 +841,8 @@ class ThingsBoardSized {
       return true;
     }
 
-    /// @brief Unsubcribes all server-side RPC callbacks
+    /// @brief Unsubcribes all server-side RPC callbacks.
+    /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the rpc topic, was successful or not
     inline bool RPC_Unsubscribe() {
@@ -800,7 +855,8 @@ class ThingsBoardSized {
     // Client-side RPC API
 
     /// @brief Requests one client-side RPC callback,
-    /// that will be called if a response from the server for the method with the given name is received
+    /// that will be called if a response from the server for the method with the given name is received.
+    /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
     inline bool RPC_Request(const RPC_Request_Callback& callback) {
@@ -863,7 +919,8 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_OTA
 
-    /// @brief Immediately starts a firmware update if firmware is assigned to the given device
+    /// @brief Immediately starts a firmware update if firmware is assigned to the given device.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
     inline bool Start_Firmware_Update(const OTA_Update_Callback& callback) {
@@ -876,13 +933,15 @@ class ThingsBoardSized {
       return Shared_Attributes_Request(m_fw_request_callback);
     }
 
-    /// @brief Stops the currently running firmware update, calls the finish callback with a failure if the update is running
+    /// @brief Stops the currently running firmware update, calls the finish callback with a failure if the update is running.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     inline void Stop_Firmware_Update() {
       m_ota.Stop_Firmware_Update();
     }
 
     /// @brief Subscribes for any assignment of firmware to the given device device,
-    /// which will then start a firmware update
+    /// which will then start a firmware update.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
     inline bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
@@ -895,7 +954,8 @@ class ThingsBoardSized {
       return Shared_Attributes_Subscribe(m_fw_update_callback);
     }
 
-    /// @brief Sends the given firmware title and firmware version to the cloud
+    /// @brief Sends the given firmware title and firmware version to the cloud.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param currFwTitle Current device firmware title
     /// @param currFwVersion Current device firmware version
     /// @return Whether sending the current device firmware information was successful or not
@@ -908,7 +968,8 @@ class ThingsBoardSized {
       return sendTelemetryJson(currentFirmwareInfoObject, Helper::Measure_Json(currentFirmwareInfoObject));
     }
 
-    /// @brief Sends the given firmware state to the cloud
+    /// @brief Sends the given firmware state to the cloud.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param currFwState Current firmware download state
     /// @param fwError Firmware error message that describes the current firmware state,
     /// pass nullptr or an empty string if the current state is not a failure state
@@ -933,7 +994,8 @@ class ThingsBoardSized {
     // Shared attributes API
 
     /// @brief Requests one shared attribute calllback,
-    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// that will be called if the key-value pair from the server for the given shared attributes is received.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
     inline bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
@@ -943,7 +1005,8 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_STL
 
     /// @brief Subscribes multiple shared attribute callbacks,
-    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// that will be called if the key-value pair from the server for the given shared attributes is received.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
     /// of the given data container, allows for using / passing either std::vector or std::array
     /// @param first_itr Iterator pointing to the first element in the data container
@@ -971,7 +1034,8 @@ class ThingsBoardSized {
 #else
 
     /// @brief  Subscribes multiple shared attribute callbacks,
-    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// that will be called if the key-value pair from the server for the given shared attributes is received.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @param callbacks Pointer to the c-style array
     /// @param callbacksSize Amount of values that should be subscribed, ensure size matches the actual array,
     /// if not the system might crash unexpectedly at a later point
@@ -997,7 +1061,8 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Subscribe one shared attribute callback,
-    /// that will be called if the key-value pair from the server for the given shared attributes is received
+    /// that will be called if the key-value pair from the server for the given shared attributes is received.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
     inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
@@ -1017,37 +1082,14 @@ class ThingsBoardSized {
       return true;
     }
 
-    /// @brief Unsubcribes all shared attribute callbacks
+    /// @brief Unsubcribes all shared attribute callbacks.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @return Whether unsubcribing all the previously subscribed callbacks
     /// and from the attribute topic, was successful or not
     inline bool Shared_Attributes_Unsubscribe() {
       // Empty all callbacks
       m_shared_attribute_update_callbacks.clear();
       return m_client.unsubscribe(ATTRIBUTE_TOPIC);
-    }
-
-    /// @brief Clears all currently subscribed callbacks and unsubscribed from all
-    /// currently subscribed MQTT topics, any response that will stil be received is discarded
-    /// and any ongoing firmware update is aborted and will not be finished.
-    /// Was previously done automatically in the connect() method, but is not done anymore,
-    /// because connect() method now reconencts to all previously subscribed MQTT topics instead,
-    /// therefore there is no need anymore to discard all previously subscribed callbacks and letting the user resubscribe
-    inline void Cleanup_Subscriptions() {
-      // Cleanup all server-side RPC subscriptions
-      this->RPC_Unsubscribe();
-      // Cleanup all client-side RPC requests
-      this->RPC_Request_Unsubscribe();
-      // Cleanup all shared attributes subscriptions
-      this->Shared_Attributes_Unsubscribe();
-      // Cleanup all client-side or shared attributes requests
-      this->Attributes_Request_Unsubscribe();
-      // Cleanup all provision requests
-      this->Provision_Unsubscribe();
-      // Stop any ongoing Firmware update,
-      // which will in turn cleanup the internal member variables of the OTAHandler class
-      // as well as all firmware subscriptions
-      // and inform the user of the failed firmware update
-      this->Stop_Firmware_Update();
     }
   
   private:
@@ -1136,7 +1178,9 @@ class ThingsBoardSized {
         return false;
       }
       else if (attributeRequestKey == nullptr || attributeResponseKey == nullptr) {
+#if THINGSBOARD_ENABLE_DEBUG
         Logger::log(ATT_KEY_NOT_FOUND);
+#endif // THINGSBOARD_ENABLE_DEBUG
         return false;
       }
 #else
@@ -1581,7 +1625,9 @@ class ThingsBoardSized {
 
         // Do not inform client, if parameter field is missing for some reason
         if (!data.containsKey(RPC_PARAMS_KEY)) {
+#if THINGSBOARD_ENABLE_DEBUG
           Logger::log(NO_RPC_PARAMS_PASSED);
+#endif // THINGSBOARD_ENABLE_DEBUG
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
@@ -1671,7 +1717,9 @@ class ThingsBoardSized {
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     inline void process_shared_attribute_update_message(char *topic, JsonObjectConst& data) {
       if (!data) {
+#if THINGSBOARD_ENABLE_DEBUG
         Logger::log(NOT_FOUND_ATT_UPDATE);
+#endif // THINGSBOARD_ENABLE_DEBUG
         return;
       }
 
@@ -1685,7 +1733,9 @@ class ThingsBoardSized {
 #else
         if (shared_attribute.Get_Attributes() == nullptr) {
 #endif // THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_DEBUG
           Logger::log(ATT_CB_NO_KEYS);
+#endif // THINGSBOARD_ENABLE_DEBUG
           // No specifc keys were subscribed so we call the callback anyway
           shared_attribute.Call_Callback<Logger>(data);
           continue;
@@ -1714,7 +1764,9 @@ class ThingsBoardSized {
           const char *att = stringToSplit.substring(previousIndex, currentIndex).c_str();
 #endif // THINGSBOARD_ENABLE_STL
           if (att == nullptr) {
+#if THINGSBOARD_ENABLE_DEBUG
             Logger::log(ATT_IS_NULL);
+#endif // THINGSBOARD_ENABLE_DEBUG
             continue;
           }
           // Check if the request contained any of our requested keys.
@@ -1734,7 +1786,9 @@ class ThingsBoardSized {
         // This callback did not request any keys that were in this response,
         // therefore we continue with the next element in the loop.
         if (!containsKey || requested_att == nullptr) {
+#if THINGSBOARD_ENABLE_DEBUG
           Logger::log(ATT_NO_CHANGE);
+#endif // THINGSBOARD_ENABLE_DEBUG
           continue;
         }
 
@@ -1781,11 +1835,15 @@ class ThingsBoardSized {
         }
         const char *attributeResponseKey = attribute_request.Get_Attribute_Key();
         if (attributeResponseKey == nullptr) {
+#if THINGSBOARD_ENABLE_DEBUG
           Logger::log(ATT_KEY_NOT_FOUND);
+#endif // THINGSBOARD_ENABLE_DEBUG
           goto delete_callback;
         }
         else if (!data) {
+#if THINGSBOARD_ENABLE_DEBUG
           Logger::log(ATT_KEY_NOT_FOUND);
+#endif // THINGSBOARD_ENABLE_DEBUG
           goto delete_callback;
         }
 
