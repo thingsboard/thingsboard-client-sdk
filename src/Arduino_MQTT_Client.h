@@ -20,7 +20,7 @@
 /// under the hood to establish and communicate over a MQTT connection. The fork includes fixes to solve issues with using std::function callbacks for non ESP boards
 class Arduino_MQTT_Client : public IMQTT_Client {
   public:
-    /// @brief Constructs a IMQTT_Client implementation without a network client, meaning it has to be added later with the set_client() and set_buffer_size() method
+    /// @brief Constructs a IMQTT_Client implementation without a network client, meaning it has to be added later with the set_client() method
     Arduino_MQTT_Client();
 
     /// @brief Constructs a IMQTT_Client implementation with the given network client

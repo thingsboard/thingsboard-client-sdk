@@ -18,7 +18,8 @@
 #include "IUpdater.h"
 
 
-/// @brief IUpdater implementation, which uses the Over the Air Update API of Espressif in the background, see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/ota.html for more information
+/// @brief IUpdater implementation that uses the Over the Air Update API from Espressif (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/ota.html)
+/// under the hood to write the given binary firmware data into flash memory so we can restart with newly received firmware
 class Espressif_Updater : public IUpdater {
   public:
     Espressif_Updater();

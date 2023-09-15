@@ -7,20 +7,24 @@
 #ifndef Configuration_h
 #define Configuration_h
 
-// Include sdkconfig file it it exists to allow overwriting of some defines with the configuration entered in the ESP IDF menuconfig
+// Include sdkconfig file it it exists to allow overwriting of some defines with the configuration entered in the Espressif IDF menuconfig.
+// Only available when compiling for Espressif IDF, but allows to more easily change some configurations with a GUI instead of code.
 #  ifdef __has_include
 #    if __has_include(<sdkconfig.h>)
 #      include <sdkconfig.h>
 #    endif
 #  endif
 
-
 // Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
-// See https://arduinojson.org/v6/api/config/use_long_long/ for more information
+// See https://arduinojson.org/v6/api/config/use_long_long/ for more information.
 #define ARDUINOJSON_USE_LONG_LONG 1
 #define ARDUINOJSON_USE_DOUBLE 1
 
-// Enable the usage of the STL library, depending on if needed STL base functionality is supported
+// Enable the usage of the C++ STL library, depending on if needed STL base functionality is supported,
+// allows to use c++ style function pointers as callbacks removing the need to store a static pointer to the instance of the class.
+// Additionally it allows to store data in the vector class, which in case it does not exist we have to fall back to an own custom implementation
+// of the vector class which is less efficient. Additionally if possible only c++ strings are used
+// and if it does not exist we fall back to the Arduino String class.
 #  ifdef __has_include
 #    if __has_include(<string>) && __has_include(<functional>) && __has_include(<vector>) && __has_include(<iterator>)
 #      ifndef THINGSBOARD_ENABLE_STL
@@ -43,7 +47,8 @@
 #    endif
 #  endif
 
-// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality
+// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality, theoretically possible without STL support,
+// but the code would have to be adjusted at compile time depending on if the C++ STL is supported or not and that has not been implemented for OTA yet.
 #  ifndef THINGSBOARD_ENABLE_OTA
 #    if THINGSBOARD_ENABLE_STL
 #      define THINGSBOARD_ENABLE_OTA 1
@@ -116,7 +121,8 @@
 #    define THINGSBOARD_USE_ESP_PARTITION 0
 #  endif
 
-// Enable the usage of the PROGMEM header for constants variables (variables are placed into flash memory instead of sram).
+// Use the pgmspace header internally for enalbing the usage of the PROGMEm header for constant variables, as long as the header exists,
+// to allow variables to be placed into flash memory instead of sram, meaning the sram can be allocated for other things.
 #  ifdef __has_include
 #    if  __has_include(<pgmspace.h>)
 #      ifndef THINGSBOARD_ENABLE_PROGMEM
@@ -145,8 +151,8 @@
 #  endif
 
 // Enables the ThingsBoard class to print all received and sent messages and their topic, from and to the server,
-// additionally some more debug messages will be printed. Requires more flash memory, and more Serial calls requiring more performance.
-// Recommended to disable when building for release.
+// additionally some more debug messages will be printed. Requires more flash memory, and more calls to the console requiring more performance.
+// Recommended to disable when building for release, should only be enabled to debug where a issue might stem from.
 // Can also optionally be configured via the ESP-IDF menuconfig, if that is the done the value is set to the value entered in the menuconfig,
 // if the value is manually overriden tough with a #define before including ThingsBoard then the hardcoded value takes precendence.
 #  ifndef THINGSBOARD_ENABLE_DEBUG
@@ -159,8 +165,12 @@
 
 // Enables the usage of an additonal library as a fallback, to directly serialize a json message that is sent to the cloud,
 // if the size of that message would be bigger than the internal buffer size of the client.
-// Allows sending much bigger messages than would otherwise be possible, and without much decrease stack or heap requirements, but at the cost of increased send times.
-// See https://arduinojson.org/v6/how-to/use-arduinojson-with-pubsubclient/#serializing-a-json-document-into-an-mqtt-message for the main difference int he underlying code.
+// Allows sending much bigger messages than would otherwise be possible, and without the need to increase stack or heap requirements, but at the cost of increased send times.
+// See https://arduinojson.org/v6/how-to/use-arduinojson-with-pubsubclient/#serializing-a-json-document-into-an-mqtt-message for the main difference in the underlying code.
+// Option can only be enabled when using Arduino, because this feature relies on Arduino as it improves the underlying data streams to directly write the data into the MQTT Client,
+// but writing each byte one by one, would be too slow, therefore the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library is used to buffer those calls into bigger packets.
+// This allows sending data that is very big without requiring to allocate that much memory, because it is sent in smaller packets.
+// To support this feature, however this interface needs to additionally implement the Print interface, because that is required by the wrapper class BufferingPrint.
 #  ifndef THINGSBOARD_ENABLE_STREAM_UTILS
 #    define THINGSBOARD_ENABLE_STREAM_UTILS 0
 #  endif

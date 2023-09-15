@@ -16,10 +16,12 @@
 
 
 /// @brief HTTP Client interface that contains the method that a class that can be used to send and receive data over an HTTP conection should implement.
-/// Seperates the specific implementation used from the ThingsBoardHttp client, allows to use differnt clients depending on different needs.
+/// Seperates the specific implementation used from the ThingsBoardHttp client, allows to use different clients depending on different needs.
 /// In this case the main use case of the seperation is to both support Espressif IDF and Arduino with the following libraries as recommendations.
 /// The default HTTP Client for Arduino is the ArduinoHttpClient (https://github.com/arduino-libraries/ArduinoHttpClient),
 /// For Espressif IDF however the default HTTP Client is the esp-http-client (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_http_client.html) component.
+// The aforementioned recommendations are already partially implemented in the library and can can simply be used and included when using the library, for Arduino we can simply include Arduino_HTTP_Client
+/// and for Espressif IDF the implementations has not been created yet, the implementations have been tested and should be compatible when used in conjunction with the ThingsBoardHttp client.
 class IHTTP_Client {
   public:
     /// @brief Sets whether to close the HTTP connection for every single request and reconnect once a new request is sent
@@ -54,7 +56,7 @@ class IHTTP_Client {
 
     /// @brief Connects to the server and sends a GET request
     /// @param url_path URL the GET request should be sent too
-    /// @return hether the request was successful or not, returns 0 if successful or if not the internal error code
+    /// @return Whether the request was successful or not, returns 0 if successful or if not the internal error code
     virtual int get(const char *url_path) = 0;
 
     /// @brief Returns the response body of a previously sent message as a string object,

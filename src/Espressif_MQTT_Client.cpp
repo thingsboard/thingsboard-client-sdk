@@ -90,8 +90,8 @@ bool Espressif_MQTT_Client::set_network_timeout(const uint16_t& network_timeout_
     return update_configuration();
 }
 
-void Espressif_MQTT_Client::set_callback(function cb) {
-    m_received_data_callback = cb;
+void Espressif_MQTT_Client::set_callback(function callback) {
+    m_received_data_callback = callback;
 }
 
 bool Espressif_MQTT_Client::set_buffer_size(const uint16_t& buffer_size) {

@@ -17,7 +17,7 @@
 
 
 /// @brief HTTP Client interface implementation that uses the ArduinoHttpClient (https://github.com/arduino-libraries/ArduinoHttpClient),
-/// under the hood to establish and communicate over a HTTP connection
+/// under the hood to establish and communicate over an HTTP connection
 class Arduino_HTTP_Client : public IHTTP_Client {
   public:
     /// @brief Constructs a IHTTP_Client implementation with the given network client
@@ -27,7 +27,7 @@ class Arduino_HTTP_Client : public IHTTP_Client {
     /// @param port Port that will be used to establish a connection and send / receive data
     /// Should be either 80 for unencrypted HTTP or 443 for HTTPS with encryption.
     /// The latter is recommended if relevant data is sent or if the client receives and handles requests from the server,
-    /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways.
+    /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways
     Arduino_HTTP_Client(Client& transport_client, const char *host, const uint16_t& port);
 
     void set_keep_alive(const bool& keep_alive) override;

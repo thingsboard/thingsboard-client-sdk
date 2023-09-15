@@ -18,7 +18,8 @@
 #include "IUpdater.h"
 
 
-/// @brief IUpdater implementation using the Arduino Updater class in the background, all calls are simply forwarded directly
+/// @brief IUpdater implementation that uses the Arduino UpdaterClass (https://github.com/esp8266/Arduino/blob/master/cores/esp8266/Updater.h),
+/// under the hood to write the given binary firmware data into flash memory so we can restart with newly received firmware
 class Arduino_ESP8266_Updater : public IUpdater {
   public:
     bool begin(const size_t& firmware_size) override;
