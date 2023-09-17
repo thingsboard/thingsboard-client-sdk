@@ -3,6 +3,10 @@
 
 #if THINGSBOARD_USE_ESP_MQTT
 
+// The error integer -1 means a general failure while handling the mqtt client,
+// where as -2 means that the outbox is filled and the message can therefore not be sent.
+// Therefore we have to check if the value is smaller or equal to the MQTT_FAILURE_MESSAGE_ID,
+// to ensure other errors are indentified as well
 constexpr int MQTT_FAILURE_MESSAGE_ID = -1;
 
 Espressif_MQTT_Client *Espressif_MQTT_Client::m_instance = nullptr;
@@ -10,6 +14,7 @@ Espressif_MQTT_Client *Espressif_MQTT_Client::m_instance = nullptr;
 Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_received_data_callback(nullptr),
     m_connected(false),
+    m_enqueue_messages(false),
     m_mqtt_configuration(),
     m_mqtt_client(nullptr)
 {
@@ -88,6 +93,10 @@ bool Espressif_MQTT_Client::set_network_timeout(const uint16_t& network_timeout_
     m_mqtt_configuration.network.timeout_ms = network_timeout_milliseconds;
 #endif // ESP_IDF_VERSION_MAJOR < 5
     return update_configuration();
+}
+
+void Espressif_MQTT_Client::set_enqueue_messages(const bool& enqueue_messages) {
+    m_enqueue_messages = enqueue_messages;
 }
 
 void Espressif_MQTT_Client::set_callback(function callback) {
@@ -195,23 +204,31 @@ bool Espressif_MQTT_Client::loop() {
 }
 
 bool Espressif_MQTT_Client::publish(const char *topic, const uint8_t *payload, const size_t& length) {
+    int message_id = MQTT_FAILURE_MESSAGE_ID;
+
+    if (m_enqueue_messages) {
+        message_id = esp_mqtt_client_enqueue(m_mqtt_client, topic, reinterpret_cast<const char*>(payload), length, 0U, 0U, true);
+        return message_id > MQTT_FAILURE_MESSAGE_ID;
+    }
+
     // The blocking version esp_mqtt_client_publish() it is sent directly from the users task context.
     // This way is used to send messages to the cloud, because like that no internal buffer has to be used to store the message until it should be sent,
     // because all messages are sent with QoS level 0. If this is not wanted esp_mqtt_client_enqueue() could be used with store = true,
     // to ensure the sending is done in the mqtt event context instead of the users task context.
-    // Allows to use the publish method without having to worry about any CPU overhead, so it can even be used in callbacks or high priority tasks, without starving other tasks.
-    const int message_id = esp_mqtt_client_publish(m_mqtt_client, topic, reinterpret_cast<const char*>(payload), length, 0U, 0U);
-    return message_id != MQTT_FAILURE_MESSAGE_ID;
+    // Allows to use the publish method without having to worry about any CPU overhead, so it can even be used in callbacks or high priority tasks, without starving other tasks,
+    // but compared to the other method esp_mqtt_client_enqueue() requires to save the message in the outbox, which increases the memory requirements for the internal buffer size
+    message_id = esp_mqtt_client_publish(m_mqtt_client, topic, reinterpret_cast<const char*>(payload), length, 0U, 0U);
+    return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
 bool Espressif_MQTT_Client::subscribe(const char *topic) {
     const int message_id = esp_mqtt_client_subscribe(m_mqtt_client, topic, 0U);
-    return message_id != MQTT_FAILURE_MESSAGE_ID;
+    return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
 bool Espressif_MQTT_Client::unsubscribe(const char *topic) {
     const int message_id = esp_mqtt_client_unsubscribe(m_mqtt_client, topic);
-    return message_id != MQTT_FAILURE_MESSAGE_ID;
+    return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
 bool Espressif_MQTT_Client::connected() {

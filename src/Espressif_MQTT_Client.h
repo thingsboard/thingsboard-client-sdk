@@ -44,8 +44,8 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning a value bigger than 300 seconds with the default config defeats the purpose of the keep alive alltogether
     /// @param keep_alive_timeout_seconds Timeout until we send another PINGREQ control packet to the broker to establish that we are still connected
     /// @return Whether changing the internal keep alive timeout was successful or not
-    bool set_keep_alive_timeout(const uint16_t& keep_alive_timeout_seconds);
-
+    bool set_keep_alive_timeout(const uint16_t& keep_alive_timeout_seconds); 
+    
     /// @brief Whether to disable or enable the keep alive mechanism, meaning we do not send any PINGREQ control packets to the broker anymore, meaning if we do not send other packet the device will be marked as inactive.
     /// The default value is false meaning the keep alive mechanism is enabled.
     /// The default timeout value ThingsBoard expectes to receive any message including a keep alive to not show the device as inactive can be found here https://thingsboard.io/docs/user-guide/install/config/#mqtt-server-parameters
@@ -81,6 +81,15 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @return Whether changing the internal network timeout was successfull or not
     bool set_network_timeout(const uint16_t& network_timeout_milliseconds);
 
+    /// @brief Sets whether to enqueue published messages or not, enqueueing has to save them in the out buffer, meaning the internal buffer size might need to be increased,
+    /// but the MQTT client can in exchange send the publish messages once the main MQTT task is running again, instead of blocking in the task that has called the publish method.
+    /// This furthermore, allows to use nearly all internal ThingsBoard calls without having to worry about blocking the task the method was called for,
+    /// or having to worry about CPU overhead.
+    /// If enqueueing the messages to be published fails once this options has been enabled, then the internal buffer size might need to be increased. Ensure to call set_buffer_size() with a bigger value
+    /// and check if enqueueing the messages to be published works successfully again
+    /// @param enqueue_messages Whether to enqueue published messages or not, where setting the value to true means that the messages are enqueued and therefor non blocking on the called from task
+    void set_enqueue_messages(const bool& enqueue_messages);
+
     void set_callback(function callback) override;
 
     bool set_buffer_size(const uint16_t& buffer_size) override;
@@ -105,7 +114,8 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 
 private:
     function m_received_data_callback;             // Callback that will be called as soon as the mqtt client receives any data
-    bool m_connected;                              // Wheter the client has received the connected or disconnected event
+    bool m_connected;                              // Whether the client has received the connected or disconnected event
+    bool m_enqueue_messages;                       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
     esp_mqtt_client_config_t m_mqtt_configuration; // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
     esp_mqtt_client_handle_t m_mqtt_client;        // Handle to the underlying mqtt client, used to establish the communication
 
