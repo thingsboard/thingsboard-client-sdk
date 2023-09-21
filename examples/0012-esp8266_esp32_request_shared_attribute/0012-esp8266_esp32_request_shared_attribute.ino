@@ -159,21 +159,6 @@ constexpr const char FW_TAG_KEY[] = "fw_tag";
 constexpr const char TEST_KEY[] = "test";
 #endif
 
-// Shared attributes we want to request from the server
-constexpr std::array<const char*, 6U> REQUESTED_SHARED_ATTRIBUTES = {
-  FW_CHKS_KEY,
-  FW_CHKS_ALGO_KEY,
-  FW_SIZE_KEY,
-  FW_TAG_KEY,
-  FW_TITLE_KEY,
-  FW_VER_KEY
-};
-
-// Client-side attributes we want to request from the server
-constexpr std::array<const char*, 1U> REQUESTED_CLIENT_ATTRIBUTES = {
-  TEST_KEY
-};
-
 
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
@@ -266,9 +251,6 @@ void processClientAttributeRequest(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-const Attribute_Request_Callback sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
-const Attribute_Request_Callback clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
-
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -303,6 +285,9 @@ void loop() {
 #else
     Serial.println("Requesting shared attributes...");
 #endif
+    // Shared attributes we want to request from the server
+    constexpr std::array<const char*, 6U> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
+    const Attribute_Request_Callback sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
     requestedShared = tb.Shared_Attributes_Request(sharedCallback);
     if (!requestedShared) {
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -319,6 +304,9 @@ void loop() {
 #else
     Serial.println("Requesting client-side attributes...");
 #endif
+    // Client-side attributes we want to request from the server
+    constexpr std::array<const char*, 1U> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
+    const Attribute_Request_Callback clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
     requestedClient = tb.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
 #if THINGSBOARD_ENABLE_PROGMEM

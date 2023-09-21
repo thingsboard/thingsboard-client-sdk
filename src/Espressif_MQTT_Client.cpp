@@ -21,6 +21,11 @@ Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_instance = this;
 }
 
+Espressif_MQTT_Client::~Espressif_MQTT_Client() {
+    m_instance = nullptr;
+    (void)esp_mqtt_client_destroy(m_mqtt_client);
+}
+
 bool Espressif_MQTT_Client::set_server_certificate(const char *server_certificate_pem) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely.
     // Because PEM format is expected for the server certificate we do not need to set the certificate_len,
@@ -266,6 +271,12 @@ void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_bas
             // Nothing to do
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_DATA:
+            // Check wheter the given message has not bee received completly, but instead would be received in multiple chunks,
+            // if it were we discard the message because receiving a message over multiple chunks is currently not supported
+            if (event->data_len != event->total_data_len) {
+                break;
+            }
+
             if (m_received_data_callback != nullptr) {
                 m_received_data_callback(event->topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
             }

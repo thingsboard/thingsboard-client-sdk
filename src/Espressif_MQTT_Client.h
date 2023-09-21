@@ -28,6 +28,9 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @brief Constructs a IMQTT_Client implementation which creates and empty esp_mqtt_client_config_t, which then has to be configured with the other methods in the class
     Espressif_MQTT_Client();
 
+    /// @brief Destructor
+    ~Espressif_MQTT_Client();
+
     /// @brief Configured the server certificate, which allows to connect to the MQTT broker over a secure TLS / SSL conenction instead of the default unencrypted channel.
     /// Has to be called before initally calling connect() on the client to ensure the certificate is set before the connection is established, if that is not done the connection will not be encrypted.
     /// Encryption is recommended if relevant data is sent or if the client receives and handles Remote Procedure Calls or Shared Attribute Update Callbacks from the server,

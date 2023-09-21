@@ -203,6 +203,14 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initalize the Updater client instance used to flash binary to flash memory
+#ifdef ESP8266
+Arduino_ESP8266_Updater updater;
+#else
+#ifdef ESP32
+Espressif_Updater updater;
+#endif // ESP32
+#endif // ESP8266
 
 // Statuses for updating
 bool currentFWSent = false;
@@ -285,16 +293,6 @@ void progressCallback(const size_t& currentChunk, const size_t& totalChuncks) {
   Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
 }
 
-#ifdef ESP8266
-Arduino_ESP8266_Updater updater;
-#else
-#ifdef ESP32
-Espressif_Updater updater;
-#endif // ESP32
-#endif // ESP8266
-
-const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
-
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -337,6 +335,7 @@ void loop() {
 #else
     Serial.println("Firwmare Update Subscription...");
 #endif
+    const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
     // See https://thingsboard.io/docs/user-guide/ota-updates/
     // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
     updateRequestSent = tb.Subscribe_Firmware_Update(callback);

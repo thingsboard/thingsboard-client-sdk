@@ -223,8 +223,6 @@ void processTime(const JsonVariantConst &data) {
   serializeJsonPretty(data, Serial);
 }
 
-const RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
-
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -259,6 +257,7 @@ void loop() {
 #else
     Serial.println("Requesting RPC...");
 #endif
+    const RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
 #if THINGSBOARD_ENABLE_PROGMEM
