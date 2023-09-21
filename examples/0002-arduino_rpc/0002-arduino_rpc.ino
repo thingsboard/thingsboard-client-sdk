@@ -208,12 +208,6 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
   return RPC_Response(doc);
 }
 
-const uint8_t callback_size = 2U;
-const RPC_Callback callbacks[callback_size] = {
-  { RPC_TEMPERATURE_METHOD,    processTemperatureChange },
-  { RPC_SWITCH_METHOD,         processSwitchChange }
-};
-
 void loop() {
   delay(1000);
 
@@ -243,7 +237,11 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
-
+    const uint8_t callback_size = 2U;
+    const RPC_Callback callbacks[callback_size] = {
+      { RPC_TEMPERATURE_METHOD,    processTemperatureChange },
+      { RPC_SWITCH_METHOD,         processSwitchChange }
+    };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.

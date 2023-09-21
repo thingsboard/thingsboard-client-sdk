@@ -78,12 +78,10 @@ class ThingsBoardHttpSized {
                                 const char *host, const uint16_t& port = 80U, const bool& keepAlive = true, const size_t& maxStackSize = Default_Max_Stack_Size)
       : m_client(client)
       , m_max_stack(maxStackSize)
-      , m_host(host)
-      , m_port(port)
       , m_token(access_token)
     {
       m_client.set_keep_alive(keepAlive);
-      m_client.connect(m_host, m_port);
+      m_client.connect(host, port);
     }
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
@@ -384,8 +382,6 @@ class ThingsBoardHttpSized {
 
     IHTTP_Client& m_client; // HttpClient instance
     size_t m_max_stack;     // Maximum stack size we allocate at once on the stack.
-    const char *m_host;     // Host address we connect too
-    const uint16_t m_port;  // Port we connect over
     const char *m_token;    // Access token used to connect with
 };
 

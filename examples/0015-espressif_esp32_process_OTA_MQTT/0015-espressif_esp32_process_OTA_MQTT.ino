@@ -103,6 +103,9 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 Espressif_MQTT_Client mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initalize the Updater client instance used to flash binary to flash memory
+Espressif_Updater updater;
+
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;
@@ -128,10 +131,6 @@ void updatedCallback(const bool& success) {
 void progressCallback(const size_t& currentChunk, const size_t& totalChuncks) {
   ESP_LOGI("MAIN", "Downwloading firmware progress %.2f%%", static_cast<float>(currentChunk * 100U) / totalChuncks);
 }
-
-Espressif_Updater updater;
-const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
-
 
 /// @brief Callback method that is called if we got an ip address from the connected WiFi meaning we successfully established a connection
 /// @param event_handler_arg User data registered to the event
@@ -206,6 +205,7 @@ extern "C" void app_main() {
         }
 
         if (!updateRequestSent) {
+            const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
             // See https://thingsboard.io/docs/user-guide/ota-updates/
             // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
             updateRequestSent = tb.Start_Firmware_Update(callback);

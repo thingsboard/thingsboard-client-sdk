@@ -72,7 +72,7 @@ class Arduino_MQTT_Client : public IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
   private:
-    PubSubClient m_mqtt_client;
+    PubSubClient m_mqtt_client; // Underlying MQTT client instance used to send data
 };
 
 #endif // ARDUINO

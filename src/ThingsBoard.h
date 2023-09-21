@@ -351,9 +351,6 @@ class ThingsBoardSized {
       , m_fw_callback(nullptr)
       , m_previous_buffer_size(0U)
       , m_change_buffer_size(false)
-      , m_fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY}
-      , m_fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend())
-      , m_fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), m_fw_shared_keys.cbegin(), m_fw_shared_keys.cend())
       , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
 #endif // THINGSBOARD_ENABLE_OTA
     {
@@ -930,7 +927,9 @@ class ThingsBoardSized {
       }
 
       // Request the firmware information
-      return Shared_Attributes_Request(m_fw_request_callback);
+      const std::vector<const char *> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+      const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      return Shared_Attributes_Request(fw_request_callback);
     }
 
     /// @brief Stops the currently running firmware update, calls the finish callback with a failure if the update is running.
@@ -951,7 +950,9 @@ class ThingsBoardSized {
       }
 
       // Subscribes to changes of the firmware information
-      return Shared_Attributes_Subscribe(m_fw_update_callback);
+      const std::vector<const char *> fw_shared_keys(FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY);
+      const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      return Shared_Attributes_Subscribe(fw_update_callback);
     }
 
     /// @brief Sends the given firmware title and firmware version to the cloud.
@@ -1919,13 +1920,15 @@ class ThingsBoardSized {
     size_t m_max_stack; // Maximum stack size we allocate at once.
     size_t m_buffering_size; // Buffering size used to serialize directly into client.
 
-#if THINGSBOARD_ENABLE_STL
     // Vectors hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
     // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
     // does not require a huge memory overhead and is acceptable especially in comparsion to possible problems that could
     // arise if references were used and the end user does not take care to ensure the Callbacks live on for the entirety
-    // of its usage, which will lead to dangling references and undefined behaviour
+    // of its usage, which will lead to dangling references and undefined behaviour.
+    // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
+    // especially because at most we copy a vector, that will only ever contain a few pointers
+#if THINGSBOARD_ENABLE_STL
     std::vector<RPC_Callback> m_rpc_callbacks; // Server side RPC callbacks vector
     std::vector<RPC_Request_Callback> m_rpc_request_callbacks; // Client side RPC callbacks vector
     std::vector<Shared_Attribute_Callback> m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector
@@ -1941,14 +1944,10 @@ class ThingsBoardSized {
     size_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0
 
 #if THINGSBOARD_ENABLE_OTA
-    const OTA_Update_Callback *m_fw_callback;
-    uint16_t m_previous_buffer_size;
-    bool m_change_buffer_size;
-    const std::vector<const char *> m_fw_shared_keys;
-    const Attribute_Request_Callback m_fw_request_callback;
-    const Shared_Attribute_Callback m_fw_update_callback;
-    OTA_Handler<Logger> m_ota;
-
+    const OTA_Update_Callback *m_fw_callback; // Ota update response callback
+    uint16_t m_previous_buffer_size; // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
+    bool m_change_buffer_size; // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
+    OTA_Handler<Logger> m_ota; // Class instance that handles the flashing and creating a hash from the given received binary firmware data
 #endif // THINGSBOARD_ENABLE_OTA
 
     /// @brief MQTT callback that will be called if a publish message is received from the server
@@ -1986,25 +1985,35 @@ class ThingsBoardSized {
       // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
-          char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
-          snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
-          Logger::log(message);
-          return;
+        char message[Helper::detectSize(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str())];
+        snprintf_P(message, sizeof(message), UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
+        Logger::log(message);
+        return;
       }
       // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
       // but it does not change the actual content of the JsonDocument, we don't want that because it already contents content
       // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonObjectConst instead.
       JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
+      // Checks to ensure we forward the already json serialized data to the correct process function,
+      // especially important is the order of ATTRIBUTE_RESPONSE_TOPIC and ATTRIBUTE_TOPIC,
+      // that is the case because the more specific one that is longer but contains the same text has to be checked first,
+      // because if we do not do that then even if we receive a message from the ATTRIBUTE_RESPONSE_TOPIC
+      // we would call the process method for the ATTRIBUTE_TOPIC because we only compare until the end of the ATTRIBUTE_TOPIC string,
+      // therefore the received topic is exactly the same. Therefore the ordering needs to stay the same for thoose two specific checks
       if (strncmp_P(RPC_RESPONSE_TOPIC, topic, strlen(RPC_RESPONSE_TOPIC)) == 0) {
         process_rpc_request_message(topic, data);
-      } else if (strncmp_P(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0) {
+      }
+      else if (strncmp_P(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0) {
         process_rpc_message(topic, data);
-      } else if (strncmp_P(ATTRIBUTE_RESPONSE_TOPIC, topic, strlen(ATTRIBUTE_RESPONSE_TOPIC)) == 0) {
+      }
+      else if (strncmp_P(ATTRIBUTE_RESPONSE_TOPIC, topic, strlen(ATTRIBUTE_RESPONSE_TOPIC)) == 0) {
         process_attribute_request_message(topic, data);
-      } else if (strncmp_P(ATTRIBUTE_TOPIC, topic, strlen(ATTRIBUTE_TOPIC)) == 0) {
+      }
+      else if (strncmp_P(ATTRIBUTE_TOPIC, topic, strlen(ATTRIBUTE_TOPIC)) == 0) {
         process_shared_attribute_update_message(topic, data);
-      } else if (strncmp_P(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
+      }
+      else if (strncmp_P(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
         process_provisioning_response(topic, data);
       }
     }
