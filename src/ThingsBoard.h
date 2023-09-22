@@ -1,9 +1,3 @@
-/*
-  ThingsBoard.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef ThingsBoard_h
 #define ThingsBoard_h
 
@@ -1916,6 +1910,12 @@ class ThingsBoardSized {
       return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
 
+    /// @brief Vector signature
+#if THINGSBOARD_ENABLE_STL
+    template<typename T>
+    using Vector = std::vector<T>;
+#endif // THINGSBOARD_ENABLE_STL
+
     IMQTT_Client& m_client; // MQTT client instance.
     size_t m_max_stack; // Maximum stack size we allocate at once.
     size_t m_buffering_size; // Buffering size used to serialize directly into client.
@@ -1928,17 +1928,10 @@ class ThingsBoardSized {
     // of its usage, which will lead to dangling references and undefined behaviour.
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy a vector, that will only ever contain a few pointers
-#if THINGSBOARD_ENABLE_STL
-    std::vector<RPC_Callback> m_rpc_callbacks; // Server side RPC callbacks vector
-    std::vector<RPC_Request_Callback> m_rpc_request_callbacks; // Client side RPC callbacks vector
-    std::vector<Shared_Attribute_Callback> m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector
-    std::vector<Attribute_Request_Callback> m_attribute_request_callbacks; // Client-side or shared attribute request callbacks vector
-#else
     Vector<RPC_Callback> m_rpc_callbacks; // Server side RPC callbacks vector, replacement for non C++ STL boards
     Vector<RPC_Request_Callback> m_rpc_request_callbacks; // Client side RPC callbacks vector, replacement for non C++ STL boards
     Vector<Shared_Attribute_Callback> m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector, replacement for non C++ STL boards
     Vector<Attribute_Request_Callback> m_attribute_request_callbacks; // Client-side or shared attribute request callback vector, replacement for non C++ STL boards
-#endif
 
     Provision_Callback m_provision_callback; // Provision response callback
     size_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0

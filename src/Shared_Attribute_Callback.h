@@ -1,9 +1,3 @@
-/*
-  Shared_Attribute_Callback.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef Shared_Attribute_Callback_h
 #define Shared_Attribute_Callback_h
 

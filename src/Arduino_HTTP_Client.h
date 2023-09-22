@@ -1,9 +1,3 @@
-/*
-  Arduino_HTTP_Client.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef Arduino_HTTP_Client_h
 #define Arduino_HTTP_Client_h
 
