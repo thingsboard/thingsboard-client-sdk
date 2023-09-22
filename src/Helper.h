@@ -1,9 +1,3 @@
-/*
-  Helper.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef Helper_h
 #define Helper_h
 

@@ -1,9 +1,3 @@
-/*
-  RPC_Callback.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef RPC_Callback_h
 #define RPC_Callback_h
 
