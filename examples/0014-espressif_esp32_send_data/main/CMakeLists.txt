@@ -2,5 +2,5 @@
 idf_component_register(
     SRCS
     "0014-espressif_esp32_send_data.cpp"
-    INCLUDE_DIRS "../../src"
+    INCLUDE_DIRS "../../../src"
 )
