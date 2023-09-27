@@ -1,0 +1,3 @@
+## IDF Component Manager Manifest File
+dependencies:
+  bblanchon/arduinojson: "^6.21.2"
