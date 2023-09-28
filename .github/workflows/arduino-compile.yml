@@ -18,7 +18,7 @@ on:
 
 env:
   SKETCHES_REPORTS_PATH: sketches-reports
-  SKETCHES_REPORTS_NAME: esp32
+  SKETCHES_REPORTS_NAME: arduino
 
 jobs:
   build:
@@ -38,8 +38,9 @@ jobs:
     strategy:
       matrix:
         board:
-          - fqbn: "arduino:avr:nano"
-            platform-name: avr:nano
+          # The possible board types for Arduino can be found here https://github.com/arduino/ArduinoCore-avr/blob/master/.github/workflows/compile-platform-examples.yml
+          - fqbn: "arduino:avr:mega:cpu=atmega2560"
+            platform-name: avr:mega
 
     steps:
       - uses: actions/checkout@v3
