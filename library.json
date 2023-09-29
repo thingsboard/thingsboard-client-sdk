@@ -4,7 +4,7 @@
     "description": "Arduino library to connect with ThingsBoard IoT Platform over MQTT or HTTP/S",
     "repository": {
         "type": "git",
-        "url": "https://github.com/thingsboard/thingsboard-arduino-sdk"
+        "url": "https://github.com/thingsboard/thingsboard-client-sdk"
     },
     "dependencies": {
         "bblanchon/ArduinoJson": "^6.21.2",
