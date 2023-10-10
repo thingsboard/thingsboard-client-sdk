@@ -1,0 +1,38 @@
+name: Compile ESP-IDF Sketches for v5.1
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/espidf-compile.yml"
+      - "examples/**"
+      - "src/**"
+  push:
+    paths:
+      - ".github/workflows/espidf-compile.yml"
+      - "examples/**"
+      - "src/**"
+  workflow_dispatch:
+  repository_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    - name: Build send data example on v5.1
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.1
+        target: esp32
+        path: 'examples/0014-espressif_esp32_send_data'
+    - name: Build process OTA over MQTT example on v5.1
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.1
+        target: esp32
+        path: 'examples/0015-espressif_esp32_process_OTA_MQTT'

@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
 
@@ -171,8 +172,10 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -277,11 +280,6 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
   return RPC_Response(doc);
 }
 
-const std::array<RPC_Callback, 2U> callbacks = {
-  RPC_Callback{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
-  RPC_Callback{ RPC_SWITCH_METHOD,         processSwitchChange }
-};
-
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -316,6 +314,10 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
+    const std::array<RPC_Callback, 2U> callbacks = {
+      RPC_Callback{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
+      RPC_Callback{ RPC_SWITCH_METHOD,         processSwitchChange }
+    };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.

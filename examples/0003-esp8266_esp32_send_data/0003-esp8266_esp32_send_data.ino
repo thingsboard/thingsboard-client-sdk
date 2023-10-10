@@ -27,6 +27,7 @@
 #define THINGSBOARD_ENABLE_STREAM_UTILS 1
 
 
+#include <Arduino_MQTT_Client.h>
 #if USING_HTTPS
 #include <ThingsBoardHttp.h>
 #else
@@ -197,11 +198,13 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
 #if USING_HTTPS
-ThingsBoardHttp tb(espClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(mqttClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 #endif
 
 
