@@ -22,8 +22,8 @@ Provision_Callback::Provision_Callback() :
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Access_Token, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *deviceName) :
-    Callback(cb, PROVISION_CB_IS_NULL),
+Provision_Callback::Provision_Callback(Access_Token, function callback, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *deviceName) :
+    Callback(callback, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -37,8 +37,8 @@ Provision_Callback::Provision_Callback(Access_Token, function cb, const char *pr
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Device_Access_Token, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *accessToken, const char *deviceName) :
-    Callback(cb, PROVISION_CB_IS_NULL),
+Provision_Callback::Provision_Callback(Device_Access_Token, function callback, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *accessToken, const char *deviceName) :
+    Callback(callback, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -52,8 +52,8 @@ Provision_Callback::Provision_Callback(Device_Access_Token, function cb, const c
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *username, const char *password, const char *clientID, const char *deviceName) :
-    Callback(cb, PROVISION_CB_IS_NULL),
+Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *username, const char *password, const char *clientID, const char *deviceName) :
+    Callback(callback, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),
@@ -67,8 +67,8 @@ Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function cb, cons
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(X509_Certificate, function cb, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *hash, const char *deviceName) :
-    Callback(cb, PROVISION_CB_IS_NULL),
+Provision_Callback::Provision_Callback(X509_Certificate, function callback, const char *provisionDeviceKey, const char *provisionDeviceSecret, const char *hash, const char *deviceName) :
+    Callback(callback, PROVISION_CB_IS_NULL),
     m_deviceKey(provisionDeviceKey),
     m_deviceSecret(provisionDeviceSecret),
     m_deviceName(deviceName),

@@ -1,0 +1,15 @@
+menu "ThingsBoard Arduino SDK Configurations"
+
+    config THINGSBOARD_ENABLE_DYNAMIC
+        bool "Removes the need to set MaxFieldAmts in template class, but saves json into DynamicJsonDocument, requiring heap instead of stack memory"
+        default n
+        help
+            If this is disabled the library will use StaticJsonDocument to receive messages from the MQTT broker instead
+
+    config THINGSBOARD_ENABLE_DEBUG
+        bool "Enables debug messages in the ThingsBoard client"
+        default n
+        help
+            If this is enabled the library uses more global constant variables containg messages that are printed
+
+endmenu

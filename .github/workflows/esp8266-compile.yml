@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - ".github/workflows/esp8266-compile.yml"
-      - "library.properties"
+      - "library.json"
       - "examples/**"
       - "src/**"
   push:
     paths:
       - ".github/workflows/esp8266-compile.yml"
-      - "library.properties"
+      - "library.json"
       - "examples/**"
       - "src/**"
   workflow_dispatch:

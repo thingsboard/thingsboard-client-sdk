@@ -16,14 +16,14 @@ RPC_Request_Callback::RPC_Request_Callback() :
     // Nothing to do
 }
 
-RPC_Request_Callback::RPC_Request_Callback(const char *methodName, function cb) :
-    RPC_Request_Callback(methodName, nullptr, cb)
+RPC_Request_Callback::RPC_Request_Callback(const char *methodName, function callback) :
+    RPC_Request_Callback(methodName, nullptr, callback)
 {
     // Nothing to do
 }
 
-RPC_Request_Callback::RPC_Request_Callback(const char *methodName, const JsonArray *parameteres, function cb) :
-    Callback(cb, RPC_REQUEST_CB_NULL),
+RPC_Request_Callback::RPC_Request_Callback(const char *methodName, const JsonArray *parameteres, function callback) :
+    Callback(callback, RPC_REQUEST_CB_NULL),
     m_methodName(methodName),
     m_parameters(parameteres),
     m_request_id(0U)
@@ -31,11 +31,11 @@ RPC_Request_Callback::RPC_Request_Callback(const char *methodName, const JsonArr
     // Nothing to do
 }
 
-const uint32_t& RPC_Request_Callback::Get_Request_ID() const {
+const size_t& RPC_Request_Callback::Get_Request_ID() const {
     return m_request_id;
 }
 
-void RPC_Request_Callback::Set_Request_ID(const uint32_t &request_id) {
+void RPC_Request_Callback::Set_Request_ID(const size_t &request_id) {
     m_request_id = request_id;
 }
 

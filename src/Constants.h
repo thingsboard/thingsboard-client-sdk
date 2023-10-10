@@ -1,9 +1,3 @@
-/*
-  Constants.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef Constants_h
 #define Constants_h
 
@@ -11,8 +5,13 @@
 #include "Configuration.h"
 
 // Library includes.
-#include <Arduino.h>
+#if THINGSBOARD_ENABLE_PROGMEM
+#include <pgmspace.h>
+#endif // THINGSBOARD_ENABLE_PROGMEM
+#if THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 #include <ArduinoJson.h>
+#endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
+
 
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
 #define Default_Buffering_Size 64
@@ -29,7 +28,11 @@ class ThingsBoardDefaultLogger;
 #ifndef vsnprintf_P
 #define vsnprintf_P   vsnprintf
 #endif // vsnprintf_P
+#ifndef strncmp_P
+#define strncmp_P   strncmp
+#endif // strncmp_P
 #endif // THINGSBOARD_ENABLE_PROGMEM
+
 
 /// ---------------------------------
 /// Constant strings in flash memory,
@@ -54,26 +57,27 @@ constexpr char UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
+
 #if THINGSBOARD_ENABLE_PSRAM
-  #include <esp_heap_caps.h>
+#include <esp_heap_caps.h>
 
-  struct SpiRamAllocator {
-    void* allocate(size_t size) {
-      return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
-    }
+struct SpiRamAllocator {
+  void* allocate(size_t size) {
+    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+  }
 
-    void deallocate(void* pointer) {
-      heap_caps_free(pointer);
-    }
+  void deallocate(void* pointer) {
+    heap_caps_free(pointer);
+  }
 
-    void* reallocate(void* ptr, size_t new_size) {
-      return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
-    }
-  };
+  void* reallocate(void* ptr, size_t new_size) {
+    return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
+  }
+};
 
-  using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
-#else
-  using TBJsonDocument = DynamicJsonDocument;
+using TBJsonDocument = BasicJsonDocument<SpiRamAllocator>;
+#elif THINGSBOARD_ENABLE_DYNAMIC
+using TBJsonDocument = DynamicJsonDocument;
 #endif
 
 #endif // Constants_h
