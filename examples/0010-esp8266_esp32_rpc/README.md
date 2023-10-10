@@ -6,6 +6,10 @@
 |  ESP32            |
 |  ESP8266          |
 
+## Framework
+
+Arduino
+
 ## ThingsBoard API
 [Server-side Remote Procedure Call](https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc)
 

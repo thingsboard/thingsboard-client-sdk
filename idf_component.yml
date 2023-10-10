@@ -1,0 +1,7 @@
+version: "0.12.0"
+description: Provides access to ThingsBoard platform over the MQTT protocol or alternatively over HTTP/S.
+url: https://github.com/thingsboard/thingsboard-arduino-sdk
+dependencies:
+  bblanchon/arduinojson: "^6.21.2"
+  idf:
+    version: "*"

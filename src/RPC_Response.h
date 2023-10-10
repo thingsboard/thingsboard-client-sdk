@@ -1,15 +1,12 @@
-/*
-  RPC_Response.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef RPC_RESPONSE_H
 #define RPC_RESPONSE_H
 
 // Local includes.
 #include "Telemetry.h"
 
+
+/// @brief RPC response expected to be sent by the user to the server once an RPC method has been called by the server,
+/// is a simple wrapper around the Telemetry and JsonVariant class, which allow to easily serialize the response into a json string
 class RPC_Response : public JsonVariant {
   public:
     /// @brief Constructor

@@ -10,13 +10,23 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
 #ifdef ESP8266
-#include <ESP8266_Updater.h>
+#include <Arduino_ESP8266_Updater.h>
 #else
 #ifdef ESP32
-#include <ESP32_Updater.h>
+// We do theoretically have an Arduino_ESP32_Updater component, which has dependencies on Arduino and used the UpdaterClass,
+// but it makes not sense to use that component atleast currently, because it simply implements writing to partitions
+// in a very suboptimal way, allocatng 4KB on the heap and even causing undefined behaviour and even memory leaks.
+// See https://github.com/espressif/arduino-esp32/issues/7984#issuecomment-1717151822 for more information on the issues with the UpdaterClass.
+// Therefore instead it is recommended to use the Epsressif_Updater which directly uses the headers, which are included in the UpdaterClass anyway,
+// but because it directly use the OTA Update API see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/ota.html for more information,
+// it is more efficient and does not have any of the aforementioned issues.
+// Thanks to those issues it is highly recommended to use the Espressif_Updater as long as the issue has not been resolved on a Arduino level, additional the same is the case
+// if an older version of Arduino is used that might not contain the possible fixes yet.
+#include <Espressif_Updater.h>
 #endif // ESP32
 #endif // ESP8266
 
@@ -189,8 +199,18 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initalize the Updater client instance used to flash binary to flash memory
+#ifdef ESP8266
+Arduino_ESP8266_Updater updater;
+#else
+#ifdef ESP32
+Espressif_Updater updater;
+#endif // ESP32
+#endif // ESP8266
 
 // Statuses for updating
 bool currentFWSent = false;
@@ -269,19 +289,9 @@ void updatedCallback(const bool& success) {
 /// @brief Progress callback that will be called every time we downloaded a new chunk successfully
 /// @param currentChunk 
 /// @param totalChuncks 
-void progressCallback(const uint32_t& currentChunk, const uint32_t& totalChuncks) {
+void progressCallback(const size_t& currentChunk, const size_t& totalChuncks) {
   Serial.printf("Progress %.2f%%\n", static_cast<float>(currentChunk * 100U) / totalChuncks);
 }
-
-#ifdef ESP8266
-ESP8266_Updater updater;
-#else
-#ifdef ESP32
-ESP32_Updater updater;
-#endif // ESP32
-#endif // ESP8266
-
-const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
 
 void setup() {
   // Initalize serial connection for debugging
@@ -325,6 +335,7 @@ void loop() {
 #else
     Serial.println("Firwmare Update...");
 #endif
+    const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
     // See https://thingsboard.io/docs/user-guide/ota-updates/
     // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
     updateRequestSent = tb.Start_Firmware_Update(callback);
