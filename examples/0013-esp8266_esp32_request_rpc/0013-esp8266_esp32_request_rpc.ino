@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
 
@@ -163,8 +164,10 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -220,8 +223,6 @@ void processTime(const JsonVariantConst &data) {
   serializeJsonPretty(data, Serial);
 }
 
-const RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
-
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -256,6 +257,7 @@ void loop() {
 #else
     Serial.println("Requesting RPC...");
 #endif
+    const RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
 #if THINGSBOARD_ENABLE_PROGMEM

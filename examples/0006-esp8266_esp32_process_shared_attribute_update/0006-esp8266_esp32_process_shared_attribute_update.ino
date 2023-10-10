@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
 
@@ -156,16 +157,6 @@ constexpr const char FW_TAG_KEY[] PROGMEM = "fw_tag";
 constexpr const char FW_TAG_KEY[] = "fw_tag";
 #endif
 
-// Shared attributes we want to request from the server
-constexpr std::array<const char*, 6U> SUBSCRIBED_SHARED_ATTRIBUTES = {
-  FW_CHKS_KEY,
-  FW_CHKS_ALGO_KEY,
-  FW_SIZE_KEY,
-  FW_TAG_KEY,
-  FW_TITLE_KEY,
-  FW_VER_KEY
-};
-
 
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
@@ -173,8 +164,10 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to shared attributes
 bool subscribed = false;
@@ -239,8 +232,6 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
   Serial.println(buffer);
 }
 
-const Shared_Attribute_Callback callback(SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend(), processSharedAttributeUpdate);
-
 void setup() {
   // Initalize serial connection for debugging
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -275,6 +266,9 @@ void loop() {
 #else
     Serial.println("Subscribing for shared attribute updates...");
 #endif
+    // Shared attributes we want to request from the server
+    constexpr std::array<const char*, 6U> SUBSCRIBED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
+    const Shared_Attribute_Callback callback(&processSharedAttributeUpdate, SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend());
     if (!tb.Shared_Attributes_Subscribe(callback)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to subscribe for shared attribute updates"));

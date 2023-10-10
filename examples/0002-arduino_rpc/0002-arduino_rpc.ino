@@ -6,6 +6,7 @@
 //  - ESP8266 connected to Arduino Uno
 
 #include <ThingsBoard.h>
+#include <Arduino_MQTT_Client.h>
 #include <WiFiEspClient.h>
 #include <WiFiEsp.h>
 #include <SoftwareSerial.h>
@@ -81,8 +82,10 @@ constexpr const char RPC_RESPONSE_KEY[] = "example_response";
 SoftwareSerial soft(2U, 3U); // RX, TX
 // Initialize the Ethernet client object
 WiFiEspClient espClient;
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance
-ThingsBoard tb(espClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -205,12 +208,6 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
   return RPC_Response(doc);
 }
 
-const uint8_t callback_size = 2U;
-const RPC_Callback callbacks[callback_size] = {
-  { RPC_TEMPERATURE_METHOD,    processTemperatureChange },
-  { RPC_SWITCH_METHOD,         processSwitchChange }
-};
-
 void loop() {
   delay(1000);
 
@@ -240,7 +237,11 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
-
+    const uint8_t callback_size = 2U;
+    const RPC_Callback callbacks[callback_size] = {
+      { RPC_TEMPERATURE_METHOD,    processTemperatureChange },
+      { RPC_SWITCH_METHOD,         processSwitchChange }
+    };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.

@@ -19,7 +19,12 @@ HashGenerator::~HashGenerator(void) {
 }
 
 void HashGenerator::start(const mbedtls_md_type_t& type) {
+    // MBEDTLS Version 3 is a major breaking changes were accessing the internal structures requires the MBEDTLS_PRIVATE macro
+#if MBEDTLS_VERSION_MAJOR < 3
     if (m_ctx.hmac_ctx != nullptr && m_ctx.md_ctx != nullptr && m_ctx.md_info != nullptr) {
+#else
+    if (m_ctx.MBEDTLS_PRIVATE(hmac_ctx) != nullptr && m_ctx.MBEDTLS_PRIVATE(md_ctx) != nullptr && m_ctx.MBEDTLS_PRIVATE(md_info) != nullptr) {
+#endif
         mbedtls_md_free(&m_ctx);
     }
     // Initialize the context
@@ -41,7 +46,12 @@ std::string HashGenerator::get_hash_string() {
 
     // Convert the hash value to a string
     std::stringstream ss;
+    // MBEDTLS Version 3 is a major breaking changes were accessing the internal structures requires the MBEDTLS_PRIVATE macro
+#if MBEDTLS_VERSION_MAJOR < 3
     for (size_t i = 0; i < mbedtls_md_get_size(m_ctx.md_info); i++)
+#else
+    for (size_t i = 0; i < mbedtls_md_get_size(m_ctx.MBEDTLS_PRIVATE(md_info)); i++)
+#endif
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
     return ss.str();
 }

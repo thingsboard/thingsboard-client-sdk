@@ -1,9 +1,3 @@
-/*
-  Vector.h - Library API for sending data to the ThingsBoard
-  Based on PubSub MQTT library.
-  Created by Olender M. Oct 2018.
-  Released into the public domain.
-*/
 #ifndef Vector_h
 #define Vector_h
 
@@ -14,6 +8,7 @@
 
 // Library includes.
 #include <assert.h>
+
 
 /// @brief Replacement data container for boards that do not support the C++ STL.
 /// @tparam T Type of the underlying data the list should point too.
@@ -116,12 +111,13 @@ class Vector {
     /// @brief Removes the element at the given index, has to move all element one to the left if the index is not at the end of the array
     /// @param index Index the element should be removed at from the underlying data container
     inline void erase(const size_t& index) {
+        // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left
             for (size_t i = index; i < m_size - 1; i++) {
                 m_elements[i] = m_elements[i + 1];
             }
-            // Decrease the size of the vector
+            // Decrease the size of the vector to remove the last element, because either it was moved one index to the left or was the element we wanted to delete
             m_size--;
         }
     }
@@ -153,9 +149,9 @@ class Vector {
     }
 
   private:
-    T* m_elements;
-    size_t m_capacity;
-    size_t m_size;
+    T* m_elements;      // Pointer to the start of our elements
+    size_t m_capacity;  // Allocated capacity that shows how many elements we could hold
+    size_t m_size;      // Used size that shows how many elements we entered
 };
 
 #endif // !THINGSBOARD_ENABLE_STL
