@@ -100,8 +100,8 @@ class OTA_Handler {
     /// @param fw_algorithm String of the algorithm type used to hash the firmware binary
     /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
     /// @param fw_checksum_algorithm Algorithm type used to hash the firmware binary
-    inline void Start_Firmware_Update(const OTA_Update_Callback *fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
-        m_fw_callback = fw_callback;
+    inline void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
+        m_fw_callback = &fw_callback;
         m_fw_size = fw_size;
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
         m_fw_algorithm = fw_algorithm;
