@@ -342,7 +342,7 @@ class ThingsBoardSized {
       , m_provision_callback()
       , m_request_id(0U)
 #if THINGSBOARD_ENABLE_OTA
-      , m_fw_callback(nullptr)
+      , m_fw_callback()
       , m_previous_buffer_size(0U)
       , m_change_buffer_size(false)
       , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
@@ -1124,7 +1124,7 @@ class ThingsBoardSized {
     inline bool Publish_Chunk_Request(const size_t& request_chunck) {
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
 
       // Convert the interger size into a readable string
       char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)];
@@ -1281,7 +1281,7 @@ class ThingsBoardSized {
       }
 
       // Set private members needed for update
-      m_fw_callback = &callback;
+      m_fw_callback = callback;
       return true;
     }
 
@@ -1307,7 +1307,7 @@ class ThingsBoardSized {
           m_client.set_buffer_size(m_previous_buffer_size);
       }
       // Reset now not needed private member variables
-      m_fw_callback = nullptr;
+      m_fw_callback = OTA_Update_Callback();
       // Unsubscribe from the topic
       return m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
     }
@@ -1317,14 +1317,9 @@ class ThingsBoardSized {
     /// to ensure we have a firmware assigned and can start the update over MQTT
     inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
       // Check if firmware is available for our device
-      if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY)) {
+      if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY) || !data.containsKey(FW_CHKS_KEY) || !data.containsKey(FW_CHKS_ALGO_KEY) || !data.containsKey(FW_SIZE_KEY)) {
         Logger::log(NO_FW);
         Firmware_Send_State(FW_STATE_FAILED, NO_FW);
-        return;
-      }
-      else if (m_fw_callback == nullptr) {
-        Logger::log(OTA_CB_IS_NULL);
-        Firmware_Send_State(FW_STATE_FAILED, OTA_CB_IS_NULL);
         return;
       }
 
@@ -1334,8 +1329,8 @@ class ThingsBoardSized {
       const std::string fw_algorithm = data[FW_CHKS_ALGO_KEY].as<std::string>();
       const size_t fw_size = data[FW_SIZE_KEY].as<const size_t>();
 
-      const char *curr_fw_title = m_fw_callback->Get_Firmware_Title();
-      const char *curr_fw_version = m_fw_callback->Get_Firmware_Version();
+      const char *curr_fw_title = m_fw_callback.Get_Firmware_Title();
+      const char *curr_fw_version = m_fw_callback.Get_Firmware_Version();
 
       if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm.empty() || fw_checksum.empty()) {
         Logger::log(EMPTY_FW);
@@ -1393,7 +1388,7 @@ class ThingsBoardSized {
 
       // Calculate the number of chuncks we need to request,
       // in order to download the complete firmware binary
-      const uint16_t& chunk_size = m_fw_callback->Get_Chunk_Size();
+      const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
 
       // Get the previous buffer size and cache it so the previous settings can be restored.
       m_previous_buffer_size = m_client.get_buffer_size();
@@ -1937,7 +1932,7 @@ class ThingsBoardSized {
     size_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0
 
 #if THINGSBOARD_ENABLE_OTA
-    const OTA_Update_Callback *m_fw_callback; // Ota update response callback
+    OTA_Update_Callback m_fw_callback; // Ota update response callback
     uint16_t m_previous_buffer_size; // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
     bool m_change_buffer_size; // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
     OTA_Handler<Logger> m_ota; // Class instance that handles the flashing and creating a hash from the given received binary firmware data
