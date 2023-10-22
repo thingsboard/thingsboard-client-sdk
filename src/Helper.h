@@ -69,7 +69,7 @@ class Helper {
 #if THINGSBOARD_ENABLE_STL
         return std::distance(first_itr, last_itr);
 #else
-        return last - first;
+        return last_itr - first_itr;
 #endif // THINGSBOARD_ENABLE_STL
     }
 };
