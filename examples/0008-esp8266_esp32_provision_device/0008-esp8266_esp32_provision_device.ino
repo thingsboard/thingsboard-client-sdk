@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
@@ -190,6 +191,8 @@ constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
 #endif
 
 
+// Logging client
+const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -199,7 +202,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 
 uint32_t previous_processing_time = 0U;
 

@@ -16,6 +16,7 @@
 // #define TINY_GSM_MODEM_M590
 // #define TINY_GSM_MODEM_ESP8266
 
+#include <DefaultLogger.h>
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
 #include <Arduino_MQTT_Client.h>
@@ -74,15 +75,18 @@ constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)";
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr char TEMPERATURE_KEY[] PROGMEM = "temperature";
 constexpr char HUMIDITY_KEY[] PROGMEM = "humidity";
 #else
-constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)";
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr char TEMPERATURE_KEY[] = "temperature";
 constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
 
+
+// Logging client
+const DefaultLogger logger;
 
 // Serial port for GSM shield
 SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
@@ -97,7 +101,7 @@ TinyGsmClient client(modem);
 Arduino_MQTT_Client mqttClient(client);
 
 // Initialize ThingsBoard instance
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 
 // Set to true, if modem is connected
 bool modemConnected = false;
@@ -196,9 +200,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
-    snprintf_P(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
-    Serial.println(message);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));

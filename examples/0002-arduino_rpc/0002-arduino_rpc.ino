@@ -6,6 +6,7 @@
 //  - ESP8266 connected to Arduino Uno
 
 #include <ThingsBoard.h>
+#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <WiFiEspClient.h>
 #include <WiFiEsp.h>
@@ -62,14 +63,14 @@ constexpr uint32_t SERIAL_ESP8266_DEBUG_BAUD = 9600U;
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)";
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr const char RPC_TEMPERATURE_METHOD[] PROGMEM = "example_set_temperature";
 constexpr const char RPC_SWITCH_METHOD[] PROGMEM = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] PROGMEM = "temp";
 constexpr const char RPC_SWITCH_KEY[] PROGMEM = "switch";
 constexpr const char RPC_RESPONSE_KEY[] PROGMEM = "example_response";
 #else
-constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)";
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr const char RPC_TEMPERATURE_METHOD[] = "example_set_temperature";
 constexpr const char RPC_SWITCH_METHOD[] = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] = "temp";
@@ -78,6 +79,8 @@ constexpr const char RPC_RESPONSE_KEY[] = "example_response";
 #endif
 
 
+// Logging client
+const DefaultLogger logger;
 // Serial driver for ESP
 SoftwareSerial soft(2U, 3U); // RX, TX
 // Initialize the Ethernet client object
@@ -85,7 +88,7 @@ WiFiEspClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -218,9 +221,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
-    snprintf_P(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
-    Serial.println(message);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));

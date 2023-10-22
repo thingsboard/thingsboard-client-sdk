@@ -28,6 +28,16 @@ OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, 
     // Nothing to do
 }
 
+OTA_Update_Callback::returnType OTA_Update_Callback::Call_Progress_Callback(const ILogger& logger, progressArgumentType current, progressArgumentType total) const {
+    // Check if the callback is a nullptr,
+    // meaning it has not been assigned any valid callback method
+    if (!m_progressCb) {
+      logger.print(OTA_CB_IS_NULL);
+      return returnType();
+    }
+    return m_progressCb(current, total);
+}
+
 void OTA_Update_Callback::Set_Progress_Callback(progressFn progressCb) {
     m_progressCb = progressCb;
 }

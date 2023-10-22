@@ -27,6 +27,7 @@
 #define THINGSBOARD_ENABLE_STREAM_UTILS 1
 
 
+#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #if USING_HTTPS
 #include <ThingsBoardHttp.h>
@@ -184,14 +185,18 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr char TEMPERATURE_KEY[] PROGMEM = "temperature";
 constexpr char HUMIDITY_KEY[] PROGMEM = "humidity";
 #else
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr char TEMPERATURE_KEY[] = "temperature";
 constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
 
 
+// Logging client
+const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -204,7 +209,7 @@ Arduino_MQTT_Client mqttClient(espClient);
 #if USING_HTTPS
 ThingsBoardHttp tb(mqttClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 #endif
 
 
@@ -274,7 +279,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
