@@ -1017,6 +1017,46 @@ class ThingsBoardSized {
     }
   
   private:
+#if THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
+    /// @brief Vector signature
+    template<typename T>
+    using Vector = std::vector<T>;
+#endif // THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
+
+    IMQTT_Client& m_client; // MQTT client instance.
+    const ILogger& m_logger; // Logging instance used to print messages
+    size_t m_max_stack; // Maximum stack size we allocate at once.
+    size_t m_buffering_size; // Buffering size used to serialize directly into client.
+
+    // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
+    // even if the user only temporarily created the object before the method was called.
+    // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
+    // does not require a huge memory overhead and is acceptable especially in comparsion to possible problems that could
+    // arise if references were used and the end user does not take care to ensure the Callbacks live on for the entirety
+    // of its usage, which will lead to dangling references and undefined behaviour.
+    // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
+    // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
+#if THINGSBOARD_ENABLE_DYNAMIC
+    Vector<RPC_Callback> m_rpc_callbacks; // Server side RPC callbacks vector
+    Vector<RPC_Request_Callback> m_rpc_request_callbacks; // Client side RPC callbacks vector
+    Vector<Shared_Attribute_Callback> m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector
+    Vector<Attribute_Request_Callback> m_attribute_request_callbacks; // Client-side or shared attribute request callback vector
+#else
+    Array<RPC_Callback, MaxSubscribtions> m_rpc_callbacks; // Server side RPC callbacks array
+    Array<RPC_Request_Callback, MaxSubscribtions> m_rpc_request_callbacks; // Client side RPC callbacks array
+    Array<Shared_Attribute_Callback, MaxSubscribtions> m_shared_attribute_update_callbacks; // Shared attribute update callbacks array
+    Array<Attribute_Request_Callback, MaxSubscribtions> m_attribute_request_callbacks; // Client-side or shared attribute request callback array
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
+    Provision_Callback m_provision_callback; // Provision response callback
+    size_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0
+
+#if THINGSBOARD_ENABLE_OTA
+    OTA_Update_Callback m_fw_callback; // Ota update response callback
+    uint16_t m_previous_buffer_size; // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
+    bool m_change_buffer_size; // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
+    OTA_Handler m_ota; // Class instance that handles the flashing and creating a hash from the given received binary firmware data
+#endif // THINGSBOARD_ENABLE_OTA
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 
@@ -1809,47 +1849,6 @@ class ThingsBoardSized {
 
       return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
-
-#if THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-    /// @brief Vector signature
-    template<typename T>
-    using Vector = std::vector<T>;
-#endif // THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-
-    IMQTT_Client& m_client; // MQTT client instance.
-    const ILogger& m_logger; // Logging instance used to print messages
-    size_t m_max_stack; // Maximum stack size we allocate at once.
-    size_t m_buffering_size; // Buffering size used to serialize directly into client.
-
-    // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
-    // even if the user only temporarily created the object before the method was called.
-    // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
-    // does not require a huge memory overhead and is acceptable especially in comparsion to possible problems that could
-    // arise if references were used and the end user does not take care to ensure the Callbacks live on for the entirety
-    // of its usage, which will lead to dangling references and undefined behaviour.
-    // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
-    // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<RPC_Callback> m_rpc_callbacks; // Server side RPC callbacks vector
-    Vector<RPC_Request_Callback> m_rpc_request_callbacks; // Client side RPC callbacks vector
-    Vector<Shared_Attribute_Callback> m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector
-    Vector<Attribute_Request_Callback> m_attribute_request_callbacks; // Client-side or shared attribute request callback vector
-#else
-    Array<RPC_Callback, MaxSubscribtions> m_rpc_callbacks; // Server side RPC callbacks array
-    Array<RPC_Request_Callback, MaxSubscribtions> m_rpc_request_callbacks; // Client side RPC callbacks array
-    Array<Shared_Attribute_Callback, MaxSubscribtions> m_shared_attribute_update_callbacks; // Shared attribute update callbacks array
-    Array<Attribute_Request_Callback, MaxSubscribtions> m_attribute_request_callbacks; // Client-side or shared attribute request callback array
-#endif // THINGSBOARD_ENABLE_DYNAMIC
-
-    Provision_Callback m_provision_callback; // Provision response callback
-    size_t m_request_id; // Allows nearly 4.3 million requests before wrapping back to 0
-
-#if THINGSBOARD_ENABLE_OTA
-    OTA_Update_Callback m_fw_callback; // Ota update response callback
-    uint16_t m_previous_buffer_size; // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
-    bool m_change_buffer_size; // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
-    OTA_Handler m_ota; // Class instance that handles the flashing and creating a hash from the given received binary firmware data
-#endif // THINGSBOARD_ENABLE_OTA
 
     /// @brief MQTT callback that will be called if a publish message is received from the server
     /// @param topic Previously subscribed topic, we got the response over 
