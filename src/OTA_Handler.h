@@ -76,7 +76,7 @@ class OTA_Handler {
     /// @param publish_callback Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
     /// @param send_fw_state_callback Callback that is used to send information about the current state of the over the air update
     /// @param finish_callback Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
-    inline OTA_Handler(const ILogger& logger, std::function<bool(const size_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback);
+    OTA_Handler(const ILogger& logger, std::function<bool(const size_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback);
 
     /// @brief Starts the firmware update with requesting the first firmware packet and initalizes the underlying needed components
     /// @param fw_callback Callback method that contains configuration information, about the over the air update
@@ -84,19 +84,19 @@ class OTA_Handler {
     /// @param fw_algorithm String of the algorithm type used to hash the firmware binary
     /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
     /// @param fw_checksum_algorithm Algorithm type used to hash the firmware binary
-    inline void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm);
+    void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm);
 
     /// @brief Stops the firmware update completly and informs that user that the update has failed because it has been aborted, ongoing communication is discarded.
     /// Be aware the written partition is not erased so the already written binary firmware data still remains in the flash partition,
     /// shouldn't really matter, because if we start the update process again the partition will be overwritten anyway and a partially written firmware will not be bootable
-    inline void Stop_Firmware_Update();
+    void Stop_Firmware_Update();
 
     /// @brief Uses the given firmware packet data and process it. Starting with writing the given amount of bytes of the packet data into flash memory and
     /// into a hash function that will be used to compare the expected complete binary file and the actually received binary file
     /// @param current_chunk Index of the chunk we recieved the binary data for
     /// @param payload Firmware packet data of the current chunk
     /// @param total_bytes Amount of bytes in the current firmware packet data
-    inline void Process_Firmware_Packet(const size_t& current_chunk, uint8_t *payload, const size_t& total_bytes);
+    void Process_Firmware_Packet(const size_t& current_chunk, uint8_t *payload, const size_t& total_bytes);
 
   private:
     const OTA_Update_Callback *m_fw_callback;                                 // Callback method that contains configuration information, about the over the air update
@@ -116,24 +116,24 @@ class OTA_Handler {
     Callback_Watchdog m_watchdog;                                             // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
 
     /// @brief Restarts or starts the firmware update and its needed components and then requests the first firmware chunk
-    inline void Request_First_Firmware_Packet();
+    void Request_First_Firmware_Packet();
 
     /// @brief Requests the next firmware chunk of the OTA firmware if there are any left
     /// and starts the timer that ensures we request the same chunk again if we have not received a response yet
-    inline void Request_Next_Firmware_Packet();
+    void Request_Next_Firmware_Packet();
 
     /// @brief Completes the firmware update, which consists of checking the complete hash of the firmware binary if the initally received value,
     /// both should be the same and if that is not the case that means that we received invalid firmware binary data and have to restart the update.
     /// If checking the hash was successfull we attempt to finish flashing the ota partition and then inform the user that the update was successfull
-    inline void Finish_Firmware_Update();
+    void Finish_Firmware_Update();
 
     /// @brief Handles errors with the received failure response so that the firmware update can regenerate from any possible issue.
     /// Will only execute the given failure response as long as there are still retries remaining, if there are not any further issue will cause the update to be aborted
     /// @param failure_response Possible response to a failure that the method should handle
-    inline void Handle_Failure(const OTA_Failure_Response& failure_response);
+    void Handle_Failure(const OTA_Failure_Response& failure_response);
 
     /// @brief Callback that will be called if we did not receive the firmware chunk response in the given timeout time
-    inline void Handle_Request_Timeout();
+    void Handle_Request_Timeout();
 };
 
 #endif // THINGSBOARD_ENABLE_OTA

@@ -63,11 +63,11 @@ constexpr uint32_t SERIAL_ESP8266_DEBUG_BAUD = 9600U;
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)";
 constexpr char TEMPERATURE_KEY[] PROGMEM = "temperature";
 constexpr char HUMIDITY_KEY[] PROGMEM = "humidity";
 #else
-constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)";
 constexpr char TEMPERATURE_KEY[] = "temperature";
 constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
@@ -165,7 +165,9 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
+    char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
+    snprintf_P(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
+    Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
