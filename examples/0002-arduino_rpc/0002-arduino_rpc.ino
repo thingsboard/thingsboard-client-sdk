@@ -245,7 +245,9 @@ void loop() {
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.
-    if (!tb.RPC_Subscribe(callbacks, callbacks + callback_size)) {
+    const RPC_Callback* begin = callbacks;
+    const RPC_Callback* end = callbacks + callback_size;
+    if (!tb.RPC_Subscribe(begin, end)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to subscribe for RPC"));
 #else
