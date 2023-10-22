@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
@@ -152,12 +153,16 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr const char FW_TAG_KEY[] PROGMEM = "fw_tag";
 #else
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr const char FW_TAG_KEY[] = "fw_tag";
 #endif
 
 
+// Logging client
+const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -167,7 +172,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to shared attributes
 bool subscribed = false;
@@ -249,7 +254,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));

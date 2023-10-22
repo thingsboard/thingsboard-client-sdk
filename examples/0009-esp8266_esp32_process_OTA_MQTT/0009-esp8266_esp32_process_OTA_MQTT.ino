@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
@@ -193,6 +194,8 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 
+// Logging client
+const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -202,7 +205,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 // Initalize the Updater client instance used to flash binary to flash memory
 #ifdef ESP8266
 Arduino_ESP8266_Updater updater;

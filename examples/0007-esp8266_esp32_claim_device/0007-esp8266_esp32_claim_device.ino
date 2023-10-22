@@ -10,6 +10,7 @@
 #endif // ESP32
 #endif // ESP8266
 
+#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 
@@ -158,8 +159,10 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 // Possible character options used to generate a password if none is provided.
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr char PASSWORD_OPTIONS[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 #else
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr char PASSWORD_OPTIONS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 #endif
 
@@ -175,6 +178,8 @@ constexpr uint32_t CLAIMING_REQUEST_DURATION_MS = (3U * 60U * 1000U);
 std::string claimingRequestSecretKey = "";
 
 
+// Logging client
+const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -184,7 +189,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 
 // Statuses for claiming
 bool claimingRequestSent = false;
@@ -268,7 +273,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
@@ -290,7 +295,7 @@ void loop() {
       // if the string is empty or null, automatically checked by the sendClaimingRequest method
       claimingRequestSecretKey;
 #endif
-    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
+    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms\n", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
     claimingRequestSent = tb.Claim_Request(secretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
   }
 
