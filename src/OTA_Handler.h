@@ -15,6 +15,14 @@
 #include "OTA_Failure_Response.h"
 
 
+// Firmware data keys.
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
+#else
+constexpr char FW_STATE_FAILED[] = "FAILED";
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
+
 /// @brief Handles the complete processing of received binary firmware data, including flashing it onto the device,
 /// creating a hash of the received data and in the end ensuring that the complete OTA firmware was flashes successfully and that the hash is the one we initally received
 class OTA_Handler {
