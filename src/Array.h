@@ -1,33 +1,23 @@
-#ifndef Vector_h
-#define Vector_h
+#ifndef Array_h
+#define Array_h
 
 // Local include.
 #include "Configuration.h"
-
-#if !THINGSBOARD_ENABLE_STL
-
-// Library includes.
-#include <assert.h>
+#include "Helper.h"
 
 
-/// @brief Replacement data container for boards that do not support the C++ STL and therefore do not have the std::vector class.
+/// @brief Replacement data container for boards that do not support the C++ STL and therefore do not have the std::array class.
 /// @tparam T Type of the underlying data the list should point too.
-template <typename T>
-class Vector {
+/// @tparam Capacity Amount of elements that can be saved into the underlying data structure allows to wrap a simple c-array and allocate it on the stack.
+template <typename T, size_t Capacity>
+class Array {
   public:
     /// @brief Constructor
-    inline Vector(void) :
-        m_elements(nullptr),
-        m_capacity(0U),
+    inline Array(void) :
+        m_elements(),
         m_size(0U)
     {
         // Nothing to do
-    }
-
-    /// @brief Destructor
-    inline ~Vector() {
-        delete[] m_elements;
-        m_elements = nullptr;
     }
 
     /// @brief Returns whether there are still any element in the underlying data container
@@ -44,8 +34,8 @@ class Vector {
 
     /// @brief Gets the maximum amount of elements that can currently be stored in the underlying data container
     /// @return The maximum amount of items that can currently be stored in the underlying data container
-    inline const size_t& capacity() const {
-        return m_capacity;
+    inline size_t capacity() const {
+        return Capacity;
     }
     
     /// @brief Returns a pointer to the first element of the vector
@@ -79,26 +69,21 @@ class Vector {
         return m_elements + m_size;
     }
 
-    /// @brief Inserts the given element at the end of the underlying data container.
-    /// Increases the size of the underlying data container if it is already full and has no remaining space for new elements.
-    /// The growth is exponential meaning it doubles every time the underlying data container has to be increased.
-    /// This results in an amortized insertion speed of O(1), but might require 0(n) when the container has to be reallocated to be increased
+    /// @brief Inserts the given element at the end of the underlying data container,
+    /// If the interal data structure is full already then this method will simply not insert those elements instead
+    /// Because if we do not we could cause an out of bounds write, which could possibly overwrite other memory.
+    /// Causing hard to debug issues, therefore this behaviour is not allowed in the first place
     /// @param element Element that should be inserted at the end
     inline void push_back(const T& element) {
-        if (m_size == m_capacity) {
-            m_capacity = (m_capacity == 0) ? 1 : 2 * m_capacity;
-            T* newElements = new T[m_capacity];
-            if (m_elements != nullptr) {
-                memcpy(newElements, m_elements, m_size * sizeof(T));
-                delete[] m_elements;
-            }
-            m_elements = newElements;
+        if (m_size < Capacity) {
+            m_elements[m_size] = element;
+            m_size++;
         }
-        m_elements[m_size] = element;
-        m_size++;
     }
 
-    /// @brief Inserts all element from the given start to the given end iterator into the underlying data container. Simply calls push_back on each element
+    /// @brief Inserts all element from the given start to the given end iterator into the underlying data container.
+    /// Simply calls push_back on each element, meaning if the initally allocated size if not big enough to hold all elements,
+    /// then this method will simply not insert those elements instead
     /// @param position_itr Attribute is not used and can be left as nullptr, simply there to keep compatibility with std::vector insert method
     /// @param first_itr Beginning of the elements we want to copy into our underlying data container
     /// @param last_itr One past the end of the elements we want to copy into our underlying data container
@@ -107,6 +92,13 @@ class Vector {
             push_back(*first_itr);
             first_itr++;
         }
+    }
+
+    /// @brief Removes the element at the given iterator, has to move all element one to the left if the index is not at the end of the array
+    /// @param iterator Iterator the element should be removed at from the underlying data container
+    inline void erase(const T* iterator) {
+        const size_t index = Helper::distance(cbegin(), iterator);
+        erase(index);
     }
 
     /// @brief Removes the element at the given index, has to move all element one to the left if the index is not at the end of the array
@@ -152,11 +144,8 @@ class Vector {
     }
 
   private:
-    T* m_elements;      // Pointer to the start of our elements
-    size_t m_capacity;  // Allocated capacity that shows how many elements we could hold
-    size_t m_size;      // Used size that shows how many elements we entered
+    T m_elements[Capacity]; // Underlying c-array holding our data
+    size_t m_size;          // Used size that shows how many elements we entered
 };
 
-#endif // !THINGSBOARD_ENABLE_STL
-
-#endif // Vector_h
+#endif // Array_h
