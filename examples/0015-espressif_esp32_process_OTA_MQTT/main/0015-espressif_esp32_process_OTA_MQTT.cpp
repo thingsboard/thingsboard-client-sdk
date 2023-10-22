@@ -99,6 +99,8 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
+constexpr char FW_STATE_UPDATED[] = "UPDATED";
+
 
 // Logging client
 const DefaultLogger logger;

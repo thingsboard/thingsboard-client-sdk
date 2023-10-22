@@ -3,6 +3,57 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
+/// ---------------------------------
+/// Constant strings in flash memory.
+/// ---------------------------------
+// Firmware data keys.
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
+constexpr char FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
+constexpr char FW_STATE_UPDATING[] PROGMEM = "UPDATING";
+constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
+#else
+constexpr char FW_STATE_DOWNLOADING[] = "DOWNLOADING";
+constexpr char FW_STATE_DOWNLOADED[] = "DOWNLOADED";
+constexpr char FW_STATE_UPDATING[] = "UPDATING";
+constexpr char FW_STATE_FAILED[] = "FAILED";
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
+// Log messages.
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware chunk";
+constexpr char RECEIVED_UNEXPECTED_CHUNK[] PROGMEM = "Received chunk (%u), not the same as requested chunk (%u)";
+constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater, ensure that the partition scheme has two app sections";
+constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary data instead of expected (%u)";
+constexpr char UPDATING_HASH_FAILED[] PROGMEM = "Updating hash failed";
+constexpr char ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
+constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
+constexpr char FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
+#if THINGSBOARD_ENABLE_DEBUG
+constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%u), with size (%u) bytes";
+constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
+constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
+constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
+constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
+#endif // THINGSBOARD_ENABLE_DEBUG
+#else
+constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
+constexpr char RECEIVED_UNEXPECTED_CHUNK[] = "Received chunk (%u), not the same as requested chunk (%u)";
+constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater, ensure that the partition scheme has two app sections";
+constexpr char ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data instead of expected (%u)";
+constexpr char UPDATING_HASH_FAILED[] = "Updating hash failed";
+constexpr char ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
+constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
+constexpr char FW_UPDATE_ABORTED[] = "Firmware update aborted";
+#if THINGSBOARD_ENABLE_DEBUG
+constexpr char FW_CHUNK[] = "Receive chunk (%u), with size (%u) bytes";
+constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
+constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
+constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
+constexpr char FW_UPDATE_SUCCESS[] = "Update success";
+#endif // THINGSBOARD_ENABLE_DEBUG
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
 OTA_Handler::OTA_Handler(const ILogger& logger, std::function<bool(const size_t&)> publish_callback, std::function<bool(const char *, const char *)> send_fw_state_callback, std::function<bool(void)> finish_callback)
     : m_fw_callback(nullptr)
     , m_logger(logger)
@@ -57,7 +108,9 @@ void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *
     }
 
     m_watchdog.detach();
+#if THINGSBOARD_ENABLE_DEBUG
     m_logger.printf(FW_CHUNK, current_chunk, total_bytes);
+#endif // THINGSBOARD_ENABLE_DEBUG
 
     if (current_chunk == 0U) {
         // Initialize Flash
@@ -129,8 +182,10 @@ void OTA_Handler::Finish_Firmware_Update() {
     (void)m_send_fw_state_callback(FW_STATE_DOWNLOADED, nullptr);
 
     const std::string calculated_hash = m_hash.get_hash_string();
+#if THINGSBOARD_ENABLE_DEBUG
     m_logger.printf(HASH_ACTUAL, m_fw_algorithm.c_str(), calculated_hash.c_str());
     m_logger.printf(HASH_EXPECTED, m_fw_algorithm.c_str(), m_fw_checksum.c_str());
+#endif // THINGSBOARD_ENABLE_DEBUG
 
     // Check if the initally received checksum is the same as the one we calculated from the received binary data,
     // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed
@@ -140,7 +195,9 @@ void OTA_Handler::Finish_Firmware_Update() {
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
 
+#if THINGSBOARD_ENABLE_DEBUG
     m_logger.print(CHKS_VER_SUCCESS);
+#endif // THINGSBOARD_ENABLE_DEBUG
 
     if (!m_fw_updater->end()) {
         m_logger.print(ERROR_UPDATE_END);
@@ -148,7 +205,9 @@ void OTA_Handler::Finish_Firmware_Update() {
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
 
+#if THINGSBOARD_ENABLE_DEBUG
     m_logger.print(FW_UPDATE_SUCCESS);
+#endif // THINGSBOARD_ENABLE_DEBUG
     (void)m_send_fw_state_callback(FW_STATE_UPDATING, nullptr);
 
     m_fw_callback->Call_Callback(m_logger, true);
