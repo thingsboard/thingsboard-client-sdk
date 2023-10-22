@@ -1336,7 +1336,7 @@ class ThingsBoardSized {
       }
       else {
         char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(fw_algorithm.size())];
-        snprintf_P(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm.c_str());
+        snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm.c_str());
         m_logger.print(message);
         Firmware_Send_State(FW_STATE_FAILED, message);
         return;

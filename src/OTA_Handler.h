@@ -15,58 +15,6 @@
 #include "OTA_Failure_Response.h"
 
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
-// Firmware data keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
-constexpr char FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
-constexpr char FW_STATE_VERIFIED[] PROGMEM = "VERIFIED";
-constexpr char FW_STATE_UPDATING[] PROGMEM = "UPDATING";
-constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
-constexpr char FW_STATE_FAILED[] PROGMEM = "FAILED";
-#else
-constexpr char FW_STATE_DOWNLOADING[] = "DOWNLOADING";
-constexpr char FW_STATE_DOWNLOADED[] = "DOWNLOADED";
-constexpr char FW_STATE_VERIFIED[] = "VERIFIED";
-constexpr char FW_STATE_UPDATING[] = "UPDATING";
-constexpr char FW_STATE_UPDATED[] = "UPDATED";
-constexpr char FW_STATE_FAILED[] = "FAILED";
-#endif // THINGSBOARD_ENABLE_PROGMEM
-
-// Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-constexpr char UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware chunk";
-constexpr char RECEIVED_UNEXPECTED_CHUNK[] PROGMEM = "Received chunk (%u), not the same as requested chunk (%u)";
-constexpr char ERROR_UPDATE_BEGIN[] PROGMEM = "Failed to initalize flash updater";
-constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary data to flash memory instead of expected (%u)";
-constexpr char UPDATING_HASH_FAILED[] PROGMEM = "Updating hash failed";
-constexpr char ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
-constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
-constexpr char FW_CHUNK[] PROGMEM = "Receive chunk (%u), with size (%u) bytes";
-constexpr char HASH_ACTUAL[] PROGMEM = "(%s) actual checksum: (%s)";
-constexpr char HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
-constexpr char CHKS_VER_SUCCESS[] PROGMEM = "Checksum is the same as expected";
-constexpr char FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
-constexpr char FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
-#else
-constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
-constexpr char RECEIVED_UNEXPECTED_CHUNK[] = "Received chunk (%u), not the same as requested chunk (%u)";
-constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater";
-constexpr char ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data to flash memory instead of expected (%u)";
-constexpr char UPDATING_HASH_FAILED[] = "Updating hash failed";
-constexpr char ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
-constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
-constexpr char FW_CHUNK[] = "Receive chunk (%u), with size (%u) bytes";
-constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
-constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
-constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
-constexpr char FW_UPDATE_ABORTED[] = "Firmware update aborted";
-constexpr char FW_UPDATE_SUCCESS[] = "Update success";
-#endif // THINGSBOARD_ENABLE_PROGMEM
-
-
 /// @brief Handles the complete processing of received binary firmware data, including flashing it onto the device,
 /// creating a hash of the received data and in the end ensuring that the complete OTA firmware was flashes successfully and that the hash is the one we initally received
 class OTA_Handler {

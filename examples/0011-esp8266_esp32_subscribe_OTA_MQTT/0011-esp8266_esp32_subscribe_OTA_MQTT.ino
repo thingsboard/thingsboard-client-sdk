@@ -193,6 +193,12 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 #endif
 
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr char FW_STATE_UPDATED[] PROGMEM = "UPDATED";
+#else
+constexpr char FW_STATE_UPDATED[] = "UPDATED";
+#endif // THINGSBOARD_ENABLE_PROGMEM
+
 
 // Logging client
 const DefaultLogger logger;
