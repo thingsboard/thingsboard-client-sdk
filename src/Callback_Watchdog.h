@@ -43,7 +43,7 @@ class Callback_Watchdog {
     void detach();
 
   private:
-    std::function<void(void)> m_callback;
+    std::function<void(void)> m_callback; // Callback that should be called if the watchdog timeout expired without calling detach first
 #if THINGSBOARD_USE_ESP_TIMER
     void *m_oneshot_timer;                // ESP Timer handle that is used to start and stop the oneshot timer
 #else

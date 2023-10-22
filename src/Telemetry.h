@@ -80,7 +80,7 @@ class Telemetry {
     bool SerializeKeyValue(const JsonVariant &jsonObj) const;
 
   private:
-    // Data container
+    /// @brief Data container, which contains one of the possibly passed values
     union Data {
         const char  *str;
         bool        boolean;
@@ -88,7 +88,7 @@ class Telemetry {
         double      real;
     };
 
-    // Data type that is set inside the container
+    /// @brief Data type that the data container currently holds
     enum class DataType: const uint8_t {
         TYPE_NONE, // Telemetry instance is empty and has not been assigned a value
         TYPE_BOOL, // Telemetry instance is a key value-pair with a boolean value

@@ -71,7 +71,9 @@ void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *
     // Write received binary data to flash partition
     const size_t written_bytes = m_fw_updater->write(payload, total_bytes);
     if (written_bytes != total_bytes) {
-        m_logger.printf(ERROR_UPDATE_WRITE, written_bytes, total_bytes);
+        char message[Helper::detectSize(ERROR_UPDATE_WRITE, written_bytes, total_bytes)];
+        snprintf(message, sizeof(message), ERROR_UPDATE_WRITE, written_bytes, total_bytes);
+        m_logger.print(message);
         (void)m_send_fw_state_callback(FW_STATE_FAILED, message);
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
@@ -126,6 +128,7 @@ void OTA_Handler::Request_Next_Firmware_Packet() {
 void OTA_Handler::Finish_Firmware_Update() {
     (void)m_send_fw_state_callback(FW_STATE_DOWNLOADED, nullptr);
 
+    const std::string calculated_hash = m_hash.get_hash_string();
     m_logger.printf(HASH_ACTUAL, m_fw_algorithm.c_str(), calculated_hash.c_str());
     m_logger.printf(HASH_EXPECTED, m_fw_algorithm.c_str(), m_fw_checksum.c_str());
 
