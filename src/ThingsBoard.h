@@ -1295,7 +1295,9 @@ class ThingsBoardSized {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
       }
       else {
-        m_logger.printf(FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm.c_str());
+        char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(fw_algorithm.size())];
+        snprintf_P(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm.c_str());
+        m_logger.print(message);
         Firmware_Send_State(FW_STATE_FAILED, message);
         return;
       }
@@ -1933,8 +1935,8 @@ class ThingsBoardSized {
 
 #if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
 
-template<size_t MaxFieldsAmount, size_t MaxSubscribtions, typename Logger>
-ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, Logger> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, Logger>::m_subscribedInstance = nullptr;
+template<size_t MaxFieldsAmount, size_t MaxSubscribtions>
+ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions>::m_subscribedInstance = nullptr;
 
 #elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
