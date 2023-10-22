@@ -1960,8 +1960,8 @@ class ThingsBoardSized {
 
 #if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
 
-template<size_t MaxFieldsAmount, typename Logger>
-ThingsBoardSized<MaxFieldsAmount, Logger> *ThingsBoardSized<MaxFieldsAmount, Logger>::m_subscribedInstance = nullptr;
+template<size_t MaxFieldsAmount, size_t MaxSubscribtions, typename Logger>
+ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, Logger> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, Logger>::m_subscribedInstance = nullptr;
 
 #elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
