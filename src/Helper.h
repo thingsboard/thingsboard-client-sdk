@@ -55,6 +55,23 @@ class Helper {
         container.erase(index);
 #endif // THINGSBOARD_ENABLE_STL
     }
+
+    /// @brief Calculates the distance between two iterators
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// When THINGSBOARD_ENABLE_STL is not enabled then this method will only calculate the correct distance for random access iterators.
+    /// This is done because calculating the size for a random access iterator is O(1) where as a sequential iterator requires O(n) computational time
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @return Distance between the two iterators
+    template<class InputIterator>
+    inline static size_t distance(const InputIterator& first_itr, const InputIterator& last_itr) {
+#if THINGSBOARD_ENABLE_STL
+        return std::distance(first_itr, last_itr);
+#else
+        return last - first;
+#endif // THINGSBOARD_ENABLE_STL
+    }
 };
 
 #endif // Helper

@@ -16,7 +16,8 @@
 #define Default_Max_Stack_Size 1023 // 10 bytes = 2^10 - 1
 #define Default_Buffering_Size 64
 #define Default_Payload 64
-#define Default_Fields_Amt 8
+#define Default_Fields_Amount 8
+#define Default_Subscriptions_Amount 2
 class ThingsBoardDefaultLogger;
 
 #if !THINGSBOARD_ENABLE_PROGMEM
