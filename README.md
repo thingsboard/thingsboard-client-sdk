@@ -126,13 +126,16 @@ If the device is crashing with an `Exception` especially `Exception (3)`, more s
 
 ### Dynamic ThingsBoard usage
 
-The received `JSON` payload, as well as the `sendAttributes` and `sendTelemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) by default, this furthermore requires the `MaxFieldsAmt` template argument passed in the constructor. To set the size the buffer should have, where bigger messages will cause not sent/received key-value pairs or failed de-/serialization.
+The received `JSON` payload, as well as the `sendAttributes` and `sendTelemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) by default, this furthermore requires the `MaxFieldsAmount` template argument passed in the constructor. To set the size the buffer should have, where bigger messages will cause not sent/received key-value pairs or failed de-/serialization.
 
-To remove the need for the `MaxFieldsAmt` template argument in the constructor and ensure the size the buffer should have is always enough to hold the sent or received messages, instead `#define THINGSBOARD_ENABLE_DYNAMIC 1` can be set before including the ThingsBoard header file. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/).
+Additionally, the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) is also used to deserialize the received payload for every kind of response received by the server, besides the `OTA` binary data.
+This means that if the `MaxFieldsAmount` template argument is smaller than the amount of requested client or shared attributes it will cause a failed deserialization of the response.
+
+To remove the need for the `MaxFieldsAmount` template argument in the constructor and ensure the size the buffer should have is always enough to hold sent or received messages, instead `#define THINGSBOARD_ENABLE_DYNAMIC 1` can be set before including the ThingsBoard header file. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/). Be aware though as this copies sent or received payloads onto the heap.
 
 ```c++
 // If not set otherwise the value is 0 per default,
-// set to 1 if the MaxFieldsAmt template argument should not be required.
+// set to 1 if the MaxFieldsAmount template argument should not be required.
 #define THINGSBOARD_ENABLE_DYNAMIC 1
 #include <ThingsBoard.h>
 ```
@@ -187,10 +190,16 @@ ThingsBoard tb(mqttClient);
 A buffer allocated internally by `ArduinoJson` library is fixed and is capable for processing not more than 8 fields. If you are trying to send more than that, you will get a respective log showing an error in the `"Serial Monitor"` window:
 
 ```
-[TB] Too many JSON fields passed (26), increase MaxFieldsAmt (8) accordingly
+[TB] Too many JSON fields passed (26), increase MaxFieldsAmount (8) accordingly
 ```
 
-The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization)**. See **Dynamic ThingsBoard Usage** above if the usage of `MaxFieldsAmt`, should be replaced with automatic detection of the needed size.
+Alternatively you might never send enough data points to reach that limit, but instead you receive more than 8 data points at once sent by the server. If that is the case it will not be able to deserialize the received payload into a `JsonDocument` by `ArduinoJson`. If that is the case, you will get a respective log showing an error in the `"Serial Monitor"` window:
+
+```
+[TB] Unable to de-serialize received json data with error (DeserializationError::NoMemory)
+```
+
+The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization)**. See **Dynamic ThingsBoard usage** above if the usage of `MaxFieldsAmount`, should be replaced with automatic detection of the needed size.
 
 ```cpp
 // For the sake of example
