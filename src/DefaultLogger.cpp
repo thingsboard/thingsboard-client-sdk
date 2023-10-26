@@ -4,7 +4,6 @@
 // Local includes.
 #include "Configuration.h"
 #include "Helper.h"
-#include "Constants.h"
 
 // Library include.
 #if THINGSBOARD_ENABLE_PROGMEM
