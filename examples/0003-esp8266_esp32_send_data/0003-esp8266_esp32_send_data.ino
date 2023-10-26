@@ -28,10 +28,11 @@
 
 
 #include <DefaultLogger.h>
-#include <Arduino_MQTT_Client.h>
 #if USING_HTTPS
+#include <Arduino_HTTP_Client.h>
 #include <ThingsBoardHttp.h>
 #else
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 #endif
 
@@ -203,12 +204,14 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
-// Initalize the Mqtt client instance
-Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
 #if USING_HTTPS
-ThingsBoardHttp tb(mqttClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+// Initalize the Http client instance
+Arduino_HTTP_Client httpClient(espClient, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(httpClient, logger, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 #endif
 

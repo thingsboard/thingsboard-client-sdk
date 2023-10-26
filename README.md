@@ -115,12 +115,23 @@ This troubleshooting guide contains common issues that are well known and can oc
 
 ### No PROGMEM support causing crashes
 
-If the device is crashing with an `Exception` especially `Exception (3)`, more specifically `LoadStoreError` or `LoadStoreErrorCause` this might be because, all constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
+If the device is crashing with a `Exception` especially `Exception (3)`, more specifically `LoadStoreError` or `LoadStoreErrorCause` this might be because, all constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
 
-```c++
-// If not set otherwise the value is 1 per default if the pgmspace include exists,
+```cpp
+// If not set the value is 1 per default if the pgmspace include exists,
 // set to 0 if the board has problems with PROGMEM variables and does not seem to work correctly.
 #define THINGSBOARD_ENABLE_PROGMEM 0
+#include <ThingsBoard.h>
+```
+
+### Enabling internal debug messages
+
+If the device is causing problems, it might be useful to enable internal debug messages, which will allow the library to print more information about sent and received messages as well as internal processes. This is disabled per default to decrease the amount of logs and memory for the log strings on the flash.
+
+```cpp
+// If not set the value is 0 per default, meaning it will only print internal error messages,
+// set to 1 to also print debugging messages which might help to discern the exact place where a method fails
+#define THINGSBOARD_ENABLE_DEBUG 1
 #include <ThingsBoard.h>
 ```
 
@@ -133,7 +144,7 @@ This means that if the `MaxFieldsAmount` template argument is smaller than the a
 
 To remove the need for the `MaxFieldsAmount` template argument in the constructor and ensure the size the buffer should have is always enough to hold sent or received messages, instead `#define THINGSBOARD_ENABLE_DYNAMIC 1` can be set before including the ThingsBoard header file. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/). Be aware though as this copies sent or received payloads onto the heap.
 
-```c++
+```cpp
 // If not set otherwise the value is 0 per default,
 // set to 1 if the MaxFieldsAmount template argument should not be required.
 #define THINGSBOARD_ENABLE_DYNAMIC 1
@@ -151,17 +162,21 @@ The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not s
 If that's the case, the buffer size for serialization should be increased. To do so, `setBufferSize()` method can be used or the `bufferSize` passed to the constructor can be increased as illustrated below:
 
 ```cpp
-// For the sake of example
-WiFiEspClient espClient;
+
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
 
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON buffer
-// ThingsBoard tb(mqttClient);
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// ThingsBoard tb(mqttClient, logger);
 
-// The SDK setup with 128 bytes for JSON buffer
-ThingsBoard tb(mqttClient, 128);
+// The SDK setup with 128 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+ThingsBoard tb(mqttClient, logger, 128);
 
 void setup() {
   // Increase internal buffer size after inital creation.
@@ -175,14 +190,17 @@ Alternatively, it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM
 // Enable skipping usage of the buffer for sends that are bigger than the internal buffer size
 #define THINGSBOARD_ENABLE_STREAM_UTILS 1
 
-// For the sake of example
-WiFiEspClient espClient;
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
 
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON buffer
-ThingsBoard tb(mqttClient);
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+ThingsBoard tb(mqttClient, logger);
 ```
 
 ### Too much data fields must be serialized
@@ -202,17 +220,51 @@ Alternatively you might never send enough data points to reach that limit, but i
 The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization)**. See **Dynamic ThingsBoard usage** above if the usage of `MaxFieldsAmount`, should be replaced with automatic detection of the needed size.
 
 ```cpp
-// For the sake of example
-WiFiEspClient espClient;
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
 
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 8 fields for JSON object
-// ThingsBoard tb(mqttClient);
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// ThingsBoard tb(mqttClient, logger);
 
-// The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<32> tb(mqttClient, 128);
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object and 2 maximum subscriptions of every possible type
+ThingsBoardSized<32> tb(mqttClient, logger, 128);
+```
+
+### Too many subscriptions
+
+The possible event subscription classes that are passed to internal methods use array on the stack per default with a maximum of 2. Meaning if the method call attempts to subscribe more than 2 events in total, then it will fail showing an error in the `"Serial Monitor"` window:
+
+```
+[TB] Too many <TB_FEATURE> subscriptions, increase MaxSubscribtions or unsubscribe
+```
+
+Important is that both server-side RPC and request attribute values are temporary, meaning once the request has been received it is deleted, and it is therefore possible to subscribe another event again. All other subscriptions like client-side RPC or attribute update subscription, however are permanent meaning once the event has been subscribed we can only unsubscribe all events to make more room.
+
+Additionally, every aforementioned type of request has its own array meaning we can subscribe 2 events and one event subscription does not affect the possible amount for another subscription.
+
+The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. See **Dynamic ThingsBoard usage** above if the usage of `MaxSubscribtions`, should be replaced with a growing vector instead.
+
+```cpp
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
+
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// ThingsBoard tb(mqttClient, logger);
+
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object and 8 maximum subscriptions of every possible type
+ThingsBoardSized<32, 8> tb(mqttClient, logger, 128);
 ```
 
 ## Tips and Tricks
@@ -228,7 +280,7 @@ meaning as long as the device can flash binary data and supports the C++ STL it 
 Currently, implemented in the library itself are the `ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and the `ESP8266_Updater` which is used with the `ESP8266`.
 If another device wants to be supported, a custom interface implementation needs to be created. For that a `class` that inherits the `IUpdater` interface needs to be created and `override` the needed methods.
 
-```c++
+```cpp
 #include <IUpdater.h>
 
 class Custom_Updater : public IUpdater {
@@ -251,6 +303,15 @@ class Custom_Updater : public IUpdater {
 };
 ```
 
+Once that has been done it can simply be passed instead of the `Espressif_Updater` instance.
+
+```cpp
+// Initalize the Updater client instance used to flash binary to flash memory
+Custom_Updater updater;
+
+const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+```
+
 ### Custom HTTP Instance
 
 When using the `ThingsBoardHttp` class instance, the protocol used to send the data to the HTTP broker is not hard coded,
@@ -263,7 +324,7 @@ Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which
 For that a `class` that inherits the `IHTTP_Client` interface needs to be created and `override` the needed methods.
 
 
-```c++
+```cpp
 #include <IHTTP_Client.h>
 
 class Custom_HTTP_Client : public IHTTP_Client {
@@ -298,6 +359,22 @@ class Custom_HTTP_Client : public IHTTP_Client {
 };
 ```
 
+Once that has been done it can simply be passed instead of the `Arduino_HTTP_Client` instance.
+
+```cpp
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
+
+// Initalize the Http client instance
+Custom_HTTP_Client httpClient(espClient, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+
+// The SDK setup with 8 fields for JSON object
+ThingsBoardHttp tb(httpClient, logger, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+```
+
 ### Custom MQTT Instance
 
 When using the `ThingsBoard` class instance, the protocol used to send the data to the MQTT broker is not hard coded,
@@ -309,7 +386,7 @@ meaning the underlying MQTT client can be whatever the user decides, so it can f
 Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`TBPubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
 For that a `class` that inherits the `IMQTT_Client` interface needs to be created and `override` the needed methods.
 
-```c++
+```cpp
 #include <IMQTT_Client.h>
 
 class Custom_MQTT_Client : public IMQTT_Client {
@@ -384,38 +461,61 @@ class Custom_MQTT_Client : public IMQTT_Client {
 };
 ```
 
-### Custom Logger Instance
-
-To use your own logger you have to create a class and pass it as second template parameter `Logger` to your `ThingsBoardSized` class instance.
-
-**For example:**
+Once that has been done it can simply be passed instead of the `Arduino_MQTT_Client` instance.
 
 ```cpp
-class CustomLogger {
-public:
-  static void log(const char *error) {
-    Serial.print("[Custom Logger] ");
-    Serial.println(error);
-  }
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
+
+// Initalize the Mqtt client instance
+Custom_MQTT_Client mqttClient(espClient);
+
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+ThingsBoard tb(mqttClient, logger);
+```
+
+### Custom Logger Instance
+
+When using the `ThingsBoard` class instance, the class used to print internal warning messages is not hard coded, but instead the `ThingsBoard` class expects the argument to a `ILogger` implementation. See **Enabling internal debug messages** above if the logger should also receive debug messages.
+
+Thanks to it being a `interface` it allows an arbitrary implementation,
+meaning the underlying Logger client can be whatever the user decides, so it can for example be used to print the messages onto a serial card instead of the serial console.
+
+Currently, implemented in the library itself is the `DefaultLogger`, which is simply a wrapper around a `printf` call. If the functionality wants to be extended, a custom interface implementation needs to be created.
+For that a `class` that inherits the `ILogger` interface needs to be created and `override` the needed methods.
+
+```cpp
+#include <ILogger.h>
+
+class CustomLogger : public ILogger {
+  public:
+    int print(const char *message) const override {
+        return 0;
+    }
+
+    int printf(const char *format, ...) const override {
+        return 0;
+    }
 };
 ```
 
-Your class must have the method `log` with the same prototype as in the example. It will be called if the library needs to print any log messages.
-
-After that, you can use it in place of the regular `ThingsBoard` class. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#too-much-data-fields-must-be-serialized).**
+Once that has been done it can simply be passed instead of the `DefaultLogger` instance.
 
 ```cpp
-// For the sake of example
-WiFiEspClient espClient;
+// Logging client
+const CustomLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
 
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 8 fields for JSON object
-// ThingsBoard tb(mqttClient);
-
-// The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object.
-ThingsBoardSized<32, CustomLogger> tb(mqttClient, 128);
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+ThingsBoard tb(mqttClient, logger);
 ```
 
 ## Have a question or proposal?

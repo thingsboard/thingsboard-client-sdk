@@ -7,9 +7,9 @@
 /// @brief Default logger class used by the ThingsBoard class to log messages into the console
 class DefaultLogger : public ILogger {
   public:
-    int print(const char *message) const;
+    int print(const char *message) const override;
 
-    int printf(const char *format, ...) const;
+    int printf(const char *format, ...) const override;
 };
 
 #endif // Thingsboard_Default_Logger_h
