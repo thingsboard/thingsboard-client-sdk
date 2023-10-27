@@ -4,10 +4,23 @@
 // Local includes.
 #include "Configuration.h"
 #include "ILogger.h"
+#if !THINGSBOARD_ENABLE_STL
+#include "Vector.h"
+#endif // !THINGSBOARD_ENABLE_STL
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
+#endif // THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_STL
+#include <vector>
+#endif // THINGSBOARD_ENABLE_STL
+
+
+#if THINGSBOARD_ENABLE_STL
+/// @brief Vector signature, makes it possible to use the Vector name everywhere instead of having to differentiate between C++ STL support or not
+template<typename T>
+using Vector = std::vector<T>;
 #endif // THINGSBOARD_ENABLE_STL
 
 

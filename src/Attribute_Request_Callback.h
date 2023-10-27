@@ -3,15 +3,9 @@
 
 // Local includes.
 #include "Callback.h"
-#if !THINGSBOARD_ENABLE_STL
-#include "Vector.h"
-#endif // !THINGSBOARD_ENABLE_STL
 
 // Library includes.
 #include <ArduinoJson.h>
-#if THINGSBOARD_ENABLE_STL
-#include <vector>
-#endif // THINGSBOARD_ENABLE_STL
 
 
 /// ---------------------------------
@@ -26,11 +20,6 @@ constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute reque
 
 /// @brief JSON object const (read only twice as small as JSON object), is used to communicate Attributes data to the client
 using Attribute_Data = const JsonObjectConst;
-#if THINGSBOARD_ENABLE_STL
-/// @brief Vector signature
-template<typename T>
-using Vector = std::vector<T>;
-#endif // THINGSBOARD_ENABLE_STL
 
 
 /// @brief Client-side or shared attributes request callback wrapper,

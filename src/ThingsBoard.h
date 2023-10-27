@@ -17,6 +17,9 @@
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #include <StreamUtils.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
+#if THINGSBOARD_ENABLE_OTA
+#include <array>
+#endif // THINGSBOARD_ENABLE_OTA
 
 
 /// ---------------------------------
@@ -880,7 +883,7 @@ class ThingsBoardSized {
       }
 
       // Request the firmware information
-      const std::vector<const char *> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+      constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
       const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
       return Shared_Attributes_Request(fw_request_callback);
     }
@@ -903,7 +906,7 @@ class ThingsBoardSized {
       }
 
       // Subscribes to changes of the firmware information
-      const std::vector<const char *> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+      constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
       const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
       return Shared_Attributes_Subscribe(fw_update_callback);
     }
