@@ -8,8 +8,7 @@
 #include <ArduinoJson.h>
 
 
-// Convenient aliases
-// JSON object const (read only twice as small as JSON object), is used to communicate Provision data to the client
+/// @brief JSON object const (read only twice as small as JSON object), is used to communicate Provision data to the client
 using Provision_Data = const JsonObjectConst;
 
 // Struct dispatch tags, to differentiate between constructors, allows the same paramter types to be passed

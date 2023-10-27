@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if !THINGSBOARD_ENABLE_STL
-
 // Library includes.
 #include <assert.h>
 
@@ -24,10 +22,28 @@ class Vector {
         // Nothing to do
     }
 
+    /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
+    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
+    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
+    inline Vector(const T* first_itr, const T* last_itr) :
+        m_elements(nullptr),
+        m_capacity(0U),
+        m_size(0U)
+    {
+        insert(nullptr, first_itr, last_itr);
+    }
+
     /// @brief Destructor
     inline ~Vector() {
         delete[] m_elements;
         m_elements = nullptr;
+    }
+
+    /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
+    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
+    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
+    inline void assign(const T* first_itr, const T* last_itr) {
+        insert(nullptr, first_itr, last_itr);
     }
 
     /// @brief Returns whether there are still any element in the underlying data container
@@ -156,7 +172,5 @@ class Vector {
     size_t m_capacity;  // Allocated capacity that shows how many elements we could hold
     size_t m_size;      // Used size that shows how many elements we entered
 };
-
-#endif // !THINGSBOARD_ENABLE_STL
 
 #endif // Vector_h
