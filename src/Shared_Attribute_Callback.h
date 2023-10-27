@@ -20,8 +20,8 @@ constexpr char ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is N
 constexpr char ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-// Convenient aliases
-// JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes to the client
+
+/// @brief JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes to the client
 using Shared_Attribute_Data = const JsonObjectConst;
 
 

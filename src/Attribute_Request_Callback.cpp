@@ -41,7 +41,7 @@ void Attribute_Request_Callback::Set_Attribute_Key(const char *attribute_key) {
 
 #if THINGSBOARD_ENABLE_STL
 
-const std::vector<const char *>& Attribute_Request_Callback::Get_Attributes() const {
+const Vector<const char *>& Attribute_Request_Callback::Get_Attributes() const {
     return m_attributes;
 }
 

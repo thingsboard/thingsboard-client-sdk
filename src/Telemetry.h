@@ -102,7 +102,7 @@ class Telemetry {
     Data         m_value; // Data value of the key-value pair
 };
 
-// Convenient aliases
+/// @brief Telemetry and attributes are only different on the database side (one has a history the other one does not), but both are simply key-value pairs
 using Attribute = Telemetry;
 
 #endif // Telemetry_h

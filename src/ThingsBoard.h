@@ -3,8 +3,6 @@
 
 // Local includes.
 #include "Constants.h"
-#include "Vector.h"
-#include "Array.h"
 #include "Helper.h"
 #include "Shared_Attribute_Callback.h"
 #include "Attribute_Request_Callback.h"
@@ -127,7 +125,7 @@ constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] PROGMEM = "Too many shared attr
 #else
 constexpr char COLON PROGMEM = ':';
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-constexpr char COMMA PROGMEM = ',';
+constexpr char COMMA[] PROGMEM = ",";
 constexpr char NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
 constexpr char RPC_METHOD_NULL[] PROGMEM = "RPC methodName is NULL";
 constexpr char SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic failed";
@@ -159,7 +157,7 @@ constexpr char MAX_SHARED_ATT_REQUEST_EXCEEDED[] = "Too many shared attribute re
 #else
 constexpr char COLON = ':';
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-constexpr char COMMA = ',';
+constexpr char COMMA[] = ",";
 constexpr char NO_KEYS_TO_REQUEST[] = "No keys to request were given";
 constexpr char RPC_METHOD_NULL[] = "RPC methodName is NULL";
 constexpr char SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic failed";
@@ -1017,12 +1015,6 @@ class ThingsBoardSized {
     }
   
   private:
-#if THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-    /// @brief Vector signature
-    template<typename T>
-    using Vector = std::vector<T>;
-#endif // THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-
     IMQTT_Client& m_client; // MQTT client instance.
     const ILogger& m_logger; // Logging instance used to print messages
     size_t m_max_stack; // Maximum stack size we allocate at once.
@@ -1133,8 +1125,7 @@ class ThingsBoardSized {
     /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
     inline bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
-#if THINGSBOARD_ENABLE_STL
-      const std::vector<const char *>& attributes = callback.Get_Attributes();
+      const Vector<const char *>& attributes = callback.Get_Attributes();
 
       // Check if any sharedKeys were requested
       if (attributes.empty()) {
@@ -1147,14 +1138,6 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DEBUG
         return false;
       }
-#else
-      const char* request = callback.Get_Attributes();
-
-      if (request == nullptr) {
-        m_logger.print(NO_KEYS_TO_REQUEST);
-        return false;
-      }
-#endif // THINGSBOARD_ENABLE_STL
 
       // Ensure the response topic has been subscribed
       Attribute_Request_Callback* registeredCallback = nullptr;
@@ -1175,11 +1158,19 @@ class ThingsBoardSized {
       // and it will generate a compile time error if not used
       const JsonVariant requestVariant = requestBuffer.template as<JsonVariant>();
 
-#if THINGSBOARD_ENABLE_STL
-      std::string request;
-
+      // Calculate the size required for the char buffer before initalizing so it is possible to allocate it on the stack
+      size_t size = 0U;
       for (const char *att : attributes) {
-        // Check if the given attribute is null, if it is skip it
+        if (att == nullptr) {
+          continue;
+        }
+
+        size += strlen(att);
+        size += strlen(COMMA);
+      }
+
+      char request[size];
+      for (const char *att : attributes) {
         if (att == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
           m_logger.print(ATT_IS_NULL);
@@ -1187,17 +1178,11 @@ class ThingsBoardSized {
           continue;
         }
 
-        request.append(att);
-        request.push_back(COMMA);
+        strncat(request, att, strlen(att));
+        strncat(request, COMMA, strlen(COMMA));
       }
 
-      // Remove latest not needed ,
-      request.pop_back();
-
-      requestVariant[attributeRequestKey] = request.c_str();
-#else
       requestVariant[attributeRequestKey] = request;
-#endif // THINGSBOARD_ENABLE_STL
 
       m_request_id++;
       registeredCallback->Set_Request_ID(m_request_id);
@@ -1671,11 +1656,7 @@ class ThingsBoardSized {
       }
 
       for (const Shared_Attribute_Callback& shared_attribute : m_shared_attribute_update_callbacks) {
-#if THINGSBOARD_ENABLE_STL
         if (shared_attribute.Get_Attributes().empty()) {
-#else
-        if (shared_attribute.Get_Attributes() == nullptr) {
-#endif // THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_DEBUG
           m_logger.print(ATT_CB_NO_KEYS);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -1687,25 +1668,7 @@ class ThingsBoardSized {
         bool containsKey = false;
         const char *requested_att = nullptr;
 
-#if THINGSBOARD_ENABLE_STL
         for (const char *att : shared_attribute.Get_Attributes()) {
-#else
-        String stringToSplit = shared_attribute.Get_Attributes();
-        int32_t previousIndex = 0;
-        int32_t currentIndex = 0;
-
-        do {
-          // Find the index of the next comma in the string
-          currentIndex = stringToSplit.indexOf(COMMA, previousIndex);
-        
-          // If no more commas are found, set the currentIndex to the end of the string
-          if (currentIndex == -1) {
-            currentIndex = stringToSplit.length();
-          }
-
-          // Extract the attribute from the original string
-          const char *att = stringToSplit.substring(previousIndex, currentIndex).c_str();
-#endif // THINGSBOARD_ENABLE_STL
           if (att == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
             m_logger.print(ATT_IS_NULL);
@@ -1719,12 +1682,7 @@ class ThingsBoardSized {
             requested_att = att;
             break;
           }
-#if THINGSBOARD_ENABLE_STL
         }
-#else
-          previousIndex = currentIndex + 1;
-        } while (currentIndex != stringToSplit.length());
-#endif // THINGSBOARD_ENABLE_STL
 
         // This callback did not request any keys that were in this response,
         // therefore we continue with the next element in the loop.
