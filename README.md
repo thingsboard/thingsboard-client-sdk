@@ -153,7 +153,7 @@ To remove the need for the `MaxFieldsAmount` template argument in the constructo
 
 ### Not enough space for JSON serialization
 
-The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not send data if the size of it is bigger than the size originally passed in the constructor as a template argument (`PayLoadSize`). Respective logs in the `"Serial Monitor"` window will indicate the condition:
+The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not send data if the size of it is bigger than the configured internal buffer size. Respective logs in the `"Serial Monitor"` window will indicate the condition:
 
 ```
 [TB] Buffer size (64) to small for the given payloads size (83), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard
@@ -189,18 +189,7 @@ Alternatively, it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM
 ```cpp
 // Enable skipping usage of the buffer for sends that are bigger than the internal buffer size
 #define THINGSBOARD_ENABLE_STREAM_UTILS 1
-
-// Logging client
-const DefaultLogger logger;
-
-// Initialize underlying client, used to establish a connection
-WiFiClient espClient;
-
-// Initalize the Mqtt client instance
-Arduino_MQTT_Client mqttClient(espClient);
-
-// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
-ThingsBoard tb(mqttClient, logger);
+#include <ThingsBoard.h>
 ```
 
 ### Too much data fields must be serialized
