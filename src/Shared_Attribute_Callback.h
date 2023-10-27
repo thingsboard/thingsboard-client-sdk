@@ -6,9 +6,6 @@
 
 // Library includes.
 #include <ArduinoJson.h>
-#if THINGSBOARD_ENABLE_STL
-#include <vector>
-#endif // THINGSBOARD_ENABLE_STL
 
 
 /// ---------------------------------
@@ -38,8 +35,6 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     /// @param cb Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     explicit Shared_Attribute_Callback(function cb);
 
-#if THINGSBOARD_ENABLE_STL
-
     /// @brief Constructs callback, will be called upon shared attribute update arrival,
     /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
     /// If the update does not include any of the given shared attributes the callback is not called.
@@ -57,7 +52,11 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     template<typename... Args>
     inline Shared_Attribute_Callback(function callback, Args... args)
       : Callback(callback, ATT_CB_IS_NULL)
+#if THINGSBOARD_ENABLE_STL
       , m_attributes(std::forward<Args>(args)...)
+#else
+      , m_attributes(args...)
+#endif // THINGSBOARD_ENABLE_STL
     {
         // Nothing to do
     }
@@ -66,7 +65,7 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     /// in the subscribed method being called if any of those attributes values is changed by the cloud,
     /// with their current value they have been changed to
     /// @return Subscribed shared attributes
-    const std::vector<const char *>& Get_Attributes() const;
+    const Vector<const char *>& Get_Attributes() const;
 
     /// @brief Sets all the subscribed shared attributes that will result,
     /// in the subscribed method being called if any of those attributes values is changed by the cloud,
@@ -83,38 +82,15 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     /// @param ...args Arguments that will be forwarded into the overloaded vector assign method see https://en.cppreference.com/w/cpp/container/vector/assign for more information
     template<typename... Args>
     inline void Set_Attributes(Args... args) {
+#if THINGSBOARD_ENABLE_STL
         m_attributes.assign(std::forward<Args>(args)...);
+#else
+        m_attributes.assign(args...);
+#endif // THINGSBOARD_ENABLE_STL
     }
 
-#else
-
-    /// @brief Constructs callback, will be called upon upon shared attribute update arrival,
-    /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
-    /// If the update does not include any of the given shared attributes the callback is not called
-    /// @param attributes Comma seperated string containing all attributes we want to subscribe (test1, test2, ...)
-    /// @param cb Callback method that will be called
-    Shared_Attribute_Callback(const char *attributes, function cb);
-
-    /// @brief Gets the string containing all the requested client-side or shared attributes that will result,
-    /// in the subscribed method being called if any of those attributes values is changed by the cloud,
-    /// with their current value they have been changed to
-    /// @return Subscribed shared attributes
-    const char* Get_Attributes() const;
-
-    /// @brief Sets the string containing all the requested client-side or shared attributes that will result,
-    /// in the subscribed method being called if any of those attributes values is changed by the cloud,
-    /// with their current value they have been changed to
-    /// @param attributes Subscribed shared attributes
-    void Set_Attributes(const char *attributes);
-
-#endif // THINGSBOARD_ENABLE_STL
-
   private:
-#if THINGSBOARD_ENABLE_STL
-    std::vector<const char *>      m_attributes;    // Shared attribute we want to subscribe to receive a message if they change
-#else
-    const char                     *m_attributes;   // Shared attribute we want to subscribe to receive a message if they change
-#endif // THINGSBOARD_ENABLE_STL
+    Vector<const char *>      m_attributes; // Shared attribute we want to subscribe to receive a message if they change
 };
 
 #endif // Shared_Attribute_Callback
