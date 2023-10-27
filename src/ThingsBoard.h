@@ -11,6 +11,7 @@
 #include "Provision_Callback.h"
 #include "OTA_Handler.h"
 #include "IMQTT_Client.h"
+#include "Array.h"
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
