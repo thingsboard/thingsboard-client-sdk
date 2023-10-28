@@ -521,7 +521,7 @@ class ThingsBoardSized {
         json = nullptr;
       }
       else {
-        char json[jsonSize];
+        char json[jsonSize] = {};
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
           m_logger.print(UNABLE_TO_SERIALIZE_JSON);
           return result;
@@ -573,7 +573,7 @@ class ThingsBoardSized {
 
       // Make the secret key optional,
       // meaning if it is an empty string or null instead we don't send it at all.
-      if (secretKey != nullptr && secretKey[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(secretKey)) {
         respObj[SECRET_KEY] = secretKey;
       }
       respObj[DURATION_KEY] = durationMs;
@@ -600,7 +600,7 @@ class ThingsBoardSized {
       const char *provisionDeviceKey = callback.Get_Device_Key();
       const char *provisionDeviceSecret = callback.Get_Device_Secret();
 
-      if (provisionDeviceKey == nullptr || provisionDeviceSecret == nullptr) {
+      if (Helper::stringIsNullorEmpty(provisionDeviceKey) || Helper::stringIsNullorEmpty(provisionDeviceSecret)) {
         return false;
       }
       // Ensure the response topic has been subscribed
@@ -621,25 +621,25 @@ class ThingsBoardSized {
       // Deciding which underlying provisioning method is restricted, by the Provision_Callback class.
       // Meaning only the key-value pairs that are needed for the given provisioning method are set,
       // meaning the rest will not be sent and therefore the provisioning request has the correct formatting
-      if (deviceName != nullptr && deviceName[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(deviceName)) {
         requestObject[DEVICE_NAME_KEY] = deviceName;
       }
-      if (accessToken != nullptr && accessToken[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(accessToken)) {
         requestObject[PROV_TOKEN] = accessToken;
       }
-      if (credUsername != nullptr && credUsername[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(credUsername)) {
         requestObject[PROV_CRED_USERNAME] = credUsername;
       }
-      if (credPassword != nullptr && credPassword[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(credPassword)) {
         requestObject[PROV_CRED_PASSWORD] = credPassword;
       }
-      if (credClientID != nullptr && credClientID[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(credClientID)) {
         requestObject[PROV_CRED_CLIENT_ID] = credClientID;
       }
-      if (hash != nullptr && hash[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(hash)) {
         requestObject[PROV_CRED_HASH] = hash;
       }
-      if (credentialsType != nullptr && credentialsType[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(credentialsType)) {
         requestObject[PROV_CRED_TYPE_KEY] = credentialsType;
       }
       requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
@@ -815,7 +815,7 @@ class ThingsBoardSized {
     inline bool RPC_Request(const RPC_Request_Callback& callback) {
       const char *methodName = callback.Get_Name();
 
-      if (methodName == nullptr) {
+      if (Helper::stringIsNullorEmpty(methodName)) {
         m_logger.print(RPC_METHOD_NULL);
         return false;
       }
@@ -860,7 +860,7 @@ class ThingsBoardSized {
       m_request_id++;
       registeredCallback->Set_Request_ID(m_request_id);
 
-      char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)];
+      char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)] = {};
       snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
 
       const size_t objectSize = Helper::Measure_Json(requestBuffer);
@@ -938,7 +938,7 @@ class ThingsBoardSized {
 
       // Make the fw error optional,
       // meaning if it is an empty string or null instead we don't send it at all.
-      if (fwError != nullptr && fwError[0] != '\0') {
+      if (!Helper::stringIsNullorEmpty(fwError)) {
         currentFirmwareStateObject[FW_ERROR_KEY] = fwError;
       }
       currentFirmwareStateObject[FW_STATE_KEY] = currFwState;
@@ -1092,12 +1092,12 @@ class ThingsBoardSized {
       const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
 
       // Convert the interger size into a readable string
-      char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)];
+      char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)] = {};
       snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
       const size_t jsonSize = strlen(size);
 
       // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
-      char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)];
+      char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)] = {};
       snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
 
       return m_client.publish(topic, reinterpret_cast<uint8_t*>(size), jsonSize);
@@ -1162,28 +1162,30 @@ class ThingsBoardSized {
       // and it will generate a compile time error if not used
       const JsonVariant requestVariant = requestBuffer.template as<JsonVariant>();
 
-      // Calculate the size required for the char buffer before initalizing so it is possible to allocate it on the stack
+      // Calculate the size required for the char buffer containing all the attributes seperated by a comma,
+      // before initalizing it so it is possible to allocate it on the stack
       size_t size = 0U;
       for (const char *att : attributes) {
-        if (att == nullptr) {
+        if (Helper::stringIsNullorEmpty(att)) {
           continue;
         }
 
-        size += strlen(att) + 1;
-        size += strlen(COMMA) + 1;
+        size += strlen(att);
+        size += strlen(COMMA);
       }
 
-      char request[size];
+      // Initalizes complete array to 0, required because strncat needs both destination and source to contain proper null terminated strings
+      char request[size] = {};
       for (const char *att : attributes) {
-        if (att == nullptr) {
+        if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
           m_logger.print(ATT_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
           continue;
         }
 
-        strncat(request, att, strlen(att) + 1);
-        strncat(request, COMMA, strlen(COMMA) + 1);
+        strncat(request, att, strlen(att));
+        strncat(request, COMMA, strlen(COMMA));
       }
 
       requestVariant[attributeRequestKey] = request;
@@ -1192,7 +1194,7 @@ class ThingsBoardSized {
       registeredCallback->Set_Request_ID(m_request_id);
       registeredCallback->Set_Attribute_Key(attributeResponseKey);
 
-      char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)];
+      char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)] = {};
       snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
 
       const size_t objectSize = Helper::Measure_Json(requestBuffer);
@@ -1231,7 +1233,7 @@ class ThingsBoardSized {
       const char *currFwVersion = callback.Get_Firmware_Version();
 
       // Send current firmware version
-      if (currFwTitle == nullptr || currFwVersion == nullptr) {
+      if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
         return false;
       }
       else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
@@ -1324,7 +1326,7 @@ class ThingsBoardSized {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
       }
       else {
-        char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(fw_algorithm.size())];
+        char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(fw_algorithm.size())] = {};
         snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm.c_str());
         m_logger.print(message);
         Firmware_Send_State(FW_STATE_FAILED, message);
@@ -1338,7 +1340,7 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
       m_logger.print(PAGE_BREAK);
       m_logger.print(NEW_FW);
-      char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))];
+      char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))] = {};
       snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
       m_logger.print(firmware);
       m_logger.print(DOWNLOADING_FW);
@@ -1547,7 +1549,7 @@ class ThingsBoardSized {
 
       for (const RPC_Callback& rpc : m_rpc_callbacks) {
         const char *subscribedMethodName = rpc.Get_Name();
-        if (subscribedMethodName == nullptr) {
+        if (Helper::stringIsNullorEmpty(subscribedMethodName)) {
           m_logger.print(RPC_METHOD_NULL);
           continue;
         }
@@ -1593,7 +1595,7 @@ class ThingsBoardSized {
       // Convert the remaining text after the topic to an integer, because it should now contain only the request id
       const size_t request_id = atoi(request.c_str());
 
-      char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)];
+      char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
       snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
 
       const size_t jsonSize = Helper::Measure_Json(response);
@@ -1635,7 +1637,7 @@ class ThingsBoardSized {
         binary = nullptr;
       }
       else {
-        uint8_t binary[length];
+        uint8_t binary[length] = {};
         memcpy(binary, payload, length);
         m_ota.Process_Firmware_Packet(request_id, binary, length);
       }
@@ -1673,7 +1675,7 @@ class ThingsBoardSized {
         const char *requested_att = nullptr;
 
         for (const char *att : shared_attribute.Get_Attributes()) {
-          if (att == nullptr) {
+          if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
             m_logger.print(ATT_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG

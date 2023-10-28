@@ -28,6 +28,12 @@ class Helper {
     /// @return Amount of occurences of the given symbol
     static size_t getOccurences(const char *str, char symbol);
 
+    /// @brief Returns wheter the given string is either a nullptr or is an empty string,
+    /// meaning it only contains a null terminator and no other characters
+    /// @param str String that we want to check for emptiness
+    /// @return Wheter the given string is a nullptr or empty
+    static bool stringIsNullorEmpty(const char *str);
+
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
     /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server

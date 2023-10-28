@@ -35,3 +35,7 @@ size_t Helper::getOccurences(const char *str, char symbol) {
     }
     return count;
 }
+
+bool Helper::stringIsNullorEmpty(const char *str) {
+    return str == nullptr || str[0] == '\0';
+}
