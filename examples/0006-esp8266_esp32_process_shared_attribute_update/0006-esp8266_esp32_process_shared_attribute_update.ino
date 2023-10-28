@@ -224,7 +224,7 @@ bool reconnect() {
 /// @brief Update callback that will be called as soon as one of the provided shared attributes changes value,
 /// if none are provided we subscribe to any shared attribute change instead
 /// @param data Data containing the shared attributes that were changed and their current value
-void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
+void processSharedAttributeUpdate(const JsonObjectConst &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     Serial.println(it->key().c_str());
     // Shared attributes have to be parsed by their type.
