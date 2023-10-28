@@ -1363,7 +1363,7 @@ class ThingsBoardSized {
         return;
       }
 
-      m_ota.Start_Firmware_Update(m_fw_callback, fw_size, fw_algorithm, fw_checksum, fw_checksum_algorithm);
+      m_ota.Start_Firmware_Update(m_fw_callback, fw_size, fw_checksum, fw_checksum_algorithm);
     }
 
 #endif // THINGSBOARD_ENABLE_OTA
