@@ -1287,14 +1287,14 @@ class ThingsBoardSized {
 
       const char *fw_title = data[FW_TITLE_KEY].as<const char *>();
       const char *fw_version = data[FW_VER_KEY].as<const char *>();
-      const std::string fw_checksum = data[FW_CHKS_KEY].as<std::string>();
-      const std::string fw_algorithm = data[FW_CHKS_ALGO_KEY].as<std::string>();
+      const char *fw_checksum = data[FW_CHKS_KEY].as<const char *>();
+      const char *fw_algorithm = data[FW_CHKS_ALGO_KEY].as<const char *>();
       const size_t fw_size = data[FW_SIZE_KEY].as<const size_t>();
 
       const char *curr_fw_title = m_fw_callback.Get_Firmware_Title();
       const char *curr_fw_version = m_fw_callback.Get_Firmware_Version();
 
-      if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm.empty() || fw_checksum.empty()) {
+      if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm == nullptr || fw_checksum == nullptr) {
         m_logger.print(EMPTY_FW);
         Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
         return;
@@ -1315,21 +1315,21 @@ class ThingsBoardSized {
       mbedtls_md_type_t fw_checksum_algorithm = mbedtls_md_type_t();
 
       // Change the used firmware algorithm, depending on which type is set for the given firmware information
-      if (fw_algorithm.compare(CHECKSUM_AGORITM_MD5) == 0) {
+      if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_MD5))) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
       }
-      else if (fw_algorithm.compare(CHECKSUM_AGORITM_SHA256) == 0) {
+      else if (strncmp(CHECKSUM_AGORITM_SHA256, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_SHA256))) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA256;
       }
-      else if (fw_algorithm.compare(CHECKSUM_AGORITM_SHA384) == 0) {
+      else if (strncmp(CHECKSUM_AGORITM_SHA384, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_SHA384))) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA384;
       }
-      else if (fw_algorithm.compare(CHECKSUM_AGORITM_SHA512) == 0) {
+      else if (strncmp(CHECKSUM_AGORITM_SHA512, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_SHA512))) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
       }
       else {
-        char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(fw_algorithm.size())] = {};
-        snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm.c_str());
+        char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(strlen(fw_algorithm))] = {};
+        snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
         m_logger.print(message);
         Firmware_Send_State(FW_STATE_FAILED, message);
         return;

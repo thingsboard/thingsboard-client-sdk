@@ -40,7 +40,7 @@ class OTA_Handler {
     /// @param fw_algorithm String of the algorithm type used to hash the firmware binary
     /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
     /// @param fw_checksum_algorithm Algorithm type used to hash the firmware binary
-    void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm);
+    void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const char *fw_algorithm, const char *fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm);
 
     /// @brief Stops the firmware update completly and informs that user that the update has failed because it has been aborted, ongoing communication is discarded.
     /// Be aware the written partition is not erased so the already written binary firmware data still remains in the flash partition,
