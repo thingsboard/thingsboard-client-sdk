@@ -8,9 +8,6 @@
 #include <ArduinoJson.h>
 
 
-/// @brief JSON object const (read only twice as small as JSON object), is used to communicate Provision data to the client
-using Provision_Data = const JsonObjectConst;
-
 // Struct dispatch tags, to differentiate between constructors, allows the same paramter types to be passed
 struct Access_Token{};
 struct Device_Access_Token{};
@@ -21,7 +18,7 @@ struct X509_Certificate{};
 /// @brief Provisioning callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of Provisioning devices in ThingsBoard can be found here https://thingsboard.io/docs/user-guide/device-provisioning/
-class Provision_Callback : public Callback<void, const Provision_Data&> {
+class Provision_Callback : public Callback<void, const JsonObjectConst&> {
   public:
     /// @brief Constructs empty callback, will result in never being called
     Provision_Callback();

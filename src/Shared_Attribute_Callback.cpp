@@ -14,6 +14,10 @@ Shared_Attribute_Callback::Shared_Attribute_Callback(function cb) :
     // Nothing to do
 }
 
+#if THINGSBOARD_ENABLE_DYNAMIC
 const Vector<const char *>& Shared_Attribute_Callback::Get_Attributes() const {
+#else
+const Array<const char *, 2U>& Shared_Attribute_Callback::Get_Attributes() const {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
     return m_attributes;
 }

@@ -11,7 +11,6 @@
 #include "Provision_Callback.h"
 #include "OTA_Handler.h"
 #include "IMQTT_Client.h"
-#include "Array.h"
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -1376,7 +1375,7 @@ class ThingsBoardSized {
     /// @return Whether connecting to ThingsBoard was successful or not
     inline bool connect_to_host(const char *access_token, const char *client_id, const char *password) {
       const bool connection_result = m_client.connect(client_id, access_token, password);
-      
+
       if (!connection_result) {
         m_logger.print(CONNECT_FAILED);
         return connection_result;
@@ -1533,7 +1532,7 @@ class ThingsBoardSized {
         m_logger.print(RPC_METHOD_NULL);
         return;
       }
- 
+
       RPC_Response response;
 
       for (const RPC_Callback& rpc : m_rpc_callbacks) {
