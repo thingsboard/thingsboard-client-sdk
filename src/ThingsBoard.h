@@ -1169,8 +1169,8 @@ class ThingsBoardSized {
           continue;
         }
 
-        size += strlen(att);
-        size += strlen(COMMA);
+        size += strlen(att) + 1;
+        size += strlen(COMMA) + 1;
       }
 
       char request[size];
@@ -1182,8 +1182,8 @@ class ThingsBoardSized {
           continue;
         }
 
-        strncat(request, att, strlen(att));
-        strncat(request, COMMA, strlen(COMMA));
+        strncat(request, att, strlen(att) + 1);
+        strncat(request, COMMA, strlen(COMMA) + 1);
       }
 
       requestVariant[attributeRequestKey] = request;
