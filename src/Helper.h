@@ -34,6 +34,15 @@ class Helper {
     /// @return Wheter the given string is a nullptr or empty
     static bool stringIsNullorEmpty(const char *str);
 
+    /// @brief Returns the portion of the received topic after the base topic as an integer.
+    /// Should contain the request id that the original request was sent with.
+    /// Is used to know which received response is connected to which inital request.
+    /// @param base_topic Base portion of the topic that does not contain any parameters,
+    /// should not contain trailing '/' character because the implementation already adds +1 to exclude that character as well (v1/devices/me/attributes/response)
+    /// @param received_topic Received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id)
+    /// @return Converted integral request id if possible or 0 if parsing as an integer failed.
+    static size_t parseRequestId(const char* base_topic, const char* received_topic);
+
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
     /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
