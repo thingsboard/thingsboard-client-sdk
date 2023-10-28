@@ -18,14 +18,10 @@ constexpr char ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 
-/// @brief JSON object const (read only twice as small as JSON object), is used to communicate Shared Attributes to the client
-using Shared_Attribute_Data = const JsonObjectConst;
-
-
 /// @brief Shared attribute update callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
-class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_Data&>  {
+class Shared_Attribute_Callback : public Callback<void, const JsonObjectConst&>  {
   public:
     /// @brief Constructs empty callback, will result in never being called
     Shared_Attribute_Callback();
@@ -65,7 +61,11 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     /// in the subscribed method being called if any of those attributes values is changed by the cloud,
     /// with their current value they have been changed to
     /// @return Subscribed shared attributes
+#if THINGSBOARD_ENABLE_DYNAMIC
     const Vector<const char *>& Get_Attributes() const;
+#else
+    const Array<const char *, 2U>& Get_Attributes() const;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 
     /// @brief Sets all the subscribed shared attributes that will result,
     /// in the subscribed method being called if any of those attributes values is changed by the cloud,
@@ -90,7 +90,11 @@ class Shared_Attribute_Callback : public Callback<void, const Shared_Attribute_D
     }
 
   private:
+#if THINGSBOARD_ENABLE_DYNAMIC
     Vector<const char *>      m_attributes; // Shared attribute we want to subscribe to receive a message if they change
+#else
+    Array<const char *, 2U>   m_attributes; // Shared attribute we want to subscribe to receive a message if they change
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 
 #endif // Shared_Attribute_Callback

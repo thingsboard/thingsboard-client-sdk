@@ -26,6 +26,10 @@ void Attribute_Request_Callback::Set_Attribute_Key(const char *attribute_key) {
     m_attribute_key = attribute_key;
 }
 
+#if THINGSBOARD_ENABLE_DYNAMIC
 const Vector<const char *>& Attribute_Request_Callback::Get_Attributes() const {
+#else
+const Array<const char *, 2U>& Attribute_Request_Callback::Get_Attributes() const {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
     return m_attributes;
 }

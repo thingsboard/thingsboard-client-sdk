@@ -4,9 +4,11 @@
 // Local includes.
 #include "Configuration.h"
 #include "ILogger.h"
-#if !THINGSBOARD_ENABLE_STL
+#if !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 #include "Vector.h"
-#endif // !THINGSBOARD_ENABLE_STL
+#else
+#include "Array.h"
+#endif // !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STL
@@ -17,11 +19,11 @@
 #endif // THINGSBOARD_ENABLE_STL
 
 
-#if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 /// @brief Vector signature, makes it possible to use the Vector name everywhere instead of having to differentiate between C++ STL support or not
 template<typename T>
 using Vector = std::vector<T>;
-#endif // THINGSBOARD_ENABLE_STL
+#endif // THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
 
 /// @brief General purpose callback wrapper. Expects either c-style or c++ style function pointer,

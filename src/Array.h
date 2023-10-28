@@ -20,6 +20,23 @@ class Array {
         // Nothing to do
     }
 
+    /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
+    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
+    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
+    inline Array(const T* first_itr, const T* last_itr) :
+        m_elements(),
+        m_size(0U)
+    {
+        insert(nullptr, first_itr, last_itr);
+    }
+
+    /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
+    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
+    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
+    inline void assign(const T* first_itr, const T* last_itr) {
+        insert(nullptr, first_itr, last_itr);
+    }
+
     /// @brief Returns whether there are still any element in the underlying data container
     /// @return Whether the underlying data container is empty or not
     inline bool empty() const {
