@@ -5,10 +5,10 @@
 #include "Constants.h"
 
 // Library includes.
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 uint8_t Helper::detectSize(const char *msg, ...) {
       va_list args;
