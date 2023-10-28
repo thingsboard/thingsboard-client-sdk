@@ -5,6 +5,9 @@
 #include "Configuration.h"
 #include "Helper.h"
 
+// Library includes.
+#include <assert.h>
+
 
 /// @brief Replacement data container for boards that do not support the C++ STL and therefore do not have the std::array class.
 /// @tparam T Type of the underlying data the list should point too.
