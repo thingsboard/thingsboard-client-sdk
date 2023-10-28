@@ -1492,30 +1492,17 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     inline void process_rpc_request_message(char *topic, const JsonObjectConst& data) {
-      // Remove the not needed part of the received topic string, which is everything before the response id,
-      // therefore we remove the section before that which is the topic + an additional "/" character, that seperates the topic from the response id.
-      // Meaning the index we want to get the substring from is the length of the topic + 1 for the additonal "/" character
-      const size_t index = strlen(RPC_RESPONSE_TOPIC) + 1U;
-#if THINGSBOARD_ENABLE_STL
-      std::string response = topic;
-      response = response.substr(index, response.length() - index);
-#else
-      String response = topic;
-      response = response.substring(index);
-#endif // THINGSBOARD_ENABLE_STL
-
-      // Convert the remaining text after the topic to an integer, because it should now contain only the response id
-      const size_t response_id = atoi(response.c_str());
+      const size_t request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
       for (size_t i = 0; i < m_rpc_request_callbacks.size(); i++) {
         const RPC_Request_Callback& rpc_request = m_rpc_request_callbacks.at(i);
 
-        if (rpc_request.Get_Request_ID() != response_id) {
+        if (rpc_request.Get_Request_ID() != request_id) {
           continue;
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.printf(CALLING_REQUEST_CB, response_id);
+        m_logger.printf(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Getting non-existing field from JSON should automatically
@@ -1582,21 +1569,7 @@ class ThingsBoardSized {
         return;
       }
 
-      // Remove the not needed part of the received topic string, which is everything before the request id,
-      // therefore we remove the section before that which is the topic + an additional "/" character, that seperates the topic from the request id.
-      // Meaning the index we want to get the substring from is the length of the topic + 1 for the additonal "/" character
-      const size_t index = strlen(RPC_REQUEST_TOPIC) + 1U;
-#if THINGSBOARD_ENABLE_STL
-      std::string request = topic;
-      request = request.substr(index, request.length() - index);
-#else
-      String request = topic;
-      request = request.substring(index);
-#endif // THINGSBOARD_ENABLE_STL
-
-      // Convert the remaining text after the topic to an integer, because it should now contain only the request id
-      const size_t request_id = atoi(request.c_str());
-
+      const size_t request_id = Helper::parseRequestId(RPC_REQUEST_TOPIC, topic);
       char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
       snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
 
@@ -1612,20 +1585,7 @@ class ThingsBoardSized {
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
     inline void process_firmware_response(char *topic, uint8_t *payload, const size_t& length) {
-      // Remove the not needed part of the received topic string, which is everything before the request id,
-      // therefore we remove the section before that which is the topic + an additional "/" character, that seperates the topic from the request id.
-      // Meaning the index we want to get the substring from is the length of the topic + 1 for the additonal "/" character
-      const size_t index = strlen(FIRMWARE_RESPONSE_TOPIC) + 1U;
-#if THINGSBOARD_ENABLE_STL
-      std::string request = topic;
-      request = request.substr(index, request.length() - index);
-#else
-      String request = topic;
-      request = request.substring(index);
-#endif // THINGSBOARD_ENABLE_STL
-
-      // Convert the remaining text after the topic to an integer, because it should now contain only the request id
-      const size_t request_id = atoi(request.c_str());
+      const size_t request_id = Helper::parseRequestId(FIRMWARE_RESPONSE_TOPIC, topic);
 
       // Check if the remaining stack size of the current task would overflow the stack,
       // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
@@ -1716,25 +1676,12 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     inline void process_attribute_request_message(char *topic, JsonObjectConst& data) {
-      // Remove the not needed part of the received topic string, which is everything before the response id,
-      // therefore we remove the section before that which is the topic + an additional "/" character, that seperates the topic from the response id.
-      // Meaning the index we want to get the substring from is the length of the topic + 1 for the additonal "/" character
-      const size_t index = strlen(ATTRIBUTE_RESPONSE_TOPIC) + 1U;
-#if THINGSBOARD_ENABLE_STL
-      std::string response = topic;
-      response = response.substr(index, response.length() - index);
-#else
-      String response = topic;
-      response = response.substring(index);
-#endif // THINGSBOARD_ENABLE_STL
-
-      // Convert the remaining text after the topic to an integer, because it should now contain only the response id
-      const size_t response_id = atoi(response.c_str());
+      const size_t request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
 
       for (size_t i = 0; i < m_attribute_request_callbacks.size(); i++) {
         const Attribute_Request_Callback& attribute_request = m_attribute_request_callbacks.at(i);
 
-        if (attribute_request.Get_Request_ID() != response_id) {
+        if (attribute_request.Get_Request_ID() != request_id) {
           continue;
         }
         const char *attributeResponseKey = attribute_request.Get_Attribute_Key();
@@ -1756,7 +1703,7 @@ class ThingsBoardSized {
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.printf(CALLING_REQUEST_CB, response_id);
+        m_logger.printf(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Getting non-existing field from JSON should automatically

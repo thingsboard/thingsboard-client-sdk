@@ -39,3 +39,11 @@ size_t Helper::getOccurences(const char *str, char symbol) {
 bool Helper::stringIsNullorEmpty(const char *str) {
     return str == nullptr || str[0] == '\0';
 }
+
+size_t parseRequestId(const char* base_topic, const char* received_topic) {
+    // Remove the not needed part of the received topic string, which is everything before the request id,
+    // therefore we ignore the section before that which is the base topic + an additional "/" character, that seperates the topic from the request id.
+    // Meaning the index we attempt to parse is the length of the base topic + 1 for the additonal "/" character
+    const size_t index = strlen(base_topic) + 1U;
+    return atoi(received_topic + index);
+}
