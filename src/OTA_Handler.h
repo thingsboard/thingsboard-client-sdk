@@ -37,10 +37,9 @@ class OTA_Handler {
     /// @brief Starts the firmware update with requesting the first firmware packet and initalizes the underlying needed components
     /// @param fw_callback Callback method that contains configuration information, about the over the air update
     /// @param fw_size Complete size of the firmware binary that will be downloaded and flashed onto this device
-    /// @param fw_algorithm String of the algorithm type used to hash the firmware binary
     /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
     /// @param fw_checksum_algorithm Algorithm type used to hash the firmware binary
-    void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const char *fw_algorithm, const char *fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm);
+    void Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const char *fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm);
 
     /// @brief Stops the firmware update completly and informs that user that the update has failed because it has been aborted, ongoing communication is discarded.
     /// Be aware the written partition is not erased so the already written binary firmware data still remains in the flash partition,
@@ -61,7 +60,6 @@ class OTA_Handler {
     std::function<bool(const char *, const char *)> m_send_fw_state_callback; // Callback that is used to send information about the current state of the over the air update
     std::function<bool(void)> m_finish_callback;                              // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
     size_t m_fw_size;                                                         // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
-    std::string m_fw_algorithm;                                               // String of the algorithm type used to hash the firmware binary
     std::string m_fw_checksum;                                                // Checksum of the complete firmware binary, should be the same as the actually written data in the end
     mbedtls_md_type_t m_fw_checksum_algorithm;                                // Algorithm type used to hash the firmware binary
     IUpdater *m_fw_updater;                                                   // Interface implementation that writes received firmware binary data onto the given device

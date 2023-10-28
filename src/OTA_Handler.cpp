@@ -45,8 +45,8 @@ constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
 constexpr char FW_UPDATE_ABORTED[] = "Firmware update aborted";
 #if THINGSBOARD_ENABLE_DEBUG
 constexpr char FW_CHUNK[] = "Receive chunk (%u), with size (%u) bytes";
-constexpr char HASH_ACTUAL[] = "(%s) actual checksum: (%s)";
-constexpr char HASH_EXPECTED[] = "(%s) expected checksum: (%s)";
+constexpr char HASH_ACTUAL[] = "Actual checksum: (%s)";
+constexpr char HASH_EXPECTED[] = "Expected checksum: (%s)";
 constexpr char CHKS_VER_SUCCESS[] = "Checksum is the same as expected";
 constexpr char FW_UPDATE_SUCCESS[] = "Update success";
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -59,7 +59,6 @@ OTA_Handler::OTA_Handler(const ILogger& logger, std::function<bool(const size_t&
     , m_send_fw_state_callback(send_fw_state_callback)
     , m_finish_callback(finish_callback)
     , m_fw_size(0U)
-    , m_fw_algorithm()
     , m_fw_checksum()
     , m_fw_checksum_algorithm()
     , m_hash()
@@ -71,11 +70,10 @@ OTA_Handler::OTA_Handler(const ILogger& logger, std::function<bool(const size_t&
   // Nothing to do
 }
 
-void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const char *fw_algorithm, const char *fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
+void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const char *fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
     m_fw_callback = &fw_callback;
     m_fw_size = fw_size;
     m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
-    m_fw_algorithm = fw_algorithm;
     m_fw_checksum = fw_checksum;
     m_fw_checksum_algorithm = fw_checksum_algorithm;
     m_fw_updater = m_fw_callback->Get_Updater();
@@ -181,8 +179,8 @@ void OTA_Handler::Finish_Firmware_Update() {
 
     const std::string calculated_hash = m_hash.get_hash_string();
 #if THINGSBOARD_ENABLE_DEBUG
-    m_logger.printf(HASH_ACTUAL, m_fw_algorithm.c_str(), calculated_hash.c_str());
-    m_logger.printf(HASH_EXPECTED, m_fw_algorithm.c_str(), m_fw_checksum.c_str());
+    m_logger.printf(HASH_ACTUAL, calculated_hash.c_str());
+    m_logger.printf(HASH_EXPECTED, m_fw_checksum.c_str());
 #endif // THINGSBOARD_ENABLE_DEBUG
 
     // Check if the initally received checksum is the same as the one we calculated from the received binary data,
