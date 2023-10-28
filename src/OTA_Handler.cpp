@@ -71,7 +71,7 @@ OTA_Handler::OTA_Handler(const ILogger& logger, std::function<bool(const size_t&
   // Nothing to do
 }
 
-void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const std::string& fw_algorithm, const std::string& fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
+void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, const size_t& fw_size, const char *fw_algorithm, const char *fw_checksum, const mbedtls_md_type_t& fw_checksum_algorithm) {
     m_fw_callback = &fw_callback;
     m_fw_size = fw_size;
     m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
