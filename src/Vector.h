@@ -64,9 +64,9 @@ class Vector {
         return m_capacity;
     }
     
-    /// @brief Returns a pointer to the first element of the vector
-    /// @return Pointer to the first element of the vector
-    inline T* begin() {
+    /// @brief Returns a constant pointer to the first element of the vector
+    /// @return Constant pointer to the first element of the vector
+    inline const T* begin() const {
         return m_elements;
     }
 
@@ -77,21 +77,9 @@ class Vector {
         return m_elements[m_size - 1U];
     }
 
-    /// @brief Returns a pointer to one-past-the-end element of the vector
-    /// @return Pointer to one-past-the-end element of the vector
-    inline T* end() {
-        return m_elements + m_size;
-    }
-
-    /// @brief Returns a constant pointer to the first element of the vector
-    /// @return Constant pointer to the first element of the vector
-    inline const T* cbegin() const {
-        return m_elements;
-    }
-
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
-    inline const T* cend() const {
+    inline const T* end() const {
         return m_elements + m_size;
     }
 

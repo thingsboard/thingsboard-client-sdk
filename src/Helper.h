@@ -63,7 +63,7 @@ class Helper {
     template<class DataContainer>
     inline static void remove(DataContainer& container, const size_t& index) {
 #if THINGSBOARD_ENABLE_STL
-        auto iterator = container.cbegin();
+        auto iterator = container.begin();
         std::advance(iterator, index);
         container.erase(iterator);
 #else

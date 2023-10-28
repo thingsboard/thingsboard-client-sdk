@@ -225,7 +225,7 @@ bool reconnect() {
 /// @brief Update callback that will be called as soon as the requested shared attributes, have been received.
 /// The callback will then not be called anymore unless it is reused for another request
 /// @param data Data containing the shared attributes that were requested and their current value
-void processSharedAttributeRequest(const Shared_Attribute_Data &data) {
+void processSharedAttributeRequest(const JsonObjectConst &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     Serial.println(it->key().c_str());
     // Shared attributes have to be parsed by their type.
@@ -241,7 +241,7 @@ void processSharedAttributeRequest(const Shared_Attribute_Data &data) {
 /// @brief Update callback that will be called as soon as the requested client-side attributes, have been received.
 /// The callback will then not be called anymore unless it is reused for another request
 /// @param data Data containing the client-side attributes that were requested and their current value
-void processClientAttributeRequest(const Shared_Attribute_Data &data) {
+void processClientAttributeRequest(const JsonObjectConst &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     Serial.println(it->key().c_str());
     // Shared attributes have to be parsed by their type.

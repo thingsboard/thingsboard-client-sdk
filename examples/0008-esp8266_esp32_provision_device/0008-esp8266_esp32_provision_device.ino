@@ -270,7 +270,7 @@ void setup() {
   previous_processing_time = millis();
 }
 
-void processProvisionResponse(const Provision_Data &data) {
+void processProvisionResponse(const JsonObjectConst &data) {
   const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);

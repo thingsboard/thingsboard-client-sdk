@@ -1128,7 +1128,7 @@ class ThingsBoardSized {
     /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
     inline bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
-      const Vector<const char *>& attributes = callback.Get_Attributes();
+      auto& attributes = callback.Get_Attributes();
 
       // Check if any sharedKeys were requested
       if (attributes.empty()) {
@@ -1164,7 +1164,7 @@ class ThingsBoardSized {
       // Calculate the size required for the char buffer containing all the attributes seperated by a comma,
       // before initalizing it so it is possible to allocate it on the stack
       size_t size = 0U;
-      for (const char *att : attributes) {
+      for (auto att : attributes) {
         if (Helper::stringIsNullorEmpty(att)) {
           continue;
         }
@@ -1175,7 +1175,7 @@ class ThingsBoardSized {
 
       // Initalizes complete array to 0, required because strncat needs both destination and source to contain proper null terminated strings
       char request[size] = {};
-      for (const char *att : attributes) {
+      for (auto att : attributes) {
         if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
           m_logger.print(ATT_IS_NULL);
@@ -1276,7 +1276,7 @@ class ThingsBoardSized {
     /// @brief Callback that will be called upon firmware shared attribute arrival
     /// @param data Json data containing key-value pairs for the needed firmware information,
     /// to ensure we have a firmware assigned and can start the update over MQTT
-    inline void Firmware_Shared_Attribute_Received(const Shared_Attribute_Data& data) {
+    inline void Firmware_Shared_Attribute_Received(const JsonObjectConst& data) {
       // Check if firmware is available for our device
       if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY) || !data.containsKey(FW_CHKS_KEY) || !data.containsKey(FW_CHKS_ALGO_KEY) || !data.containsKey(FW_SIZE_KEY)) {
         m_logger.print(NO_FW);
@@ -1635,7 +1635,7 @@ class ThingsBoardSized {
         bool containsKey = false;
         const char *requested_att = nullptr;
 
-        for (const char *att : shared_attribute.Get_Attributes()) {
+        for (auto att : shared_attribute.Get_Attributes()) {
           if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
             m_logger.print(ATT_IS_NULL);

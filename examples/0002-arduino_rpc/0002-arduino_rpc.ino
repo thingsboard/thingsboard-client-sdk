@@ -160,11 +160,11 @@ void setup() {
 }
 
 /// @brief Processes function for RPC call "example_set_temperature"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
+/// JsonVariantConst is a JSON variant, that can be queried using operator[]
 /// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
 /// @param data Data containing the rpc data that was called and its current value
 /// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processTemperatureChange(const RPC_Data &data) {
+RPC_Response processTemperatureChange(const JsonVariantConst &data) {
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Received the set temperature RPC method"));
 #else
@@ -188,11 +188,11 @@ RPC_Response processTemperatureChange(const RPC_Data &data) {
 }
 
 /// @brief Processes function for RPC call "example_set_switch"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
+/// JsonVariantConst is a JSON variant, that can be queried using operator[]
 /// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
 /// @param data Data containing the rpc data that was called and its current value
 /// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processSwitchChange(const RPC_Data &data) {
+RPC_Response processSwitchChange(const JsonVariantConst &data) {
   Serial.println("Received the set switch method");
 
   // Process data
