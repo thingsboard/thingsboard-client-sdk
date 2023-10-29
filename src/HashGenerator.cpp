@@ -39,7 +39,7 @@ bool HashGenerator::update(const uint8_t* data, const size_t& len) {
     return mbedtls_md_update(&m_ctx, data, len) == 0;
 }
 
-HashGenerator::get_hash_string(unsigned char *hash) {
+void HashGenerator::get_hash_string(unsigned char *hash) {
     finish(hash);
 }
 
