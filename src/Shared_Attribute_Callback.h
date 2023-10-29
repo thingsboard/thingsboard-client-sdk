@@ -24,7 +24,9 @@ constexpr char ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
 /// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
 /// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or some of the requested keys may be lost, default = 5
+#if !THINGSBOARD_ENABLE_DYNAMIC
 template <size_t MaxAttributes = Default_Attributes_Amount>
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 class Shared_Attribute_Callback : public Callback<void, const JsonObjectConst&>  {
   public:
     /// @brief Constructs empty callback, will result in never being called
