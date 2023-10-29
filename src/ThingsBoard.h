@@ -889,7 +889,7 @@ class ThingsBoardSized {
 
       // Request the firmware information
       constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      constexpr Attribute_Request_Callback<5U> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      const Attribute_Request_Callback<5U> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
       return Shared_Attributes_Request(fw_request_callback);
     }
 
@@ -912,7 +912,7 @@ class ThingsBoardSized {
 
       // Subscribes to changes of the firmware information
       constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      constexpr Shared_Attribute_Callback<5U> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      const Shared_Attribute_Callback<5U> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
       return Shared_Attributes_Subscribe(fw_update_callback);
     }
 
