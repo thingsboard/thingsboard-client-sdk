@@ -3,6 +3,8 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
+#include <string.h>
+
 /// ---------------------------------
 /// Constant strings in flash memory.
 /// ---------------------------------
@@ -74,7 +76,7 @@ void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, 
     m_fw_callback = &fw_callback;
     m_fw_size = fw_size;
     m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
-    m_fw_checksum = fw_checksum;
+    strncpy(m_fw_checksum, fw_checksum, sizeof(m_fw_checksum));
     m_fw_checksum_algorithm = fw_checksum_algorithm;
     m_fw_updater = m_fw_callback->Get_Updater();
 
@@ -177,15 +179,16 @@ void OTA_Handler::Request_Next_Firmware_Packet() {
 void OTA_Handler::Finish_Firmware_Update() {
     (void)m_send_fw_state_callback(FW_STATE_DOWNLOADED, nullptr);
 
-    const std::string calculated_hash = m_hash.get_hash_string();
+    unsigned char calculated_hash[MBEDTLS_MD_MAX_SIZE] = {};
+    m_hash.get_hash_string(calculated_hash);
 #if THINGSBOARD_ENABLE_DEBUG
-    m_logger.printf(HASH_ACTUAL, calculated_hash.c_str());
-    m_logger.printf(HASH_EXPECTED, m_fw_checksum.c_str());
+    m_logger.printf(HASH_ACTUAL, calculated_hash);
+    m_logger.printf(HASH_EXPECTED, m_fw_checksum);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
     // Check if the initally received checksum is the same as the one we calculated from the received binary data,
-    // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed
-    if (m_fw_checksum.compare(calculated_hash) != 0) {
+    // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed.
+    if (memcmp(m_fw_checksum, calculated_hash, sizeof(m_fw_checksum)) == 0) {
         m_logger.print(CHKS_VER_FAILED);
         (void)m_send_fw_state_callback(FW_STATE_FAILED, CHKS_VER_FAILED);
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);

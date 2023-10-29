@@ -60,7 +60,7 @@ class OTA_Handler {
     std::function<bool(const char *, const char *)> m_send_fw_state_callback; // Callback that is used to send information about the current state of the over the air update
     std::function<bool(void)> m_finish_callback;                              // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
     size_t m_fw_size;                                                         // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
-    std::string m_fw_checksum;                                                // Checksum of the complete firmware binary, should be the same as the actually written data in the end
+    char m_fw_checksum[MBEDTLS_MD_MAX_SIZE];                                  // Checksum of the complete firmware binary, should be the same as the actually written data in the end
     mbedtls_md_type_t m_fw_checksum_algorithm;                                // Algorithm type used to hash the firmware binary
     IUpdater *m_fw_updater;                                                   // Interface implementation that writes received firmware binary data onto the given device
     HashGenerator m_hash;                                                     // Class instance that allows to generate a hash from received firmware binary data
