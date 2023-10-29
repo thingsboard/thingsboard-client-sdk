@@ -172,10 +172,10 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// The SDK setup with 64 bytes for JSON payload
 // ThingsBoard tb(mqttClient, logger);
 
-// The SDK setup with 128 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// The SDK setup with 128 bytes for JSON payload
 ThingsBoard tb(mqttClient, logger, 128);
 
 void setup() {
@@ -218,10 +218,10 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// The SDK setup with 64 bytes for JSON payload and 8 fields for JSON object
 // ThingsBoard tb(mqttClient, logger);
 
-// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object and 2 maximum subscriptions of every possible type
+// The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
 ThingsBoardSized<32> tb(mqttClient, logger, 128);
 ```
 
@@ -254,6 +254,39 @@ Arduino_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object and 8 maximum subscriptions of every possible type
 ThingsBoardSized<32, 8> tb(mqttClient, logger, 128);
+```
+
+### Too many attributes
+
+The possible attribute values that are passed to the `Shared_Attribute_Callback` or `Attribute_Request_Callback` use an array on the stack per default with a maximum of 5. Meaning if we attempt to subscribe or request more attributes than that it will fail showing an error in the `"Serial Monitor"` window:
+
+```
+Assertion `m_size < Capacity' failed.
+```
+
+Important is that the minimum size used has to be 5 if the OTA update is used, this is the case, because internally the OTA update process requests or subscribes to updates of 5 attributes. If the amount is decreased below those 5 then the OTA update process can not be started correctly and will not work anymore.
+
+Additionally, the size passed in the template list of the `Shared_Attribute_Callback` or `Attribute_Request_Callback` class, should be the same as the `ThingsBoardSized` class template list. If it isn't, it will not be possible to call the internal methods.
+
+Therefore, the only thing that needs to be done is to increase the size accordingly, if it exceeds 5, in both `Shared_Attribute_Callback` or `Attribute_Request_Callback` and `ThingsBoardSized` class template list to the amount of attributes we want to subscribe or request.
+
+The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. See **Dynamic ThingsBoard usage** above if the usage of `MaxAttributes`, should be replaced with a growing vector inside `Shared_Attribute_Callback` and `Attribute_Request_Callback` class instead.
+
+```cpp
+// Logging client
+const DefaultLogger logger;
+
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
+
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
+// ThingsBoard tb(mqttClient, logger);
+
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
+ThingsBoardSized<32, 8, 6> tb(mqttClient, logger, 128);
 ```
 
 ## Tips and Tricks
@@ -462,7 +495,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Custom_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// The SDK setup with 64 bytes for JSON payload
 ThingsBoard tb(mqttClient, logger);
 ```
 
@@ -503,7 +536,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
+// The SDK setup with 64 bytes for JSON payload
 ThingsBoard tb(mqttClient, logger);
 ```
 

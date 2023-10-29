@@ -298,7 +298,7 @@ void loop() {
 #endif
     // Shared attributes we want to request from the server
     constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
-    constexpr Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
+    const Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
     requestedShared = tb.Shared_Attributes_Request(sharedCallback);
     if (!requestedShared) {
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -316,8 +316,8 @@ void loop() {
     Serial.println("Requesting client-side attributes...");
 #endif
     // Client-side attributes we want to request from the server
-    constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
-    constexpr Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
+    constexpr std::array<const char*, 1U> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
+    const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
     requestedClient = tb.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
 #if THINGSBOARD_ENABLE_PROGMEM

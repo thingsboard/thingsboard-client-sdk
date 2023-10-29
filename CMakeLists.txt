@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.12)
 set(srcs
     src/Arduino_HTTP_Client.cpp
     src/Arduino_MQTT_Client.cpp
-    src/Attribute_Request_Callback.cpp
     src/Callback_Watchdog.cpp
     src/Arduino_ESP32_Updater.cpp
     src/Arduino_ESP8266_Updater.cpp
@@ -17,7 +16,6 @@ set(srcs
     src/RPC_Callback.cpp
     src/RPC_Request_Callback.cpp
     src/RPC_Response.cpp
-    src/Shared_Attribute_Callback.cpp
     src/Telemetry.cpp
     src/DefaultLogger.cpp
 )
@@ -43,4 +41,4 @@ if(ESP_PLATFORM)
 	return()
 endif()
 
-project(ThingsBoardArduinoSDK VERSION 0.12.0)
+project(ThingsBoardClientSDK VERSION 0.13.0)
