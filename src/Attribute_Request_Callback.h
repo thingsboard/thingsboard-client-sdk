@@ -3,6 +3,7 @@
 
 // Local includes.
 #include "Callback.h"
+#include "Constants.h"
 
 // Library includes.
 #include <ArduinoJson.h>
@@ -26,10 +27,20 @@ constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute reque
 /// To achieve that some internal member variables get set automatically by those methods, the first one being a string to differentiate which attribute scope was requested
 /// and the second being the id of the mqtt request, where the response by the server will use the same id, which makes it easy to know which method intially requested the data and should now receive it.
 /// Documentation about the specific use of Requesting client-side or shared scope atrributes in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
+/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or some of the requested keys may be lost, default = 5
+template <size_t MaxAttributes = Default_Attributes_Amount>
 class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&> {
   public:
     /// @brief Constructs empty callback, will result in never being called
-    Attribute_Request_Callback();
+    Attribute_Request_Callback()  :
+        Callback(nullptr, ATT_REQUEST_CB_IS_NULL),
+        m_attributes(),
+        m_request_id(0U),
+        m_attribute_key(nullptr)
+    {
+        // Nothing to do
+    }
 
     /// @brief Constructs callback, will be called upon client-side or shared attribute request arrival
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client.
@@ -62,7 +73,10 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @return Unique identifier connected to the requested client-side or shared attributes
-    const size_t& Get_Request_ID() const;
+    const size_t& Get_Request_ID() const {
+        return m_request_id;
+    }
+
 
     /// @brief Sets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
@@ -70,13 +84,17 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// Not meant for external use, because the value is overwritten by the ThingsBoard class once the class instance has been passed as a parameter anyway,
     /// this is the case because only the ThingsBoard class knows the current request id that this callback will be attached too. 
     /// @param request_id Unqiue identifier of the request for client-side or shared attributes
-    void Set_Request_ID(const size_t &request_id);
+    void Set_Request_ID(const size_t &request_id) {
+        m_request_id = request_id;
+    }
 
     /// @brief Gets the response key of the key-value pair,
     /// that we expect the client-side or shared attribute payload json data to be contained in
     /// @return Key that the data is saved into,
     /// "client" for client-side attributes and "shared" for shared scope attributes
-    const char* Get_Attribute_Key() const;
+    const char* Get_Attribute_Key() const {
+        return m_attribute_key;
+    }
 
     /// @brief Sets the response key of the key-value pair,
     /// that we expect the client-side or shared attribute payload json data to be contained in
@@ -85,17 +103,21 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// and which type we requests depends on which method the class instance is passed as a parameter to
     /// @param attribute_key Key that the data is saved into,
     /// "client" for client-side attributes and "shared" for shared scope attributes
-    void Set_Attribute_Key(const char *attribute_key);
+    void Set_Attribute_Key(const char *attribute_key) {
+        m_attribute_key = attribute_key;
+    }
 
     /// @brief Gets all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
     /// is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
 #if THINGSBOARD_ENABLE_DYNAMIC
-    const Vector<const char *>& Get_Attributes() const;
+    const Vector<const char *>& Get_Attributes() const {
 #else
-    const Array<const char *, 2U>& Get_Attributes() const;
+    const Array<const char *, MaxAttributes>& Get_Attributes() const {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
+        return m_attributes;
+    }
 
     /// @brief Sets all the requested client-side or shared attributes that will result,
     /// in the subscribed method being called when the response with their current value
@@ -121,12 +143,12 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
 
   private:
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<const char *>           m_attributes;     // Attribute we want to request
+    Vector<const char *>               m_attributes;     // Attribute we want to request
 #else
-    Array<const char *, 2U>        m_attributes;     // Attribute we want to request
+    Array<const char *, MaxAttributes> m_attributes;     // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    size_t                         m_request_id;     // Id the request was called with
-    const char                     *m_attribute_key; // Attribute key that we wil receive the response on ("client" or "shared")
+    size_t                             m_request_id;     // Id the request was called with
+    const char                         *m_attribute_key; // Attribute key that we wil receive the response on ("client" or "shared")
 };
 
 #endif // Attribute_Request_Callback_h
