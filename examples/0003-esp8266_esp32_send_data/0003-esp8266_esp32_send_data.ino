@@ -26,6 +26,9 @@
 // Requires an additional library, see https://github.com/bblanchon/ArduinoStreamUtils for more information.
 #define THINGSBOARD_ENABLE_STREAM_UTILS 1
 
+// Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
+// If enabled the program might be slightly slower and all the memory will be placed onto the heap instead of the stack.
+#define THINGSBOARD_ENABLE_DYNAMIC 1
 
 #include <DefaultLogger.h>
 #if USING_HTTPS
