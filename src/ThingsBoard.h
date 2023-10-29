@@ -2,8 +2,6 @@
 #define ThingsBoard_h
 
 // Local includes.
-#include "Constants.h"
-#include "Helper.h"
 #include "Shared_Attribute_Callback.h"
 #include "Attribute_Request_Callback.h"
 #include "RPC_Callback.h"
@@ -300,20 +298,28 @@ constexpr char DOWNLOADING_FW[] = "Attempting to download over MQTT...";
 #if THINGSBOARD_ENABLE_DYNAMIC
 /// @brief Wrapper around any arbitrary MQTT Client implementing the IMQTT_Client interface, to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol.
 /// BufferSize of the underlying data buffer can be changed during the runtime and the maximum amount of data points that can ever be sent or received are automatically deduced at runtime.
-/// Additionally there are internal vectors that hold all subscriptions and requests and dynamically allocate memory on the heap, depending on how much space we requrie currently.
+/// Additionally, there are internal vectors that hold all subscriptions and requests and dynamically allocate memory on the heap, depending on how much space we currently require.
+/// Furthermore, there are internal vectors in the Shared_Attribute_Callback and the Attribute_Request_Callback, which hold the amount of keys we want to request or subscribe to updates too.
+/// Dynamically increasing the internal size, allows to adjust how much space we require depending on the amount of subscribed or requested keys.
 /// If this feature of automatic deduction, is not needed, or not wanted because it allocates memory on the heap, then the values can be set once as template arguements.
 /// Simply set THINGSBOARD_ENABLE_DYNAMIC to 0, before including ThingsBoard.h
 #else
 /// @brief Wrapper around any arbitrary MQTT Client implementing the IMQTT_Client interface, to allow connecting and sending / retrieving data from ThingsBoard over the MQTT or MQTT with TLS/SSL protocol.
 /// BufferSize of the underlying data buffer can be changed during the runtime and the maximum amount of data points that can ever be can be set once as template argument.
-/// Additionally tshere are internal arrays that hold all subscriptions and requests and statically allocate memory on the stack once, which can be set once as a template argument.
-/// Changing is only possible if a new instance of this class is created. If these values should be automatically deduced at runtime instead then,
+/// Additionally, there are internal arrays that hold all subscriptions and requests and statically allocate memory on the stack, which can also be set once as a template argument.
+/// Furthermore, there are the maximum amount of values for the internal arrays of the Shared_Attribute_Callback and the Attribute_Request_Callback, which hold the amount of keys we want to request or subscribe to updates too
+/// Setting a fixed size, allows to allocate the variables in the container on the stack, which can also be set once as a template argument.
+/// Changing is only possible if a new instance of this class is created. If these values should be automatically deduced at runtime instead then, and then dynamically allocated on the heap,
 /// simply set THINGSBOARD_ENABLE_DYNAMIC to 1, before including ThingsBoard.h
 /// @tparam MaxFieldsAmount Maximum amount of key value pair that we will be able to sent or received by ThingsBoard in one call, default = 8
 /// @tparam MaxSubscribtions Maximum amount of simultaneous shared attribute or server side rpc subscriptions and shared or client scope attribute or client side rpc requests.
 /// Each aforementioned type has its own maximum and does not count to the max allowed simultaneous subscriptions or requests of any other.
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = 2
-template<size_t MaxFieldsAmount = Default_Fields_Amount, size_t MaxSubscribtions = Default_Subscriptions_Amount>
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback or the Shared_Attribute_Callback, allows to use an array on the stack in the background.
+/// Be aware though the size set in this template and the size passed to the callback instances MaxAttributes template needs to be higher or the same, fi that is not the case some of the requested keys may be lost.
+/// Furthermore, if OTA Updates are utilized the size should never be decreased to less than 5, because that amount of attributes needs to be requested or updated to start the OTA update.
+/// Meaning if the number is decreased the OTA update will not work correctly anymore and will not be able to be started anymore, default = 5
+template<size_t MaxFieldsAmount = Default_Fields_Amount, size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class ThingsBoardSized {
   public:
@@ -737,7 +743,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-    inline bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
+    inline bool Client_Attributes_Request(const Attribute_Request_Callback<MaxAttributes>& callback) {
       return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
     }
 
@@ -883,7 +889,7 @@ class ThingsBoardSized {
 
       // Request the firmware information
       constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      constexpr Attribute_Request_Callback<5U> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
       return Shared_Attributes_Request(fw_request_callback);
     }
 
@@ -906,7 +912,7 @@ class ThingsBoardSized {
 
       // Subscribes to changes of the firmware information
       constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      constexpr Shared_Attribute_Callback<5U> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
       return Shared_Attributes_Subscribe(fw_update_callback);
     }
 
@@ -954,7 +960,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-    inline bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
+    inline bool Shared_Attributes_Request(const Attribute_Request_Callback<MaxAttributes>& callback) {
       return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
 
@@ -990,7 +996,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-    inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+    inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback<MaxAttributes>& callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_shared_attribute_update_callbacks.size() + 1U > m_shared_attribute_update_callbacks.capacity()) {
         m_logger.print(MAX_SHARED_ATT_UPDATE_EXCEEDED);
@@ -1039,8 +1045,8 @@ class ThingsBoardSized {
 #else
     Array<RPC_Callback, MaxSubscribtions> m_rpc_callbacks; // Server side RPC callbacks array
     Array<RPC_Request_Callback, MaxSubscribtions> m_rpc_request_callbacks; // Client side RPC callbacks array
-    Array<Shared_Attribute_Callback, MaxSubscribtions> m_shared_attribute_update_callbacks; // Shared attribute update callbacks array
-    Array<Attribute_Request_Callback, MaxSubscribtions> m_attribute_request_callbacks; // Client-side or shared attribute request callback array
+    Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscribtions> m_shared_attribute_update_callbacks; // Shared attribute update callbacks array
+    Array<Attribute_Request_Callback<MaxAttributes>, MaxSubscribtions> m_attribute_request_callbacks; // Client-side or shared attribute request callback array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
     Provision_Callback m_provision_callback; // Provision response callback
@@ -1127,7 +1133,7 @@ class ThingsBoardSized {
     /// @param attributeRequestKey Key of the key-value pair that will contain the attributes we want to request
     /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
-    inline bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
+    inline bool Attributes_Request(const Attribute_Request_Callback<MaxAttributes>& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
       auto& attributes = callback.Get_Attributes();
 
       // Check if any sharedKeys were requested
@@ -1143,7 +1149,7 @@ class ThingsBoardSized {
       }
 
       // Ensure the response topic has been subscribed
-      Attribute_Request_Callback* registeredCallback = nullptr;
+      Attribute_Request_Callback<MaxAttributes>* registeredCallback = nullptr;
       if (!Attributes_Request_Subscribe(callback, registeredCallback)) {
         return false;
       }
@@ -1434,7 +1440,7 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
-    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
+    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback<MaxAttributes>& callback, Attribute_Request_Callback<MaxAttributes>*& registeredCallback = nullptr) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
         m_logger.print(MAX_SHARED_ATT_REQUEST_EXCEEDED);
@@ -1476,7 +1482,6 @@ class ThingsBoardSized {
       }
 
       StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
-
       const JsonVariant object = jsonBuffer.to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
         m_logger.print(UNABLE_TO_SERIALIZE);
@@ -1622,7 +1627,7 @@ class ThingsBoardSized {
         data = data[SHARED_RESPONSE_KEY];
       }
 
-      for (const Shared_Attribute_Callback& shared_attribute : m_shared_attribute_update_callbacks) {
+      for (const auto& shared_attribute : m_shared_attribute_update_callbacks) {
         if (shared_attribute.Get_Attributes().empty()) {
 #if THINGSBOARD_ENABLE_DEBUG
           m_logger.print(ATT_CB_NO_KEYS);
@@ -1678,7 +1683,7 @@ class ThingsBoardSized {
       const size_t request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
 
       for (size_t i = 0; i < m_attribute_request_callbacks.size(); i++) {
-        const Attribute_Request_Callback& attribute_request = m_attribute_request_callbacks.at(i);
+        const auto& attribute_request = m_attribute_request_callbacks.at(i);
 
         if (attribute_request.Get_Request_ID() != request_id) {
           continue;

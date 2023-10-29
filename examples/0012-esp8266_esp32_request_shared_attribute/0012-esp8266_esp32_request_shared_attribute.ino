@@ -79,6 +79,14 @@ constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
 #endif
 
+// Maximum amount of attributs we can request or subscribe, has to be set both in the ThingsBoard template list and Attribute_Request_Callback template list
+// and should be the same as the amount of variables in the passed array. If it is less not all variables will be requested or subscribed
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr size_t MAX_ATTRIBUTES PROGMEM = 6U;
+#else
+constexpr size_t MAX_ATTRIBUTES = 6U;
+#endif
+
 #if ENCRYPTED
 // See https://comodosslstore.com/resources/what-is-a-root-ca-certificate-and-how-do-i-download-it/
 // on how to get the root certificate of the server we want to communicate with,
@@ -172,7 +180,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoardSized<Default_Fields_Amount, Default_Subscriptions_Amount, MAX_ATTRIBUTES> tb(mqttClient, logger, MAX_MESSAGE_SIZE);
 
 // Statuses for requesting of attributes
 bool requestedClient = false;
@@ -289,8 +297,8 @@ void loop() {
     Serial.println("Requesting shared attributes...");
 #endif
     // Shared attributes we want to request from the server
-    constexpr std::array<const char*, 6U> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
-    const Attribute_Request_Callback sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
+    constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
+    constexpr Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
     requestedShared = tb.Shared_Attributes_Request(sharedCallback);
     if (!requestedShared) {
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -308,8 +316,8 @@ void loop() {
     Serial.println("Requesting client-side attributes...");
 #endif
     // Client-side attributes we want to request from the server
-    constexpr std::array<const char*, 1U> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
-    const Attribute_Request_Callback clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
+    constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
+    constexpr Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
     requestedClient = tb.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
 #if THINGSBOARD_ENABLE_PROGMEM

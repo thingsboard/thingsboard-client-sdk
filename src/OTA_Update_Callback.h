@@ -9,11 +9,6 @@
 // Local includes.
 #include "IUpdater.h"
 
-// Library includes.
-#if THINGSBOARD_ENABLE_PROGMEM
-#include <pgmspace.h>
-#endif // THINGSBOARD_ENABLE_PROGMEM
-
 
 /// ---------------------------------
 /// Constant strings in flash memory.

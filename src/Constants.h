@@ -18,6 +18,7 @@
 #define Default_Payload 64
 #define Default_Fields_Amount 8
 #define Default_Subscriptions_Amount 2
+#define Default_Attributes_Amount 5
 
 
 /// ---------------------------------
