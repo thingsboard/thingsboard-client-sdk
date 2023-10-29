@@ -39,21 +39,8 @@ bool HashGenerator::update(const uint8_t* data, const size_t& len) {
     return mbedtls_md_update(&m_ctx, data, len) == 0;
 }
 
-std::string HashGenerator::get_hash_string() {
-    // Calculate the current hash value
-    uint8_t hash[MBEDTLS_MD_MAX_SIZE];
+HashGenerator::get_hash_string(unsigned char *hash) {
     finish(hash);
-
-    // Convert the hash value to a string
-    std::stringstream ss;
-    // MBEDTLS Version 3 is a major breaking changes were accessing the internal structures requires the MBEDTLS_PRIVATE macro
-#if MBEDTLS_VERSION_MAJOR < 3
-    for (size_t i = 0; i < mbedtls_md_get_size(m_ctx.md_info); i++)
-#else
-    for (size_t i = 0; i < mbedtls_md_get_size(m_ctx.MBEDTLS_PRIVATE(md_info)); i++)
-#endif
-        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
-    return ss.str();
 }
 
 void HashGenerator::finish(unsigned char *hash) {

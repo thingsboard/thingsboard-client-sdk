@@ -41,9 +41,9 @@ class HashGenerator {
     /// @return Whether updating the hash for the given bytes was successful or not
     bool update(const uint8_t* data, const size_t& len);
 
-    /// @brief Returns the final hash value as a string
-    /// @return String containing the final hash value for the passed bytes
-    std::string get_hash_string();
+    /// @brief Finishes the hash and copies the result in the input buffer
+    /// @param hash Array that the final hash value should be copied into
+    void get_hash_string(unsigned char *hash);
 
   private:
     mbedtls_md_context_t m_ctx; // Context used to access the already written bytes and update them latter
