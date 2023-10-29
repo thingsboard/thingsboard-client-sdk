@@ -892,8 +892,12 @@ class ThingsBoardSized {
       }
 
       // Request the firmware information
-      constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      const Attribute_Request_Callback<5U> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      constexpr std::array<const char *, MaxAttributes> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+#if THINGSBOARD_ENABLE_DYNAMIC
+      const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+#else
+      const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+#endif //THINGSBOARD_ENABLE_DYNAMIC
       return Shared_Attributes_Request(fw_request_callback);
     }
 
@@ -915,8 +919,12 @@ class ThingsBoardSized {
       }
 
       // Subscribes to changes of the firmware information
-      constexpr std::array<const char *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-      const Shared_Attribute_Callback<5U> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+      constexpr std::array<const char *, MaxAttributes> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+#if THINGSBOARD_ENABLE_DYNAMIC
+      const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+#else
+      const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+#endif //THINGSBOARD_ENABLE_DYNAMIC
       return Shared_Attributes_Subscribe(fw_update_callback);
     }
 
@@ -1429,7 +1437,7 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
-    inline bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback = nullptr) {
+    inline bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
         m_logger.print(MAX_RPC_REQUEST_EXCEEDED);
@@ -1461,9 +1469,9 @@ class ThingsBoardSized {
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
 #if THINGSBOARD_ENABLE_DYNAMIC
-    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
+    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback) {
 #else
-    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback<MaxAttributes>& callback, Attribute_Request_Callback<MaxAttributes>*& registeredCallback = nullptr) {
+    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback<MaxAttributes>& callback, Attribute_Request_Callback<MaxAttributes>*& registeredCallback) {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
@@ -1874,16 +1882,16 @@ class ThingsBoardSized {
 };
 
 #if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
-
 template<size_t MaxFieldsAmount, size_t MaxSubscribtions, size_t MaxAttributes>
 ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes>::m_subscribedInstance = nullptr;
-
 #elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-
 ThingsBoardSized *ThingsBoardSized::m_subscribedInstance = nullptr;
-
 #endif
 
+#if THINGSBOARD_ENABLE_DYNAMIC
+using ThingsBoard = ThingsBoardSized;
+#else
 using ThingsBoard = ThingsBoardSized<>;
+#endif //THINGSBOARD_ENABLE_DYNAMIC
 
 #endif // ThingsBoard_h
