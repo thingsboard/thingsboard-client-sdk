@@ -743,7 +743,11 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
+#if THINGSBOARD_ENABLE_DYNAMIC
+    inline bool Client_Attributes_Request(const Attribute_Request_Callback& callback) {
+#else
     inline bool Client_Attributes_Request(const Attribute_Request_Callback<MaxAttributes>& callback) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
       return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
     }
 
@@ -960,7 +964,11 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
+#if THINGSBOARD_ENABLE_DYNAMIC
+    inline bool Shared_Attributes_Request(const Attribute_Request_Callback& callback) {
+#else
     inline bool Shared_Attributes_Request(const Attribute_Request_Callback<MaxAttributes>& callback) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
       return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
 
@@ -996,7 +1004,11 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
+#if THINGSBOARD_ENABLE_DYNAMIC
+    inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback& callback) {
+#else
     inline bool Shared_Attributes_Subscribe(const Shared_Attribute_Callback<MaxAttributes>& callback) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_shared_attribute_update_callbacks.size() + 1U > m_shared_attribute_update_callbacks.capacity()) {
         m_logger.print(MAX_SHARED_ATT_UPDATE_EXCEEDED);
@@ -1133,7 +1145,11 @@ class ThingsBoardSized {
     /// @param attributeRequestKey Key of the key-value pair that will contain the attributes we want to request
     /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
+#if THINGSBOARD_ENABLE_DYNAMIC
+    inline bool Attributes_Request(const Attribute_Request_Callback& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
+#else
     inline bool Attributes_Request(const Attribute_Request_Callback<MaxAttributes>& callback, const char* attributeRequestKey, const char* attributeResponseKey) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
       auto& attributes = callback.Get_Attributes();
 
       // Check if any sharedKeys were requested
@@ -1149,7 +1165,11 @@ class ThingsBoardSized {
       }
 
       // Ensure the response topic has been subscribed
+#if THINGSBOARD_ENABLE_DYNAMIC
+      Attribute_Request_Callback* registeredCallback = nullptr;
+#else
       Attribute_Request_Callback<MaxAttributes>* registeredCallback = nullptr;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
       if (!Attributes_Request_Subscribe(callback, registeredCallback)) {
         return false;
       }
@@ -1440,7 +1460,11 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
+#if THINGSBOARD_ENABLE_DYNAMIC
+    inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback& callback, Attribute_Request_Callback*& registeredCallback = nullptr) {
+#else
     inline bool Attributes_Request_Subscribe(const Attribute_Request_Callback<MaxAttributes>& callback, Attribute_Request_Callback<MaxAttributes>*& registeredCallback = nullptr) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
         m_logger.print(MAX_SHARED_ATT_REQUEST_EXCEEDED);
@@ -1851,8 +1875,8 @@ class ThingsBoardSized {
 
 #if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
 
-template<size_t MaxFieldsAmount, size_t MaxSubscribtions>
-ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions>::m_subscribedInstance = nullptr;
+template<size_t MaxFieldsAmount, size_t MaxSubscribtions, size_t MaxAttributes>
+ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes>::m_subscribedInstance = nullptr;
 
 #elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
