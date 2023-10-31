@@ -3,10 +3,6 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-// Library includes.
-#include <sstream>
-#include <iomanip>
-
 HashGenerator::HashGenerator() :
     m_ctx()
 {
@@ -14,37 +10,39 @@ HashGenerator::HashGenerator() :
 }
 
 HashGenerator::~HashGenerator(void) {
-    // Ensures to clean up the mbedtls memory after it has been used
-    mbedtls_md_free(&m_ctx);
+    free();
 }
 
-void HashGenerator::start(const mbedtls_md_type_t& type) {
-    // MBEDTLS Version 3 is a major breaking changes were accessing the internal structures requires the MBEDTLS_PRIVATE macro
-#if MBEDTLS_VERSION_MAJOR < 3
-    if (m_ctx.hmac_ctx != nullptr && m_ctx.md_ctx != nullptr && m_ctx.md_info != nullptr) {
-#else
-    if (m_ctx.MBEDTLS_PRIVATE(hmac_ctx) != nullptr && m_ctx.MBEDTLS_PRIVATE(md_ctx) != nullptr && m_ctx.MBEDTLS_PRIVATE(md_info) != nullptr) {
-#endif
-        mbedtls_md_free(&m_ctx);
-    }
+bool HashGenerator::start(const mbedtls_md_type_t& type) {
+    // Clear the internal structure of any previous attempt, because if we do not the init function will not work correctly
+    free();
     // Initialize the context
     mbedtls_md_init(&m_ctx);
     // Choose the hash function
-    mbedtls_md_setup(&m_ctx, mbedtls_md_info_from_type(type), 0);
+    bool init_result = mbedtls_md_setup(&m_ctx, mbedtls_md_info_from_type(type), 0) == 0;
     // Start the hash
-    mbedtls_md_starts(&m_ctx);
+    init_result = init_result && (mbedtls_md_starts(&m_ctx) == 0);
+    return init_result;
 }
 
 bool HashGenerator::update(const uint8_t* data, const size_t& len) {
     return mbedtls_md_update(&m_ctx, data, len) == 0;
 }
 
-void HashGenerator::get_hash_string(unsigned char *hash) {
-    finish(hash);
+bool HashGenerator::finish(unsigned char *hash) {
+    return mbedtls_md_finish(&m_ctx, hash) == 0;
 }
 
-void HashGenerator::finish(unsigned char *hash) {
-    mbedtls_md_finish(&m_ctx, hash);
+void HashGenerator::free() {
+    // MBEDTLS Version 3 is a major breaking changes were accessing the internal structures requires the MBEDTLS_PRIVATE macro
+#if MBEDTLS_VERSION_MAJOR < 3
+    if (m_ctx.hmac_ctx != nullptr && m_ctx.md_ctx != nullptr && m_ctx.md_info != nullptr) {
+#else
+    if (m_ctx.MBEDTLS_PRIVATE(hmac_ctx) != nullptr && m_ctx.MBEDTLS_PRIVATE(md_ctx) != nullptr && m_ctx.MBEDTLS_PRIVATE(md_info) != nullptr) {
+#endif
+        // Ensures to clean up the mbedtls memory after it has been used
+        mbedtls_md_free(&m_ctx);
+    }
 }
 
 #endif // THINGSBOARD_ENABLE_OTA
