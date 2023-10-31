@@ -12,6 +12,8 @@
 #else
 #include <Seeed_mbedtls.h>
 #endif // THINGSBOARD_USE_MBED_TLS
+#include <stdint.h>
+#include <stddef.h>
 
 
 /// @brief Wrapper class which allows generating a hash of the given type from any arbitrary byte payload, which is hashable in chunks.

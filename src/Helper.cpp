@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
-uint8_t Helper::detectSize(const char *msg, ...) {
+int32_t Helper::detectSize(const char *msg, ...) {
       va_list args;
       va_start(args, msg);
       // Result is what would have been written if the passed buffer would have been large enough not counting null character,

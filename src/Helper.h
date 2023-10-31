@@ -5,11 +5,11 @@
 #include "Configuration.h"
 
 // Library include.
-#include <stdint.h>
 #include <ArduinoJson.h>
 #if THINGSBOARD_ENABLE_STL
 #include <iterator>
 #endif // THINGSBOARD_ENABLE_STL
+#include <stdint.h>
 
 
 /// @brief Static helper class that includes some uniliterally used functionalities in multiple places, especially the ThingsBoardHttp and ThingsBoard implementations
@@ -20,7 +20,7 @@ class Helper {
     /// @param ... Additional arguments that should be inserted into the message at the given points,
     /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
     /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
-    static uint8_t detectSize(const char *msg, ...);
+    static int32_t detectSize(const char *msg, ...);
 
     /// @brief Returns the amount of occurences of the given smybol in the given string
     /// @param str String that we want to check the symbol in
