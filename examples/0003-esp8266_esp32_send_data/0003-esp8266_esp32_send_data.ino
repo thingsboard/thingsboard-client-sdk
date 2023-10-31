@@ -13,7 +13,7 @@
 
 // Sending data can either be done over MQTT and the PubSubClient
 // or HTTPS and the HTTPClient, when using the ESP32 or ESP8266
-#define USING_HTTPS false
+#define USING_HTTPS true
 
 // Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
