@@ -5,13 +5,7 @@
 #include "Callback.h"
 #include "Constants.h"
 
-// Library includes.
-#include <ArduinoJson.h>
 
-
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATT_REQUEST_CB_IS_NULL[] PROGMEM = "Client-side or shared attribute request callback is NULL";
 #else

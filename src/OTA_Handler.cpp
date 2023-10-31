@@ -3,11 +3,12 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
+// Local includes.
+#include "Helper.h"
+
+// Library includes.
 #include <string.h>
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 // Firmware data keys.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";

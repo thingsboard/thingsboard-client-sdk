@@ -3,19 +3,12 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-// Library includes.
 #if THINGSBOARD_USE_ESP_TIMER
+// Library includes.
 #include <esp_timer.h>
-#endif // THINGSBOARD_USE_ESP_TIMER
-#if THINGSBOARD_ENABLE_PROGMEM
-#include <pgmspace.h>
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
-#if THINGSBOARD_ENABLE_PROGMEM
-constexpr char WATCHDOG_TIMER_NAME[] PROGMEM = "watchdog_timer";
-#else
 constexpr char WATCHDOG_TIMER_NAME[] = "watchdog_timer";
-#endif // THINGSBOARD_ENABLE_PROGMEM
+#endif // THINGSBOARD_USE_ESP_TIMER
 
 Callback_Watchdog *Callback_Watchdog::m_instance = nullptr;
 

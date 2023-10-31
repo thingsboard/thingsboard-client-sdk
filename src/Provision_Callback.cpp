@@ -1,9 +1,6 @@
 // Header include.
 #include "Provision_Callback.h"
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char PROVISION_CB_IS_NULL[] PROGMEM = "Provisioning callback is NULL";
 constexpr char ACCESS_TOKEN_CRED_TYPE[] PROGMEM = "ACCESS_TOKEN";

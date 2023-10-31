@@ -15,9 +15,6 @@
 #include "ILogger.h"
 
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 // HTTP topics.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";

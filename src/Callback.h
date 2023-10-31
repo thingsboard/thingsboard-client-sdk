@@ -11,6 +11,7 @@
 #endif // !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
 // Library includes.
+#include <ArduinoJson.h>
 #if THINGSBOARD_ENABLE_STL
 #include <functional>
 #endif // THINGSBOARD_ENABLE_STL
