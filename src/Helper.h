@@ -10,17 +10,19 @@
 #include <iterator>
 #endif // THINGSBOARD_ENABLE_STL
 #include <stdint.h>
+#include <stdarg.h>
 
 
 /// @brief Static helper class that includes some uniliterally used functionalities in multiple places, especially the ThingsBoardHttp and ThingsBoard implementations
 class Helper {
   public:
     /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
-    /// @param msg Formating message that the given argument will be inserted into
+    /// @param msg Formating message that the given arguments will be inserted into
     /// @param ... Additional arguments that should be inserted into the message at the given points,
     /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
     /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
     static int32_t detectSize(const char *msg, ...);
+    static int32_t detectSize(const char *msg, va_list args);
 
     /// @brief Returns the amount of occurences of the given smybol in the given string
     /// @param str String that we want to check the symbol in

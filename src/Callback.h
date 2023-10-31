@@ -64,7 +64,7 @@ class Callback {
         // Check if the callback is a nullptr,
         // meaning it has not been assigned any valid callback method
         if (!m_callback) {
-          logger.print(m_message);
+          logger.log(m_message);
           return returnType();
         }
         return m_callback(arguments...);

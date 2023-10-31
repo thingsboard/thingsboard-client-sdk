@@ -514,11 +514,11 @@ For that a `class` that inherits the `ILogger` interface needs to be created and
 
 class CustomLogger : public ILogger {
   public:
-    int print(const char *message) const override {
+    int log(const char *message) const override {
         return 0;
     }
 
-    int printf(const char *format, ...) const override {
+    int logf(const char *format, ...) const override {
         return 0;
     }
 };

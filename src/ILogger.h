@@ -8,14 +8,14 @@ class ILogger {
     /// @brief Prints the given message
     /// @param message Message that should be printed
     /// @return Either the written amount of characters or an error indicater (being a negative number) if one occured
-    virtual int print(const char *message) const = 0;
+    virtual int log(const char *message) const = 0;
 
     /// @brief Prints the given format message containing format specifiers (subsequences beginning with %), the additional arguments following format are formatted and inserted in the resulting string replacing their respective specifiers.
     /// See https://cplusplus.com/reference/cstdio/printf/ for more information on the possible format specifiers
     /// @param format Format message the additional arguments will be formatedd into
     /// @param  ... Additional arguments that will be formatted and inserted into the resulting string, replacing their respective specifiers
     /// @return Either the written amount of characters or an error indicater (being a negative number) if one occured
-    virtual int printf(const char *format, ...) const = 0;
+    virtual int logf(const char *format, ...) const = 0;
 };
 
 #endif // ILogger_h
