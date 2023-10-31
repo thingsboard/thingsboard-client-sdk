@@ -1,6 +1,9 @@
 #ifndef IHTTP_Client_h
 #define IHTTP_Client_h
 
+// Local include.
+#include "Configuration.h"
+
 // Library include.
 #if THINGSBOARD_ENABLE_STL
 #include <string>

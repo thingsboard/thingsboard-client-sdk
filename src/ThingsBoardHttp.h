@@ -92,13 +92,13 @@ class ThingsBoardHttpSized {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
       if (source.isNull()) {
-        m_logger.log(UNABLE_TO_ALLOCATE_MEMORY);
+        m_logger.print(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
       }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const size_t amount = source.size();
       if (MaxFieldsAmount < amount) {
-        m_logger.logf(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmount);
+        m_logger.printf(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmount);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -107,7 +107,7 @@ class ThingsBoardHttpSized {
       if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
-          m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+          m_logger.print(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
           result = Send_Json_String(topic, json);
@@ -120,7 +120,7 @@ class ThingsBoardHttpSized {
       else {
         char json[jsonSize];
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
-          m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+          m_logger.print(UNABLE_TO_SERIALIZE_JSON);
           return result;
         }
         result = Send_Json_String(topic, json);
@@ -277,7 +277,7 @@ class ThingsBoardHttpSized {
       const int status = m_client.get_response_status_code();
 
       if (!success || status < HTTP_RESPONSE_SUCCESS_RANGE_START || status > HTTP_RESPONSE_SUCCESS_RANGE_END) {
-        m_logger.logf(HTTP_FAILED, POST, status);
+        m_logger.printf(HTTP_FAILED, POST, status);
         result = false;
       }
 
@@ -301,7 +301,7 @@ class ThingsBoardHttpSized {
       const int status = m_client.get_response_status_code();
 
       if (!success || status < HTTP_RESPONSE_SUCCESS_RANGE_START || status > HTTP_RESPONSE_SUCCESS_RANGE_END) {
-        m_logger.logf(HTTP_FAILED, GET, status);
+        m_logger.printf(HTTP_FAILED, GET, status);
         result = false;
         goto cleanup;
       }
@@ -332,15 +332,10 @@ class ThingsBoardHttpSized {
 
       for (size_t i = 0; i < data_count; ++i) {
         if (!data[i].SerializeKeyValue(object)) {
-          m_logger.log(UNABLE_TO_SERIALIZE);
+          m_logger.print(UNABLE_TO_SERIALIZE);
           return false;
         }
       }
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-      // Resize internal JsonDocument buffer to only use the actually needed amount of memory.
-      requestBuffer.shrinkToFit();
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
       return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
     }
@@ -362,7 +357,7 @@ class ThingsBoardHttpSized {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
-        m_logger.log(UNABLE_TO_SERIALIZE);
+        m_logger.print(UNABLE_TO_SERIALIZE);
         return false;
       }
 
@@ -370,6 +365,10 @@ class ThingsBoardHttpSized {
     }
 };
 
+#if THINGSBOARD_ENABLE_DYNAMIC
+using ThingsBoardHttp = ThingsBoardHttpSized;
+#else
 using ThingsBoardHttp = ThingsBoardHttpSized<>;
+#endif //THINGSBOARD_ENABLE_DYNAMIC
 
 #endif // ThingsBoard_Http_h
