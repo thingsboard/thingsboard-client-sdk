@@ -3,11 +3,11 @@
 
 #ifdef ARDUINO
 
-// Library includes.
-#include <ArduinoHttpClient.h>
-
 // Local includes.
 #include "IHTTP_Client.h"
+
+// Library includes.
+#include <ArduinoHttpClient.h>
 
 
 /// @brief HTTP Client interface implementation that uses the ArduinoHttpClient (https://github.com/arduino-libraries/ArduinoHttpClient),

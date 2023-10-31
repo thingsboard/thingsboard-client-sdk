@@ -9,7 +9,6 @@
 // Local include.
 #include "Callback_Watchdog.h"
 #include "HashGenerator.h"
-#include "Helper.h"
 #include "ILogger.h"
 #include "OTA_Update_Callback.h"
 #include "OTA_Failure_Response.h"

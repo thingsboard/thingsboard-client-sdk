@@ -5,13 +5,7 @@
 #include "Callback.h"
 #include "Constants.h"
 
-// Library includes.
-#include <ArduinoJson.h>
 
-
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
 #else

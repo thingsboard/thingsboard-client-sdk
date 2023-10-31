@@ -19,9 +19,6 @@
 #endif // THINGSBOARD_ENABLE_OTA
 
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 // Publish data topics.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";

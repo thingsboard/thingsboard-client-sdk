@@ -10,9 +10,6 @@
 #include "IUpdater.h"
 
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char OTA_CB_IS_NULL[] PROGMEM = "OTA update callback is NULL";
 #else

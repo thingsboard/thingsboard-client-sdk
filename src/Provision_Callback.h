@@ -4,9 +4,6 @@
 // Local includes.
 #include "Callback.h"
 
-// Library includes.
-#include <ArduinoJson.h>
-
 
 // Struct dispatch tags, to differentiate between constructors, allows the same paramter types to be passed
 struct Access_Token{};

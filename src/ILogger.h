@@ -1,7 +1,6 @@
 #ifndef ILogger_h
 #define ILogger_h
 
-
 /// @brief Logger interface that contains the method that a class that can print log messages has to implement.
 /// Allows to safe the given log messages into a file or simply print them onto the console output, or do both
 class ILogger {

@@ -2,7 +2,6 @@
 #define Array_h
 
 // Local include.
-#include "Configuration.h"
 #include "Helper.h"
 
 // Library includes.

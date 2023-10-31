@@ -1,9 +1,6 @@
 // Header include.
 #include "RPC_Callback.h"
 
-/// ---------------------------------
-/// Constant strings in flash memory.
-/// ---------------------------------
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char RPC_CB_NULL[] PROGMEM = "Server-side RPC callback is NULL";
 #else

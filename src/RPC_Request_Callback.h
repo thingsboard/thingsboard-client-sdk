@@ -4,9 +4,6 @@
 // Local includes.
 #include "Callback.h"
 
-// Library includes.
-#include <ArduinoJson.h>
-
 
 /// @brief Client-side RPC callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
