@@ -30,10 +30,11 @@ int DefaultLogger::printf(const char *format, ...) const {
     va_list args;
     // Start to store all passed arguments to the method, after the last dynamic argument
     va_start(args, format);
-    const size_t size = Helper::detectSize(format, args);
+    const int32_t size = Helper::detectSize(format, args);
     char arguments[size];
     const int written_characters = vsnprintf(arguments, size, format, args);
-    const bool result = (written_characters == size - 1);
+    // Written characters is expected to be one less, because of the null termination character
+    const bool result = (written_characters == (size - 1));
     va_end(args);
     return printf(LOG_MESSAGE_FORMAT, result ? arguments : FAILED_MESSAGE);
 }
