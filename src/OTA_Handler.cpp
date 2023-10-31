@@ -25,7 +25,6 @@ constexpr char UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware
 constexpr char RECEIVED_UNEXPECTED_CHUNK[] PROGMEM = "Received chunk (%u), not the same as requested chunk (%u)";
 constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater, ensure that the partition scheme has two app sections";
 constexpr char ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary data instead of expected (%u)";
-constexpr char UPDATING_HASH_FAILED[] PROGMEM = "Updating hash failed";
 constexpr char ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
 constexpr char CHKS_VER_FAILED[] PROGMEM = "Checksum verification failed";
 constexpr char FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
@@ -41,7 +40,6 @@ constexpr char UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
 constexpr char RECEIVED_UNEXPECTED_CHUNK[] = "Received chunk (%u), not the same as requested chunk (%u)";
 constexpr char ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater, ensure that the partition scheme has two app sections";
 constexpr char ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data instead of expected (%u)";
-constexpr char UPDATING_HASH_FAILED[] = "Updating hash failed";
 constexpr char ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
 constexpr char CHKS_VER_FAILED[] = "Checksum verification failed";
 constexpr char FW_UPDATE_ABORTED[] = "Firmware update aborted";
@@ -129,12 +127,9 @@ void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
 
-    // Update value only if writing to flash was a success
-    if (!m_hash.update(payload, total_bytes)) {
-        m_logger.print(UPDATING_HASH_FAILED);
-        (void)m_send_fw_state_callback(FW_STATE_FAILED, UPDATING_HASH_FAILED);
-        return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
-    }
+    // Update value only if writing to flash was a success, result is ignored,
+    // because it can only fail if the input parameters are invalid
+    (void)m_hash.update(payload, total_bytes);
 
     m_requested_chunks = current_chunk + 1;
     m_fw_callback->Call_Progress_Callback(m_logger, m_requested_chunks, m_total_chunks);
@@ -153,7 +148,8 @@ void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *
 void OTA_Handler::Request_First_Firmware_Packet() {
     m_requested_chunks = 0U;
     m_retries = m_fw_callback->Get_Chunk_Retries();
-    m_hash.start(m_fw_checksum_algorithm);
+    // Hash start result is ignored, because it can only fail if the input parameters are invalid
+    (void)m_hash.start(m_fw_checksum_algorithm);
     m_watchdog.detach();
     m_fw_updater->reset();
     Request_Next_Firmware_Packet();
@@ -180,7 +176,8 @@ void OTA_Handler::Finish_Firmware_Update() {
     (void)m_send_fw_state_callback(FW_STATE_DOWNLOADED, nullptr);
 
     unsigned char calculated_hash[MBEDTLS_MD_MAX_SIZE] = {};
-    m_hash.get_hash_string(calculated_hash);
+    // Calculating final hash result is ignored, because it can only fail if the input parameters are invalid
+    (void)m_hash.finish(calculated_hash);
 #if THINGSBOARD_ENABLE_DEBUG
     m_logger.printf(HASH_ACTUAL, calculated_hash);
     m_logger.printf(HASH_EXPECTED, m_fw_checksum);
