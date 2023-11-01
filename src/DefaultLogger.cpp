@@ -20,7 +20,7 @@ constexpr char FAILED_MESSAGE[] = "Invalid arguments passed to format specifiers
 constexpr char LOG_MESSAGE_FORMAT[] = "[TB] %s\n";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-int DefaultLogger::logf(const char *format, ...) const {
+int DefaultLogger::log(const char *format, ...) const {
     va_list args;
     // Start to store all passed arguments to the method, after the last dynamic argument
     va_start(args, format);
