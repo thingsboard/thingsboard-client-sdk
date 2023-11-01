@@ -32,7 +32,7 @@ OTA_Update_Callback::returnType OTA_Update_Callback::Call_Progress_Callback(cons
     // Check if the callback is a nullptr,
     // meaning it has not been assigned any valid callback method
     if (!m_progressCb) {
-      logger.log(OTA_CB_IS_NULL);
+      logger.logf(OTA_CB_IS_NULL);
       return returnType();
     }
     return m_progressCb(current, total);
