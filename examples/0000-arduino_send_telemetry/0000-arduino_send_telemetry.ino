@@ -5,12 +5,12 @@
 //  - Arduino Uno
 //  - ESP8266 connected to Arduino Uno
 
-#include <ThingsBoard.h>
 #include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <WiFiEspClient.h>
 #include <WiFiEsp.h>
 #include <SoftwareSerial.h>
+#include <ThingsBoard.h>
 
 
 #if THINGSBOARD_ENABLE_PROGMEM
