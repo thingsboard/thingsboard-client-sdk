@@ -92,7 +92,7 @@ class ThingsBoardHttpSized {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
       if (source.isNull()) {
-        m_logger.log(UNABLE_TO_ALLOCATE_MEMORY);
+        m_logger.logf(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
       }
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -107,7 +107,7 @@ class ThingsBoardHttpSized {
       if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
-          m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+          m_logger.logf(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
           result = Send_Json_String(topic, json);
@@ -120,7 +120,7 @@ class ThingsBoardHttpSized {
       else {
         char json[jsonSize];
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
-          m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+          m_logger.logf(UNABLE_TO_SERIALIZE_JSON);
           return result;
         }
         result = Send_Json_String(topic, json);
@@ -332,7 +332,7 @@ class ThingsBoardHttpSized {
 
       for (size_t i = 0; i < data_count; ++i) {
         if (!data[i].SerializeKeyValue(object)) {
-          m_logger.log(UNABLE_TO_SERIALIZE);
+          m_logger.logf(UNABLE_TO_SERIALIZE);
           return false;
         }
       }
@@ -357,7 +357,7 @@ class ThingsBoardHttpSized {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
       JsonVariant object = jsonBuffer.template to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
-        m_logger.log(UNABLE_TO_SERIALIZE);
+        m_logger.logf(UNABLE_TO_SERIALIZE);
         return false;
       }
 
