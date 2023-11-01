@@ -1335,13 +1335,13 @@ class ThingsBoardSized {
         return;
       }
       // If firmware version and title is the same, we do not initiate an update, because we expect the binary to be the same one we are currently using
-      else if (strncmp(curr_fw_title, fw_title, JSON_STRING_SIZE(strlen(curr_fw_title))) == 0 && strncmp(curr_fw_version, fw_version, JSON_STRING_SIZE(strlen(curr_fw_version))) == 0) {
+      else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
         m_logger.log(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_FAILED, FW_UP_TO_DATE);
         return;
       }
       // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another device type 
-      else if (strncmp(curr_fw_title, fw_title, JSON_STRING_SIZE(strlen(curr_fw_title))) != 0) {
+      else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
         m_logger.log(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_FAILED, FW_NOT_FOR_US);
         return;
@@ -1350,16 +1350,16 @@ class ThingsBoardSized {
       mbedtls_md_type_t fw_checksum_algorithm = mbedtls_md_type_t();
 
       // Change the used firmware algorithm, depending on which type is set for the given firmware information
-      if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_MD5))) == 0) {
+      if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, strlen(CHECKSUM_AGORITM_MD5)) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
       }
-      else if (strncmp(CHECKSUM_AGORITM_SHA256, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_SHA256))) == 0) {
+      else if (strncmp(CHECKSUM_AGORITM_SHA256, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA256)) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA256;
       }
-      else if (strncmp(CHECKSUM_AGORITM_SHA384, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_SHA384))) == 0) {
+      else if (strncmp(CHECKSUM_AGORITM_SHA384, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA384)) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA384;
       }
-      else if (strncmp(CHECKSUM_AGORITM_SHA512, fw_algorithm, JSON_STRING_SIZE(strlen(CHECKSUM_AGORITM_SHA512))) == 0) {
+      else if (strncmp(CHECKSUM_AGORITM_SHA512, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA512)) == 0) {
         fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
       }
       else {
@@ -1597,7 +1597,7 @@ class ThingsBoardSized {
         m_logger.log(CALLING_RPC_CB, methodName);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-        const JsonVariantConst param = data[RPC_PARAMS_KEY]
+        const JsonVariantConst param = data[RPC_PARAMS_KEY];
         response = rpc.Call_Callback(m_logger, param);
         break;
       }
