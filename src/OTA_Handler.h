@@ -73,7 +73,11 @@ class OTA_Handler {
 
     /// @brief Requests the next firmware chunk of the OTA firmware if there are any left
     /// and starts the timer that ensures we request the same chunk again if we have not received a response yet
-    void Request_Next_Firmware_Packet();
+    /// @param update_state Whether the firmware OTA progress state should be updated if the chunk request was successfull or not,
+    /// Is true if this is a re-request for the same packet that was previously requested, because something failed internally.
+    /// Needed so we can update the firmware state to downloading again, to inform the user that the device is attempting to recover from the issue,
+    /// but only if we sent a failure state before. Allows to decrease the amount of sent messages making the overall process faster
+    void Request_Next_Firmware_Packet(bool update_state = false);
 
     /// @brief Completes the firmware update, which consists of checking the complete hash of the firmware binary if the initally received value,
     /// both should be the same and if that is not the case that means that we received invalid firmware binary data and have to restart the update.

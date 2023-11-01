@@ -97,8 +97,6 @@ void OTA_Handler::Stop_Firmware_Update() {
 }
 
 void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *payload, const size_t& total_bytes) {
-    (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
-
     if (current_chunk != m_requested_chunks) {
       m_logger.log(RECEIVED_UNEXPECTED_CHUNK, current_chunk, m_requested_chunks);
       return;
@@ -153,10 +151,10 @@ void OTA_Handler::Request_First_Firmware_Packet() {
     (void)m_hash.start(m_fw_checksum_algorithm);
     m_watchdog.detach();
     m_fw_updater->reset();
-    Request_Next_Firmware_Packet();
+    Request_Next_Firmware_Packet(true);
 }
 
-void OTA_Handler::Request_Next_Firmware_Packet() {
+void OTA_Handler::Request_Next_Firmware_Packet(bool update_state) {
     // Check if we have already requested and handled the last remaining chunk
     if (m_requested_chunks >= m_total_chunks) {
         Finish_Firmware_Update();   
@@ -166,6 +164,9 @@ void OTA_Handler::Request_Next_Firmware_Packet() {
     if (!m_publish_callback(m_requested_chunks)) {
       m_logger.log(UNABLE_TO_REQUEST_CHUNCKS);
       (void)m_send_fw_state_callback(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
+    }
+    else if (update_state) {
+        (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
     }
 
     // Watchdog gets started no matter if publishing request was successful or not in hopes,
@@ -224,7 +225,7 @@ void OTA_Handler::Handle_Failure(const OTA_Failure_Response& failure_response) {
 
   switch (failure_response) {
     case OTA_Failure_Response::RETRY_CHUNK:
-      Request_Next_Firmware_Packet();
+      Request_Next_Firmware_Packet(true);
       break;
     case OTA_Failure_Response::RETRY_UPDATE:
       Request_First_Firmware_Packet();
