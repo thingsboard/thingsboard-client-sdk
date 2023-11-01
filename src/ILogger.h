@@ -10,7 +10,7 @@ class ILogger {
     /// @param format Format message the additional arguments will be formatedd into
     /// @param  ... Additional arguments that will be formatted and inserted into the resulting string, replacing their respective specifiers
     /// @return Either the written amount of characters or an error indicater (being a negative number) if one occured
-    virtual int logf(const char *format, ...) const = 0;
+    virtual int log(const char *format, ...) const = 0;
 };
 
 #endif // ILogger_h
