@@ -1,5 +1,5 @@
-#ifndef Thingsboard_Default_Logger_h
-#define Thingsboard_Default_Logger_h
+#ifndef Default_Logger_h
+#define Default_Logger_h
 
 // Local includes.
 #include "ILogger.h"
@@ -10,4 +10,4 @@ class DefaultLogger : public ILogger {
     int logf(const char *format, ...) const override;
 };
 
-#endif // Thingsboard_Default_Logger_h
+#endif // Default_Logger_h

@@ -11,7 +11,6 @@
 #endif // THINGSBOARD_ENABLE_PROGMEM
 #include <stdio.h>
 
-
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char FAILED_MESSAGE[] PROGMEM = "Invalid arguments passed to format specifiers (%) in printf";
