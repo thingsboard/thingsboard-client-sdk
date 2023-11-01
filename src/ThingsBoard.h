@@ -1320,11 +1320,11 @@ class ThingsBoardSized {
         return;
       }
 
-      const char *fw_title = data[FW_TITLE_KEY].as<const char *>();
-      const char *fw_version = data[FW_VER_KEY].as<const char *>();
-      const char *fw_checksum = data[FW_CHKS_KEY].as<const char *>();
-      const char *fw_algorithm = data[FW_CHKS_ALGO_KEY].as<const char *>();
-      const size_t fw_size = data[FW_SIZE_KEY].as<const size_t>();
+      const char *fw_title = data[FW_TITLE_KEY];
+      const char *fw_version = data[FW_VER_KEY];
+      const char *fw_checksum = data[FW_CHKS_KEY];
+      const char *fw_algorithm = data[FW_CHKS_ALGO_KEY];
+      const size_t fw_size = data[FW_SIZE_KEY];
 
       const char *curr_fw_title = m_fw_callback.Get_Firmware_Title();
       const char *curr_fw_version = m_fw_callback.Get_Firmware_Version();
@@ -1565,7 +1565,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     inline void process_rpc_message(char *topic, const JsonObjectConst& data) {
-      const char *methodName = data[RPC_METHOD_KEY].as<const char *>();
+      const char *methodName = data[RPC_METHOD_KEY];
 
       if (methodName == nullptr) {
         m_logger.log(RPC_METHOD_NULL);
@@ -1597,7 +1597,7 @@ class ThingsBoardSized {
         m_logger.log(CALLING_RPC_CB, methodName);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-        const JsonVariantConst param = data[RPC_PARAMS_KEY].as<JsonVariantConst>();
+        const JsonVariantConst param = data[RPC_PARAMS_KEY]
         response = rpc.Call_Callback(m_logger, param);
         break;
       }
