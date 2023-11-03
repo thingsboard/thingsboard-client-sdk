@@ -473,15 +473,16 @@ class ThingsBoardSized {
       return m_client.loop();
     }
 
-    /// @brief Attempts to send key value pairs from a JsonDocument source over the given topic to the server
+    /// @brief Attempts to send key value pairs from custom source over the given topic to the server
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param topic Topic we want to send the data over
-    /// @param source JsonDocument source containing our json key value pairs we want to send.
-    /// See https://arduinojson.org/v6/api/jsondocument/ for more information
+    /// @param source Data source containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    inline bool Send_Json(const char* topic, const JsonDocument& source, const size_t& jsonSize) {
+    template <typename TSource>
+    inline bool Send_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       // Check if allocating needed memory failed when trying to create the JsonObject,
-      // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsondocument/isnull/ for more information
+      // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
       if (source.isNull()) {
         m_logger.println(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
@@ -1067,13 +1068,15 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 
-    /// @brief Serialize the JsonDocument source into the underlying client.
-    /// Sends the given bytes to the client without requiring any temporary buffer at the cost of increased send times
+    /// @brief Serialize the custom attribute source into the underlying client.
+    /// Sends the given bytes to the client without requiring any temporary buffer at the cost of hugely increased send times
+    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param topic Topic we want to send the data over
-    /// @param source JsonDocument source containing our json key value pairs we want to send.
-    /// See https://arduinojson.org/v6/api/jsondocument/ for more information    /// @param jsonSize Size of the data inside the source
+    /// @param source Data source containing our json key value pairs we want to send
+    /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    inline bool Serialize_Json(const char* topic, const JsonDocument& source, const size_t& jsonSize) {
+    template <typename TSource>
+    inline bool Serialize_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       if (!m_client.begin_publish(topic, jsonSize)) {
         m_logger.println(UNABLE_TO_SERIALIZE_JSON);
         return false;
