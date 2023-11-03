@@ -9,7 +9,6 @@
 #if THINGSBOARD_ENABLE_PROGMEM
 #include <pgmspace.h>
 #endif // THINGSBOARD_ENABLE_PROGMEM
-#include <stdio.h>
 
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -20,15 +19,19 @@ constexpr char FAILED_MESSAGE[] = "Invalid arguments passed to format specifiers
 constexpr char LOG_MESSAGE_FORMAT[] = "[TB] %s\n";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-int DefaultLogger::log(const char *format, ...) const {
+int DefaultLogger::printfln(const char *format, ...) const {
     va_list args;
     // Start to store all passed arguments to the method, after the last dynamic argument
     va_start(args, format);
-    const int32_t size = Helper::detectSize(format, args);
+    const int size = Helper::detectSize(format, args);
     char arguments[size] = {};
     const int written_characters = vsnprintf(arguments, size, format, args);
+    va_end(args);
     // Written characters is expected to be one less, because of the null termination character
     const bool result = (written_characters == (size - 1));
-    va_end(args);
     return printf(LOG_MESSAGE_FORMAT, (result ? arguments : FAILED_MESSAGE));
+}
+
+int DefaultLogger::println(const char *message) const {
+    return printf(LOG_MESSAGE_FORMAT, message);
 }

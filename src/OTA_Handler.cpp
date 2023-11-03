@@ -80,7 +80,7 @@ void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, 
     m_fw_updater = m_fw_callback->Get_Updater();
 
     if (!m_publish_callback || !m_send_fw_state_callback || !m_finish_callback || !m_fw_updater) {
-      m_logger.log(OTA_CB_IS_NULL);
+      m_logger.println(OTA_CB_IS_NULL);
       (void)m_send_fw_state_callback(FW_STATE_FAILED, OTA_CB_IS_NULL);
         return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
     }
@@ -90,7 +90,7 @@ void OTA_Handler::Start_Firmware_Update(const OTA_Update_Callback& fw_callback, 
 void OTA_Handler::Stop_Firmware_Update() {
     m_watchdog.detach();
     m_fw_updater->reset();
-    m_logger.log(FW_UPDATE_ABORTED);
+    m_logger.println(FW_UPDATE_ABORTED);
     (void)m_send_fw_state_callback(FW_STATE_FAILED, FW_UPDATE_ABORTED);
     Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
     m_fw_callback = nullptr;
@@ -98,19 +98,19 @@ void OTA_Handler::Stop_Firmware_Update() {
 
 void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *payload, const size_t& total_bytes) {
     if (current_chunk != m_requested_chunks) {
-      m_logger.log(RECEIVED_UNEXPECTED_CHUNK, current_chunk, m_requested_chunks);
+      m_logger.printfln(RECEIVED_UNEXPECTED_CHUNK, current_chunk, m_requested_chunks);
       return;
     }
 
     m_watchdog.detach();
 #if THINGSBOARD_ENABLE_DEBUG
-    m_logger.log(FW_CHUNK, current_chunk, total_bytes);
+    m_logger.printfln(FW_CHUNK, current_chunk, total_bytes);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
     if (current_chunk == 0U) {
         // Initialize Flash
         if (!m_fw_updater->begin(m_fw_size)) {
-          m_logger.log(ERROR_UPDATE_BEGIN);
+          m_logger.println(ERROR_UPDATE_BEGIN);
           (void)m_send_fw_state_callback(FW_STATE_FAILED, ERROR_UPDATE_BEGIN);
           return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
         }
@@ -121,7 +121,7 @@ void OTA_Handler::Process_Firmware_Packet(const size_t& current_chunk, uint8_t *
     if (written_bytes != total_bytes) {
         char message[Helper::detectSize(ERROR_UPDATE_WRITE, written_bytes, total_bytes)];
         snprintf(message, sizeof(message), ERROR_UPDATE_WRITE, written_bytes, total_bytes);
-        m_logger.log(message);
+        m_logger.println(message);
         (void)m_send_fw_state_callback(FW_STATE_FAILED, message);
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
@@ -162,7 +162,7 @@ void OTA_Handler::Request_Next_Firmware_Packet(bool update_state) {
     }
 
     if (!m_publish_callback(m_requested_chunks)) {
-      m_logger.log(UNABLE_TO_REQUEST_CHUNCKS);
+      m_logger.println(UNABLE_TO_REQUEST_CHUNCKS);
       (void)m_send_fw_state_callback(FW_STATE_FAILED, UNABLE_TO_REQUEST_CHUNCKS);
     }
     else if (update_state) {
@@ -181,30 +181,30 @@ void OTA_Handler::Finish_Firmware_Update() {
     // Calculating final hash result is ignored, because it can only fail if the input parameters are invalid
     (void)m_hash.finish(calculated_hash);
 #if THINGSBOARD_ENABLE_DEBUG
-    m_logger.log(HASH_ACTUAL, calculated_hash);
-    m_logger.log(HASH_EXPECTED, m_fw_checksum);
+    m_logger.printfln(HASH_ACTUAL, calculated_hash);
+    m_logger.printfln(HASH_EXPECTED, m_fw_checksum);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
     // Check if the initally received checksum is the same as the one we calculated from the received binary data,
     // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed.
     if (memcmp(m_fw_checksum, calculated_hash, sizeof(m_fw_checksum)) == 0) {
-        m_logger.log(CHKS_VER_FAILED);
+        m_logger.println(CHKS_VER_FAILED);
         (void)m_send_fw_state_callback(FW_STATE_FAILED, CHKS_VER_FAILED);
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
 
 #if THINGSBOARD_ENABLE_DEBUG
-    m_logger.log(CHKS_VER_SUCCESS);
+    m_logger.println(CHKS_VER_SUCCESS);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
     if (!m_fw_updater->end()) {
-        m_logger.log(ERROR_UPDATE_END);
+        m_logger.println(ERROR_UPDATE_END);
         (void)m_send_fw_state_callback(FW_STATE_FAILED, ERROR_UPDATE_END);
         return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
     }
 
 #if THINGSBOARD_ENABLE_DEBUG
-    m_logger.log(FW_UPDATE_SUCCESS);
+    m_logger.println(FW_UPDATE_SUCCESS);
 #endif // THINGSBOARD_ENABLE_DEBUG
     (void)m_send_fw_state_callback(FW_STATE_UPDATING, nullptr);
 

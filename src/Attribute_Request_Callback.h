@@ -54,11 +54,7 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     template<typename... Args>
     inline Attribute_Request_Callback(function callback, Args... args)
       : Callback(callback, ATT_REQUEST_CB_IS_NULL)
-#if THINGSBOARD_ENABLE_STL
-      , m_attributes(std::forward<Args>(args)...)
-#else
       , m_attributes(args...)
-#endif // THINGSBOARD_ENABLE_STL
       , m_request_id(0U)
       , m_attribute_key(nullptr)
     {
@@ -130,11 +126,7 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// @param ...args Arguments that will be forwarded into the overloaded vector assign method see https://en.cppreference.com/w/cpp/container/vector/assign for more information
     template<typename... Args>
     inline void Set_Attributes(Args... args) {
-#if THINGSBOARD_ENABLE_STL
-        m_attributes.assign(std::forward<Args>(args)...);
-#else
         m_attributes.assign(args...);
-#endif // THINGSBOARD_ENABLE_STL
     }
 
   private:

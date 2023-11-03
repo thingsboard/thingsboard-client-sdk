@@ -21,10 +21,6 @@
 #define Default_Attributes_Amount 5
 
 
-/// ---------------------------------
-/// Constant strings in flash memory,
-/// used by both ThingsBoard and ThingsBoardHttp.
-/// ---------------------------------
 // Log messages.
 #if THINGSBOARD_ENABLE_PROGMEM
 constexpr char UNABLE_TO_SERIALIZE[] PROGMEM = "Unable to serialize key-value json";

@@ -9,20 +9,34 @@
 #if THINGSBOARD_ENABLE_STL
 #include <iterator>
 #endif // THINGSBOARD_ENABLE_STL
-#include <stdint.h>
+#include <assert.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 
 /// @brief Static helper class that includes some uniliterally used functionalities in multiple places, especially the ThingsBoardHttp and ThingsBoard implementations
 class Helper {
   public:
-    /// @brief Returns the length in characters needed for a given value with the given argument string to be displayed completly
-    /// @param msg Formating message that the given arguments will be inserted into
-    /// @param ... Additional arguments that should be inserted into the message at the given points,
-    /// see https://cplusplus.com/reference/cstdio/printf/ for more information on the possible arguments
-    /// @return Length in characters, needed for the given message with the given values inserted to be displayed completly
-    static int32_t detectSize(const char *msg, ...);
-    static int32_t detectSize(const char *msg, va_list args);
+    /// @brief Returns the total amount of bytes needed to store the formatted string that will be created if the given format string and the arguments are passed to snprintf.
+    /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the snprintf method, allowing any arbitrary amount of combinations without having to rely on va_list
+    /// @param format Formatting message that the given arguments will be inserted into
+    /// @param ...args Arguments that will be forwarded into the snprintf method see https://cplusplus.com/reference/cstdio/snprintf/ for more information
+    /// @return Amount of bytes in characters, needed for the formatted string with the given arguments inserted, to be displayed completly
+    template<typename... Args>
+    static int detectSize(const char *format, Args... args) {
+        // Result is what would have been written if the passed buffer would have been large enough not counting null character,
+        // or if an error occured while creating the string a negative number is returned instead. To ensure this will not crash the system
+        // when creating an array with negative size we assert beforehand with a clear error message.
+        const int result = snprintf(nullptr, 0U, format, args...) + 1U;
+        assert(result >= 0);
+        return result;
+    }
+
+    /// @brief Returns the total amount of bytes needed to store the formatted string that will be created if the given format string and the arguments are passed to vsnprintf.
+    /// @param format Formatting message that the given arguments will be inserted into
+    /// @param args Arguments that will be forwarded into the snprintf method see https://cplusplus.com/reference/cstdio/vsnprintf/ for more information
+    /// @return Amount of bytes in characters, needed for the formatted string with the given arguments inserted, to be displayed completly
+    static int detectSize(const char *format, va_list args);
 
     /// @brief Returns the amount of occurences of the given smybol in the given string
     /// @param str String that we want to check the symbol in
@@ -52,7 +66,7 @@ class Helper {
     /// @return Total size of the string produced by serializeJson + 1 byte for the string null terminator
     template <typename TSource>
     inline static size_t Measure_Json(const TSource& source) {
-      return JSON_STRING_SIZE(measureJson(source));
+        return JSON_STRING_SIZE(measureJson(source));
     }
 
     /// @brief Removes the element with the given index using the given iterator, which allows to use data containers that do not have a random-access iterator.
