@@ -27,7 +27,6 @@ constexpr char UNABLE_TO_SERIALIZE[] PROGMEM = "Unable to serialize key-value js
 #if !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char TOO_MANY_JSON_FIELDS[] PROGMEM = "Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-constexpr char JSON_OVERFLOWED[] PROGMEM = "JsonDocument contained incomplete output, not enough space to store all data";
 constexpr char CONNECT_FAILED[] PROGMEM = "Connecting to server failed";
 constexpr char UNABLE_TO_SERIALIZE_JSON[] PROGMEM = "Unable to serialize json data";
 constexpr char UNABLE_TO_ALLOCATE_MEMORY[] PROGMEM = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
@@ -36,7 +35,6 @@ constexpr char UNABLE_TO_SERIALIZE[] = "Unable to serialize key-value json";
 #if !THINGSBOARD_ENABLE_DYNAMIC
 constexpr char TOO_MANY_JSON_FIELDS[] = "Too many JSON fields passed (%u), increase MaxFieldsAmt (%u) accordingly";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-constexpr char JSON_OVERFLOWED[] = "JsonDocument contained incomplete output, not enough space to store all data";
 constexpr char CONNECT_FAILED[] = "Connecting to server failed";
 constexpr char UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 constexpr char UNABLE_TO_ALLOCATE_MEMORY[] = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
