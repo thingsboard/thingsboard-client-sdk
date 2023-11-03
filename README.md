@@ -225,22 +225,6 @@ Arduino_MQTT_Client mqttClient(espClient);
 ThingsBoardSized<32> tb(mqttClient, logger, 128);
 ```
 
-### Incomplete `JSON` output
-
-You might have created enough space for the amount of fields in your `StaticJsonDocument<>`, but the keys or values of the fields were copied by value. This is done if a `char*`, `String` or `FlashStringHelper` is passed as either the key or the value, because `ArduinoJson` copies them into the `JsonDocument`. See https://arduinojson.org/v6/issues/incomplete-output/ for more information. If that is the issue, you will get a respective log showing an error in the `"Serial Monitor"` window:
-
-```
-[TB] JsonDocument contained incomplete output, not enough space to store all data
-```
-
-The solution is to increase the capacity of the `JsonDocument` if it is possible to know the size beforehand. The [`ArduinoJson Assistant`](https://arduinojson.org/v6/assistant/) can help with that. Especially important are to add the below sizes to the `StaticJsonDocument`:
-
-- `JSON_ARRAY_SIZE(n)` for each `JSON` array of size n
-- `JSON_OBJECT_SIZE(n)` for each `JSON` object of size n
-- n+1 for each `char*`, `String` or `FlashStringHelper` of n characters
-
-See [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) if the size should be passed in the constructor, instead of as a template argument. Allows to calculate the needed size at runtime, instead of having to know it beforehand at compile time. Be aware though this will allocate the memory on the heap instead of the stack.
-
 ### Too many subscriptions
 
 The possible event subscription classes that are passed to internal methods use array on the stack per default with a maximum of 2. Meaning if the method call attempts to subscribe more than 2 events in total, then it will fail showing an error in the `"Serial Monitor"` window:
