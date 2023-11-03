@@ -203,7 +203,9 @@ void loop() {
   // Uploads new telemetry to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api 
   // for more details
-  tb.sendTelemetry(data, data + data_items);
+  const Telemetry* begin = data;
+  const Telemetry* end = data + data_items;
+  tb.sendTelemetry(begin, end);
 
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Sending attributes data..."));
