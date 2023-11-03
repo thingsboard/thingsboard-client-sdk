@@ -79,31 +79,38 @@ class Telemetry {
     /// @param source Data source that should contain the key value pair or a value
     /// @return Whether serializing was successful or not
     template <typename TSource>
-    bool SerializeKeyValue(const TSource& source) const {
+    bool SerializeKeyValue(TSource& source) const {
         Data data{};
         switch (m_type) {
             case DataType::TYPE_BOOL:
-                data = m_value.boolean;
-                break;
+                if (m_key) {
+                    source[m_key] = m_value.boolean;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.boolean);
             case DataType::TYPE_INT:
-                data = m_value.integer;
-                break;
+                if (m_key) {
+                    source[m_key] = m_value.integer;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.integer);
             case DataType::TYPE_REAL:
-                data = m_value.real;
-                break;
+                if (m_key) {
+                    source[m_key] = m_value.real;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.real);
             case DataType::TYPE_STR:
-                data = m_value.str;
-                break;
+                if (m_key) {
+                    source[m_key] = m_value.str;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.str);
             default:
                 // Nothing to do
-                return false;
+                break;
         }
-
-        if (m_key) {
-            source[m_key] = m_value.boolean;
-            return source.containsKey(m_key);
-        }
-        return source.set(m_value.boolean);
+        return false;
     }
 
   private:
