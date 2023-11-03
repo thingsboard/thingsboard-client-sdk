@@ -7,14 +7,14 @@
 
 /// @brief RPC response expected to be sent by the user to the server once an RPC method has been called by the server,
 /// is a simple wrapper around the Telemetry and JsonVariant class, which allow to easily serialize the response into a json string
-class RPC_Response : public JsonVariant {
+class RPC_Response : public JsonDocument {
   public:
     /// @brief Constructor
     RPC_Response();
 
     /// @brief Constructor
-    /// @param variant JsonVariant object the internal data should be copied from
-    explicit RPC_Response(JsonVariant variant);
+    /// @param variant JsonDocument object the internal data should be copied from
+    explicit RPC_Response(JsonDocument document);
 
     /// @brief Constructor
     /// @param telemetry Telemetry object the internal data should be copied from
