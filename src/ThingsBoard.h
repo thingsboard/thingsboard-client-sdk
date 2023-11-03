@@ -576,17 +576,15 @@ class ThingsBoardSized {
     /// @return Whether sending the claiming request was successful or not
     inline bool Claim_Request(const char *secretKey, const size_t& durationMs) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
-      const JsonObject respObj = requestBuffer.to<JsonObject>();
-
       // Make the secret key optional,
       // meaning if it is an empty string or null instead we don't send it at all.
       if (!Helper::stringIsNullorEmpty(secretKey)) {
-        respObj[SECRET_KEY] = secretKey;
+        requestBuffer[SECRET_KEY] = secretKey;
       }
-      respObj[DURATION_KEY] = durationMs;
+      requestBuffer[DURATION_KEY] = durationMs;
 
-      const size_t objectSize = Helper::Measure_Json(respObj);
-      return Send_Json(CLAIM_TOPIC, respObj, objectSize);
+      const size_t objectSize = Helper::Measure_Json(requestBuffer);
+      return Send_Json(CLAIM_TOPIC, requestBuffer, objectSize);
     }
 
     //----------------------------------------------------------------------------
@@ -601,9 +599,6 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @return Whether sending the provisioning request was successful or not
     inline bool Provision_Request(const Provision_Callback& callback) {
-      StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
-      const JsonObject requestObject = requestBuffer.to<JsonObject>();
-
       const char *provisionDeviceKey = callback.Get_Device_Key();
       const char *provisionDeviceSecret = callback.Get_Device_Secret();
 
@@ -615,6 +610,7 @@ class ThingsBoardSized {
         return false;
       }
 
+      StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
       const char *deviceName = callback.Get_Device_Name();
       const char *accessToken = callback.Get_Device_Access_Token();
       const char *credUsername = callback.Get_Credentials_Username();
@@ -629,31 +625,31 @@ class ThingsBoardSized {
       // Meaning only the key-value pairs that are needed for the given provisioning method are set,
       // meaning the rest will not be sent and therefore the provisioning request has the correct formatting
       if (!Helper::stringIsNullorEmpty(deviceName)) {
-        requestObject[DEVICE_NAME_KEY] = deviceName;
+        requestBuffer[DEVICE_NAME_KEY] = deviceName;
       }
       if (!Helper::stringIsNullorEmpty(accessToken)) {
-        requestObject[PROV_TOKEN] = accessToken;
+        requestBuffer[PROV_TOKEN] = accessToken;
       }
       if (!Helper::stringIsNullorEmpty(credUsername)) {
-        requestObject[PROV_CRED_USERNAME] = credUsername;
+        requestBuffer[PROV_CRED_USERNAME] = credUsername;
       }
       if (!Helper::stringIsNullorEmpty(credPassword)) {
-        requestObject[PROV_CRED_PASSWORD] = credPassword;
+        requestBuffer[PROV_CRED_PASSWORD] = credPassword;
       }
       if (!Helper::stringIsNullorEmpty(credClientID)) {
-        requestObject[PROV_CRED_CLIENT_ID] = credClientID;
+        requestBuffer[PROV_CRED_CLIENT_ID] = credClientID;
       }
       if (!Helper::stringIsNullorEmpty(hash)) {
-        requestObject[PROV_CRED_HASH] = hash;
+        requestBuffer[PROV_CRED_HASH] = hash;
       }
       if (!Helper::stringIsNullorEmpty(credentialsType)) {
-        requestObject[PROV_CRED_TYPE_KEY] = credentialsType;
+        requestBuffer[PROV_CRED_TYPE_KEY] = credentialsType;
       }
-      requestObject[PROV_DEVICE_KEY] = provisionDeviceKey;
-      requestObject[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
+      requestBuffer[PROV_DEVICE_KEY] = provisionDeviceKey;
+      requestBuffer[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
 
-      const size_t objectSize = Helper::Measure_Json(requestObject);
-      return Send_Json(PROV_REQUEST_TOPIC, requestObject, objectSize);
+      const size_t objectSize = Helper::Measure_Json(requestBuffer);
+      return Send_Json(PROV_REQUEST_TOPIC, requestBuffer, objectSize);
     }
 
     //----------------------------------------------------------------------------
@@ -687,14 +683,12 @@ class ThingsBoardSized {
       return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
-    /// @brief Attempts to send telemetry key value pairs from custom source to the server.
+    /// @brief Attempts to send telemetry key value pairs from a JsonObject source to the server.
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
-    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
-    /// @param source Data source containing our json key value pairs we want to send
+    /// @param source JsonObject source containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    template <typename TSource>
-    inline bool sendTelemetryJson(const TSource& source, const size_t& jsonSize) {
+    inline bool sendTelemetryJson(const JsonObject& source, const size_t& jsonSize) {
       return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
     }
 
@@ -729,14 +723,12 @@ class ThingsBoardSized {
       return Send_Json_String(ATTRIBUTE_TOPIC, json);
     }
 
-    /// @brief Attempts to send attribute key value pairs from custom source to the server.
+    /// @brief Attempts to send attribute key value pairs from a JsonObject source to the server.
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
-    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
-    /// @param source Data source containing our json key value pairs we want to send
+    /// @param source JsonObject source containing our json key value pairs we want to send
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    template <typename TSource>
-    inline bool sendAttributeJSON(const TSource& source, const size_t& jsonSize) {
+    inline bool sendAttributeJSON(const JsonObject& source, const size_t& jsonSize) {
       return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
     }
 
@@ -852,20 +844,16 @@ class ThingsBoardSized {
       // therefore we set the size to the MaxFieldsAmount instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> requestBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-      // The .template variant of createing the JsonVariant has to be used,
-      // because we are passing a template to the StaticJsonDocument template list
-      // and it will generate a compile time error if not used
-      const JsonVariant requestVariant = requestBuffer.template as<JsonVariant>();
 
-      requestVariant[RPC_METHOD_KEY] = methodName;
+      requestBuffer[RPC_METHOD_KEY] = methodName;
 
       // Make the parameters for the client side RPC optional,
       // meaning if it is an empty array or null instead we don't send it at all.
       if (parameters != nullptr && !parameters->isNull()) {
-        requestVariant[RPC_PARAMS_KEY] = *parameters;
+        requestBuffer[RPC_PARAMS_KEY] = *parameters;
       }
       else {
-        requestVariant[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
+        requestBuffer[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
       }
 
       m_request_id++;
@@ -1192,10 +1180,6 @@ class ThingsBoardSized {
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
       constexpr size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(1U);
       StaticJsonDocument<dataStructureMemoryUsage> requestBuffer;
-      // The .template variant of createing the JsonVariant has to be used,
-      // because we are passing a template to the StaticJsonDocument template list
-      // and it will generate a compile time error if not used
-      const JsonVariant requestVariant = requestBuffer.template as<JsonVariant>();
 
       // Calculate the size required for the char buffer containing all the attributes seperated by a comma,
       // before initalizing it so it is possible to allocate it on the stack
@@ -1228,7 +1212,7 @@ class ThingsBoardSized {
       // Ensure to cast to const, this is done so that ArduinoJson does not copy the value but instead simply store the pointer, which does not require any more memory,
       // besides the base size needed to allocate one key-value pair. Because if we don't the char array would be copied
       // and because there is not enough space the value would simply be "undefined" instead. Which would cause the request to not be sent correctly
-      requestVariant[attributeRequestKey] = static_cast<const char*>(request);
+      requestBuffer[attributeRequestKey] = static_cast<const char*>(request);
 
       m_request_id++;
       registeredCallback->Set_Request_ID(m_request_id);

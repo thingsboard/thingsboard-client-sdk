@@ -28,7 +28,7 @@ bool Telemetry::IsEmpty() const {
     return !m_key && m_type == DataType::TYPE_NONE;
 }
 
-bool Telemetry::SerializeKeyValue(const JsonVariant &jsonObj) const {
+bool Telemetry::SerializeKeyValue(const JsonDocument& document) const {
     if (m_key) {
         switch (m_type) {
             case DataType::TYPE_BOOL:	

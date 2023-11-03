@@ -75,9 +75,9 @@ class Telemetry {
     bool IsEmpty() const;
 
     /// @brief Serializes the key-value pair depending on the constructor used
-    /// @param jsonObj Object the value will be copied into with the given key
+    /// @param document Object the value will be copied into with the given key
     /// @return Whether serializing was successful or not
-    bool SerializeKeyValue(const JsonVariant &jsonObj) const;
+    bool SerializeKeyValue(const JsonDocument& document) const;
 
   private:
     /// @brief Data container, which contains one of the possibly passed values
