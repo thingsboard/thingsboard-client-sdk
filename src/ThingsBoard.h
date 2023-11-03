@@ -487,6 +487,12 @@ class ThingsBoardSized {
         m_logger.println(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
       }
+      // Check if passed arguments to the JsonDocument caused it to overflow because it did not allocate enough space for those variables,
+      // if it did the overflowed() method will return true. See https://arduinojson.org/v6/issues/incomplete-output/ for more information
+      if (source.overflowed()) {
+        m_logger.println(JSON_OVERFLOWED);
+        return false;
+      }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const size_t amount = source.size();
       if (MaxFieldsAmount < amount) {
