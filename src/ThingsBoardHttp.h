@@ -332,7 +332,8 @@ class ThingsBoardHttpSized {
       // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
       // Data structure size depends on the amount of key value pairs passed.
       // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-      const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(data_count);
+      const size_t size = Helper::distance(first_itr, last_itr);
+      const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(size);
       TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
