@@ -203,8 +203,8 @@ void loop() {
   // Uploads new telemetry to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api 
   // for more details
-  const Telemetry* begin = data;
-  const Telemetry* end = data + data_items;
+  Telemetry* begin = data;
+  Telemetry* end = data + data_items;
   tb.sendTelemetry(begin, end);
 
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -231,8 +231,8 @@ void loop() {
   // Publish attribute update to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server 
   // for more details
-  const Attribute* begin = attributes;
-  const Attribute* end = attributes + attribute_items;
+  begin = attributes;
+  end = attributes + attribute_items;
   tb.sendAttributes(begin, end);
 
   tb.loop();
