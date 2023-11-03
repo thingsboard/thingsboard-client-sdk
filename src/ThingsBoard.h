@@ -484,13 +484,13 @@ class ThingsBoardSized {
       // Check if allocating needed memory failed when trying to create the JsonObject,
       // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
       if (source.isNull()) {
-        m_logger.log(UNABLE_TO_ALLOCATE_MEMORY);
+        m_logger.println(UNABLE_TO_ALLOCATE_MEMORY);
         return false;
       }
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const size_t amount = source.size();
       if (MaxFieldsAmount < amount) {
-        m_logger.log(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmount);
+        m_logger.printfln(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmount);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -501,7 +501,7 @@ class ThingsBoardSized {
       // if it is utilize the serialize json work around, so that the internal client buffer can be circumvented
       if (m_client.get_buffer_size() < jsonSize)  {
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(SEND_MESSAGE, topic, SEND_SERIALIZED);
+        m_logger.printfln(SEND_MESSAGE, topic, SEND_SERIALIZED);
 #endif // THINGSBOARD_ENABLE_DEBUG
         result = Serialize_Json(topic, source, jsonSize);
       }
@@ -512,7 +512,7 @@ class ThingsBoardSized {
       if (getMaximumStackSize() < jsonSize) {
         char* json = new char[jsonSize];
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
-          m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+          m_logger.println(UNABLE_TO_SERIALIZE_JSON);
         }
         else {
           result = Send_Json_String(topic, json);
@@ -525,7 +525,7 @@ class ThingsBoardSized {
       else {
         char json[jsonSize] = {};
         if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
-          m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+          m_logger.println(UNABLE_TO_SERIALIZE_JSON);
           return result;
         }
         result = Send_Json_String(topic, json);
@@ -547,12 +547,12 @@ class ThingsBoardSized {
       const size_t jsonSize = strlen(json);
 
       if (currentBufferSize < jsonSize) {
-        m_logger.log(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
+        m_logger.printfln(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
         return false;
       }
 
 #if THINGSBOARD_ENABLE_DEBUG
-      m_logger.log(SEND_MESSAGE, topic, json);
+      m_logger.printfln(SEND_MESSAGE, topic, json);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
       return m_client.publish(topic, reinterpret_cast<const uint8_t*>(json), jsonSize);
@@ -764,12 +764,12 @@ class ThingsBoardSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const size_t size = Helper::distance(first_itr, last_itr);
       if (m_rpc_callbacks.size() + size > m_rpc_callbacks.capacity()) {
-        m_logger.log(MAX_RPC_EXCEEDED);
+        m_logger.println(MAX_RPC_EXCEEDED);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
 
@@ -786,12 +786,12 @@ class ThingsBoardSized {
     inline bool RPC_Subscribe(const RPC_Callback& callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpc_callbacks.size() + 1 > m_rpc_callbacks.capacity()) {
-        m_logger.log(MAX_RPC_EXCEEDED);
+        m_logger.println(MAX_RPC_EXCEEDED);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
 
@@ -822,7 +822,7 @@ class ThingsBoardSized {
       const char *methodName = callback.Get_Name();
 
       if (Helper::stringIsNullorEmpty(methodName)) {
-        m_logger.log(RPC_METHOD_NULL);
+        m_logger.println(RPC_METHOD_NULL);
         return false;
       }
       RPC_Request_Callback* registeredCallback = nullptr;
@@ -884,7 +884,7 @@ class ThingsBoardSized {
     /// @return Whether subscribing the given callback was successful or not
     inline bool Start_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
-        m_logger.log(RESETTING_FAILED);
+        m_logger.println(RESETTING_FAILED);
         return false;
       }
 
@@ -912,7 +912,7 @@ class ThingsBoardSized {
     /// @return Whether subscribing the given callback was successful or not
     inline bool Subscribe_Firmware_Update(const OTA_Update_Callback& callback) {
       if (!Prepare_Firmware_Settings(callback))  {
-        m_logger.log(RESETTING_FAILED);
+        m_logger.println(RESETTING_FAILED);
         return false;
       }
 
@@ -992,12 +992,12 @@ class ThingsBoardSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       const size_t size = Helper::distance(first_itr, last_itr);
       if (m_shared_attribute_update_callbacks.size() + size > m_shared_attribute_update_callbacks.capacity()) {
-        m_logger.log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
+        m_logger.println(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       if (!m_client.subscribe(ATTRIBUTE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
 
@@ -1018,12 +1018,12 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_shared_attribute_update_callbacks.size() + 1U > m_shared_attribute_update_callbacks.capacity()) {
-        m_logger.log(MAX_SHARED_ATT_UPDATE_EXCEEDED);
+        m_logger.println(MAX_SHARED_ATT_UPDATE_EXCEEDED);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       if (!m_client.subscribe(ATTRIBUTE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
 
@@ -1090,13 +1090,13 @@ class ThingsBoardSized {
     template <typename TSource>
     inline bool Serialize_Json(const char* topic, const TSource& source, const size_t& jsonSize) {
       if (!m_client.begin_publish(topic, jsonSize)) {
-        m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+        m_logger.println(UNABLE_TO_SERIALIZE_JSON);
         return false;
       }
       BufferingPrint buffered_print(m_client, getBufferingSize());
       const size_t bytes_serialized = serializeJson(source, buffered_print);
       if (bytes_serialized < jsonSize) {
-        m_logger.log(UNABLE_TO_SERIALIZE_JSON);
+        m_logger.println(UNABLE_TO_SERIALIZE_JSON);
         return false;
       }
       buffered_print.flush();
@@ -1161,12 +1161,12 @@ class ThingsBoardSized {
 
       // Check if any sharedKeys were requested
       if (attributes.empty()) {
-        m_logger.log(NO_KEYS_TO_REQUEST);
+        m_logger.println(NO_KEYS_TO_REQUEST);
         return false;
       }
       else if (attributeRequestKey == nullptr || attributeResponseKey == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(ATT_KEY_NOT_FOUND);
+        m_logger.println(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
         return false;
       }
@@ -1211,7 +1211,7 @@ class ThingsBoardSized {
       for (const auto& att : attributes) {
         if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
-          m_logger.log(ATT_IS_NULL);
+          m_logger.println(ATT_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
           continue;
         }
@@ -1244,7 +1244,7 @@ class ThingsBoardSized {
     /// @return Whether requesting the given callback was successful or not
     inline bool Provision_Subscribe(const Provision_Callback& callback) {
       if (!m_client.subscribe(PROV_RESPONSE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
       m_provision_callback = callback;
@@ -1286,7 +1286,7 @@ class ThingsBoardSized {
     /// @return Whether subscribing to the firmware response topic was successful or not
     inline bool Firmware_OTA_Subscribe() {
       if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         Firmware_Send_State(FW_STATE_FAILED, SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
@@ -1315,7 +1315,7 @@ class ThingsBoardSized {
     inline void Firmware_Shared_Attribute_Received(const JsonObjectConst& data) {
       // Check if firmware is available for our device
       if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY) || !data.containsKey(FW_CHKS_KEY) || !data.containsKey(FW_CHKS_ALGO_KEY) || !data.containsKey(FW_SIZE_KEY)) {
-        m_logger.log(NO_FW);
+        m_logger.println(NO_FW);
         Firmware_Send_State(FW_STATE_FAILED, NO_FW);
         return;
       }
@@ -1330,19 +1330,19 @@ class ThingsBoardSized {
       const char *curr_fw_version = m_fw_callback.Get_Firmware_Version();
 
       if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm == nullptr || fw_checksum == nullptr) {
-        m_logger.log(EMPTY_FW);
+        m_logger.println(EMPTY_FW);
         Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
         return;
       }
       // If firmware version and title is the same, we do not initiate an update, because we expect the binary to be the same one we are currently using
       else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
-        m_logger.log(FW_UP_TO_DATE);
+        m_logger.println(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_FAILED, FW_UP_TO_DATE);
         return;
       }
       // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another device type 
       else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
-        m_logger.log(FW_NOT_FOR_US);
+        m_logger.println(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_FAILED, FW_NOT_FOR_US);
         return;
       }
@@ -1365,7 +1365,7 @@ class ThingsBoardSized {
       else {
         char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(strlen(fw_algorithm))] = {};
         snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
-        m_logger.log(message);
+        m_logger.println(message);
         Firmware_Send_State(FW_STATE_FAILED, message);
         return;
       }
@@ -1375,12 +1375,12 @@ class ThingsBoardSized {
       }
 
 #if THINGSBOARD_ENABLE_DEBUG
-      m_logger.log(PAGE_BREAK);
-      m_logger.log(NEW_FW);
+      m_logger.println(PAGE_BREAK);
+      m_logger.println(NEW_FW);
       char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))] = {};
       snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
-      m_logger.log(firmware);
-      m_logger.log(DOWNLOADING_FW);
+      m_logger.println(firmware);
+      m_logger.println(DOWNLOADING_FW);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
       // Calculate the number of chuncks we need to request,
@@ -1393,7 +1393,7 @@ class ThingsBoardSized {
 
       // Increase size of receive buffer
       if (m_change_buffer_size && !m_client.set_buffer_size(chunk_size + 50U)) {
-        m_logger.log(NOT_ENOUGH_RAM);
+        m_logger.println(NOT_ENOUGH_RAM);
         Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
         return;
       }
@@ -1413,7 +1413,7 @@ class ThingsBoardSized {
       const bool connection_result = m_client.connect(client_id, access_token, password);
 
       if (!connection_result) {
-        m_logger.log(CONNECT_FAILED);
+        m_logger.println(CONNECT_FAILED);
         return connection_result;
       }
 
@@ -1442,12 +1442,12 @@ class ThingsBoardSized {
     inline bool RPC_Request_Subscribe(const RPC_Request_Callback& callback, RPC_Request_Callback*& registeredCallback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
-        m_logger.log(MAX_RPC_REQUEST_EXCEEDED);
+        m_logger.println(MAX_RPC_REQUEST_EXCEEDED);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       if (!m_client.subscribe(RPC_RESPONSE_SUBSCRIBE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
 
@@ -1477,12 +1477,12 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
       if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
-        m_logger.log(MAX_ATT_REQUEST_EXCEEDED);
+        m_logger.println(MAX_ATT_REQUEST_EXCEEDED);
         return false;
       }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
       if (!m_client.subscribe(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC)) {
-        m_logger.log(SUBSCRIBE_TOPIC_FAILED);
+        m_logger.println(SUBSCRIBE_TOPIC_FAILED);
         return false;
       }
 
@@ -1518,7 +1518,7 @@ class ThingsBoardSized {
       StaticJsonDocument<JSON_OBJECT_SIZE(1)>jsonBuffer;
       const JsonVariant object = jsonBuffer.to<JsonVariant>();
       if (!t.SerializeKeyValue(object)) {
-        m_logger.log(UNABLE_TO_SERIALIZE);
+        m_logger.println(UNABLE_TO_SERIALIZE);
         return false;
       }
 
@@ -1540,7 +1540,7 @@ class ThingsBoardSized {
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(CALLING_REQUEST_CB, request_id);
+        m_logger.printfln(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Getting non-existing field from JSON should automatically
@@ -1568,7 +1568,7 @@ class ThingsBoardSized {
       const char *methodName = data[RPC_METHOD_KEY];
 
       if (methodName == nullptr) {
-        m_logger.log(RPC_METHOD_NULL);
+        m_logger.println(RPC_METHOD_NULL);
         return;
       }
 
@@ -1577,7 +1577,7 @@ class ThingsBoardSized {
       for (const RPC_Callback& rpc : m_rpc_callbacks) {
         const char *subscribedMethodName = rpc.Get_Name();
         if (Helper::stringIsNullorEmpty(subscribedMethodName)) {
-          m_logger.log(RPC_METHOD_NULL);
+          m_logger.println(RPC_METHOD_NULL);
           continue;
         }
         // Strncmp returns the ascii value difference of the ascii characters that are different,
@@ -1589,12 +1589,12 @@ class ThingsBoardSized {
         // Do not inform client, if parameter field is missing for some reason
         if (!data.containsKey(RPC_PARAMS_KEY)) {
 #if THINGSBOARD_ENABLE_DEBUG
-          m_logger.log(NO_RPC_PARAMS_PASSED);
+          m_logger.println(NO_RPC_PARAMS_PASSED);
 #endif // THINGSBOARD_ENABLE_DEBUG
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(CALLING_RPC_CB, methodName);
+        m_logger.printfln(CALLING_RPC_CB, methodName);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         const JsonVariantConst param = data[RPC_PARAMS_KEY];
@@ -1652,7 +1652,7 @@ class ThingsBoardSized {
     inline void process_shared_attribute_update_message(char *topic, JsonObjectConst& data) {
       if (!data) {
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(NOT_FOUND_ATT_UPDATE);
+        m_logger.println(NOT_FOUND_ATT_UPDATE);
 #endif // THINGSBOARD_ENABLE_DEBUG
         return;
       }
@@ -1664,7 +1664,7 @@ class ThingsBoardSized {
       for (const auto& shared_attribute : m_shared_attribute_update_callbacks) {
         if (shared_attribute.Get_Attributes().empty()) {
 #if THINGSBOARD_ENABLE_DEBUG
-          m_logger.log(ATT_CB_NO_KEYS);
+          m_logger.println(ATT_CB_NO_KEYS);
 #endif // THINGSBOARD_ENABLE_DEBUG
           // No specifc keys were subscribed so we call the callback anyway
           shared_attribute.Call_Callback(m_logger, data);
@@ -1677,7 +1677,7 @@ class ThingsBoardSized {
         for (const auto& att : shared_attribute.Get_Attributes()) {
           if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
-            m_logger.log(ATT_IS_NULL);
+            m_logger.println(ATT_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
             continue;
           }
@@ -1694,13 +1694,13 @@ class ThingsBoardSized {
         // therefore we continue with the next element in the loop.
         if (!containsKey || requested_att == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-          m_logger.log(ATT_NO_CHANGE);
+          m_logger.println(ATT_NO_CHANGE);
 #endif // THINGSBOARD_ENABLE_DEBUG
           continue;
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(CALLING_ATT_CB, requested_att);
+        m_logger.printfln(CALLING_ATT_CB, requested_att);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Getting non-existing field from JSON should automatically
@@ -1725,13 +1725,13 @@ class ThingsBoardSized {
         const char *attributeResponseKey = attribute_request.Get_Attribute_Key();
         if (attributeResponseKey == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-          m_logger.log(ATT_KEY_NOT_FOUND);
+          m_logger.println(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
           goto delete_callback;
         }
         else if (!data) {
 #if THINGSBOARD_ENABLE_DEBUG
-          m_logger.log(ATT_KEY_NOT_FOUND);
+          m_logger.println(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
           goto delete_callback;
         }
@@ -1741,7 +1741,7 @@ class ThingsBoardSized {
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        m_logger.log(CALLING_REQUEST_CB, request_id);
+        m_logger.printfln(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Getting non-existing field from JSON should automatically
@@ -1793,7 +1793,7 @@ class ThingsBoardSized {
 
       for (size_t i = 0; i < data_count; i++) {
         if (!data[i].SerializeKeyValue(object)) {
-          m_logger.log(UNABLE_TO_SERIALIZE);
+          m_logger.println(UNABLE_TO_SERIALIZE);
           return false;
         }
       }
@@ -1807,7 +1807,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     inline void onMQTTMessage(char *topic, uint8_t *payload, unsigned int length) {
 #if THINGSBOARD_ENABLE_DEBUG
-      m_logger.log(RECEIVE_MESSAGE, topic);
+      m_logger.printfln(RECEIVE_MESSAGE, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
 #if THINGSBOARD_ENABLE_OTA
@@ -1834,7 +1834,7 @@ class ThingsBoardSized {
       // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
       const DeserializationError error = deserializeJson(jsonBuffer, payload, length);
       if (error) {
-        m_logger.log(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
+        m_logger.printfln(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
         return;
       }
       // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
