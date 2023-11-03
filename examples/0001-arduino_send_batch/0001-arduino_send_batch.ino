@@ -203,7 +203,7 @@ void loop() {
   // Uploads new telemetry to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api 
   // for more details
-  tb.sendTelemetry(data, data_items);
+  tb.sendTelemetry(data, data + data_items);
 
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Sending attributes data..."));
@@ -229,7 +229,7 @@ void loop() {
   // Publish attribute update to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server 
   // for more details
-  tb.sendAttributes(attributes, attribute_items);
+  tb.sendAttributes(attributes, attributes + attribute_items);
 
   tb.loop();
 }
