@@ -229,7 +229,9 @@ void loop() {
   // Publish attribute update to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server 
   // for more details
-  tb.sendAttributes(attributes, attributes + attribute_items);
+  const Attribute* begin = attributes;
+  const Attribute* end = attributes + attribute_items;
+  tb.sendAttributes(begin, end);
 
   tb.loop();
 }
