@@ -80,7 +80,6 @@ class Telemetry {
     /// @return Whether serializing was successful or not
     template <typename TSource>
     bool SerializeKeyValue(TSource& source) const {
-        Data data{};
         switch (m_type) {
             case DataType::TYPE_BOOL:
                 if (m_key) {

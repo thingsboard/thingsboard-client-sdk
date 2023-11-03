@@ -157,13 +157,16 @@ class ThingsBoardHttpSized {
       return sendKeyValue(key, value);
     }
 
-    /// @brief Attempts to send aggregated telemetry data.
+    /// @brief Attempts to send aggregated telemetry data, expects iterators to a container containing Telemetry class instances.
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
-    /// @param data Array containing all the data we want to send
-    /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendTelemetry(const Telemetry *data, size_t data_count) {
-      return sendDataArray(data, data_count);
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @return Whether sending the aggregated telemetry data was successful or not
+    template<class InputIterator>
+    inline bool sendTelemetry(const InputIterator& first_itr, const InputIterator& last_itr) {
+      return sendDataArray(first_itr, last_itr, true);
     }
 
     /// @brief Attempts to send custom json telemetry string.
@@ -220,20 +223,23 @@ class ThingsBoardHttpSized {
       return sendKeyValue(key, value, false);
     }
 
-    /// @brief Attempts to send aggregated attribute data.
+    /// @brief Attempts to send aggregated attribute data, expects iterators to a container containing Attribute class instances.
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
-    /// @param data Array containing all the data we want to send
-    /// @param data_count Amount of data entries in the array that we want to send
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributes(const Attribute *data, size_t data_count) {
-      return sendDataArray(data, data_count, false);
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @return Whether sending the aggregated attribute data was successful or not
+    template<class InputIterator>
+    inline bool sendAttributes(const InputIterator& first_itr, const InputIterator& last_itr) {
+      return sendDataArray(first_itr, last_itr, false);
     }
 
     /// @brief Attempts to send custom json attribute string.
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeJSON(const char *json) {
+    inline bool sendAttributeJson(const char *json) {
       return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
     }
 
@@ -244,7 +250,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendAttributeJSON(const TSource& source, const size_t& jsonSize) {
+    inline bool sendAttributeJson(const TSource& source, const size_t& jsonSize) {
       return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
     }
 
@@ -314,11 +320,14 @@ class ThingsBoardHttpSized {
     }
 
     /// @brief Attempts to send aggregated attribute or telemetry data
-    /// @param data Array containing all the data we want to send
-    /// @param data_count Amount of data entries in the array that we want to send
-    /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
-    /// @return Whetherr sending the data was successful or not
-    inline bool sendDataArray(const Telemetry *data, size_t data_count, bool telemetry = true) {
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// @param first_itr Iterator pointing to the first element in the data container
+    /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
+    /// @param telemetry Whether the data we want to send should be sent over the attribute or telemtry topic
+    /// @return Whether sending the aggregated data was successful or not
+    template<class InputIterator>
+    inline bool sendDataArray(const InputIterator& first_itr, const InputIterator& last_itr, bool telemetry) {
 #if THINGSBOARD_ENABLE_DYNAMIC
       // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
       // Data structure size depends on the amount of key value pairs passed.
@@ -327,17 +336,17 @@ class ThingsBoardHttpSized {
       TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
       StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
-#endif // THINGSBOARD_ENABLE_DYNAMIC
-      JsonVariant object = jsonBuffer.template to<JsonVariant>();
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
-      for (size_t i = 0; i < data_count; ++i) {
-        if (!data[i].SerializeKeyValue(object)) {
-          m_logger.printfln(UNABLE_TO_SERIALIZE);
+      for (auto it = first_itr; it != last_itr; ++it) {
+        const auto& data = *it;
+        if (!data.SerializeKeyValue(jsonBuffer)) {
+          m_logger.println(UNABLE_TO_SERIALIZE);
           return false;
         }
       }
 
-      return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
+      return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
     }
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
@@ -355,13 +364,12 @@ class ThingsBoardHttpSized {
       }
 
       StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
-      JsonVariant object = jsonBuffer.template to<JsonVariant>();
-      if (!t.SerializeKeyValue(object)) {
+      if (!t.SerializeKeyValue(jsonBuffer)) {
         m_logger.printfln(UNABLE_TO_SERIALIZE);
         return false;
       }
 
-      return telemetry ? sendTelemetryJson(object, Helper::Measure_Json(object)) : sendAttributeJSON(object, Helper::Measure_Json(object));
+      return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
     }
 };
 
