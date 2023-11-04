@@ -72,9 +72,9 @@ class IMQTT_Client {
     virtual void set_server(const char *domain, const uint16_t& port) = 0;
 
     /// @brief Connects to the previously with set_server configured server instance that should be connected to over the previously defined port
-    /// @param id Client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker
-    /// @param user Client username that is used to authenticate, who is connecting over MQTT
-    /// @param pass Client password that is used to authenticate, who is connecting over MQTT
+    /// @param client_id Client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker
+    /// @param user_name Client username that is used to authenticate, who is connecting over MQTT
+    /// @param password Client password that is used to authenticate, who is connecting over MQTT
     /// @return Whether the client could establish the connection successfully or not
     virtual bool connect(const char *client_id, const char *user_name, const char *password) = 0;
 
