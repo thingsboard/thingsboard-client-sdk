@@ -299,8 +299,10 @@ but instead the `OTA_Update_Callback` class expects an optional argument, the `I
 Thanks to it being a `interface` it allows an arbitrary implementation,
 meaning as long as the device can flash binary data and supports the C++ STL it supports OTA updates, with the `ThingsBoard` library.
 
-Currently, implemented in the library itself are the `ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and the `ESP8266_Updater` which is used with the `ESP8266`.
-If another device wants to be supported, a custom interface implementation needs to be created. For that a `class` that inherits the `IUpdater` interface needs to be created and `override` the needed methods.
+Currently, implemented in the library itself are the `ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `ESP8266_Updater` which is used with the `ESP8266` and `Arduino` and the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain.
+
+If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` that inherits the `IUpdater` interface needs to be created and `override` the needed methods.
 
 ```cpp
 #include <IUpdater.h>
@@ -342,9 +344,10 @@ but instead the `ThingsBoardHttp` class expects the argument to a `IHTTP_Client`
 Thanks to it being a `interface` it allows an arbitrary implementation,
 meaning the underlying HTTP client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
 
-Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which is simply a wrapper around the [`ArduinoHttpClient`](https://github.com/arduino-libraries/ArduinoHttpClient), see [dependencies](https://github.com/arduino-libraries/ArduinoHttpClient?tab=readme-ov-file#dependencies) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
-For that a `class` that inherits the `IHTTP_Client` interface needs to be created and `override` the needed methods.
+Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which is simply a wrapper around the [`ArduinoHttpClient`](https://github.com/arduino-libraries/ArduinoHttpClient), see [dependencies](https://github.com/arduino-libraries/ArduinoHttpClient?tab=readme-ov-file#dependencies) for whether the board you are using is supported or not.
 
+If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` needs to inherit the `IHTTP_Client` interface and `override` the needed methods shown below:
 
 ```cpp
 #include <IHTTP_Client.h>
@@ -405,8 +408,10 @@ but instead the `ThingsBoard` class expects the argument to a `IMQTT_Client` imp
 Thanks to it being a `interface` it allows an arbitrary implementation,
 meaning the underlying MQTT client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
 
-Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`TBPubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not. If another device wants to be supported, a custom interface implementation needs to be created.
-For that a `class` that inherits the `IMQTT_Client` interface needs to be created and `override` the needed methods.
+Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`TBPubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not, useful when using `Arduino`. As well as the `Espressif_MQTT_Client`, which is a simple wrapper around the [`esp-mqtt`](https://github.com/espressif/esp-mqtt), useful when using `Espressif IDF` with a `ESP32`.
+
+If another device wants to be supported, a custom interface implementation needs to be created.
+For that a `class` needs to inherit the `IMQTT_Client` interface and `override` the needed methods shown below:
 
 ```cpp
 #include <IMQTT_Client.h>
@@ -483,7 +488,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
 };
 ```
 
-Once that has been done it can simply be passed instead of the `Arduino_MQTT_Client` instance.
+Once that has been done it can simply be passed instead of the `Arduino_MQTT_Client` or the `Espressif_MQTT_Client` instance.
 
 ```cpp
 // Logging client
@@ -507,7 +512,7 @@ Thanks to it being a `interface` it allows an arbitrary implementation,
 meaning the underlying Logger client can be whatever the user decides, so it can for example be used to print the messages onto a serial card instead of the serial console.
 
 Currently, implemented in the library itself is the `DefaultLogger`, which is simply a wrapper around a `printf` call. If the functionality wants to be extended, a custom interface implementation needs to be created.
-For that a `class` that inherits the `ILogger` interface needs to be created and `override` the needed methods.
+For that a `class` needs to inherit the `ILogger` interface and `override` the needed methods shown below:
 
 ```cpp
 #include <ILogger.h>
