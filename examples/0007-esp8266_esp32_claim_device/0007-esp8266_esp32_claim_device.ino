@@ -244,7 +244,7 @@ bool reconnect() {
 /// @return The generated password.
 const std::string generateRandomPassword(const uint8_t& length = 8U) {
   std::string password = "";
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length; ++i) {
     password.append(1U, PASSWORD_OPTIONS[random(sizeof(PASSWORD_OPTIONS))]);
   }
   return password;

@@ -69,7 +69,9 @@ class Helper {
         return JSON_STRING_SIZE(measureJson(source));
     }
 
-    /// @brief Removes the element with the given index using the given iterator, which allows to use data containers that do not have a random-access iterator.
+    /// @brief Removes the element with the given index, which allows to use data containers that do not have a random-access iterator.
+    /// The underlying data container is expected to return atleast an InputIterator feature wise from the begin() method.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// The user is also cautioned that this function only erases the element, and that if the element is itself a pointer,
     /// the pointed-to memory is not touched in any way. Managing the pointer is the user's responsibility.
     /// See https://stackoverflow.com/questions/875103/how-do-i-erase-an-element-from-stdvector-by-index for more information
@@ -90,8 +92,7 @@ class Helper {
     /// @brief Calculates the distance between two iterators
     /// @tparam InputIterator Class that points to the begin and end iterator
     /// of the given data container, allows for using / passing either std::vector or std::array.
-    /// When THINGSBOARD_ENABLE_STL is not enabled then this method will only calculate the correct distance for random access iterators.
-    /// This is done because calculating the size for a random access iterator is O(1) where as a sequential iterator requires O(n) computational time
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Distance between the two iterators
@@ -100,7 +101,15 @@ class Helper {
 #if THINGSBOARD_ENABLE_STL
         return std::distance(first_itr, last_itr);
 #else
-        return last_itr - first_itr;
+        // Subtracting last_itr by the first_itr is only a valid way to calculate the distance if we can guarantee that the given iterators are random access,
+        // to keep compatibility with code that supports the STL we allow InputIterators, therefore we have to implement the size calculation the more inneficient O(n) way instead.
+        // This allows the edge case where an end-user uses this method themselves in the code with their own implemented list data type.
+        size_t size = 0U;
+        while (first_itr != last_itr) {
+            ++first_itr;
+            ++size;
+        }
+        return size;
 #endif // THINGSBOARD_ENABLE_STL
     }
 };

@@ -21,7 +21,7 @@ size_t Helper::getOccurences(const char *str, char symbol) {
     if (str == nullptr) {
       return count;
     }
-    for (size_t i = 0; i < strlen(str); i++) {
+    for (size_t i = 0; i < strlen(str); ++i) {
       if (str[i] != symbol) {
         continue;
       }
