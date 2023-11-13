@@ -105,8 +105,9 @@ class Helper {
         // to keep compatibility with code that supports the STL we allow InputIterators, therefore we have to implement the size calculation the more inneficient O(n) way instead.
         // This allows the edge case where an end-user uses this method themselves in the code with their own implemented list data type.
         size_t size = 0U;
-        while (first_itr != last_itr) {
-            ++first_itr;
+        auto it = first_itr;
+        while (it != last_itr) {
+            ++it;
             ++size;
         }
         return size;
