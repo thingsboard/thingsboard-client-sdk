@@ -665,7 +665,8 @@ class ThingsBoardSized {
     /// @brief Attempts to send aggregated telemetry data, expects iterators to a container containing Telemetry class instances.
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether sending the aggregated telemetry data was successful or not
@@ -710,7 +711,8 @@ class ThingsBoardSized {
     /// @brief Attempts to send aggregated attribute data, expects iterators to a container containing Attribute class instances.
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether sending the aggregated attribute data was successful or not
@@ -758,7 +760,8 @@ class ThingsBoardSized {
     /// that will be called if a request from the server for the method with the given name is received.
     /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether subscribing the given callbacks was successful or not
@@ -978,7 +981,8 @@ class ThingsBoardSized {
     /// that will be called if the key-value pair from the server for the given shared attributes is received.
     /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether subscribing the given callbacks was successful or not
@@ -1765,7 +1769,8 @@ class ThingsBoardSized {
 
     /// @brief Attempts to send aggregated attribute or telemetry data
     /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator.
     /// @param first_itr Iterator pointing to the first element in the data container
     /// @param last_itr Iterator pointing to the end of the data container (last element + 1)
     /// @param telemetry Whether the data we want to send should be sent over the attribute or telemtry topic
