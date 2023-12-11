@@ -1,4 +1,4 @@
-version: "0.12.0"
+version: "0.12.2"
 description: Provides access to ThingsBoard platform over the MQTT protocol or alternatively over HTTP/S.
 url: https://github.com/thingsboard/thingsboard-arduino-sdk
 dependencies:
