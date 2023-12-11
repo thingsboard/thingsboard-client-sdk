@@ -7,7 +7,7 @@
 #include "IMQTT_Client.h"
 
 // Library include
-#include <TBPubSubClient.h>
+#include <PubSubClient.h>
 
 
 /// @brief MQTT Client interface implementation that uses the PubSubClient forked from ThingsBoard (https://github.com/thingsboard/pubsubclient),
