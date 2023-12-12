@@ -178,8 +178,6 @@ constexpr uint32_t CLAIMING_REQUEST_DURATION_MS = (3U * 60U * 1000U);
 std::string claimingRequestSecretKey = "";
 
 
-// Logging client
-const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -189,7 +187,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for claiming
 bool claimingRequestSent = false;

@@ -1500,7 +1500,7 @@ class ThingsBoardSized {
 
             // Getting non-existing field from JSON should automatically
             // set JSONVariant to null
-            rpc_request.Call_Callback(m_logger, data);
+            rpc_request.Call_Callback<Logger>(data);
 
             // Delete callback because the changes have been requested and the callback is no longer needed
             Helper::remove(m_rpc_request_callbacks, it);
@@ -1553,7 +1553,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DEBUG
 
             JsonVariantConst const param = data[RPC_PARAMS_KEY];
-            response = rpc.Call_Callback(m_logger, param);
+            response = rpc.Call_Callback<Logger>(param);
             break;
         }
 
@@ -1622,7 +1622,7 @@ class ThingsBoardSized {
                 Logger::println(ATT_CB_NO_KEYS);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 // No specifc keys were subscribed so we call the callback anyway
-                shared_attribute.Call_Callback(m_logger, data);
+                shared_attribute.Call_Callback<Logger>(data);
                 continue;
             }
 
@@ -1658,7 +1658,7 @@ class ThingsBoardSized {
 
             // Getting non-existing field from JSON should automatically
             // set JSONVariant to null
-            shared_attribute.Call_Callback(m_logger, data);
+            shared_attribute.Call_Callback<Logger>(data);
         }
     }
 
@@ -1699,7 +1699,7 @@ class ThingsBoardSized {
 
             // Getting non-existing field from JSON should automatically
             // set JSONVariant to null
-            attribute_request.Call_Callback(m_logger, data);
+            attribute_request.Call_Callback<Logger>(data);
 
             delete_callback:
             // Delete callback because the changes have been requested and the callback is no longer needed
@@ -1720,7 +1720,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     inline void process_provisioning_response(char * const topic, JsonObjectConst const & data) {
-        m_provision_callback.Call_Callback(m_logger, data);
+        m_provision_callback.Call_Callback<Logger>(data);
         // Unsubscribe from the provision response topic,
         // Will be resubscribed if another request is sent anyway
         Provision_Unsubscribe();

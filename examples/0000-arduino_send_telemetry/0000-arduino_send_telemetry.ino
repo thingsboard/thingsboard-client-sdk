@@ -73,8 +73,6 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
 
 
-// Logging client
-const DefaultLogger logger;
 // Serial driver for ESP
 SoftwareSerial soft(2U, 3U); // RX, TX
 // Initialize the Ethernet client object
@@ -82,7 +80,7 @@ WiFiEspClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 
 /// @brief Initalizes WiFi connection,

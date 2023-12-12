@@ -200,8 +200,6 @@ constexpr char FW_STATE_UPDATED[] = "UPDATED";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 
-// Logging client
-const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -211,7 +209,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 // Initalize the Updater client instance used to flash binary to flash memory
 #ifdef ESP8266
 Arduino_ESP8266_Updater updater;
