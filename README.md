@@ -3,14 +3,14 @@
 [![MIT license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://lbesson.mit-license.org/)
 [![ESP32](https://img.shields.io/badge/ESP-32-green.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp32)
 [![ESP8266](https://img.shields.io/badge/ESP-8266-blue.svg?style=flat-square)](https://www.espressif.com/en/products/socs/esp8266)
-[![GitHub release](https://img.shields.io/github/release/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
-[![GitHub downloads](https://img.shields.io/github/downloads/thingsboard/thingsboard-arduino-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-arduino-sdk/releases/)
-[![Arduino actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/arduino-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/arduino-compile.yml)
-[![Espressif IDF v4.4 actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/espidf-compile-v4.4.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/espidf-compile-v4.4.yml)
-[![Espressif IDF v5.1 actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/espidf-compile-v5.1.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/espidf-compile-v5.1.yml)
-[![ESP32 actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp32-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp32-compile.yml)
-[![ESP8266 actions status](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-arduino-sdk/actions/workflows/esp8266-compile.yml)
-![GitHub stars](https://img.shields.io/github/stars/thingsboard/thingsboard-arduino-sdk?style=social)
+[![GitHub release](https://img.shields.io/github/release/thingsboard/thingsboard-client-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-client-sdk/releases/)
+[![GitHub downloads](https://img.shields.io/github/downloads/thingsboard/thingsboard-client-sdk/all.svg?style=flat-square)](https://github.com/thingsboard/thingsboard-client-sdk/releases/)
+[![Arduino actions status](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/arduino-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/arduino-compile.yml)
+[![Espressif IDF v4.4 actions status](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/espidf-compile-v4.4.yml/badge.svg)](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/espidf-compile-v4.4.yml)
+[![Espressif IDF v5.1 actions status](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/espidf-compile-v5.1.yml/badge.svg)](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/espidf-compile-v5.1.yml)
+[![ESP32 actions status](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/esp32-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/esp32-compile.yml)
+[![ESP8266 actions status](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/esp8266-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/esp8266-compile.yml)
+![GitHub stars](https://img.shields.io/github/stars/thingsboard/thingsboard-client-sdk?style=social)
 
 This library provides access to the ThingsBoard platform over the `MQTT` or `HTTP(S)` protocols.
 
@@ -62,7 +62,7 @@ Meaning the repository has to first be a `git` project, if that is not the case 
 Similar to the other call there are a multiple way to define the version that should be fetched, but the method below is the most basic to simply get the last released version, to learn more see [Git Submodule Help page](https://git-scm.com/docs/git-submodule).
 
 ```
-git submodule add https://github.com/thingsboard/thingsboard-arduino-sdk.git components/ThingsBoard
+git submodule add https://github.com/thingsboard/thingsboard-client-sdk.git components/ThingsBoard
 ```
 
 #### Arduino IDE
@@ -162,10 +162,6 @@ The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not s
 If that's the case, the buffer size for serialization should be increased. To do so, `setBufferSize()` method can be used or the `bufferSize` passed to the constructor can be increased as illustrated below:
 
 ```cpp
-
-// Logging client
-const DefaultLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -173,10 +169,10 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 64 bytes for JSON payload
-// ThingsBoard tb(mqttClient, logger);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload
-ThingsBoard tb(mqttClient, logger, 128);
+ThingsBoard tb(mqttClient, 128);
 
 void setup() {
   // Increase internal buffer size after inital creation.
@@ -209,9 +205,6 @@ Alternatively you might never send enough data points to reach that limit, but i
 The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization)**. See **Dynamic ThingsBoard usage** above if the usage of `MaxFieldsAmount`, should be replaced with automatic detection of the needed size.
 
 ```cpp
-// Logging client
-const DefaultLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -219,10 +212,10 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 64 bytes for JSON payload and 8 fields for JSON object
-// ThingsBoard tb(mqttClient, logger);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
-ThingsBoardSized<32> tb(mqttClient, logger, 128);
+ThingsBoardSized<32> tb(mqttClient, 128);
 ```
 
 ### Too many subscriptions
@@ -240,9 +233,6 @@ Additionally, every aforementioned type of request has its own array meaning we 
 The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. See **Dynamic ThingsBoard usage** above if the usage of `MaxSubscribtions`, should be replaced with a growing vector instead.
 
 ```cpp
-// Logging client
-const DefaultLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -250,10 +240,10 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and 2 maximum subscriptions of every possible type
-// ThingsBoard tb(mqttClient, logger);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object and 8 maximum subscriptions of every possible type
-ThingsBoardSized<32, 8> tb(mqttClient, logger, 128);
+ThingsBoardSized<32, 8> tb(mqttClient, 128);
 ```
 
 ### Too many attributes
@@ -273,9 +263,6 @@ Therefore, the only thing that needs to be done is to increase the size accordin
 The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. See **Dynamic ThingsBoard usage** above if the usage of `MaxAttributes`, should be replaced with a growing vector inside `Shared_Attribute_Callback` and `Attribute_Request_Callback` class instead.
 
 ```cpp
-// Logging client
-const DefaultLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -283,10 +270,10 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
-// ThingsBoard tb(mqttClient, logger);
+// ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
-ThingsBoardSized<32, 8, 6> tb(mqttClient, logger, 128);
+ThingsBoardSized<32, 8, 6> tb(mqttClient, 128);
 ```
 
 ## Tips and Tricks
@@ -387,9 +374,6 @@ class Custom_HTTP_Client : public IHTTP_Client {
 Once that has been done it can simply be passed instead of the `Arduino_HTTP_Client` instance.
 
 ```cpp
-// Logging client
-const DefaultLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -397,7 +381,7 @@ WiFiClient espClient;
 Custom_HTTP_Client httpClient(espClient, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 
 // The SDK setup with 8 fields for JSON object
-ThingsBoardHttp tb(httpClient, logger, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(httpClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 ```
 
 ### Custom MQTT Instance
@@ -408,7 +392,7 @@ but instead the `ThingsBoard` class expects the argument to a `IMQTT_Client` imp
 Thanks to it being a `interface` it allows an arbitrary implementation,
 meaning the underlying MQTT client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
 
-Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`TBPubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not, useful when using `Arduino`. As well as the `Espressif_MQTT_Client`, which is a simple wrapper around the [`esp-mqtt`](https://github.com/espressif/esp-mqtt), useful when using `Espressif IDF` with a `ESP32`.
+Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`PubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not, useful when using `Arduino`. As well as the `Espressif_MQTT_Client`, which is a simple wrapper around the [`esp-mqtt`](https://github.com/espressif/esp-mqtt), useful when using `Espressif IDF` with a `ESP32`.
 
 If another device wants to be supported, a custom interface implementation needs to be created.
 For that a `class` needs to inherit the `IMQTT_Client` interface and `override` the needed methods shown below:
@@ -491,9 +475,6 @@ class Custom_MQTT_Client : public IMQTT_Client {
 Once that has been done it can simply be passed instead of the `Arduino_MQTT_Client` or the `Espressif_MQTT_Client` instance.
 
 ```cpp
-// Logging client
-const DefaultLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -501,29 +482,28 @@ WiFiClient espClient;
 Custom_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 64 bytes for JSON payload
-ThingsBoard tb(mqttClient, logger);
+ThingsBoard tb(mqttClient);
 ```
 
 ### Custom Logger Instance
 
-When using the `ThingsBoard` class instance, the class used to print internal warning messages is not hard coded, but instead the `ThingsBoard` class expects the argument to a `ILogger` implementation. See **Enabling internal debug messages** above if the logger should also receive debug messages.
+When using the `ThingsBoard` class instance, the class used to print internal warning messages is not hard coded, but instead the `ThingsBoard` class expects the template argument to a `Logger` implementation. See **Enabling internal debug messages** above if the logger should also receive debug messages.
 
-Thanks to it being a `interface` it allows an arbitrary implementation,
+Thanks to it being a `template` parameters it allows an arbitrary implementation,
 meaning the underlying Logger client can be whatever the user decides, so it can for example be used to print the messages onto a serial card instead of the serial console.
 
-Currently, implemented in the library itself is the `DefaultLogger`, which is simply a wrapper around a `printf` call. If the functionality wants to be extended, a custom interface implementation needs to be created.
-For that a `class` needs to inherit the `ILogger` interface and `override` the needed methods shown below:
+Currently, implemented in the library itself is the `DefaultLogger`, which is simply a wrapper around a `printf` call. If the functionality wants to be extended, a custom implementation needs to be created.
+For that a `class` needs to fulfill the contract and implement the needed methods shown below:
 
 ```cpp
-#include <ILogger.h>
-
-class CustomLogger : public ILogger {
+class CustomLogger {
   public:
-    int printfln(const char *format, ...) const override {
+    template<typename ...Args>
+    static int printfln(char const * const format, Args const &... args) {
         return 0;
     }
 
-    int println(const char *message) const override {
+    static int println(char const * const message) {
         return 0;
     }
 };
@@ -532,9 +512,6 @@ class CustomLogger : public ILogger {
 Once that has been done it can simply be passed instead of the `DefaultLogger` instance.
 
 ```cpp
-// Logging client
-const CustomLogger logger;
-
 // Initialize underlying client, used to establish a connection
 WiFiClient espClient;
 
@@ -542,12 +519,12 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 
 // The SDK setup with 64 bytes for JSON payload
-ThingsBoard tb(mqttClient, logger);
+ThingsBoard tb<CustomLogger>(mqttClient, logger);
 ```
 
 ## Have a question or proposal?
 
-You are welcome in our [issues](https://github.com/thingsboard/thingsboard-arduino-sdk/issues) and [Q&A forum](https://groups.google.com/forum/#!forum/thingsboard).
+You are welcome in our [issues](https://github.com/thingsboard/thingsboard-client-sdk/issues) and [Q&A forum](https://groups.google.com/forum/#!forum/thingsboard).
 
 ## License
 

@@ -12,12 +12,12 @@ constexpr char WATCHDOG_TIMER_NAME[] = "watchdog_timer";
 
 Callback_Watchdog *Callback_Watchdog::m_instance = nullptr;
 
-Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback) :
-    m_callback(callback),
+Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback)
+  : m_callback(callback)
 #if THINGSBOARD_USE_ESP_TIMER
-    m_oneshot_timer(nullptr)
+  , m_oneshot_timer(nullptr)
 #else
-    m_oneshot_timer()
+  , m_oneshot_timer()
 #endif // THINGSBOARD_USE_ESP_TIMER
 {
     m_instance = this;
@@ -35,7 +35,7 @@ Callback_Watchdog::~Callback_Watchdog() {
     m_instance = nullptr;
 }
 
-void Callback_Watchdog::once(const uint64_t& timeout_microseconds) {
+void Callback_Watchdog::once(uint64_t const & timeout_microseconds) {
 #if THINGSBOARD_USE_ESP_TIMER
     create_timer();
     (void)esp_timer_start_once(static_cast<esp_timer_handle_t>(m_oneshot_timer), timeout_microseconds);

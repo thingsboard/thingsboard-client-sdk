@@ -37,7 +37,7 @@ class Callback_Watchdog {
 
     /// @brief Starts the watchdog timer once for the given timeout
     /// @param timeout_microseconds Amount of microseconds until the detach() method is excpected to have been called or the initally given callback method will be called
-    void once(const uint64_t& timeout_microseconds);
+    void once(uint64_t const & timeout_microseconds);
 
     /// @brief Stops the currently ongoing watchdog timer and ensures the callback is not called. Timer can simply be restarted with calling once() again.
     void detach();

@@ -13,7 +13,7 @@ HashGenerator::~HashGenerator(void) {
     free();
 }
 
-bool HashGenerator::start(const mbedtls_md_type_t& type) {
+bool HashGenerator::start(mbedtls_md_type_t const & type) {
     // Clear the internal structure of any previous attempt, because if we do not the init function will not work correctly
     free();
     // Initialize the context
@@ -25,11 +25,11 @@ bool HashGenerator::start(const mbedtls_md_type_t& type) {
     return init_result;
 }
 
-bool HashGenerator::update(const uint8_t* data, const size_t& len) {
-    return mbedtls_md_update(&m_ctx, data, len) == 0;
+bool HashGenerator::update(uint8_t const * const data, size_t const & length) {
+    return mbedtls_md_update(&m_ctx, data, length) == 0;
 }
 
-bool HashGenerator::finish(unsigned char *hash) {
+bool HashGenerator::finish(unsigned char * hash) {
     return mbedtls_md_finish(&m_ctx, hash) == 0;
 }
 

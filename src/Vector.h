@@ -14,23 +14,23 @@ template <typename T>
 class Vector {
   public:
     /// @brief Constructor
-    inline Vector(void) :
-        m_elements(nullptr),
-        m_capacity(0U),
-        m_size(0U)
+    inline Vector(void)
+      : m_elements(nullptr)
+      , m_capacity(0U)
+      , m_size(0U)
     {
         // Nothing to do
     }
 
     /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
-    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
-    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
-    inline Vector(const T* first_itr, const T* last_itr) :
-        m_elements(nullptr),
-        m_capacity(0U),
-        m_size(0U)
+    /// @param first Beginning of the elements we want to copy into our underlying data container
+    /// @param last One past the end of the elements we want to copy into our underlying data container
+    inline Vector(T const * const first, T const * const last)
+      : m_elements(nullptr)
+      , m_capacity(0U)
+      , m_size(0U)
     {
-        insert(nullptr, first_itr, last_itr);
+        insert(nullptr, first, last);
     }
 
     /// @brief Destructor
@@ -40,10 +40,10 @@ class Vector {
     }
 
     /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
-    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
-    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
-    inline void assign(const T* first_itr, const T* last_itr) {
-        insert(nullptr, first_itr, last_itr);
+    /// @param first Beginning of the elements we want to copy into our underlying data container
+    /// @param last One past the end of the elements we want to copy into our underlying data container
+    inline void assign(T const * const first, T const * const last) {
+        insert(nullptr, first, last);
     }
 
     /// @brief Returns whether there are still any element in the underlying data container
@@ -54,32 +54,44 @@ class Vector {
 
     /// @brief Gets the current amount of elements in the underlying data container
     /// @return The amount of items currently in the underlying data container
-    inline const size_t& size() const {
+    inline size_t const & size() const {
         return m_size;
     }
 
     /// @brief Gets the maximum amount of elements that can currently be stored in the underlying data container
     /// @return The maximum amount of items that can currently be stored in the underlying data container
-    inline const size_t& capacity() const {
+    inline size_t const & capacity() const {
         return m_capacity;
     }
-    
+
+    /// @brief Returns a pointer to the first element of the vector
+    /// @return Pointer to the first element of the vector
+    inline T * begin() {
+        return m_elements;
+    }
+
     /// @brief Returns a constant pointer to the first element of the vector
     /// @return Constant pointer to the first element of the vector
-    inline const T* begin() const {
+    inline T const * cbegin() const {
         return m_elements;
     }
 
     /// @brief Returns the last element of the vector
     /// @return Reference to the last element of the vector
-    inline T& back() {
+    inline T & back() {
         assert(m_size != 0U);
         return m_elements[m_size - 1U];
     }
 
+    /// @brief Returns a pointer to one-past-the-end element of the vector
+    /// @return Pointer to one-past-the-end element of the vector
+    inline T * end() {
+        return m_elements + m_size;
+    }
+
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
-    inline const T* end() const {
+    inline T const * cend() const {
         return m_elements + m_size;
     }
 
@@ -88,7 +100,7 @@ class Vector {
     /// The growth is exponential meaning it doubles every time the underlying data container has to be increased.
     /// This results in an amortized insertion speed of O(1), but might require 0(n) when the container has to be reallocated to be increased
     /// @param element Element that should be inserted at the end
-    inline void push_back(const T& element) {
+    inline void push_back(T const & element) {
         if (m_size == m_capacity) {
             m_capacity = (m_capacity == 0) ? 1 : 2 * m_capacity;
             T* newElements = new T[m_capacity];
@@ -103,19 +115,20 @@ class Vector {
     }
 
     /// @brief Inserts all element from the given start to the given end iterator into the underlying data container. Simply calls push_back on each element
-    /// @param position_itr Attribute is not used and can be left as nullptr, simply there to keep compatibility with std::vector insert method
-    /// @param first_itr Beginning of the elements we want to copy into our underlying data container
-    /// @param last_itr One past the end of the elements we want to copy into our underlying data container
-    inline void insert(const T* position_itr, const T* first_itr, const T* last_itr) {
-        while (first_itr < last_itr) {
-            push_back(*first_itr);
-            first_itr++;
+    /// @param position Attribute is not used and can be left as nullptr, simply there to keep compatibility with std::vector insert method
+    /// @param first Beginning of the elements we want to copy into our underlying data container
+    /// @param last One past the end of the elements we want to copy into our underlying data container
+    inline void insert(T const * const position, T const * first, T const * const last) {
+        while (first < last) {
+            push_back(*first);
+            first++;
         }
     }
 
-    /// @brief Removes the element at the given index, has to move all element one to the left if the index is not at the end of the array
-    /// @param index Index the element should be removed at from the underlying data container
-    inline void erase(const size_t& index) {
+    /// @brief Removes the element at the given iterator, has to move all element one to the left if the index is not at the end of the array
+    /// @param iterator Iterator the element should be removed at from the underlying data container
+    inline void erase(T const * const iterator) {
+        size_t const index = Helper::distance(cbegin(), iterator);
         // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left
@@ -130,7 +143,7 @@ class Vector {
     /// @brief Method to access an element at a given index,
     /// ensures the device crashes if we attempted to access in an invalid location
     /// @param index Index we want to get the corresponding element for
-    inline T& at(const size_t& index) {
+    inline T & at(size_t const & index) {
         assert(index < m_size);
         return m_elements[index];
     }
@@ -138,14 +151,14 @@ class Vector {
     /// @brief Bracket operator to access an element at a given index.
     /// Does not do any bounds checks, meaning the access is more efficient but it is possible to read out of bounds data
     /// @param index Index we want to get the corresponding element for
-    inline T& operator[](const size_t& index) {
+    inline T & operator[](size_t const & index) {
         return m_elements[index];
     }
 
     /// @brief Bracket operator to access an element at a given index.
     /// Does not do any bounds checks, meaning the access is more efficient but it is possible to read out of bounds data
     /// @param index Index we want to get the corresponding element for
-    inline const T& operator[](const size_t& index) const {
+    inline T const & operator[](size_t const & index) const {
         return m_elements[index];
     }
 
@@ -156,7 +169,7 @@ class Vector {
     }
 
   private:
-    T* m_elements;      // Pointer to the start of our elements
+    T      *m_elements; // Pointer to the start of our elements
     size_t m_capacity;  // Allocated capacity that shows how many elements we could hold
     size_t m_size;      // Used size that shows how many elements we entered
 };
