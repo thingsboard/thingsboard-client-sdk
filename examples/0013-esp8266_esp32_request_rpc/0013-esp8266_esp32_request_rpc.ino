@@ -258,13 +258,48 @@ void loop() {
 #else
     Serial.println("Requesting RPC...");
 #endif
-    const RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
+    // RPC Request without any parameters
+    RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
 #if THINGSBOARD_ENABLE_PROGMEM
-      Serial.println(F("Failed to request for RPC"));
+      Serial.println(F("Failed to request for RPC without arguments"));
 #else
-      Serial.println("Failed to request for RPC");
+      Serial.println("Failed to request for RPC without arguments");
+#endif
+      return;
+    }
+
+    // RPC Request with multiple simple parameters
+    StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
+    JsonArray array = doc.to<JsonArray>();
+    array.add("example");
+    array.add(true);
+    array.add(145);
+    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime);
+    // Perform a request of the given RPC method. Optional responses are handled in processTime
+    if (!tb.RPC_Request(callback)) {
+#if THINGSBOARD_ENABLE_PROGMEM
+      Serial.println(F("Failed to request for RPC with multiple arguments"));
+#else
+      Serial.println("Failed to request for RPC with multiple arguments");
+#endif
+      return;
+    }
+
+    // RPC Request with one paramater that is another JsonDocument, can still contain more arguments simply add them with calls to the .add() method on the array object
+    StaticJsonDocument<JSON_OBJECT_SIZE(2)> doc2;
+    StaticJsonDocument<JSON_OBJECT_SIZE(1)> innerDoc;
+    array = doc2.to<JsonArray>();
+    innerDoc["example"] = "test";
+    array.add(innerDoc);
+    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime);
+    // Perform a request of the given RPC method. Optional responses are handled in processTime
+    if (!tb.RPC_Request(callback)) {
+#if THINGSBOARD_ENABLE_PROGMEM
+      Serial.println(F("Failed to request for RPC with one inner json argument"));
+#else
+      Serial.println("Failed to request for RPC with one inner json argument");
 #endif
       return;
     }
