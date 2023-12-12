@@ -1498,8 +1498,6 @@ class ThingsBoardSized {
             Logger::printfln(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-            // Getting non-existing field from JSON should automatically
-            // set JSONVariant to null
             rpc_request.template Call_Callback<Logger>(data);
 
             // Delete callback because the changes have been requested and the callback is no longer needed
@@ -1621,7 +1619,7 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
                 Logger::println(ATT_CB_NO_KEYS);
 #endif // THINGSBOARD_ENABLE_DEBUG
-                // No specifc keys were subscribed so we call the callback anyway
+                // No specifc keys were subscribed so we call the callback anyway, assumed to be subscribed to any update
                 shared_attribute.template Call_Callback<Logger>(data);
                 continue;
             }
@@ -1656,8 +1654,6 @@ class ThingsBoardSized {
             Logger::printfln(CALLING_ATT_CB, requested_att);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-            // Getting non-existing field from JSON should automatically
-            // set JSONVariant to null
             shared_attribute.template Call_Callback<Logger>(data);
         }
     }
@@ -1697,8 +1693,6 @@ class ThingsBoardSized {
             Logger::printfln(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-            // Getting non-existing field from JSON should automatically
-            // set JSONVariant to null
             attribute_request.template Call_Callback<Logger>(data);
 
             delete_callback:
@@ -1795,8 +1789,8 @@ class ThingsBoardSized {
             return;
         }
         // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
-        // but it does not change the actual content of the JsonDocument, we don't want that because it already contents content
-        // and would result in the data simply being "null", instead .as() allows accessing the data over a JsonObjectConst instead.
+        // but it does not change the actual content of the JsonDocument, we don't want that because it contains content
+        // and .to() would result in the data being cleared ()"null"), instead .as() which allows accessing the data over a JsonObjectConst instead
         JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
         // Checks to ensure we forward the already json serialized data to the correct process function,
