@@ -115,7 +115,7 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     /// @brief Gets the updater implementation, used to write the actual firmware data into the needed memory location,
     /// so it can be used to reboot the given device with that new flashed firmware
     /// @return Updater implementation that writes the given firmware data
-    IUpdater const * Get_Updater() const;
+    IUpdater * Get_Updater() const;
 
     /// @brief Sets the updater implementation, used to write the actual firmware data into the needed memory location,
     /// so it can be used to reboot the given device with that new flashed firmware

@@ -48,7 +48,7 @@ void OTA_Update_Callback::Set_Firmware_Version(char const * const currFwVersion)
     m_fwVersion = currFwVersion;
 }
 
-IUpdater* OTA_Update_Callback::Get_Updater() const {
+IUpdater * OTA_Update_Callback::Get_Updater() const {
     return m_updater;
 }
 
