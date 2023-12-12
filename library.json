@@ -7,7 +7,7 @@
         "url": "https://github.com/thingsboard/thingsboard-client-sdk"
     },
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.21.3"
+        "bblanchon/ArduinoJson": "^6.21.4"
     },
     "version": "0.13.0",
     "examples": "examples/*/*.ino",
