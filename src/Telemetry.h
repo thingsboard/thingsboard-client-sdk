@@ -31,7 +31,7 @@ class Telemetry {
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    inline Telemetry(const char *key, T value)
+    inline Telemetry(char const * const key, T const & value)
       : m_type(DataType::TYPE_INT),
       m_key(key),
       m_value()
@@ -52,23 +52,23 @@ class Telemetry {
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_floating_point declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_floating_point<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    Telemetry(const char *key, T value)
-      : m_type(DataType::TYPE_REAL),
-      m_key(key),
-      m_value()
+    Telemetry(char const * const key, T const & value)
+      : m_type(DataType::TYPE_REAL)
+      , m_key(key)
+      , m_value()
     {
         m_value.real = value;
     }
 
     /// @brief Constructs telemetry record from boolean value	
     /// @param key Key of the key value pair we want to create	
-    /// @param val Value of the key value pair we want to create	
-    Telemetry(const char *key, bool val);
+    /// @param value Value of the key value pair we want to create	
+    Telemetry(char const * const key, bool value);
 
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
     /// @param value Value of the key value pair we want to create
-    Telemetry(const char *key, const char *value);
+    Telemetry(char const * const key, char const * const value);
 
     /// @brief Whether this record is empty or not
     /// @return Whether there is any data in this record or not
@@ -79,7 +79,7 @@ class Telemetry {
     /// @param source Data source that should contain the key value pair or a value
     /// @return Whether serializing was successful or not
     template <typename TSource>
-    bool SerializeKeyValue(TSource& source) const {
+    bool SerializeKeyValue(TSource & source) const {
         switch (m_type) {
             case DataType::TYPE_BOOL:
                 if (m_key) {

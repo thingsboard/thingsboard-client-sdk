@@ -26,14 +26,14 @@ constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute reque
 #if !THINGSBOARD_ENABLE_DYNAMIC
 template <size_t MaxAttributes = Default_Attributes_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&> {
+class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &> {
   public:
     /// @brief Constructs empty callback, will result in never being called
-    Attribute_Request_Callback()  :
-        Callback(nullptr, ATT_REQUEST_CB_IS_NULL),
-        m_attributes(),
-        m_request_id(0U),
-        m_attribute_key(nullptr)
+    Attribute_Request_Callback()
+      : Callback(nullptr, ATT_REQUEST_CB_IS_NULL)
+      , m_attributes()
+      , m_request_id(0U)
+      , m_attribute_key(nullptr)
     {
         // Nothing to do
     }
@@ -52,7 +52,7 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @param ...args Arguments that will be forwarded into the overloaded vector constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
-    inline Attribute_Request_Callback(function callback, Args... args)
+    inline Attribute_Request_Callback(function callback, Args const &... args)
       : Callback(callback, ATT_REQUEST_CB_IS_NULL)
       , m_attributes(args...)
       , m_request_id(0U)
@@ -76,7 +76,7 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// Not meant for external use, because the value is overwritten by the ThingsBoard class once the class instance has been passed as a parameter anyway,
     /// this is the case because only the ThingsBoard class knows the current request id that this callback will be attached too. 
     /// @param request_id Unqiue identifier of the request for client-side or shared attributes
-    void Set_Request_ID(const size_t &request_id) {
+    void Set_Request_ID(size_t const & request_id) {
         m_request_id = request_id;
     }
 
@@ -84,7 +84,7 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// that we expect the client-side or shared attribute payload json data to be contained in
     /// @return Key that the data is saved into,
     /// "client" for client-side attributes and "shared" for shared scope attributes
-    const char* Get_Attribute_Key() const {
+    char const * Get_Attribute_Key() const {
         return m_attribute_key;
     }
 
@@ -95,7 +95,7 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// and which type we requests depends on which method the class instance is passed as a parameter to
     /// @param attribute_key Key that the data is saved into,
     /// "client" for client-side attributes and "shared" for shared scope attributes
-    void Set_Attribute_Key(const char *attribute_key) {
+    void Set_Attribute_Key(char const * const attribute_key) {
         m_attribute_key = attribute_key;
     }
 
@@ -104,9 +104,9 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
 #if THINGSBOARD_ENABLE_DYNAMIC
-    const Vector<const char *>& Get_Attributes() const {
+    const Vector<char const *>& Get_Attributes() const {
 #else
-    const Array<const char *, MaxAttributes>& Get_Attributes() const {
+    const Array<char const *, MaxAttributes>& Get_Attributes() const {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
         return m_attributes;
     }
@@ -125,18 +125,18 @@ class Attribute_Request_Callback : public Callback<void, const JsonObjectConst&>
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the vector assign method and therefore allow to use every overloaded vector assign without having to implement them
     /// @param ...args Arguments that will be forwarded into the overloaded vector assign method see https://en.cppreference.com/w/cpp/container/vector/assign for more information
     template<typename... Args>
-    inline void Set_Attributes(Args... args) {
+    inline void Set_Attributes(Args const &... args) {
         m_attributes.assign(args...);
     }
 
   private:
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<const char *>               m_attributes;     // Attribute we want to request
+    Vector<char const *>               m_attributes;     // Attribute we want to request
 #else
-    Array<const char *, MaxAttributes> m_attributes;     // Attribute we want to request
+    Array<char const *, MaxAttributes> m_attributes;     // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_DYNAMIC
     size_t                             m_request_id;     // Id the request was called with
-    const char                         *m_attribute_key; // Attribute key that we wil receive the response on ("client" or "shared")
+    char const                         *m_attribute_key; // Attribute key that we wil receive the response on ("client" or "shared")
 };
 
 #endif // Attribute_Request_Callback_h

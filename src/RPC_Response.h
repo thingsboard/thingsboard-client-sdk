@@ -14,19 +14,19 @@ class RPC_Response : public JsonVariant {
 
     /// @brief Constructor
     /// @param variant JsonVariant object the internal data should be copied from
-    explicit RPC_Response(JsonVariant variant);
+    explicit RPC_Response(JsonVariant const & variant);
 
     /// @brief Constructor
     /// @param telemetry Telemetry object the internal data should be copied from
-    explicit RPC_Response(Telemetry telemetry);
+    explicit RPC_Response(Telemetry const & telemetry);
 
     /// @brief Constructor
     /// @tparam T Type of the passed value
     /// @param key Key of the key value pair we want to create
     /// @param value Value of the key value pair we want to create
     template <typename T>
-    RPC_Response(const char *key, T value) :
-        RPC_Response(Telemetry(key, value))
+    RPC_Response(char const * const key, T const & value)
+      : RPC_Response(Telemetry(key, value))
     {
         // Nothing to do
     }
