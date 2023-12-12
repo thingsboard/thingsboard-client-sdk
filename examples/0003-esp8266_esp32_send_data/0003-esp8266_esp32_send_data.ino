@@ -199,8 +199,6 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
 
 
-// Logging client
-const DefaultLogger logger;
 // Initialize underlying client, used to establish a connection
 #if ENCRYPTED
 WiFiClientSecure espClient;
@@ -211,11 +209,11 @@ WiFiClient espClient;
 #if USING_HTTPS
 // Initalize the Http client instance
 Arduino_HTTP_Client httpClient(espClient, THINGSBOARD_SERVER, THINGSBOARD_PORT);
-ThingsBoardHttp tb(httpClient, logger, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(httpClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 #endif
 
 

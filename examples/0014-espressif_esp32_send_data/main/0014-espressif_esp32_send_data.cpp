@@ -86,12 +86,10 @@ constexpr char TEMPERATURE_KEY[] = "temperature";
 constexpr char HUMIDITY_KEY[] = "humidity";
 
 
-// Logging client
-const DefaultLogger logger;
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

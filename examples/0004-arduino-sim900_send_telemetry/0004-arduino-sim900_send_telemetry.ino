@@ -85,9 +85,6 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
 
 
-// Logging client
-const DefaultLogger logger;
-
 // Serial port for GSM shield
 SoftwareSerial serialGsm(7U, 8U); // RX, TX pins for communicating with modem
 
@@ -101,7 +98,7 @@ TinyGsmClient client(modem);
 Arduino_MQTT_Client mqttClient(client);
 
 // Initialize ThingsBoard instance
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Set to true, if modem is connected
 bool modemConnected = false;

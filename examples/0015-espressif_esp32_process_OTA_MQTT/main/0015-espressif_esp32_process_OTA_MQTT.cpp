@@ -102,12 +102,10 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 constexpr char FW_STATE_UPDATED[] = "UPDATED";
 
 
-// Logging client
-const DefaultLogger logger;
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, logger, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 // Initalize the Updater client instance used to flash binary to flash memory
 Espressif_Updater updater;
 
