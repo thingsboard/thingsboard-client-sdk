@@ -23,7 +23,7 @@ class IUpdater {
     /// @param payload Firmware packet data that should be written
     /// @param total_bytes Amount of bytes in the current firmware packet data
     /// @return Total amount of bytes that were successfully written
-    virtual size_t write(uint8_t * payload, size_t const & total_bytes) = 0;
+    virtual size_t write(uint8_t * const payload, size_t const & total_bytes) = 0;
   
     /// @brief Resets the writing of the given data so it can be restarted with begin
     virtual void reset() = 0;

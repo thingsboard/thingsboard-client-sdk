@@ -65,7 +65,7 @@ class Array {
 
     /// @brief Returns a constant pointer to the first element of the vector
     /// @return Constant pointer to the first element of the vector
-    inline T const * cbegin() const {
+    inline T const * begin() const {
         return m_elements;
     }
 
@@ -84,7 +84,7 @@ class Array {
 
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
-    inline T const * cend() const {
+    inline T const * end() const {
         return m_elements + m_size;
     }
 
