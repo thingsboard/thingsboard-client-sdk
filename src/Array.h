@@ -69,6 +69,12 @@ class Array {
         return m_elements;
     }
 
+    /// @brief Returns a constant pointer to the first element of the vector
+    /// @return Constant pointer to the first element of the vector
+    inline T const * cbegin() const {
+        return m_elements;
+    }
+
     /// @brief Returns the last element of the vector
     /// @return Reference to the last element of the vector
     inline T & back() {
@@ -85,6 +91,12 @@ class Array {
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
     inline T const * end() const {
+        return m_elements + m_size;
+    }
+
+    /// @brief Returns a constant pointer to one-past-the-end element of the vector
+    /// @return Constant pointer to one-past-the-end element of the vector
+    inline T const * cend() const {
         return m_elements + m_size;
     }
 
