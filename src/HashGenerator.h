@@ -27,7 +27,7 @@
 class HashGenerator {
   public:
     /// @brief Constructor
-    HashGenerator(void);
+    HashGenerator(void) = default;
 
     /// @brief Destructor
     ~HashGenerator(void);

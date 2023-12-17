@@ -14,7 +14,7 @@
 /// under the hood to write the given binary firmware data into flash memory so we can restart with newly received firmware
 class Espressif_Updater : public IUpdater {
   public:
-    Espressif_Updater();
+    Espressif_Updater() = default;
 
     bool begin(size_t const & firmware_size) override;
   

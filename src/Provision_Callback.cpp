@@ -13,12 +13,6 @@ constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
 constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-Provision_Callback::Provision_Callback()
-  : Provision_Callback(Access_Token(), nullptr, nullptr, nullptr)
-{
-    // Nothing to do
-}
-
 Provision_Callback::Provision_Callback(Access_Token, function callback, char const * const provisionDeviceKey, char const * const provisionDeviceSecret, char const * const deviceName)
   : Callback(callback, PROVISION_CB_IS_NULL)
   , m_deviceKey(provisionDeviceKey)

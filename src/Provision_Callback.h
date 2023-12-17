@@ -17,8 +17,8 @@ struct X509_Certificate{};
 /// Documentation about the specific use of Provisioning devices in ThingsBoard can be found here https://thingsboard.io/docs/user-guide/device-provisioning/
 class Provision_Callback : public Callback<void, JsonObjectConst const &> {
   public:
-    /// @brief Constructs empty callback, will result in never being called
-    Provision_Callback();
+    /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
+    Provision_Callback() = default;
 
     /// @brief Constructs callback that will be fired upon a provision request arrival,
     /// where the requested credentials were sent by the cloud and received by the client.

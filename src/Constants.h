@@ -19,6 +19,7 @@
 #define Default_Fields_Amount 8
 #define Default_Subscriptions_Amount 2
 #define Default_Attributes_Amount 5
+#define Default_RPC_Amount 0
 
 
 // Log messages.

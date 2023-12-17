@@ -38,8 +38,8 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     using progressArgumentType = size_t const &;
     using progressFn = std::function<returnType(progressArgumentType current, progressArgumentType total)>;
 
-    /// @brief Constructs empty callback, will result in never being called
-    OTA_Update_Callback();
+    /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
+    OTA_Update_Callback() = default;
 
     /// @brief Constructs callbacks that will be called when the OTA firmware data,
     /// has been completly sent by the cloud, received by the client and written to the flash partition

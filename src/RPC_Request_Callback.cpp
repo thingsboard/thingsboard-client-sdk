@@ -7,12 +7,6 @@ char constexpr RPC_REQUEST_CB_NULL[] PROGMEM = "Client-side RPC request callback
 char constexpr RPC_REQUEST_CB_NULL[] = "Client-side RPC request callback is NULL";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
-RPC_Request_Callback::RPC_Request_Callback() :
-    RPC_Request_Callback(nullptr, nullptr, nullptr)
-{
-    // Nothing to do
-}
-
 RPC_Request_Callback::RPC_Request_Callback(char const * const methodName, function callback) :
     RPC_Request_Callback(methodName, nullptr, callback)
 {

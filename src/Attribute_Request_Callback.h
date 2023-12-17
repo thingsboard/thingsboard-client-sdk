@@ -3,7 +3,9 @@
 
 // Local includes.
 #include "Callback.h"
+#if !THINGSBOARD_ENABLE_DYNAMIC
 #include "Constants.h"
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
 
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -21,22 +23,15 @@ constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute reque
 /// To achieve that some internal member variables get set automatically by those methods, the first one being a string to differentiate which attribute scope was requested
 /// and the second being the id of the mqtt request, where the response by the server will use the same id, which makes it easy to know which method intially requested the data and should now receive it.
 /// Documentation about the specific use of Requesting client-side or shared scope atrributes in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or some of the requested keys may be lost, default = 5
 #if !THINGSBOARD_ENABLE_DYNAMIC
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
+/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost, default = Default_Attributes_Amount (5)
 template <size_t MaxAttributes = Default_Attributes_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &> {
   public:
-    /// @brief Constructs empty callback, will result in never being called
-    Attribute_Request_Callback()
-      : Callback(nullptr, ATT_REQUEST_CB_IS_NULL)
-      , m_attributes()
-      , m_request_id(0U)
-      , m_attribute_key(nullptr)
-    {
-        // Nothing to do
-    }
+    /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
+    Attribute_Request_Callback() = default;
 
     /// @brief Constructs callback, will be called upon client-side or shared attribute request arrival
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client.
