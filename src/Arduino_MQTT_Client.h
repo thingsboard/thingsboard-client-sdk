@@ -15,7 +15,7 @@
 class Arduino_MQTT_Client : public IMQTT_Client {
   public:
     /// @brief Constructs a IMQTT_Client implementation without a network client, meaning it has to be added later with the set_client() method
-    Arduino_MQTT_Client();
+    Arduino_MQTT_Client() = default;
 
     /// @brief Constructs a IMQTT_Client implementation with the given network client
     /// @param transport_client Client that is used to send the actual payload via. MQTT, needs to implement the client interface,

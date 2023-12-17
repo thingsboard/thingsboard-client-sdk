@@ -41,6 +41,9 @@ class Callback {
     using function = returnType (*)(argumentTypes... arguments);
 #endif // THINGSBOARD_ENABLE_STL
 
+    /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
+    inline Callback() = default;
+
     /// @brief Constructs base callback, will be called upon specific arrival of json message
     /// where the requested data was sent by the cloud and received by the client
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types

@@ -14,7 +14,6 @@ set(srcs
     src/Provision_Callback.cpp
     src/RPC_Callback.cpp
     src/RPC_Request_Callback.cpp
-    src/RPC_Response.cpp
     src/Telemetry.cpp
 )
 

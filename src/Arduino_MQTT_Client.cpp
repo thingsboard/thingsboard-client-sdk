@@ -3,12 +3,6 @@
 
 #ifdef ARDUINO
 
-Arduino_MQTT_Client::Arduino_MQTT_Client() :
-    m_mqtt_client()
-{
-    // Nothing to do
-}
-
 Arduino_MQTT_Client::Arduino_MQTT_Client(Client & transport_client) :
     m_mqtt_client(transport_client)
 {

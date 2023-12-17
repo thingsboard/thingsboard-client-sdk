@@ -3,12 +3,6 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-OTA_Update_Callback::OTA_Update_Callback()
-  : OTA_Update_Callback(nullptr, nullptr, nullptr, nullptr, nullptr)
-{
-    // Nothing to do
-}
-
 OTA_Update_Callback::OTA_Update_Callback(function endCb, char const * const currFwTitle, char const * const currFwVersion, IUpdater * updater, uint8_t const & chunkRetries, uint16_t const & chunkSize, uint64_t const & timeout)
   : OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, updater, chunkRetries, chunkSize, timeout)
 {

@@ -68,14 +68,12 @@ constexpr const char RPC_TEMPERATURE_METHOD[] PROGMEM = "example_set_temperature
 constexpr const char RPC_SWITCH_METHOD[] PROGMEM = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] PROGMEM = "temp";
 constexpr const char RPC_SWITCH_KEY[] PROGMEM = "switch";
-constexpr const char RPC_RESPONSE_KEY[] PROGMEM = "example_response";
 #else
 constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)";
 constexpr const char RPC_TEMPERATURE_METHOD[] = "example_set_temperature";
 constexpr const char RPC_SWITCH_METHOD[] = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] = "temp";
 constexpr const char RPC_SWITCH_KEY[] PROGMEM = "switch";
-constexpr const char RPC_RESPONSE_KEY[] = "example_response";
 #endif
 
 
@@ -161,8 +159,8 @@ void setup() {
 /// JsonVariantConst is a JSON variant, that can be queried using operator[]
 /// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
 /// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processTemperatureChange(const JsonVariantConst &data) {
+/// @param response Data containgin the response value, any number, string or json, that should be sent to the cloud. Useful for getMethods
+void processTemperatureChange(const JsonVariantConst &data, JsonDocument &response) {
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Received the set temperature RPC method"));
 #else
@@ -179,18 +177,17 @@ RPC_Response processTemperatureChange(const JsonVariantConst &data) {
 #endif
   Serial.println(example_temperature);
 
-  // Just an response example
-  StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
-  doc[RPC_RESPONSE_KEY] = 42;
-  return RPC_Response(doc);
+  JsonVariant response = doc.to<JsonVariant>();
+  variant.set(42);
 }
 
 /// @brief Processes function for RPC call "example_set_switch"
 /// JsonVariantConst is a JSON variant, that can be queried using operator[]
 /// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
 /// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processSwitchChange(const JsonVariantConst &data) {
+/// @param data Data containing the rpc data that was called and its current value
+/// @param response Data containgin the response value, any number, string or json, that should be sent to the cloud. Useful for getMethods
+void processSwitchChange(const JsonVariantConst &data, JsonDocument &response) {
   Serial.println("Received the set switch method");
 
   // Process data
@@ -203,10 +200,8 @@ RPC_Response processSwitchChange(const JsonVariantConst &data) {
 #endif
   Serial.println(switch_state);
 
-  // Just an response example
-  StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
-  doc[RPC_RESPONSE_KEY] = 22.02;
-  return RPC_Response(doc);
+  JsonVariant response = doc.to<JsonVariant>();
+  variant.set(22.02);
 }
 
 void loop() {

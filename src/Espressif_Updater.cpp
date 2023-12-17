@@ -6,14 +6,6 @@
 // Library include.
 #include <esp_ota_ops.h>
 
-
-Espressif_Updater::Espressif_Updater() :
-    m_ota_handle(0U),
-    m_update_partition(nullptr)
-{
-    // Nothing to do
-}
-
 bool Espressif_Updater::begin(size_t const & firmware_size) {
     esp_partition_t const * const running = esp_ota_get_running_partition();
     esp_partition_t const * const configured = esp_ota_get_boot_partition();

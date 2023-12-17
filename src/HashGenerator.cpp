@@ -3,12 +3,6 @@
 
 #if THINGSBOARD_ENABLE_OTA
 
-HashGenerator::HashGenerator() :
-    m_ctx()
-{
-    // Nothing to do
-}
-
 HashGenerator::~HashGenerator(void) {
     free();
 }

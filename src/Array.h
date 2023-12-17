@@ -15,12 +15,7 @@ template <typename T, size_t Capacity>
 class Array {
   public:
     /// @brief Constructor
-    inline Array(void) :
-        m_elements(),
-        m_size(0U)
-    {
-        // Nothing to do
-    }
+    inline Array(void) = default;
 
     /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
     /// @param first Beginning of the elements we want to copy into our underlying data container

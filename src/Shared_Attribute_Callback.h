@@ -3,7 +3,9 @@
 
 // Local includes.
 #include "Callback.h"
+#if !THINGSBOARD_ENABLE_DYNAMIC
 #include "Constants.h"
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 
 
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -16,19 +18,15 @@ char constexpr ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
 /// @brief Shared attribute update callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or some of the requested keys may be lost, default = 5
 #if !THINGSBOARD_ENABLE_DYNAMIC
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
+/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost, default = Default_Attributes_Amount (5)
 template <size_t MaxAttributes = Default_Attributes_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>  {
   public:
-    /// @brief Constructs empty callback, will result in never being called
-    Shared_Attribute_Callback()
-      : Shared_Attribute_Callback(nullptr)
-    {
-        // Nothing to do
-    }
+    /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
+    Shared_Attribute_Callback() = default;
 
     /// @brief Constructs callback, will be called upon shared attribute update arrival,
     /// of any existing or new shared attribute on the given device
