@@ -272,7 +272,7 @@ void processSwitchChange(const JsonVariantConst &data, JsonDocument &response) {
   Serial.println(switch_state);
 
   JsonVariant variant = response.to<JsonVariant>();
-  variant.set(22.02;);
+  variant.set(22.02);
 }
 
 void setup() {
@@ -309,9 +309,9 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
-    const std::array<PC_Callback<0U>, 2U> callbacks = {
-      PC_Callback<0U>{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
-      PC_Callback<0U>{ RPC_SWITCH_METHOD,         processSwitchChange }
+    const std::array<RPC_Callback<0U>, 2U> callbacks = {
+      RPC_Callback<0U>{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
+      RPC_Callback<0U>{ RPC_SWITCH_METHOD,         processSwitchChange }
     };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
