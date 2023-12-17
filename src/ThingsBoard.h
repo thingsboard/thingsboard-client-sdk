@@ -775,13 +775,15 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
+#if THINGSBOARD_ENABLE_DYNAMIC
     inline bool RPC_Subscribe(RPC_Callback const & callback) {
-#if !THINGSBOARD_ENABLE_DYNAMIC
+#else
+    inline bool RPC_Subscribe(RPC_Callback<MaxRPC> const & callback) {
         if (m_rpc_callbacks.size() + 1 > m_rpc_callbacks.capacity()) {
             Logger::println(MAX_RPC_EXCEEDED);
             return false;
         }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
+#endif // THINGSBOARD_ENABLE_DYNAMIC
         if (!m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
             Logger::println(SUBSCRIBE_TOPIC_FAILED);
             return false;
@@ -1527,7 +1529,11 @@ class ThingsBoardSized {
             return;
         }
 
+#if THINGSBOARD_ENABLE_DYNAMIC
         for (RPC_Callback & rpc : m_rpc_callbacks) {
+#else
+        for (RPC_Callback<MaxRPC> & rpc : m_rpc_callbacks) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
             char const * const subscribedMethodName = rpc.Get_Name();
             if (Helper::stringIsNullorEmpty(subscribedMethodName)) {
               Logger::println(RPC_METHOD_NULL);
@@ -1834,7 +1840,7 @@ class ThingsBoardSized {
 
 #if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
 template<size_t MaxFieldsAmount, size_t MaxSubscribtions, size_t MaxAttributes, size_t MaxRPC, typename Logger>
-ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes, Logger> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes, MaxRPC, Logger>::m_subscribedInstance = nullptr;
+ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes, MaxRPC, Logger> *ThingsBoardSized<MaxFieldsAmount, MaxSubscribtions, MaxAttributes, MaxRPC, Logger>::m_subscribedInstance = nullptr;
 #elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 template<typename Logger>
 ThingsBoardSized<Logger> *ThingsBoardSized<Logger>::m_subscribedInstance = nullptr;
