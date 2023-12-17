@@ -865,7 +865,10 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_OTA
 
-    /// @brief Immediately starts a firmware update if firmware is assigned to the given device.
+    /// @brief Checks if firmware settings are assigned to the connected device and if they are attempts to use those settings to start a firmware update.
+    /// Will only be checked once and if there is no firmware assigned or if the assigned firmware is already installed this method will not update.
+    /// This firmware status is only checked once, meaning to recheck the status either call this method again or use the Subscribe_Firmware_Update method.
+    /// to be automatically informed and start the update if firmware has been assigned and it is not already installed.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
@@ -886,14 +889,17 @@ class ThingsBoardSized {
         return Shared_Attributes_Request(fw_request_callback);
     }
 
-    /// @brief Stops the currently running firmware update, calls the finish callback with a failure if the update is running.
+    /// @brief Stops the currently ongoing firmware update, calls the subscribed user finish callback with a failure if any update was stopped.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     inline void Stop_Firmware_Update() {
         m_ota.Stop_Firmware_Update();
     }
 
-    /// @brief Subscribes for any assignment of firmware to the given device device,
-    /// which will then start a firmware update.
+    /// @brief Subscribes to any changes of the assigned firmware information on the connected device,
+    /// meaning once we subscribed if we register any changes we will start the update if the given firmware is not already installed.
+    /// Unlike Start_Firmware_Update this method only registers changes to the firmware information,
+    /// meaning if the change occured while this device was asleep or turned off we will not update,
+    /// to achieve that, it is instead recommended to call the Start_Firmware_Update method when the device has started once to check for that edge case.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
