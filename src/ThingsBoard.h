@@ -10,6 +10,7 @@
 #include "OTA_Handler.h"
 #include "IMQTT_Client.h"
 #include "DefaultLogger.h"
+#include "Telemetry.h"
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
