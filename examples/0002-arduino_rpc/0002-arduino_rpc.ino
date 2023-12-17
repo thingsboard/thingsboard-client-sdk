@@ -177,7 +177,7 @@ void processTemperatureChange(const JsonVariantConst &data, JsonDocument &respon
 #endif
   Serial.println(example_temperature);
 
-  JsonVariant response = doc.to<JsonVariant>();
+  JsonVariant variant = response.to<JsonVariant>();
   variant.set(42);
 }
 
@@ -200,7 +200,7 @@ void processSwitchChange(const JsonVariantConst &data, JsonDocument &response) {
 #endif
   Serial.println(switch_state);
 
-  JsonVariant response = doc.to<JsonVariant>();
+  JsonVariant variant = response.to<JsonVariant>();
   variant.set(22.02);
 }
 
@@ -234,15 +234,15 @@ void loop() {
     Serial.println("Subscribing for RPC...");
 #endif
     const uint8_t callback_size = 2U;
-    const RPC_Callback callbacks[callback_size] = {
+    const RPC_Callback<0U> callbacks[callback_size] = {
       { RPC_TEMPERATURE_METHOD,    processTemperatureChange },
       { RPC_SWITCH_METHOD,         processSwitchChange }
     };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.
-    const RPC_Callback* begin = callbacks;
-    const RPC_Callback* end = callbacks + callback_size;
+    const RPC_Callback<0U>* begin = callbacks;
+    const RPC_Callback<0U>* end = callbacks + callback_size;
     if (!tb.RPC_Subscribe(begin, end)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to subscribe for RPC"));
