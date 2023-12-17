@@ -12,7 +12,6 @@ set(srcs
     src/Helper.cpp
     src/OTA_Update_Callback.cpp
     src/Provision_Callback.cpp
-    src/RPC_Callback.cpp
     src/RPC_Request_Callback.cpp
     src/Telemetry.cpp
 )
