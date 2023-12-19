@@ -40,6 +40,7 @@ char constexpr ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary d
 char constexpr ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
 char constexpr CHECKSUM_VERIFICATION_FAILED[] PROGMEM = "Calculated checksum (%s), not the same as expected checksum (%s)";
 char constexpr FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
+char constexpr CHUNK_REQUEST_TIMED_OUT[] PROGMEM = "Failed to receive requested chunk (%u) in (%u) ms. Internet connection might have been lost";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr FW_CHUNK[] PROGMEM = "Receive chunk (%u), with size (%u) bytes";
 char constexpr HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
@@ -55,6 +56,7 @@ char constexpr ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data inst
 char constexpr ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
 char constexpr CHECKSUM_VERIFICATION_FAILED[] = "Calculated checksum (%s), not the same as expected checksum (%s)";
 char constexpr FW_UPDATE_ABORTED[] = "Firmware update aborted";
+char constexpr CHUNK_REQUEST_TIMED_OUT[] = "Failed to receive requested chunk (%u) in (%u) ms. Internet connection might have been lost";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr FW_CHUNK[] = "Receive chunk (%u), with size (%u) bytes";
 char constexpr HASH_EXPECTED[] = "Expected checksum: (%s)";
@@ -106,8 +108,7 @@ class OTA_Handler {
 
         if (!m_publish_callback || !m_send_fw_state_callback || !m_finish_callback || !m_fw_updater) {
             Logger::println(OTA_CB_IS_NULL);
-            (void)m_send_fw_state_callback(FW_STATE_FAILED, OTA_CB_IS_NULL);
-            return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
+            return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING, OTA_CB_IS_NULL);
         }
         Request_First_Firmware_Packet();
         (void)m_send_fw_state_callback(FW_STATE_DOWNLOADING, nullptr);
@@ -120,8 +121,7 @@ class OTA_Handler {
         m_watchdog.detach();
         m_fw_updater->reset();
         Logger::println(FW_UPDATE_ABORTED);
-        (void)m_send_fw_state_callback(FW_STATE_FAILED, FW_UPDATE_ABORTED);
-        Handle_Failure(OTA_Failure_Response::RETRY_NOTHING);
+        Handle_Failure(OTA_Failure_Response::RETRY_NOTHING, FW_UPDATE_ABORTED);
         m_fw_callback = nullptr;
     }
 
@@ -150,7 +150,7 @@ class OTA_Handler {
             // Initialize Flash
             if (!m_fw_updater->begin(m_fw_size)) {
                 Logger::println(ERROR_UPDATE_BEGIN);
-                return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
+                return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_BEGIN);
             }
         }
 
@@ -158,7 +158,7 @@ class OTA_Handler {
         size_t const written_bytes = m_fw_updater->write(payload, total_bytes);
         if (written_bytes != total_bytes) {
             Logger::printfln(ERROR_UPDATE_WRITE, written_bytes, total_bytes);
-            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
+            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_WRITE);
         }
 
         // Update value only if writing to flash was a success, result is ignored,
@@ -171,7 +171,8 @@ class OTA_Handler {
         // Ensure to check if the update was cancelled during the progress callback,
         // if it was the callback variable was reset and there is no need to request the next firmware packet
         if (m_fw_callback == nullptr) {
-            return;
+            Logger::println(OTA_CB_IS_NULL);
+            return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING, OTA_CB_IS_NULL);
         }
 
         // Reset retries as the current chunk has been downloaded and handled successfully
@@ -237,6 +238,8 @@ class OTA_Handler {
 
         // Watchdog gets started no matter if publishing request was successful or not in hopes,
         // that after the given timeout the callback calls this method again and can then publish the request successfully.
+        // This works because the request fails most of the time, because the internet connection might have been temporarily disconnected.
+        // Therefore waiting a while and then retrying, means we might be reconnected again
         m_watchdog.once(m_fw_callback->Get_Timeout());
     }
 
@@ -253,8 +256,10 @@ class OTA_Handler {
         // Check if the initally received checksum is the same as the one we calculated from the received binary data,
         // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed.
         if (memcmp(m_fw_checksum, calculated_hash, sizeof(m_fw_checksum)) == 0) {
-            Logger::printfln(CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum);
-            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
+            char message[Helper::detectSize(CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum)] = {};
+            snprintf(message, sizeof(message), CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum);
+            Logger::println(message);
+            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, message);
         }
 
     #if THINGSBOARD_ENABLE_DEBUG
@@ -263,14 +268,14 @@ class OTA_Handler {
 
         if (!m_fw_updater->end()) {
             Logger::println(ERROR_UPDATE_END);
-            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE);
+            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_END);
         }
 
     #if THINGSBOARD_ENABLE_DEBUG
         Logger::println(FW_UPDATE_SUCCESS);
     #endif // THINGSBOARD_ENABLE_DEBUG
-        (void)m_send_fw_state_callback(FW_STATE_UPDATING, nullptr);
 
+        (void)m_send_fw_state_callback(FW_STATE_UPDATING, nullptr);
         m_fw_callback->Call_Callback<Logger>(true);
         (void)m_finish_callback();
     }
@@ -278,8 +283,10 @@ class OTA_Handler {
     /// @brief Handles errors with the received failure response so that the firmware update can regenerate from any possible issue.
     /// Will only execute the given failure response as long as there are still retries remaining, if there are not any further issue will cause the update to be aborted
     /// @param failure_response Possible response to a failure that the method should handle
-    void Handle_Failure(OTA_Failure_Response const & failure_response)  {
+    /// @param error_message Error message that should be printed if we abort the update
+    void Handle_Failure(OTA_Failure_Response const & failure_response, char const * const error_message = nullptr)  {
         if (m_retries <= 0) {
+            (void)m_send_fw_state_callback(FW_STATE_FAILED, error_message);
             m_fw_callback->Call_Callback<Logger>(false);
             (void)m_finish_callback();
             return;
@@ -297,6 +304,7 @@ class OTA_Handler {
                 Request_First_Firmware_Packet();
                 break;
             case OTA_Failure_Response::RETRY_NOTHING:
+                (void)m_send_fw_state_callback(FW_STATE_FAILED, error_message);
                 m_fw_callback->Call_Callback<Logger>(false);
                 (void)m_finish_callback();
                 break;
@@ -308,7 +316,10 @@ class OTA_Handler {
 
     /// @brief Callback that will be called if we did not receive the firmware chunk response in the given timeout time
     void Handle_Request_Timeout()  {
-        Handle_Failure(OTA_Failure_Response::RETRY_CHUNK);
+        char message[Helper::detectSize(CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, m_fw_callback->Get_Timeout() / 1000)] = {};
+        snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, m_fw_callback->Get_Timeout() / 1000);
+        Logger::println(message);
+        Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
 };
 
