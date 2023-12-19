@@ -86,6 +86,8 @@ Following dependencies are installed automatically or must be installed, too:
 
 ## Supported ThingsBoard Features
 
+Example implementations for all base features, mentioned above, can be found in the `examples` folder. See the according `README.md`, to see which boards are supported and which functionality the example shows.
+
 ### Over `MQTT`:
 
 All possible features are implemented over `MQTT`:
@@ -102,31 +104,18 @@ All possible features are implemented over `MQTT`:
 
 ### Over `HTTP(S)`:
 
-The remaining features have to be implemented by hand with the `sendGetRequest` or `sendPostRequest` method. See the [ThingsBoard Documentation](https://thingsboard.io/docs/reference/http-api) on how these features could be implemented.
+The remaining features have to be implemented by hand with the `sendGetRequest` or `sendPostRequest` method. See the [ThingsBoard Documentation](https://thingsboard.io/docs/reference/http-api) on how these features could be implemented. This is not done directly in the library, because most features require constant polling, whether an event occurred or not, this would cause massive overhead if it is done for all possible features and therefore not recommended.
 
  - [Telemetry data upload](https://thingsboard.io/docs/reference/http-api/#telemetry-upload-api)
  - [Device attribute publish](https://thingsboard.io/docs/reference/http-api/#publish-attribute-update-to-the-server)
-
-Example implementations for all base features, mentioned above, can be found in the `examples` folder. See the according `README.md`, to see which boards are supported and which functionality the example shows.
 
 ## Troubleshooting
 
 This troubleshooting guide contains common issues that are well known and can occur if the library is used wrongly. Ensure to read this section before creating a new `GitHub Issue`.
 
-### No PROGMEM support causing crashes
+### Other issues, enabling internal debug messages
 
-If the device is crashing with a `Exception` especially `Exception (3)`, more specifically `LoadStoreError` or `LoadStoreErrorCause` this might be because, all constant variables are per default in flash memory to decrease the memory footprint of the library, if the libraries used or the board itself don't support `PROGMEM`. This can cause crashes to mitigate that add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file.
-
-```cpp
-// If not set the value is 1 per default if the pgmspace include exists,
-// set to 0 if the board has problems with PROGMEM variables and does not seem to work correctly.
-#define THINGSBOARD_ENABLE_PROGMEM 0
-#include <ThingsBoard.h>
-```
-
-### Enabling internal debug messages
-
-If the device is causing problems, it might be useful to enable internal debug messages, which will allow the library to print more information about sent and received messages as well as internal processes. This is disabled per default to decrease the amount of logs and memory for the log strings on the flash.
+If the device is causing problems that are not already described in more detail below, it might be useful to enable internal debug messages, which will allow the library to print more information about sent and received messages as well as internal processes. This is disabled per default to decrease the amount of logs and memory for the log strings on the flash.
 
 ```cpp
 // If not set the value is 0 per default, meaning it will only print internal error messages,
@@ -135,19 +124,14 @@ If the device is causing problems, it might be useful to enable internal debug m
 #include <ThingsBoard.h>
 ```
 
-### Dynamic ThingsBoard usage
+### No PROGMEM support causing crashes
 
-The received `JSON` payload, as well as the `sendAttributes` and `sendTelemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) by default, this furthermore requires the `MaxFieldsAmount` template argument passed in the constructor. To set the size the buffer should have, where bigger messages will cause not sent/received key-value pairs or failed de-/serialization.
-
-Additionally, the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) is also used to deserialize the received payload for every kind of response received by the server, besides the `OTA` binary data.
-This means that if the `MaxFieldsAmount` template argument is smaller than the amount of requested client or shared attributes it will cause a failed deserialization of the response.
-
-To remove the need for the `MaxFieldsAmount` template argument in the constructor and ensure the size the buffer should have is always enough to hold sent or received messages, instead `#define THINGSBOARD_ENABLE_DYNAMIC 1` can be set before including the ThingsBoard header file. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/). Be aware though as this copies sent or received payloads onto the heap.
+If the device is crashing with a `Exception` especially `Exception (3)`, more specifically `LoadStoreError` or `LoadStoreErrorCause` this might be caused because all constant variables are per default in flash memory to decrease the overall memory footprint of the library. This can cause crashes if the underlying used libraries or the board itself don't support `PROGMEM`, to mitigate that add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file. This will simply remove all constants from the flash memory region and should therefore resolve any incompatibilities.
 
 ```cpp
-// If not set otherwise the value is 0 per default,
-// set to 1 if the MaxFieldsAmount template argument should not be required.
-#define THINGSBOARD_ENABLE_DYNAMIC 1
+// If not set the value is 1 per default if the pgmspace include exists,
+// set to 0 if the board has problems with PROGMEM variables and does not seem to work correctly
+#define THINGSBOARD_ENABLE_PROGMEM 0
 #include <ThingsBoard.h>
 ```
 
@@ -188,21 +172,34 @@ Alternatively, it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM
 #include <ThingsBoard.h>
 ```
 
+### Dynamic ThingsBoard usage
+
+All internal methods call attempt to utilize the stack as far as possible and completely minimize heap usage, that is the reason why there are places in the library where template arguments are required. If that memory being on the heap is not an issue, it is possible to remove the need to enter those template arguments altogether. Simply enable the `THINGSBOARD_ENABLE_DYNAMIC` option like shown below.
+
+```cpp
+// If not set the value is 0 per default,
+// set to 1 if the MaxFieldsAmount template argument should be automatically deduced instead
+#define THINGSBOARD_ENABLE_DYNAMIC 1
+#include <ThingsBoard.h>
+```
+
 ### Too much data fields must be serialized
 
-A buffer allocated internally by `ArduinoJson` library is fixed and is capable for processing not more than 8 fields. If you are trying to send more than that, you will get a respective log showing an error in the `"Serial Monitor"` window:
+The received `JSON` payload, as well as the `sendAttributes` and `sendTelemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) this requires the `MaxFieldsAmount` template argument to be passed in the constructor template list. The default value is 8, if more than that are sent, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
+[TB] Unable to serialize key-value json
 [TB] Too many JSON fields passed (26), increase MaxFieldsAmount (8) accordingly
 ```
 
-Alternatively you might never send enough data points to reach that limit, but instead you receive more than 8 data points at once sent by the server. If that is the case it will not be able to deserialize the received payload into a `JsonDocument` by `ArduinoJson`. If that is the case, you will get a respective log showing an error in the `"Serial Monitor"` window:
+Additionally, the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) is also used to deserialize the received payload for every kind of response received by the server, besides the `OTA` binary data.
+This means that if the `MaxFieldsAmount` template argument is smaller than the amount of requested client or shared attributes, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
 [TB] Unable to de-serialize received json data with error (DeserializationError::NoMemory)
 ```
 
-The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. **Note that the serialized JSON buffer size must be specified explicitly, as described [here](#not-enough-space-for-json-serialization)**. See **Dynamic ThingsBoard usage** above if the usage of `MaxFieldsAmount`, should be replaced with automatic detection of the needed size.
+To fix the issue we simply have to increase the template argument to the required amount.
 
 ```cpp
 // Initialize underlying client, used to establish a connection
@@ -218,19 +215,19 @@ Arduino_MQTT_Client mqttClient(espClient);
 ThingsBoardSized<32> tb(mqttClient, 128);
 ```
 
+Alternatively to remove the need for the `MaxFieldsAmount` template argument in the constructor template list and to ensure the size the buffer should have is always enough to hold sent or received messages, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/). Be aware though as this copies sent or received payloads onto the heap.
+
 ### Too many subscriptions
 
-The possible event subscription classes that are passed to internal methods use array on the stack per default with a maximum of 2. Meaning if the method call attempts to subscribe more than 2 events in total, then it will fail showing an error in the `"Serial Monitor"` window:
+The possible event subscription classes that are passed to internal methods, use arrays which reside on the stack those require the `MaxSubscribtions` template argument to be passed in the constructor template list. The default value is 2, if the method call attempts to subscribe more than that many events in total, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
-[TB] Too many <TB_FEATURE> subscriptions, increase MaxSubscribtions or unsubscribe
+[TB] Too many server-side RPC subscriptions, increase MaxSubscribtions or unsubscribe
 ```
 
-Important is that both server-side RPC and request attribute values are temporary, meaning once the request has been received it is deleted, and it is therefore possible to subscribe another event again. All other subscriptions like client-side RPC or attribute update subscription, however are permanent meaning once the event has been subscribed we can only unsubscribe all events to make more room.
+Important is that both server-side RPC and request attribute values are temporary, meaning once the request has been received it is deleted, and it is therefore possible to subscribe another event again. However, all other subscriptions like client-side RPC or attribute update subscription are permanent meaning once the event has been subscribed we can only unsubscribe all events to make more room.
 
-Additionally, every aforementioned type of request has its own array meaning we can subscribe 2 events and one event subscription does not affect the possible amount for another subscription.
-
-The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. See **Dynamic ThingsBoard usage** above if the usage of `MaxSubscribtions`, should be replaced with a growing vector instead.
+Additionally, every aforementioned type of request has its own array meaning one type of event subscription (client-side RPC) does not affect the possible amount for another event subscription (attribute update subscription). Therefore, the only thing that needs to be done is to increase the size accordingly.
 
 ```cpp
 // Initialize underlying client, used to establish a connection
@@ -246,9 +243,11 @@ Arduino_MQTT_Client mqttClient(espClient);
 ThingsBoardSized<32, 8> tb(mqttClient, 128);
 ```
 
+Alternatively, to remove the need for the `MaxSubscribtions` template argument in the constructor template list, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This will replace the internal implementation with a growing vector instead, meaning all the subscribed callback data will reside on the heap instead.
+
 ### Too many attributes
 
-The possible attribute values that are passed to the `Shared_Attribute_Callback` or `Attribute_Request_Callback` use an array on the stack per default with a maximum of 5. Meaning if we attempt to subscribe or request more attributes than that it will fail showing an error in the `"Serial Monitor"` window:
+The possible attribute values that are passed to the `Shared_Attribute_Callback` or `Attribute_Request_Callback`, use arrays which reside on the stack those require the `MaxAttributes` template argument to be passed in the constructor template list. The default value is 5, if we attempt to subscribe or request more attributes than that, the `"Serial Monitor"` window will get a respective log showing a crash:
 
 ```
 Assertion `m_size < Capacity' failed.
@@ -258,9 +257,7 @@ Important is that the minimum size used has to be 5 if the OTA update is used, t
 
 Additionally, the size passed in the template list of the `Shared_Attribute_Callback` or `Attribute_Request_Callback` class, should be the same as the `ThingsBoardSized` class template list. If it isn't, it will not be possible to call the internal methods.
 
-Therefore, the only thing that needs to be done is to increase the size accordingly, if it exceeds 5, in both `Shared_Attribute_Callback` or `Attribute_Request_Callback` and `ThingsBoardSized` class template list to the amount of attributes we want to subscribe or request.
-
-The solution is to use `ThingsBoardSized` class instead of `ThingsBoard`. See **Dynamic ThingsBoard usage** above if the usage of `MaxAttributes`, should be replaced with a growing vector inside `Shared_Attribute_Callback` and `Attribute_Request_Callback` class instead.
+Therefore, the only thing that needs to be done is to increase the size accordingly.
 
 ```cpp
 // Initialize underlying client, used to establish a connection
@@ -275,6 +272,34 @@ Arduino_MQTT_Client mqttClient(espClient);
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
 ThingsBoardSized<32, 8, 6> tb(mqttClient, 128);
 ```
+
+Alternatively, to remove the need for the `MaxAttributes` template argument in the constructor template list, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This will replace the internal implementation with a growing vector instead, meaning all the subscribed attribute data will reside on the heap instead.
+
+### Server-side RPC response overflowed
+
+The possible response in subscribed `RPC_Callback` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) this requires the `MaxRPC` template argument to be passed in the constructor template list. The default value is 0, if we attempt to return more key-value pairs in the `JSON` that, the `"Serial Monitor"` window will get a respective log showing an error:
+
+```
+[TB] Server-side RPC response overflowed, increase MaxRPC (0)
+```
+
+The default size is only 0, because if a callback only uses the [`JsonDocument::set()`](https://arduinojson.org/v6/api/jsondocument/set/) method, it does not require additional memory. This is only the case if we attempt to add key-value pairs to the [`JsonDocument`](https://arduinojson.org/v6/api/jsondocument/). Therefore, the only thing that needs to be done is to increase the size accordingly.
+
+```cpp
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
+
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 0 possible key-value pairs that can be passed as a response from a server-side RPC call
+// ThingsBoard tb(mqttClient);
+
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 2 possible key-value pairs that can be passed as a response from a server-side RPC call
+ThingsBoardSized<32, 8, 6, 5> tb(mqttClient, 128);
+```
+
+Alternatively, to remove the need for the `MaxRPC` template argument in the constructor template list, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This will instead expect an additional parameter `responseSize` in the `RPC_Callback` constructor argument list, which shows the internal size the [`JsonDocument`](https://arduinojson.org/v6/api/jsondocument/) needs to have to contain the response. Use `JSON_OBJECT_SIZE()` and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information.
 
 ## Tips and Tricks
 
