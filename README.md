@@ -86,7 +86,7 @@ Following dependencies are installed automatically or must be installed, too:
 
 ## Supported ThingsBoard Features
 
-Example implementations for all base features, mentioned above, can be found in the `examples` folder. See the according `README.md`, to see which boards are supported and which functionality the example shows.
+Example implementations for all base features, mentioned above, can be found in the `examples` folder. See the `README.md` in each example folder, to see which boards are supported and which functionality the example shows.
 
 ### Over `MQTT`:
 
@@ -113,7 +113,7 @@ The remaining features have to be implemented by hand with the `sendGetRequest` 
 
 This troubleshooting guide contains common issues that are well known and can occur if the library is used wrongly. Ensure to read this section before creating a new `GitHub Issue`.
 
-### Other issues, enabling internal debug messages
+### Enabling internal debug messages
 
 If the device is causing problems that are not already described in more detail below, it might be useful to enable internal debug messages, which will allow the library to print more information about sent and received messages as well as internal processes. This is disabled per default to decrease the amount of logs and memory for the log strings on the flash.
 
@@ -266,7 +266,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
+// The SDK setup with 64 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
 // ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type and 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback
@@ -292,7 +292,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 0 possible key-value pairs that can be passed as a response from a server-side RPC call
+// The SDK setup with 64 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 0 possible key-value pairs that can be passed as a response from a server-side RPC call
 // ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 2 possible key-value pairs that can be passed as a response from a server-side RPC call
@@ -512,7 +512,7 @@ ThingsBoard tb(mqttClient);
 
 ### Custom Logger Instance
 
-When using the `ThingsBoard` class instance, the class used to print internal warning messages is not hard coded, but instead the `ThingsBoard` class expects the template argument to a `Logger` implementation. See **Enabling internal debug messages** above if the logger should also receive debug messages.
+When using the `ThingsBoard` class instance, the class used to print internal warning messages is not hard coded, but instead the `ThingsBoard` class expects the template argument to a `Logger` implementation. See the [Enabling internal debug messages](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#enabling-internal-debug-messages) section if the logger should also receive debug messages.
 
 Thanks to it being a `template` parameters it allows an arbitrary implementation,
 meaning the underlying Logger client can be whatever the user decides, so it can for example be used to print the messages onto a serial card instead of the serial console.
@@ -543,8 +543,11 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload
-ThingsBoard tb<CustomLogger>(mqttClient, logger);
+// The SDK setup with 64 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 0 possible key-value pairs that can be passed as a response from a server-side RPC call and the default logging instance (DefaultLogger)
+// ThingsBoard tb(mqttClient);
+
+// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback, 2 possible key-value pairs that can be passed as a response from a server-side RPC call and a custom logging instance (CustomLogger)
+ThingsBoardSized<32, 8, 6, 5, CustomLogger> tb(mqttClient, 128);
 ```
 
 ## Have a question or proposal?
