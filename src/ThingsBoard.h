@@ -1590,7 +1590,7 @@ class ThingsBoardSized {
                 break;
             }
             else if (jsonBuffer.overflowed()) {
-                Logger::printfln(RPC_RESPONSE_OVERFLOWED, rpc_response_size)
+                Logger::printfln(RPC_RESPONSE_OVERFLOWED, rpc_response_size);
                 break;
             }
 
