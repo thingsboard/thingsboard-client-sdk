@@ -299,8 +299,7 @@ void processSwitchChange(const JsonVariantConst &data, JsonDocument &response) {
 #endif
   Serial.println(switch_state);
 
-  JsonVariant variant = response.to<JsonVariant>();
-  variant.set(22.02);
+  response.set(22.02);
 }
 
 void setup() {
@@ -337,13 +336,13 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
-    const std::array<RPC_Callback<5U>, 3U> callbacks = {
+    const std::array<RPC_Callback, 3U> callbacks = {
       // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
-      RPC_Callback<5U>{ RPC_JSON_METHOD,           processGetJson },
+      RPC_Callback{ RPC_JSON_METHOD,           processGetJson },
       // Requires additional memory in the JsonDocument for 5 key-value pairs that do not copy their value into the JsonDocument itself
-      RPC_Callback<5U>{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
+      RPC_Callback{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
        // Internal size can be 0, because if we use the JsonDocument as a JsonVariant and then set the value we do not require additional memory
-      RPC_Callback<5U>{ RPC_SWITCH_METHOD,         processSwitchChange }
+      RPC_Callback{ RPC_SWITCH_METHOD,         processSwitchChange }
     };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,

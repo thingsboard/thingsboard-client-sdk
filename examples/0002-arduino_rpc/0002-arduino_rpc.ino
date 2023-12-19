@@ -228,8 +228,7 @@ void processSwitchChange(const JsonVariantConst &data, JsonDocument &response) {
 #endif
   Serial.println(switch_state);
 
-  JsonVariant variant = response.to<JsonVariant>();
-  variant.set(22.02);
+  response.set(22.02);
 }
 
 void loop() {
@@ -261,8 +260,8 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
-    const uint8_t callback_size = 3U;
-    const RPC_Callback<5U> callbacks[callback_size] = {
+    constexpr uint8_t CALLBACK_SIZE = 3U;
+    const RPC_Callback callbacks[CALLBACK_SIZE] = {
       // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
       { RPC_JSON_METHOD,           processGetJson },
       // Requires additional memory in the JsonDocument for 5 key-value pairs that do not copy their value into the JsonDocument itself
@@ -273,8 +272,8 @@ void loop() {
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.
-    const RPC_Callback<5U>* begin = callbacks;
-    const RPC_Callback<5U>* end = callbacks + callback_size;
+    const RPC_Callback* begin = callbacks;
+    const RPC_Callback* end = callbacks + CALLBACK_SIZE;
     if (!tb.RPC_Subscribe(begin, end)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to subscribe for RPC"));
