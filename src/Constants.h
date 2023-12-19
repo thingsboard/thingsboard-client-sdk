@@ -12,14 +12,15 @@
 #include <ArduinoJson.h>
 #endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 
-
-#define Default_Max_Stack_Size 1024
-#define Default_Buffering_Size 64
-#define Default_Payload 64
 #define Default_Fields_Amount 8
 #define Default_Subscriptions_Amount 2
 #define Default_Attributes_Amount 5
 #define Default_RPC_Amount 0
+#define Default_Payload 64
+#define Default_Max_Stack_Size 1024
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+#define Default_Buffering_Size 64
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
 
 // Log messages.

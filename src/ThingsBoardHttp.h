@@ -69,7 +69,7 @@ class ThingsBoardHttpSized {
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    inline ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t const & port = 80U, bool keepAlive = true, size_t const & maxStackSize = Default_Max_Stack_Size)
+    ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t const & port = 80U, bool keepAlive = true, size_t const & maxStackSize = Default_Max_Stack_Size)
       : m_client(client)
       , m_max_stack(maxStackSize)
       , m_token(access_token)
@@ -80,7 +80,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
-    inline void setMaximumStackSize(size_t const & maxStackSize) {
+    void setMaximumStackSize(size_t const & maxStackSize) {
         m_max_stack = maxStackSize;
     }
 
@@ -91,7 +91,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool Send_Json(char const * const topic, TSource const & source, size_t const & jsonSize) {
+    bool Send_Json(char const * const topic, TSource const & source, size_t const & jsonSize) {
         // Check if allocating needed memory failed when trying to create the JsonObject,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
@@ -134,7 +134,7 @@ class ThingsBoardHttpSized {
     /// @param topic Topic we want to send the data over
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    inline bool Send_Json_String(char const * const topic, char const * const json) {
+    bool Send_Json_String(char const * const topic, char const * const json) {
         if (json == nullptr || m_token == nullptr) {
             return false;
         }
@@ -154,7 +154,7 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    inline bool sendTelemetryData(char const * const key, T const & value) {
+    bool sendTelemetryData(char const * const key, T const & value) {
         return sendKeyValue(key, value);
     }
 
@@ -167,7 +167,7 @@ class ThingsBoardHttpSized {
     /// @param last Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether sending the aggregated telemetry data was successful or not
     template<typename InputIterator>
-    inline bool sendTelemetry(InputIterator const & first, InputIterator const & last) {
+    bool sendTelemetry(InputIterator const & first, InputIterator const & last) {
         return sendDataArray(first, last, true);
     }
 
@@ -175,7 +175,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    inline bool sendTelemetryJson(char const * const json) {
+    bool sendTelemetryJson(char const * const json) {
         return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
     }
 
@@ -186,7 +186,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendTelemetryJson(TSource const & source, size_t const & jsonSize) {
+    bool sendTelemetryJson(TSource const & source, size_t const & jsonSize) {
         return Send_Json(HTTP_TELEMETRY_TOPIC, source, jsonSize);
     }
 
@@ -196,9 +196,9 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
 #if THINGSBOARD_ENABLE_STL
-    inline bool sendGetRequest(char const * const path, std::string & response) {
+    bool sendGetRequest(char const * const path, std::string & response) {
 #else
-    inline bool sendGetRequest(char const * const path, String& response) {
+    bool sendGetRequest(char const * const path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
         return getMessage(path, response);
     }
@@ -207,7 +207,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
-    inline bool sendPostRequest(char const * const path, char const * const json) {
+    bool sendPostRequest(char const * const path, char const * const json) {
         return postMessage(path, json);
     }
 
@@ -221,7 +221,7 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    inline bool sendAttributeData(char const * const key, T const & value) {
+    bool sendAttributeData(char const * const key, T const & value) {
         return sendKeyValue(key, value, false);
     }
 
@@ -234,7 +234,7 @@ class ThingsBoardHttpSized {
     /// @param last Iterator pointing to the end of the data container (last element + 1)
     /// @return Whether sending the aggregated attribute data was successful or not
     template<typename InputIterator>
-    inline bool sendAttributes(InputIterator const & first, InputIterator const & last) {
+    bool sendAttributes(InputIterator const & first, InputIterator const & last) {
         return sendDataArray(first, last, false);
     }
 
@@ -242,7 +242,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    inline bool sendAttributeJson(char const * const json) {
+    bool sendAttributeJson(char const * const json) {
         return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
     }
 
@@ -253,7 +253,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     template <typename TSource>
-    inline bool sendAttributeJson(TSource const & source, size_t const & jsonSize) {
+    bool sendAttributeJson(TSource const & source, size_t const & jsonSize) {
         return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
     }
 
@@ -264,13 +264,13 @@ class ThingsBoardHttpSized {
 
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
-    inline size_t const & getMaximumStackSize() const {
+    size_t const & getMaximumStackSize() const {
         return m_max_stack;
     }
 
     /// @brief Clears any remaining memory of the previous conenction,
     /// and resets the TCP as well, if data is resend the TCP connection has to be re-established
-    inline void clearConnection() {
+    void clearConnection() {
         m_client.stop();
     }
 
@@ -278,7 +278,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
-    inline bool postMessage(char const * const path, char const * const json) {
+    bool postMessage(char const * const path, char const * const json) {
         bool result = true;
         const int success = m_client.post(path, HTTP_POST_PATH, json);
         const int status = m_client.get_response_status_code();
@@ -298,9 +298,9 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
 #if THINGSBOARD_ENABLE_STL
-    inline bool getMessage(char const * const path, std::string& response) {
+    bool getMessage(char const * const path, std::string& response) {
 #else
-    inline bool getMessage(char const * const path, String& response) {
+    bool getMessage(char const * const path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
         bool result = true;
         const bool success = m_client.get(path);
@@ -328,7 +328,7 @@ class ThingsBoardHttpSized {
     /// @param telemetry Whether the data we want to send should be sent over the attribute or telemtry topic
     /// @return Whether sending the aggregated data was successful or not
     template<typename InputIterator>
-    inline bool sendDataArray(InputIterator const & first, InputIterator const & last, bool telemetry) {
+    bool sendDataArray(InputIterator const & first, InputIterator const & last, bool telemetry) {
 #if THINGSBOARD_ENABLE_DYNAMIC
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed.
@@ -358,7 +358,7 @@ class ThingsBoardHttpSized {
     /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
     /// @return Whetherr sending the data was successful or not
     template<typename T>
-    inline bool sendKeyValue(char const * const key, T value, bool telemetry = true) {
+    bool sendKeyValue(char const * const key, T value, bool telemetry = true) {
         const Telemetry t(key, value);
         if (t.IsEmpty()) {
             // Message is ignored and not sent at all.

@@ -47,7 +47,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @param ...args Arguments that will be forwarded into the overloaded vector constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
-    inline Attribute_Request_Callback(function callback, Args const &... args)
+    Attribute_Request_Callback(function callback, Args const &... args)
       : Callback(callback, ATT_REQUEST_CB_IS_NULL)
       , m_attributes(args...)
       , m_request_id(0U)
@@ -120,7 +120,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the vector assign method and therefore allow to use every overloaded vector assign without having to implement them
     /// @param ...args Arguments that will be forwarded into the overloaded vector assign method see https://en.cppreference.com/w/cpp/container/vector/assign for more information
     template<typename... Args>
-    inline void Set_Attributes(Args const &... args) {
+    void Set_Attributes(Args const &... args) {
         m_attributes.assign(args...);
     }
 

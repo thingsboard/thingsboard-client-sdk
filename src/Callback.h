@@ -42,14 +42,14 @@ class Callback {
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
-    inline Callback() = default;
+    Callback() = default;
 
     /// @brief Constructs base callback, will be called upon specific arrival of json message
     /// where the requested data was sent by the cloud and received by the client
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types
     /// @param message Message that is logged if the callback given initally is a nullptr and can therefore not be called,
     /// used to ensure users are informed that the initalization of the child class is invalid
-    inline Callback(function callback, char const * const message)
+    Callback(function callback, char const * const message)
       : m_callback(callback)
       , m_message(message)
     {
@@ -61,7 +61,7 @@ class Callback {
     /// @param ...arguments Received client-side or shared attribute request data that include
     /// the client-side or shared attributes that were requested and their current values
     template <typename Logger>
-    inline returnType Call_Callback(argumentTypes const &... arguments) const {
+    returnType Call_Callback(argumentTypes const &... arguments) const {
         if (!m_callback) {
           Logger::println(m_message);
           return returnType();
@@ -72,7 +72,7 @@ class Callback {
     /// @brief Sets the callback method that will be called upon data arrival with the given data that was received serialized into the given argument types,
     /// used to change the callback initally passed or to set the callback if it was not passed as an argument initally
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given argument types
-    inline void Set_Callback(function callback) {
+    void Set_Callback(function callback) {
         m_callback = callback;
     }
 
