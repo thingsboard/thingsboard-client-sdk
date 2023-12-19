@@ -59,7 +59,7 @@ class Helper {
     /// @param source Data source containing our json key value pairs we want to measure
     /// @return Total size of the string produced by serializeJson + 1 byte for the string null terminator
     template <typename TSource>
-    inline static size_t Measure_Json(TSource const & source) {
+    static size_t Measure_Json(TSource const & source) {
         return JSON_STRING_SIZE(measureJson(source));
     }
 
@@ -73,7 +73,7 @@ class Helper {
     /// @param container Data container holding the elements we want to remove an element from
     /// @param index Iterator position we want to remove the element at
     template<typename DataContainer, typename InputIterator>
-    inline static void remove(DataContainer & container, InputIterator const & iterator) {
+    static void remove(DataContainer & container, InputIterator const & iterator) {
         container.erase(iterator);
     }
 
@@ -85,7 +85,7 @@ class Helper {
     /// @param last Iterator pointing to the end of the data container (last element + 1)
     /// @return Distance between the two iterators
     template<typename InputIterator>
-    inline static size_t distance(InputIterator const & first, InputIterator const & last) {
+    static size_t distance(InputIterator const & first, InputIterator const & last) {
 #if THINGSBOARD_ENABLE_STL
         return std::distance(first, last);
 #else

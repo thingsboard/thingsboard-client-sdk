@@ -15,12 +15,12 @@ template <typename T, size_t Capacity>
 class Array {
   public:
     /// @brief Constructor
-    inline Array(void) = default;
+    Array(void) = default;
 
     /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
     /// @param first Beginning of the elements we want to copy into our underlying data container
     /// @param last One past the end of the elements we want to copy into our underlying data container
-    inline Array(T const * const first, T const * const last) :
+    Array(T const * const first, T const * const last) :
         m_elements(),
         m_size(0U)
     {
@@ -30,68 +30,68 @@ class Array {
     /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
     /// @param first Beginning of the elements we want to copy into our underlying data container
     /// @param last One past the end of the elements we want to copy into our underlying data container
-    inline void assign(T const * const first, T const * const last) {
+    void assign(T const * const first, T const * const last) {
         insert(nullptr, first, last);
     }
 
     /// @brief Returns whether there are still any element in the underlying data container
     /// @return Whether the underlying data container is empty or not
-    inline bool empty() const {
+    bool empty() const {
         return m_size == 0U;
     }
 
     /// @brief Gets the current amount of elements in the underlying data container
     /// @return The amount of items currently in the underlying data container
-    inline size_t const & size() const {
+    size_t const & size() const {
         return m_size;
     }
 
     /// @brief Gets the maximum amount of elements that can currently be stored in the underlying data container
     /// @return The maximum amount of items that can currently be stored in the underlying data container
-    inline size_t capacity() const {
+    size_t capacity() const {
         return Capacity;
     }
 
     /// @brief Returns a constant pointer to the first element of the vector
     /// @return Constant pointer to the first element of the vector
-    inline T * begin() {
+    T * begin() {
         return m_elements;
     }
 
     /// @brief Returns a constant pointer to the first element of the vector
     /// @return Constant pointer to the first element of the vector
-    inline T const * begin() const {
+    T const * begin() const {
         return m_elements;
     }
 
     /// @brief Returns a constant pointer to the first element of the vector
     /// @return Constant pointer to the first element of the vector
-    inline T const * cbegin() const {
+    T const * cbegin() const {
         return m_elements;
     }
 
     /// @brief Returns the last element of the vector
     /// @return Reference to the last element of the vector
-    inline T & back() {
+    T & back() {
         assert(m_size != 0U);
         return m_elements[m_size - 1U];
     }
 
     /// @brief Returns a pointer to one-past-the-end element of the vector
     /// @return Pointer to one-past-the-end element of the vector
-    inline T * end() {
+    T * end() {
         return m_elements + m_size;
     }
 
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
-    inline T const * end() const {
+    T const * end() const {
         return m_elements + m_size;
     }
 
     /// @brief Returns a constant pointer to one-past-the-end element of the vector
     /// @return Constant pointer to one-past-the-end element of the vector
-    inline T const * cend() const {
+    T const * cend() const {
         return m_elements + m_size;
     }
 
@@ -100,7 +100,7 @@ class Array {
     /// Because if we do not we could cause an out of bounds write, which could possibly overwrite other memory.
     /// Causing hard to debug issues, therefore this behaviour is not allowed in the first place
     /// @param element Element that should be inserted at the end
-    inline void push_back(T const & element) {
+    void push_back(T const & element) {
         assert(m_size < Capacity);
         m_elements[m_size] = element;
         m_size++;
@@ -112,7 +112,7 @@ class Array {
     /// @param position Attribute is not used and can be left as nullptr, simply there to keep compatibility with std::vector insert method
     /// @param first Beginning of the elements we want to copy into our underlying data container
     /// @param last One past the end of the elements we want to copy into our underlying data container
-    inline void insert(T const * const position, T const * first, T const * const last) {
+    void insert(T const * const position, T const * first, T const * const last) {
         while (first < last) {
             push_back(*first);
             first++;
@@ -121,7 +121,7 @@ class Array {
 
     /// @brief Removes the element at the given iterator, has to move all element one to the left if the index is not at the end of the array
     /// @param iterator Iterator the element should be removed at from the underlying data container
-    inline void erase(T const * const iterator) {
+    void erase(T const * const iterator) {
         size_t const index = Helper::distance(this->cbegin(), iterator);
         // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
@@ -137,7 +137,7 @@ class Array {
     /// @brief Method to access an element at a given index,
     /// ensures the device crashes if we attempted to access in an invalid location
     /// @param index Index we want to get the corresponding element for
-    inline T& at(size_t const & index) {
+    T& at(size_t const & index) {
         assert(index < m_size);
         return m_elements[index];
     }
@@ -145,20 +145,20 @@ class Array {
     /// @brief Bracket operator to access an element at a given index.
     /// Does not do any bounds checks, meaning the access is more efficient but it is possible to read out of bounds data
     /// @param index Index we want to get the corresponding element for
-    inline T& operator[](size_t const & index) {
+    T& operator[](size_t const & index) {
         return m_elements[index];
     }
 
     /// @brief Bracket operator to access an element at a given index.
     /// Does not do any bounds checks, meaning the access is more efficient but it is possible to read out of bounds data
     /// @param index Index we want to get the corresponding element for
-    inline T const & operator[](size_t const & index) const {
+    T const & operator[](size_t const & index) const {
         return m_elements[index];
     }
 
     /// @brief Clears the given underlying data container.
     /// Simply sets the underlying size to 0, data will only be cleared in the destructor
-    inline void clear() {
+    void clear() {
         m_size = 0;
     }
 
