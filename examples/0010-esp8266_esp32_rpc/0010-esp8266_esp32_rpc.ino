@@ -343,7 +343,7 @@ void loop() {
       // Requires additional memory in the JsonDocument for 5 key-value pairs that do not copy their value into the JsonDocument itself
       RPC_Callback<5U>{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
        // Internal size can be 0, because if we use the JsonDocument as a JsonVariant and then set the value we do not require additional memory
-      RPC_Callback<0U>{ RPC_SWITCH_METHOD,         processSwitchChange }
+      RPC_Callback<5U>{ RPC_SWITCH_METHOD,         processSwitchChange }
     };
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
