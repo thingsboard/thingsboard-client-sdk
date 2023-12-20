@@ -9,6 +9,13 @@
 #    endif
 #  endif
 
+// Include the internal version of the ESP IDF contained in the esp_idf_version fil if it exists to allow checking for supported ESP IDF vrsion.
+#  ifdef __has_include
+#    if __has_include(<esp_idf_version.h>)
+#      include <esp_idf_version.h>
+#    endif
+#  endif
+
 // Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
 // See https://arduinojson.org/v6/api/config/use_long_long/ for more information.
 #define ARDUINOJSON_USE_LONG_LONG 1
@@ -51,7 +58,7 @@
 #    endif
 #  endif
 
-// Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists and we support the used ESP IDF, because it is more efficient than the Arduino Ticker implementation,
+// Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
 #  ifdef __has_include
 #    if  __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR > 4
@@ -67,7 +74,7 @@
 #    define THINGSBOARD_USE_ESP_TIMER 0
 #  endif
 
-// Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists and we support the used ESP IDF,
+// Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client.
 #  ifdef __has_include
 #    if  __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR > 4
@@ -83,7 +90,7 @@
 #    define THINGSBOARD_USE_ESP_MQTT 0
 #  endif
 
-// Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists and we support the used ESP IDF,
+// Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
 // because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
 #  ifdef __has_include
 #    if  __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR > 4
@@ -99,7 +106,7 @@
 #    define THINGSBOARD_USE_MBED_TLS 0
 #  endif
 
-// Use the esp_ota_ops header internally for handling the writing of ota update data, as long as the header exists and we support the used ESP IDF,
+// Use the esp_ota_ops header internally for handling the writing of ota update data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
 #  ifdef __has_include
 #    if  __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR > 4
