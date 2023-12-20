@@ -768,7 +768,7 @@ class ThingsBoardSized {
     template<typename InputIterator>
     bool RPC_Subscribe(InputIterator const & first, InputIterator const & last) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
-        const size_t size = Helper::distance(first, last);
+        size_t const size = Helper::distance(first, last);
         if (m_rpc_callbacks.size() + size > m_rpc_callbacks.capacity()) {
             Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SERVER_SIDE_RPC_SUBSCRIPTIONS);
             return false;
@@ -844,7 +844,7 @@ class ThingsBoardSized {
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed + the default methodName and params key needed for the request.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
+        size_t const dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
         TBJsonDocument requestBuffer(dataStructureMemoryUsage);
 #else
         // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
@@ -989,7 +989,7 @@ class ThingsBoardSized {
     template<typename InputIterator>
     bool Shared_Attributes_Subscribe(InputIterator const & first, InputIterator const & last) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
-        const size_t size = Helper::distance(first, last);
+        size_t const size = Helper::distance(first, last);
         if (m_shared_attribute_update_callbacks.size() + size > m_shared_attribute_update_callbacks.capacity()) {
             Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS);
             return false;
@@ -1092,7 +1092,7 @@ class ThingsBoardSized {
             return false;
         }
         BufferingPrint buffered_print(m_client, getBufferingSize());
-        const size_t bytes_serialized = serializeJson(source, buffered_print);
+        size_t const bytes_serialized = serializeJson(source, buffered_print);
         if (bytes_serialized < jsonSize) {
             Logger::println(UNABLE_TO_SERIALIZE_JSON);
             return false;
@@ -1134,7 +1134,7 @@ class ThingsBoardSized {
     /// @brief Returns the amount of bytes that can be allocated to speed up fall back serialization with the StreamUtils class
     /// See https://github.com/bblanchon/ArduinoStreamUtils for more information on the underlying class used
     /// @return Amount of bytes allocated to speed up serialization
-    const size_t& getBufferingSize() const {
+    size_t const & getBufferingSize() const {
       return m_buffering_size;
     }
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS

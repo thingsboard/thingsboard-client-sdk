@@ -40,7 +40,7 @@ char constexpr ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary d
 char constexpr ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
 char constexpr CHECKSUM_VERIFICATION_FAILED[] PROGMEM = "Calculated checksum (%s), not the same as expected checksum (%s)";
 char constexpr FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
-char constexpr CHUNK_REQUEST_TIMED_OUT[] PROGMEM = "Failed to receive requested chunk (%u) in (%llu) ms. Internet connection might have been lost";
+char constexpr CHUNK_REQUEST_TIMED_OUT[] PROGMEM = "Failed to receive requested chunk (%u) in (%llu) us. Internet connection might have been lost";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr FW_CHUNK[] PROGMEM = "Receive chunk (%u), with size (%u) bytes";
 char constexpr HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
@@ -56,7 +56,7 @@ char constexpr ERROR_UPDATE_WRITE[] = "Only wrote (%u) bytes of binary data inst
 char constexpr ERROR_UPDATE_END[] = "Error during flash updater not all bytes written";
 char constexpr CHECKSUM_VERIFICATION_FAILED[] = "Calculated checksum (%s), not the same as expected checksum (%s)";
 char constexpr FW_UPDATE_ABORTED[] = "Firmware update aborted";
-char constexpr CHUNK_REQUEST_TIMED_OUT[] = "Failed to receive requested chunk (%u) in (%llu) ms. Internet connection might have been lost";
+char constexpr CHUNK_REQUEST_TIMED_OUT[] = "Failed to receive requested chunk (%u) in (%llu) us. Internet connection might have been lost";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr FW_CHUNK[] = "Receive chunk (%u), with size (%u) bytes";
 char constexpr HASH_EXPECTED[] = "Expected checksum: (%s)";
@@ -316,8 +316,9 @@ class OTA_Handler {
 
     /// @brief Callback that will be called if we did not receive the firmware chunk response in the given timeout time
     void Handle_Request_Timeout()  {
-        char message[Helper::detectSize(CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, m_fw_callback->Get_Timeout() / 1000)] = {};
-        snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, m_fw_callback->Get_Timeout() / 1000);
+        uint64_t const & timeout = m_fw_callback->Get_Timeout();
+        char message[Helper::detectSize(CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout)] = {};
+        snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout);
         Logger::println(message);
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
