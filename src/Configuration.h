@@ -61,7 +61,7 @@
 // Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
 #  ifdef __has_include
-#    if  __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR > 4
+#    if  __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR >= 4
 #      ifndef THINGSBOARD_USE_ESP_TIMER
 #        define THINGSBOARD_USE_ESP_TIMER 1
 #      endif
@@ -77,7 +77,7 @@
 // Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client.
 #  ifdef __has_include
-#    if  __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR > 4
+#    if  __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR >= 4
 #      ifndef THINGSBOARD_USE_ESP_MQTT
 #        define THINGSBOARD_USE_ESP_MQTT 1
 #      endif
@@ -93,7 +93,7 @@
 // Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
 // because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
 #  ifdef __has_include
-#    if  __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR > 4
+#    if  __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR >= 4
 #      ifndef THINGSBOARD_USE_MBED_TLS
 #        define THINGSBOARD_USE_MBED_TLS 1
 #      endif
@@ -109,7 +109,7 @@
 // Use the esp_ota_ops header internally for handling the writing of ota update data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
 #  ifdef __has_include
-#    if  __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR > 4
+#    if  __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR >= 4
 #      ifndef THINGSBOARD_USE_ESP_PARTITION
 #        define THINGSBOARD_USE_ESP_PARTITION 1
 #      endif
