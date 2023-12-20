@@ -99,7 +99,7 @@ class ThingsBoardHttpSized {
             return false;
         }
 #if !THINGSBOARD_ENABLE_DYNAMIC
-        const size_t amount = source.size();
+        size_t const amount = source.size();
         if (MaxFieldsAmount < amount) {
             Logger::printfln(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmount);
             return false;
@@ -279,17 +279,16 @@ class ThingsBoardHttpSized {
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
     bool postMessage(char const * const path, char const * const json) {
-        bool result = true;
-        const int success = m_client.post(path, HTTP_POST_PATH, json);
-        const int status = m_client.get_response_status_code();
+        bool success = m_client.post(path, HTTP_POST_PATH, json) == 0;
+        int const status = m_client.get_response_status_code();
 
         if (!success || status < HTTP_RESPONSE_SUCCESS_RANGE_START || status > HTTP_RESPONSE_SUCCESS_RANGE_END) {
             Logger::printfln(HTTP_FAILED, POST, status);
-            result = false;
+            success = false;
         }
 
         clearConnection();
-        return result;
+        return success;
     }
 
     /// @brief Attempts to send a GET request over HTTP or HTTPS
@@ -302,13 +301,12 @@ class ThingsBoardHttpSized {
 #else
     bool getMessage(char const * const path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
-        bool result = true;
-        const bool success = m_client.get(path);
-        const int status = m_client.get_response_status_code();
+        bool success = m_client.get(path);
+        int const status = m_client.get_response_status_code();
 
         if (!success || status < HTTP_RESPONSE_SUCCESS_RANGE_START || status > HTTP_RESPONSE_SUCCESS_RANGE_END) {
             Logger::printfln(HTTP_FAILED, GET, status);
-            result = false;
+            success = false;
             goto cleanup;
         }
 
@@ -316,7 +314,7 @@ class ThingsBoardHttpSized {
 
         cleanup:
         clearConnection();
-        return result;
+        return success;
     }
 
     /// @brief Attempts to send aggregated attribute or telemetry data
@@ -333,15 +331,15 @@ class ThingsBoardHttpSized {
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        const size_t size = Helper::distance(first, last);
-        const size_t dataStructureMemoryUsage = JSON_OBJECT_SIZE(size);
+        size_t const size = Helper::distance(first, last);
+        size_t const dataStructureMemoryUsage = JSON_OBJECT_SIZE(size);
         TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
         for (auto it = first; it != last; ++it) {
-            const auto& data = *it;
+            auto const & data = *it;
             if (!data.SerializeKeyValue(jsonBuffer)) {
                 Logger::println(UNABLE_TO_SERIALIZE);
                 return false;
@@ -359,7 +357,7 @@ class ThingsBoardHttpSized {
     /// @return Whetherr sending the data was successful or not
     template<typename T>
     bool sendKeyValue(char const * const key, T value, bool telemetry = true) {
-        const Telemetry t(key, value);
+        Telemetry const t(key, value);
         if (t.IsEmpty()) {
             // Message is ignored and not sent at all.
             return false;
