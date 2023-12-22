@@ -308,13 +308,13 @@ Alternatively, to remove the need for the `MaxRPC` template argument in the cons
 When using the `ThingsBoard` class instance, the class used to flash the binary data onto the device is not hard coded,
 but instead the `OTA_Update_Callback` class expects an optional argument, the `IUpdater` implementation.
 
-Thanks to it being a `interface` it allows an arbitrary implementation,
+Thanks to it being an interface it allows an arbitrary implementation,
 meaning as long as the device can flash binary data and supports the C++ STL it supports OTA updates, with the `ThingsBoard` library.
 
-Currently, implemented in the library itself are the `ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `ESP8266_Updater` which is used with the `ESP8266` and `Arduino` and the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain.
+Currently, implemented in the library itself are the `Arduino_ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `Arduino_ESP8266_Updater` which is used with the `ESP8266` and `Arduino` and the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain.
 
 If another device wants to be supported, a custom interface implementation needs to be created.
-For that a `class` that inherits the `IUpdater` interface needs to be created and `override` the needed methods.
+For that a `class` needs to inherit the `IUpdater` interface and `override` the needed methods shown below:
 
 ```cpp
 #include <IUpdater.h>
@@ -339,7 +339,7 @@ class Custom_Updater : public IUpdater {
 };
 ```
 
-Once that has been done it can simply be passed instead of the `Espressif_Updater` instance.
+Once that has been done it can simply be passed instead of the `Espressif_Updater`, `Arduino_ESP8266_Client` or the `Arduino_ESP32_Client` instance.
 
 ```cpp
 // Initalize the Updater client instance used to flash binary to flash memory
@@ -353,7 +353,7 @@ const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_
 When using the `ThingsBoardHttp` class instance, the protocol used to send the data to the HTTP broker is not hard coded,
 but instead the `ThingsBoardHttp` class expects the argument to a `IHTTP_Client` implementation.
 
-Thanks to it being a `interface` it allows an arbitrary implementation,
+Thanks to it being an interface it allows an arbitrary implementation,
 meaning the underlying HTTP client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
 
 Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which is simply a wrapper around the [`ArduinoHttpClient`](https://github.com/arduino-libraries/ArduinoHttpClient), see [dependencies](https://github.com/arduino-libraries/ArduinoHttpClient?tab=readme-ov-file#dependencies) for whether the board you are using is supported or not.
@@ -414,7 +414,7 @@ ThingsBoardHttp tb(httpClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 When using the `ThingsBoard` class instance, the protocol used to send the data to the MQTT broker is not hard coded,
 but instead the `ThingsBoard` class expects the argument to a `IMQTT_Client` implementation.
 
-Thanks to it being a `interface` it allows an arbitrary implementation,
+Thanks to it being an interface it allows an arbitrary implementation,
 meaning the underlying MQTT client can be whatever the user decides, so it can for example be used to support platforms using `Arduino` or even `Espressif IDF`.
 
 Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`PubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not, useful when using `Arduino`. As well as the `Espressif_MQTT_Client`, which is a simple wrapper around the [`esp-mqtt`](https://github.com/espressif/esp-mqtt), useful when using `Espressif IDF` with a `ESP32`.
@@ -514,7 +514,7 @@ ThingsBoard tb(mqttClient);
 
 When using the `ThingsBoard` class instance, the class used to print internal warning messages is not hard coded, but instead the `ThingsBoard` class expects the template argument to a `Logger` implementation. See the [Enabling internal debug messages](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#enabling-internal-debug-messages) section if the logger should also receive debug messages.
 
-Thanks to it being a `template` parameters it allows an arbitrary implementation,
+Thanks to it being a template parameter it allows an arbitrary implementation,
 meaning the underlying Logger client can be whatever the user decides, so it can for example be used to print the messages onto a serial card instead of the serial console.
 
 Currently, implemented in the library itself is the `DefaultLogger`, which is simply a wrapper around a `printf` call. If the functionality wants to be extended, a custom implementation needs to be created.
@@ -534,7 +534,7 @@ class CustomLogger {
 };
 ```
 
-Once that has been done it can simply be passed instead of the `DefaultLogger` instance.
+Once that has been done it can simply be passed as the last template parameter.
 
 ```cpp
 // Initialize underlying client, used to establish a connection
