@@ -28,9 +28,17 @@
 // and if it does not exist we fall back to the Arduino String class.
 #  ifndef THINGSBOARD_ENABLE_STL
 #    ifdef __has_include
-#      define THINGSBOARD_ENABLE_STL __has_include(<string>) && __has_include(<functional>) && __has_include(<vector>) && __has_include(<iterator>)
+#      if __has_include(<string>) && __has_include(<functional>) && __has_include(<vector>) && __has_include(<iterator>)
+#        define THINGSBOARD_ENABLE_STL 1
+#      else
+#        define THINGSBOARD_ENABLE_STL 0
+#      endif
 #    else
-#      define THINGSBOARD_ENABLE_STL 0
+#      ifdef ARDUINO
+#        define THINGSBOARD_ENABLE_STL 0
+#      else
+#        define THINGSBOARD_ENABLE_STL 1
+#      endif
 #    endif
 #  endif
 
@@ -44,7 +52,11 @@
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
 #  ifndef THINGSBOARD_USE_ESP_TIMER
 #    ifdef __has_include
-#      define THINGSBOARD_USE_ESP_TIMER  __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#        define THINGSBOARD_USE_ESP_TIMER 1
+#      else
+#        define THINGSBOARD_USE_ESP_TIMER 0
+#      endif
 #    else
 #      define THINGSBOARD_USE_ESP_TIMER 0
 #    endif
@@ -54,7 +66,11 @@
 // to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client.
 #  ifndef THINGSBOARD_USE_ESP_MQTT
 #    ifdef __has_include
-#      define THINGSBOARD_USE_ESP_MQTT  __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#        define THINGSBOARD_USE_ESP_MQTT 1
+#      else
+#        define THINGSBOARD_USE_ESP_MQTT 0
+#      endif
 #    else
 #      define THINGSBOARD_USE_ESP_MQTT 0
 #    endif
@@ -64,7 +80,11 @@
 // because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
 #  ifndef THINGSBOARD_USE_MBED_TLS
 #    ifdef __has_include
-#      define THINGSBOARD_USE_MBED_TLS  __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#        define THINGSBOARD_USE_MBED_TLS 1
+#      else
+#        define THINGSBOARD_USE_MBED_TLS 0
+#      endif
 #    else
 #      define THINGSBOARD_USE_MBED_TLS 0
 #    endif
@@ -74,7 +94,11 @@
 // to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
 #  ifndef THINGSBOARD_USE_ESP_PARTITION
 #    ifdef __has_include
-#      define THINGSBOARD_USE_ESP_PARTITION  __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#        define THINGSBOARD_USE_ESP_PARTITION 1
+#      else
+#        define THINGSBOARD_USE_ESP_PARTITION 0
+#      endif
 #    else
 #      define THINGSBOARD_USE_ESP_PARTITION 0
 #    endif
@@ -84,7 +108,11 @@
 // to allow variables to be placed into flash memory instead of sram, meaning the sram can be allocated for other things.
 #  ifndef THINGSBOARD_ENABLE_PROGMEM
 #    ifdef __has_include
-#      define THINGSBOARD_ENABLE_PROGMEM __has_include(<pgmspace.h>)
+#      if __has_include(<pgmspace.h>)
+#        define THINGSBOARD_ENABLE_PROGMEM 1
+#      else
+#        define THINGSBOARD_ENABLE_PROGMEM 0
+#      endif
 #    else
 #      define THINGSBOARD_ENABLE_PROGMEM 0
 #    endif
@@ -118,7 +146,11 @@
 // To support this feature, however the IMQTT_Client interface implementation, needs to additionally override the Print interface, because that is required by the wrapper class BufferingPrint.
 #  ifndef THINGSBOARD_ENABLE_STREAM_UTILS
 #    ifdef __has_include
-#      define THINGSBOARD_ENABLE_STREAM_UTILS __has_include(<StreamUtils.h>)
+#      if __has_include(<StreamUtils.h>)
+#        define THINGSBOARD_ENABLE_STREAM_UTILS 1
+#      else
+#        define THINGSBOARD_ENABLE_STREAM_UTILS 0
+#      endif
 #    else
 #      define THINGSBOARD_ENABLE_STREAM_UTILS 0
 #    endif
@@ -130,7 +162,11 @@
 // See https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/ and https://arduinojson.org/v6/api/basicjsondocument/ for the main difference in the underlying code.
 #  ifndef THINGSBOARD_ENABLE_PSRAM
 #    ifdef __has_include
-#      define THINGSBOARD_ENABLE_PSRAM THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
+#      if THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
+#        define THINGSBOARD_ENABLE_PSRAM 1
+#      else
+#        define THINGSBOARD_ENABLE_PSRAM 0
+#      endif
 #    else
 #      define THINGSBOARD_ENABLE_PSRAM 0
 #    endif
