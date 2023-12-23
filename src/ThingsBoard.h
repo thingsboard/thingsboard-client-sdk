@@ -509,7 +509,7 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::printfln(SEND_MESSAGE, topic, SEND_SERIALIZED);
 #endif // THINGSBOARD_ENABLE_DEBUG
-            result = Serialize_Json(topic, source, jsonSize);
+            result = Serialize_Json(topic, source, jsonSize - 1);
         }
         // Check if the remaining stack size of the current task would overflow the stack,
         // if it would allocate the memory on the heap instead to ensure no stack overflow occurs

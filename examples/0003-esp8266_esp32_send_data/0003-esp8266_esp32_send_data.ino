@@ -24,7 +24,7 @@
 // Enables sending messages that are bigger than the predefined message size,
 // where the message will be sent byte by byte as a fallback instead.
 // Requires an additional library, see https://github.com/bblanchon/ArduinoStreamUtils for more information.
-#define THINGSBOARD_ENABLE_STREAM_UTILS 1
+// Simply install that library and the feature will be enabled automatically.
 
 // Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
 // If enabled the program might be slightly slower and all the memory will be placed onto the heap instead of the stack.

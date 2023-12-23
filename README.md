@@ -82,7 +82,7 @@ Following dependencies are installed automatically or must be installed, too:
  - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`.
  - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
  - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` with a `ESP8266`.
- - [StreamUtils](https://github.com/bblanchon/StreamUtils) — needed if `#define THINGSBOARD_ENABLE_STREAM_UTILS 1` is set, it allows sending arbitrary amount of payload even if the buffer size is too small to hold that complete payload
+ - [StreamUtils](https://github.com/bblanchon/StreamUtils) — needed when sending arbitrary amount of payload even if the buffer size is too small to hold that complete payload is wanted, aforementioned feature is automatically enabled if the library is installed
 
 ## Supported ThingsBoard Features
 
@@ -166,11 +166,7 @@ void setup() {
 
 Alternatively, it is possible to enable the mentioned `THINGSBOARD_ENABLE_STREAM_UTILS` option, which sends messages that are bigger than the given buffer size with a method that skips the internal buffer, be aware tough this only works for sent messages. The internal buffer size still has to be big enough to receive the biggest possible message received by the client that is sent by the server.
 
-```cpp
-// Enable skipping usage of the buffer for sends that are bigger than the internal buffer size
-#define THINGSBOARD_ENABLE_STREAM_UTILS 1
-#include <ThingsBoard.h>
-```
+For that the only thing that needs to be done is to install the required `StreamUtils` library, see the [Dependencies](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dependencies) section.
 
 ### Dynamic ThingsBoard usage
 
