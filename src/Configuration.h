@@ -9,6 +9,13 @@
 #    endif
 #  endif
 
+// Include the internal version of the ESP IDF contained in the esp_idf_version fil if it exists to allow checking for supported ESP IDF vrsion.
+#  ifdef __has_include
+#    if __has_include(<esp_idf_version.h>)
+#      include <esp_idf_version.h>
+#    endif
+#  endif
+
 // Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
 // See https://arduinojson.org/v6/api/config/use_long_long/ for more information.
 #define ARDUINOJSON_USE_LONG_LONG 1
@@ -20,7 +27,11 @@
 // of the vector class which is less efficient. Additionally if possible only c++ strings are used
 // and if it does not exist we fall back to the Arduino String class.
 #  ifndef THINGSBOARD_ENABLE_STL
-#    define THINGSBOARD_ENABLE_STL __has_include(<string>) && __has_include(<functional>) && __has_include(<vector>) && __has_include(<iterator>)
+#    ifdef __has_include
+#      define THINGSBOARD_ENABLE_STL __has_include(<string>) && __has_include(<functional>) && __has_include(<vector>) && __has_include(<iterator>)
+#    else
+#      define THINGSBOARD_ENABLE_STL 0
+#    endif
 #  endif
 
 // Enable the usage of OTA (Over the air) updates, only possible with STL base functionality, theoretically possible without STL support,
@@ -32,31 +43,51 @@
 // Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
 #  ifndef THINGSBOARD_USE_ESP_TIMER
-#    define THINGSBOARD_USE_ESP_TIMER  __has_include(<esp_timer.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_USE_ESP_TIMER  __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#    else
+#      define THINGSBOARD_USE_ESP_TIMER 0
+#    endif
 #  endif
 
 // Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client.
 #  ifndef THINGSBOARD_USE_ESP_MQTT
-#    define THINGSBOARD_USE_ESP_MQTT  __has_include(<mqtt_client.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_USE_ESP_MQTT  __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#    else
+#      define THINGSBOARD_USE_ESP_MQTT 0
+#    endif
 #  endif
 
 // Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
 // because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
 #  ifndef THINGSBOARD_USE_MBED_TLS
-#    define THINGSBOARD_USE_MBED_TLS  __has_include(<mbedtls/md.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_USE_MBED_TLS  __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#    else
+#      define THINGSBOARD_USE_MBED_TLS 0
+#    endif
 #  endif
 
 // Use the esp_ota_ops header internally for handling the writing of ota update data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
 #  ifndef THINGSBOARD_USE_ESP_PARTITION
-#    define THINGSBOARD_USE_ESP_PARTITION  __has_include(<esp_ota_ops.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_USE_ESP_PARTITION  __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#    else
+#      define THINGSBOARD_USE_ESP_PARTITION 0
+#    endif
 #  endif
 
 // Use the pgmspace header internally for enabling the usage of the PROGMEM header for constant variables, as long as the header exists,
 // to allow variables to be placed into flash memory instead of sram, meaning the sram can be allocated for other things.
 #  ifndef THINGSBOARD_ENABLE_PROGMEM
-#    define THINGSBOARD_ENABLE_PROGMEM __has_include(<pgmspace.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_ENABLE_PROGMEM __has_include(<pgmspace.h>)
+#    else
+#      define THINGSBOARD_ENABLE_PROGMEM 0
+#    endif
 #  endif
 
 // Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
@@ -86,7 +117,11 @@
 // This allows sending data that is very big without requiring to allocate that much memory, because it is sent in smaller packets.
 // To support this feature, however the IMQTT_Client interface implementation, needs to additionally override the Print interface, because that is required by the wrapper class BufferingPrint.
 #  ifndef THINGSBOARD_ENABLE_STREAM_UTILS
-#    define THINGSBOARD_ENABLE_STREAM_UTILS __has_include(<StreamUtils.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_ENABLE_STREAM_UTILS __has_include(<StreamUtils.h>)
+#    else
+#      define THINGSBOARD_ENABLE_STREAM_UTILS 0
+#    endif
 #  endif
 
 // Enables the ThingsBoard class to save the allocated memory of the DynamicJsonDocument into psram instead of onto the sram.
@@ -94,7 +129,11 @@
 // If enabled the program might be slightly slower, but all the memory will be placed onto psram instead of sram, meaning the sram can be allocated for other things.
 // See https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/ and https://arduinojson.org/v6/api/basicjsondocument/ for the main difference in the underlying code.
 #  ifndef THINGSBOARD_ENABLE_PSRAM
-#    define THINGSBOARD_ENABLE_PSRAM THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
+#    ifdef __has_include
+#      define THINGSBOARD_ENABLE_PSRAM THINGSBOARD_ENABLE_DYNAMIC && __has_include(<esp_heap_caps.h>)
+#    else
+#      define THINGSBOARD_ENABLE_PSRAM 0
+#    endif
 #  endif
 
 #endif // Configuration_h
