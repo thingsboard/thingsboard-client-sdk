@@ -76,10 +76,10 @@ Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
  - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — needed for dealing with the `JSON` payload that is sent to and received by `ThingsBoard`
-
-**Needs to be installed manually:**
+*Installed automatically, but you can remove them if you don't need them*:
  - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`.
  - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`.
+**Needs to be installed manually:**
  - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
  - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` with a `ESP8266`.
  - [StreamUtils](https://github.com/bblanchon/StreamUtils) — needed when sending arbitrary amount of payload even if the buffer size is too small to hold that complete payload is wanted, aforementioned feature is automatically enabled if the library is installed
