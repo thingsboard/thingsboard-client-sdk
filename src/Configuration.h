@@ -9,7 +9,7 @@
 #    endif
 #  endif
 
-// Include the internal version of the ESP IDF contained in the esp_idf_version fil if it exists to allow checking for supported ESP IDF vrsion.
+// Include the internal version of the ESP IDF contained in the esp_idf_version file, if it exists, to allow checking for supported ESP IDF version.
 #  ifdef __has_include
 #    if __has_include(<esp_idf_version.h>)
 #      include <esp_idf_version.h>
