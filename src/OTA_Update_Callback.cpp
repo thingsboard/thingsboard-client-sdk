@@ -31,7 +31,7 @@ OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb,c
 void OTA_Update_Callback::Set_Progress_Callback(progressFn progressCb) {
     m_progressCb = progressCb;
 }
-const std::string OTA_Update_Callback::Get_Firmware_Title() const {
+std::string OTA_Update_Callback::Get_Firmware_Title() const {
     return m_fwTitel;
 }
 

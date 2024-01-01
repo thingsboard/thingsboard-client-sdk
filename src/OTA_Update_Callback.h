@@ -105,7 +105,7 @@ class OTA_Update_Callback : public Callback<void, const bool&> {
     /// @brief Gets the current firmware title, used to decide if an OTA firmware update is already installed and therefore should not be downladed,
     /// this is only done if the title of the update and the current firmware title are the same because if they are not then this firmware is meant for another device type
     /// @return Current firmware title of the device
-    const std::string Get_Firmware_Title() const;
+    std::string Get_Firmware_Title() const;
 
     /// @brief Sets the current firmware title, used to decide if an OTA firmware update is already installed and therefore should not be downladed,
     /// this is only done if the title of the update and the current firmware title are the same because if they are not then this firmware is meant for another device type
