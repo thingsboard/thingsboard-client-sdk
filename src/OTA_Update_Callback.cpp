@@ -9,13 +9,13 @@ OTA_Update_Callback::OTA_Update_Callback() :
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint64_t &timeout) :
+OTA_Update_Callback::OTA_Update_Callback(function endCb,const std::string currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint64_t &timeout) :
     OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, updater, chunkRetries, chunkSize, timeout)
 {
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, const char *currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint64_t &timeout) :
+OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb,const std::string currFwTitle, const char *currFwVersion, IUpdater *updater, const uint8_t &chunkRetries, const uint16_t &chunkSize, const uint64_t &timeout) :
     Callback(endCb, OTA_CB_IS_NULL),
     m_progressCb(progressCb),
     m_fwTitel(currFwTitle),
@@ -31,12 +31,11 @@ OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, 
 void OTA_Update_Callback::Set_Progress_Callback(progressFn progressCb) {
     m_progressCb = progressCb;
 }
-
-const char* OTA_Update_Callback::Get_Firmware_Title() const {
+const std::string OTA_Update_Callback::Get_Firmware_Title() const {
     return m_fwTitel;
 }
 
-void OTA_Update_Callback::Set_Firmware_Title(const char *currFwTitle) {
+void OTA_Update_Callback::Set_Firmware_Title(const std::string currFwTitle) {
     m_fwTitel = currFwTitle;
 }
 

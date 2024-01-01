@@ -954,7 +954,7 @@ class ThingsBoardSized {
     /// @param currFwTitle Current device firmware title
     /// @param currFwVersion Current device firmware version
     /// @return Whether sending the current device firmware information was successful or not
-    inline bool Firmware_Send_Info(const char *currFwTitle, const char *currFwVersion) {
+    inline bool Firmware_Send_Info(std::string currFwTitle, const char *currFwVersion) {
       StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
       const JsonObject currentFirmwareInfoObject = currentFirmwareInfo.to<JsonObject>();
 
@@ -1269,11 +1269,11 @@ class ThingsBoardSized {
     /// @param callback Callback method that will be called
     /// @return Whether checking and sending the current device firmware information was successful or not
     inline bool Prepare_Firmware_Settings(const OTA_Update_Callback& callback) {
-      const char *currFwTitle = callback.Get_Firmware_Title();
+      const std::string currFwTitle = callback.Get_Firmware_Title();
       const char *currFwVersion = callback.Get_Firmware_Version();
 
       // Send current firmware version
-      if (currFwTitle == nullptr || currFwVersion == nullptr) {
+      if (currFwTitle.empty() || currFwVersion == nullptr) {
         return false;
       }
       else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
@@ -1333,23 +1333,22 @@ class ThingsBoardSized {
       const std::string fw_checksum = data[FW_CHKS_KEY].as<std::string>();
       const std::string fw_algorithm = data[FW_CHKS_ALGO_KEY].as<std::string>();
       const size_t fw_size = data[FW_SIZE_KEY].as<const size_t>();
-
-      const char *curr_fw_title = m_fw_callback->Get_Firmware_Title();
+      std::string curr_fw_title = m_fw_callback->Get_Firmware_Title();
       const char *curr_fw_version = m_fw_callback->Get_Firmware_Version();
 
-      if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm.empty() || fw_checksum.empty()) {
+      if (fw_title == nullptr || fw_version == nullptr || curr_fw_title.empty() || curr_fw_version==nullptr || fw_algorithm.empty() || fw_checksum.empty()) {
         Logger::log(EMPTY_FW);
         Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
         return;
       }
       // If firmware version and title is the same, we do not initiate an update, because we expect the binary to be the same one we are currently using
-      else if (strncmp_P(curr_fw_title, fw_title, JSON_STRING_SIZE(strlen(curr_fw_title))) == 0 && strncmp_P(curr_fw_version, fw_version, JSON_STRING_SIZE(strlen(curr_fw_version))) == 0) {
+      else if (strncmp_P(curr_fw_title.c_str(), fw_title, JSON_STRING_SIZE(curr_fw_title.length())) == 0 && strncmp_P(curr_fw_version, fw_version, JSON_STRING_SIZE(strlen(curr_fw_version))) == 0) {
         Logger::log(FW_UP_TO_DATE);
         Firmware_Send_State(FW_STATE_FAILED, FW_UP_TO_DATE);
         return;
       }
       // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another device type 
-      else if (strncmp_P(curr_fw_title, fw_title, JSON_STRING_SIZE(strlen(curr_fw_title))) != 0) {
+      else if (strncmp_P(curr_fw_title.c_str(), fw_title, JSON_STRING_SIZE(curr_fw_title.length())) != 0) {
         Logger::log(FW_NOT_FOR_US);
         Firmware_Send_State(FW_STATE_FAILED, FW_NOT_FOR_US);
         return;
@@ -1385,7 +1384,7 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
       Logger::log(PAGE_BREAK);
       Logger::log(NEW_FW);
-      char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))];
+      char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(curr_fw_version.length())) + JSON_STRING_SIZE(strlen(fw_version))];
       snprintf_P(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
       Logger::log(firmware);
       Logger::log(DOWNLOADING_FW);
