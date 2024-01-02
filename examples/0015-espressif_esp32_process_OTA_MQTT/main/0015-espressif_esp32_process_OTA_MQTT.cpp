@@ -2,6 +2,7 @@
 #include <esp_log.h>
 #include <esp_wifi.h>
 #include <nvs_flash.h>
+#incllude <Ticker.h>
 
 
 // Whether the given script is using encryption or not,
