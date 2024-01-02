@@ -2,6 +2,7 @@
 #include <esp_log.h>
 #include <esp_wifi.h>
 #include <nvs_flash.h>
+#incllude <Ticker.h>
 
 
 // Whether the given script is using encryption or not,
@@ -18,7 +19,7 @@
 
 // Firmware title and version used to compare with remote version, to check if an update is needed.
 // Title needs to be the same and version needs to be different --> downgrading is possible
-constexpr char CURRENT_FIRMWARE_TITLE[] = "ESP32";
+const std::string CURRENT_FIRMWARE_TITLE = "ESP32";
 constexpr char CURRENT_FIRMWARE_VERSION[] = "1.0.0";
 
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT

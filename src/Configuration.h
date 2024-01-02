@@ -186,5 +186,8 @@
 #  else
 #    define THINGSBOARD_ENABLE_PSRAM 0
 #  endif
-
+#  
+# ifdef ESP8266
+#   define THINGSBOARD_ENABLE_PROGMEM 0
+# endif
 #endif // Configuration_h

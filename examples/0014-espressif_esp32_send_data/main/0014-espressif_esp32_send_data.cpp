@@ -3,6 +3,7 @@
 #include <esp_wifi.h>
 #include <nvs_flash.h>
 #include <esp_random.h>
+#include <Ticker.h>
 
 
 // Whether the given script is using encryption or not,

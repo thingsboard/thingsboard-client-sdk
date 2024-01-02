@@ -41,10 +41,10 @@
 // Firmware title and version used to compare with remote version, to check if an update is needed.
 // Title needs to be the same and version needs to be different --> downgrading is possible
 #if THINGSBOARD_ENABLE_PROGMEM
-constexpr char CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
+const std::string CURRENT_FIRMWARE_TITLE[] PROGMEM = "TEST";
 constexpr char CURRENT_FIRMWARE_VERSION[] PROGMEM = "1.0.0";
 #else
-constexpr char CURRENT_FIRMWARE_TITLE[] = "TEST";
+const std::string CURRENT_FIRMWARE_TITLE = "TEST";
 constexpr char CURRENT_FIRMWARE_VERSION[] = "1.0.0";
 #endif
 
