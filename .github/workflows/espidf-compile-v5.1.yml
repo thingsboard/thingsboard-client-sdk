@@ -3,12 +3,12 @@ name: Compile ESP-IDF Sketches for v5.1
 on:
   pull_request:
     paths:
-      - ".github/workflows/espidf-compile.yml"
+      - ".github/workflows/espidf-compile-v*.yml"
       - "examples/**"
       - "src/**"
   push:
     paths:
-      - ".github/workflows/espidf-compile.yml"
+      - ".github/workflows/espidf-compile-v*.yml"
       - "examples/**"
       - "src/**"
   workflow_dispatch:
