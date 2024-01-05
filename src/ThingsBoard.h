@@ -264,8 +264,8 @@ char constexpr CHECKSUM_AGORITM_SHA512[] = "SHA512";
 #if THINGSBOARD_ENABLE_PROGMEM
 char constexpr NO_FW[] PROGMEM = "No new firmware assigned on the given device";
 char constexpr EMPTY_FW[] PROGMEM = "Given firmware was NULL";
-char constexpr FW_UP_TO_DATE[] PROGMEM = "Firmware is already up to date";
-char constexpr FW_NOT_FOR_US[] PROGMEM = "Firmware is not for us (title is different)";
+char constexpr FW_UP_TO_DATE[] PROGMEM = "Firmware version (%s) already up to date";
+char constexpr FW_NOT_FOR_US[] PROGMEM = "Firmware title (%s) not same as received title (%s)";
 char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] PROGMEM = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
 char constexpr RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
@@ -278,8 +278,8 @@ char constexpr DOWNLOADING_FW[] PROGMEM = "Attempting to download over MQTT...";
 #else
 char constexpr NO_FW[] = "No new firmware assigned on the given device";
 char constexpr EMPTY_FW[] = "Given firmware was NULL";
-char constexpr FW_UP_TO_DATE[] = "Firmware is already up to date";
-char constexpr FW_NOT_FOR_US[] = "Firmware is not for us (title is different)";
+char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
+char constexpr FW_NOT_FOR_US[] = "Firmware title (%s) not same as received title (%s)";
 char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
 char constexpr RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
@@ -844,8 +844,7 @@ class ThingsBoardSized {
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed + the default methodName and params key needed for the request.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        size_t const dataStructureMemoryUsage = JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U);
-        TBJsonDocument requestBuffer(dataStructureMemoryUsage);
+        TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U));
 #else
         // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
         // therefore we set the size to the MaxFieldsAmount instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
@@ -1179,13 +1178,12 @@ class ThingsBoardSized {
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed + the default clientKeys or sharedKeys
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        size_t constexpr dataStructureMemoryUsage = JSON_OBJECT_SIZE(1U);
-        StaticJsonDocument<dataStructureMemoryUsage> requestBuffer;
+        StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
 
         // Calculate the size required for the char buffer containing all the attributes seperated by a comma,
         // before initalizing it so it is possible to allocate it on the stack
         size_t size = 0U;
-        for (const auto& att : attributes) {
+        for (const auto & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
                 continue;
             }
@@ -1196,7 +1194,7 @@ class ThingsBoardSized {
 
         // Initalizes complete array to 0, required because strncat needs both destination and source to contain proper null terminated strings
         char request[size] = {};
-        for (const auto& att : attributes) {
+        for (const auto & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
                 Logger::println(ATT_IS_NULL);
@@ -1321,18 +1319,22 @@ class ThingsBoardSized {
         }
         // If firmware version and title is the same, we do not initiate an update, because we expect the type of binary to be the same one we are currently using and therefore updating would be useless
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
-            Logger::println(FW_UP_TO_DATE);
-            Firmware_Send_State(FW_STATE_FAILED, FW_UP_TO_DATE);
+            char message[JSON_STRING_SIZE(strlen(FW_UP_TO_DATE)) + JSON_STRING_SIZE(strlen(curr_fw_version))] = {};
+            snprintf(message, sizeof(message), FW_UP_TO_DATE, curr_fw_version);
+            Logger::println(message);
+            Firmware_Send_State(FW_STATE_FAILED, message);
             return;
         }
         // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device and downloading it on this device could possibly cause hardware issues
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
-            Logger::println(FW_NOT_FOR_US);
-            Firmware_Send_State(FW_STATE_FAILED, FW_NOT_FOR_US);
+            char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(curr_fw_title)) + JSON_STRING_SIZE(strlen(fw_title))] = {};
+            snprintf(message, sizeof(message), FW_NOT_FOR_US, curr_fw_title, fw_title);
+            Logger::println(message);
+            Firmware_Send_State(FW_STATE_FAILED, message);
             return;
         }
 
-        mbedtls_md_type_t fw_checksum_algorithm = mbedtls_md_type_t();
+        mbedtls_md_type_t fw_checksum_algorithm = mbedtls_md_type_t{};
 
         if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, strlen(CHECKSUM_AGORITM_MD5)) == 0) {
             fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
@@ -1549,7 +1551,7 @@ class ThingsBoardSized {
             return;
         }
 
-        for (RPC_Callback const & rpc : m_rpc_callbacks) {
+        for (auto const & rpc : m_rpc_callbacks) {
             char const * const subscribedMethodName = rpc.Get_Name();
             if (Helper::stringIsNullorEmpty(subscribedMethodName)) {
               Logger::println(RPC_METHOD_NULL);
@@ -1771,8 +1773,7 @@ class ThingsBoardSized {
         // Data structure size depends on the amount of key value pairs passed.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         size_t const size = Helper::distance(first, last);
-        size_t const dataStructureMemoryUsage = JSON_OBJECT_SIZE(size);
-        TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(size));
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
@@ -1810,8 +1811,7 @@ class ThingsBoardSized {
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        size_t const dataStructureMemoryUsage = JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char *>(payload), COLON));
-        TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char *>(payload), COLON)));
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC

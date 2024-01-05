@@ -108,7 +108,7 @@
 // to allow variables to be placed into flash memory instead of sram, meaning the sram can be allocated for other things.
 #  ifndef THINGSBOARD_ENABLE_PROGMEM
 #    ifdef __has_include
-#      if __has_include(<pgmspace.h>)
+#      if __has_include(<pgmspace.h>) && !defined(ESP8266)
 #        define THINGSBOARD_ENABLE_PROGMEM 1
 #      else
 #        define THINGSBOARD_ENABLE_PROGMEM 0
