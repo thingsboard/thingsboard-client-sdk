@@ -332,8 +332,7 @@ class ThingsBoardHttpSized {
         // Data structure size depends on the amount of key value pairs passed.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         size_t const size = Helper::distance(first, last);
-        size_t const dataStructureMemoryUsage = JSON_OBJECT_SIZE(size);
-        TBJsonDocument jsonBuffer(dataStructureMemoryUsage);
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(size));
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
