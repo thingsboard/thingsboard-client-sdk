@@ -30,7 +30,7 @@ jobs:
         - source-path: ./
         - name: TBPubSubClient
         - name: ArduinoHttpClient
-        - name: ArduinoJson
+        - https://github.com/bblanchon/ArduinoJson#v6.21.4
         - name: StreamUtils
 
     strategy:
