@@ -16,7 +16,6 @@
 // #define TINY_GSM_MODEM_M590
 // #define TINY_GSM_MODEM_ESP8266
 
-#include <DefaultLogger.h>
 #include <TinyGsmClient.h>
 #include <SoftwareSerial.h>
 #include <Arduino_HTTP_Client.h>
