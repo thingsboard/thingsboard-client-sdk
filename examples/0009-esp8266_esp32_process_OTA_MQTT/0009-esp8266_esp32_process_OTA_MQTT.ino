@@ -7,7 +7,6 @@
 #endif // ESP32
 #endif // ESP8266
 
-#include <DefaultLogger.h>
 #include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 

@@ -12,7 +12,6 @@
 #define ENCRYPTED false
 
 
-#include <DefaultLogger.h>
 #include <Espressif_MQTT_Client.h>
 #include <ThingsBoard.h>
 

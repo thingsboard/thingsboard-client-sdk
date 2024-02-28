@@ -27,7 +27,6 @@
 // If enabled the program might be slightly slower and all the memory will be placed onto the heap instead of the stack.
 #define THINGSBOARD_ENABLE_DYNAMIC 1
 
-#include <DefaultLogger.h>
 #if USING_HTTPS
 #include <Arduino_HTTP_Client.h>
 #include <ThingsBoardHttp.h>
