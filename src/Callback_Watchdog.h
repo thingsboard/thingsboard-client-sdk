@@ -37,13 +37,13 @@ class Callback_Watchdog {
 
     /// @brief Starts the watchdog timer once for the given timeout
     /// @param timeout_microseconds Amount of microseconds until the detach() method is excpected to have been called or the initally given callback method will be called
-    void once(const uint64_t& timeout_microseconds);
+    void once(uint64_t const & timeout_microseconds);
 
     /// @brief Stops the currently ongoing watchdog timer and ensures the callback is not called. Timer can simply be restarted with calling once() again.
     void detach();
 
   private:
-    std::function<void(void)> m_callback;
+    std::function<void(void)> m_callback; // Callback that should be called if the watchdog timeout expired without calling detach first
 #if THINGSBOARD_USE_ESP_TIMER
     void *m_oneshot_timer;                // ESP Timer handle that is used to start and stop the oneshot timer
 #else

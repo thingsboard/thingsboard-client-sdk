@@ -7,11 +7,9 @@
         "url": "https://github.com/thingsboard/thingsboard-client-sdk"
     },
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.21.2",
-        "thingsboard/TBPubSubClient": "^2.9.3",
-        "arduino-libraries/ArduinoHttpClient": "^0.5.0"
+        "bblanchon/ArduinoJson": "^6.21.4"
     },
-    "version": "0.12.2",
+    "version": "0.13.0",
     "examples": "examples/*/*.ino",
     "frameworks": "*",
     "license": "MIT"

@@ -80,7 +80,7 @@ WiFiEspClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
-               
+
 
 /// @brief Initalizes WiFi connection,
 // will endlessly delay until a connection has been successfully established
@@ -163,7 +163,7 @@ void loop() {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
     char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
-    snprintf_P(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
+    snprintf(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM

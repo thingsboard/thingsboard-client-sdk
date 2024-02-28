@@ -1,0 +1,39 @@
+name: Build / Deploy doxygen documentation
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/generate_documentation.yml"
+      - "docs/**"
+      - "src/**"
+  push:
+    paths:
+      - ".github/workflows/generate_documentation.yml"
+      - "docs/**"
+      - "src/**"
+  workflow_dispatch:
+  repository_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build doxygen documentation
+      uses: mattnotmitt/doxygen-action@v1.9.5
+      with:
+        doxyfile-path: 'docs/Doxyfile'
+        working-directory: .
+
+    - name: Deploy doxygen documentation
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/Doxygen/html
+        enable_jekyll: false
+        allow_empty_commit: false
+        force_orphan: true
+        publish_branch: gh-pages

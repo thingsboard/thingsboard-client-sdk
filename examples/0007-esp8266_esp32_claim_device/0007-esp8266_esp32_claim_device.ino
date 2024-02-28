@@ -1,8 +1,5 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-// Disable PROGMEM because the ESP8266WiFi library,
-// does not support flash strings.
-#define THINGSBOARD_ENABLE_PROGMEM 0
 #else
 #ifdef ESP32
 #include <WiFi.h>
@@ -158,8 +155,10 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 // Possible character options used to generate a password if none is provided.
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr char PASSWORD_OPTIONS[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 #else
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr char PASSWORD_OPTIONS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 #endif
 
@@ -239,7 +238,7 @@ bool reconnect() {
 /// @return The generated password.
 const std::string generateRandomPassword(const uint8_t& length = 8U) {
   std::string password = "";
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length; ++i) {
     password.append(1U, PASSWORD_OPTIONS[random(sizeof(PASSWORD_OPTIONS))]);
   }
   return password;
@@ -268,7 +267,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
@@ -290,7 +289,7 @@ void loop() {
       // if the string is empty or null, automatically checked by the sendClaimingRequest method
       claimingRequestSecretKey;
 #endif
-    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
+    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms\n", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
     claimingRequestSent = tb.Claim_Request(secretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
   }
 
