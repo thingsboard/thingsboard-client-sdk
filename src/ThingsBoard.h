@@ -79,11 +79,14 @@ constexpr char PROV_RESPONSE_TOPIC[] = "/provision/response";
 constexpr char GATEWAY_CONNECT_TOPIC[] PROGMEM              = "v1/gateway/connect";
 constexpr char GATEWAY_DISCONNECT_TOPIC[] PROGMEM           = "v1/gateway/disconnect";
 constexpr char GATEWAY_RPC_TOPIC[] PROGMEM                  = "v1/gateway/rpc";
+constexpr char GATEWAY_TELEMETRY_TOPIC[] PROGMEM            = "v1/gateway/telemetry";
 constexpr char GATEWAY_CONNECT_DISCONNECT_PAYLOAD[] PROGMEM = "{\"device\":\"%s\"}";
 #else
-constexpr char GATEWAY_CONNECT_TOPIC[]    = "v1/gateway/connect";
-constexpr char GATEWAY_DISCONNECT_TOPIC[] = "v1/gateway/disconnect";
-constexpr char GATEWAY_RPC_TOPIC[]        = "v1/gateway/rpc";
+constexpr char GATEWAY_CONNECT_TOPIC[]              = "v1/gateway/connect";
+constexpr char GATEWAY_DISCONNECT_TOPIC[]           = "v1/gateway/disconnect";
+constexpr char GATEWAY_RPC_TOPIC[]                  = "v1/gateway/rpc";
+constexpr char GATEWAY_TELEMETRY_TOPIC[]            = "v1/gateway/telemetry";
+constexpr char GATEWAY_CONNECT_DISCONNECT_PAYLOAD[] = "{\"device\":\"%s\"}";
 #endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Default login data.
@@ -856,6 +859,13 @@ class ThingsBoardSized {
   template <typename TSource>
   inline bool sendTelemetryJson(const TSource& source, const size_t& jsonSize) {
     return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
+  }
+
+  //----------------------------------------------------------------------------
+  // Gateway Telemetry API
+
+  inline bool sendGatewayJson(const char* json) {
+    return Send_Json_String(GATEWAY_TELEMETRY_TOPIC, json);
   }
 
   //----------------------------------------------------------------------------
