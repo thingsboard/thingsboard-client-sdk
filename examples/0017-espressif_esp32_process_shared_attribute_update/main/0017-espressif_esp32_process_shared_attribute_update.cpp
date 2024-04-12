@@ -87,7 +87,7 @@ static void on_got_ip(void* arg, esp_event_base_t event_base,
 }
 
 void InitWiFi() {
-    ESP_ERROR_CHECK(nvs_flash_ ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_netif_create_default_wifi_sta();
@@ -115,6 +115,10 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data& data) {
 extern "C" void app_main(void) {
     InitWiFi();
 
+    const std::array<const char*, 2U> attribute_key = { "exampleAttribute1", "exampleAttribute2" };
+
+    const Shared_Attribute_Callback attribute_key_change_callback(&processSharedAttributeUpdate, attribute_key.cbegin(), attribute_key.cend());
+
     while (true) {
         if (!tb.connected()) {
             ESP_LOGI("Attribute Update", "Connecting to: %s with token %s", THINGSBOARD_SERVER, TOKEN);
@@ -123,7 +127,7 @@ extern "C" void app_main(void) {
 
                 if (!subscribed) {
                     const char* subscribed_attributes[] = { "exampleAttribute1", "exampleAttribute2" };
-                    if (tb.Shared_Attributes_Subscribe(processSharedAttributeUpdate, subscribed_attributes, 2)) {
+                    if (tb.Shared_Attributes_Subscribe(attribute_key_change_callback)) {
                         ESP_LOGI("Attribute Update", "Subscribed to shared attribute updates");
                         subscribed = true;
                     } else {
