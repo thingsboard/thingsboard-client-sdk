@@ -118,9 +118,9 @@ bool currentFWSent = false;
 bool updateRequestSent = false;
 
 struct binary_data_t {
-    size: size_t,
-    remaining_size: size_t,
-    data: void *
+    size_t size;
+    size_t remaining_size;
+    void * data;
 };
 
 
