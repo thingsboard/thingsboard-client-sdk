@@ -27,6 +27,11 @@
 // If enabled the program might be slightly slower and all the memory will be placed onto the heap instead of the stack.
 #define THINGSBOARD_ENABLE_DYNAMIC 1
 
+// If the THINGSBOARD_ENABLE_DYNAMIC 1 setting causes this error log message to appear [TB] Unable to de-serialize received json data with error (DeserializationError::NoMemory).
+// Simply add this configuration line as well.
+//#define THINGSBOARD_ENABLE_PSRAM 0
+
+
 #if USING_HTTPS
 #include <Arduino_HTTP_Client.h>
 #include <ThingsBoardHttp.h>
