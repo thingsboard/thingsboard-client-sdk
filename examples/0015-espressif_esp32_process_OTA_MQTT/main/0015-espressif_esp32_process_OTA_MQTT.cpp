@@ -117,13 +117,19 @@ bool wifi_connected = false;
 bool currentFWSent = false;
 bool updateRequestSent = false;
 
+struct binary_data_t {
+    size: size_t,
+    remaining_size: size_t,
+    data: void *
+};
+
 
 /// @brief Attempts to write all received data on the given file into flash memory,
 /// allows to write binary data from an sd card into flash memory
 /// @param pvParameter Always null
 void otaSDToFlashTask(void* pvParameter) {
     FILE * ota_bin_file = fopen(UPDAT_FILE_PATH, "rb");
-    esp_ota_handle_t update_handle = NULL;
+    esp_ota_handle_t update_handle;
     esp_partition_t const * update_partition = esp_ota_get_next_update_partition(NULL);
     binary_data_t data;
 
@@ -137,7 +143,7 @@ void otaSDToFlashTask(void* pvParameter) {
         data.size = ftell(ota_bin_file);
         data.remaining_size = data.size;
         ESP_LOGI("MAIN", "Update Size: %" PRIu32, data.size);
-        data.data = (char*) malloc(FIRMWARE_PACKET_SIZE);
+        data.data = malloc(FIRMWARE_PACKET_SIZE);
         fseek(ota_bin_file, 0, SEEK_SET);
         esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
         while (data.remaining_size > 0) {
