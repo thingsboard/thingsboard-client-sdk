@@ -14,7 +14,7 @@ SDCard_Updater::SDCard_Updater(char const * const file_path)
 }
 
 bool SDCard_Updater::begin(size_t const & firmware_size) {
-    FILE* file = fopen(PATH, "w");
+    FILE* file = fopen(m_path, "w");
     if (file == nullptr) {
         return false;
     }
@@ -23,7 +23,7 @@ bool SDCard_Updater::begin(size_t const & firmware_size) {
 }
 
 size_t SDCard_Updater::write(uint8_t * const payload, size_t const & total_bytes) {
-    FILE* file = fopen(PATH, "a");
+    FILE* file = fopen(m_path, "a");
     if (file == nullptr) {
         return 0;
     }
@@ -37,7 +37,7 @@ void SDCard_Updater::reset() {
 }
 
 bool SDCard_Updater::end() {
-    return remove(PATH) == 0;
+    return remove(m_path) == 0;
 }
 
 #endif // THINGSBOARD_ENABLE_OTA
