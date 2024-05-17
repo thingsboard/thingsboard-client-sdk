@@ -1,6 +1,9 @@
 #ifndef SDCard_Updater_h
 #define SDCard_Updater_h
 
+// Local include.
+#include "Configuration.h"
+
 #if THINGSBOARD_ENABLE_OTA
 
 // Local include.
