@@ -142,7 +142,7 @@ void otaSDToFlashTask(void* pvParameter) {
         fseek(ota_bin_file, 0, SEEK_END);
         data.size = ftell(ota_bin_file);
         data.remaining_size = data.size;
-        ESP_LOGI("MAIN", "Update Size: %" PRIu32, data.size);
+        ESP_LOGI("MAIN", "Update Size: %u", data.size);
         data.data = malloc(FIRMWARE_PACKET_SIZE);
         fseek(ota_bin_file, 0, SEEK_SET);
         esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
