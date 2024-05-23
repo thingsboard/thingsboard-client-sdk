@@ -371,9 +371,11 @@ class ThingsBoardSized {
 
         // Initalize callback.
 #if THINGSBOARD_ENABLE_STL
-        m_client.set_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        m_client.set_data_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        m_client.set_connect_callback(std::bind(&ThingsBoardSized::Resubscribe_Topics, this));
 #else
-        m_client.set_callback(ThingsBoardSized::onStaticMQTTMessage);
+        m_client.set_data_callback(ThingsBoardSized::onStaticMQTTMessage);
+        m_client.set_connect_callback(ThingsBoardSized::onStaticMQTTConnect);
         m_subscribedInstance = this;
 #endif // THINGSBOARD_ENABLE_STL
     }
@@ -444,7 +446,9 @@ class ThingsBoardSized {
         this->Stop_Firmware_Update();
     }
 
-    /// @brief Connects to the specified ThingsBoard server over the given port as the given device
+    /// @brief Connects to the specified ThingsBoard server over the given port as the given device.
+    /// If there are still active server-side RPC or Shared Attribute subscriptions, the aforementioned topics will be resubscribed automatically.
+    /// Additionally internal vectors are kept the same so any permanent subscriptions, does not need to be resubscribed by calling the appropriate subscribe methods again.
     /// @param host ThingsBoard server instance we want to connect to
     /// @param access_token Access token that connects this device with a created device on the ThingsBoard server,
     /// can be "provision", if the device creates itself instead. See https://thingsboard.io/docs/user-guide/device-provisioning/?mqttprovisioning=without#provision-device-apis for more information, default = PROV_ACCESS_TOKEN ("provision")
@@ -1396,14 +1400,9 @@ class ThingsBoardSized {
     /// @return Whether connecting to ThingsBoard was successful or not
     bool connect_to_host(char const * const access_token, char const * const client_id, char const * const password) {
         const bool connection_result = m_client.connect(client_id, access_token, password);
-
         if (!connection_result) {
             Logger::println(CONNECT_FAILED);
-            return connection_result;
         }
-
-        // Only attempt to resubscribe if we connected successfully
-        Resubscribe_Topics();
         return connection_result;
     }
 
@@ -1863,6 +1862,13 @@ class ThingsBoardSized {
             return;
         }
         m_subscribedInstance->onMQTTMessage(topic, payload, length);
+    }
+
+    static void onStaticMQTTConnect() {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
+        m_subscribedInstance->Resubscribe_Topics();
     }
 #endif // !THINGSBOARD_ENABLE_STL
 };

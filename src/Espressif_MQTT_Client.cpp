@@ -13,6 +13,7 @@ Espressif_MQTT_Client *Espressif_MQTT_Client::m_instance = nullptr;
 
 Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_received_data_callback(nullptr),
+    m_connected_callback(nullptr),
     m_connected(false),
     m_enqueue_messages(false),
     m_mqtt_configuration(),
@@ -104,8 +105,12 @@ void Espressif_MQTT_Client::set_enqueue_messages(const bool& enqueue_messages) {
     m_enqueue_messages = enqueue_messages;
 }
 
-void Espressif_MQTT_Client::set_callback(function callback) {
+void Espressif_MQTT_Client::set_data_callback(data_function callback) {
     m_received_data_callback = callback;
+}
+
+void Espressif_MQTT_Client::set_connect_callback(connect_function callback) {
+    m_connected_callback = callback;
 }
 
 bool Espressif_MQTT_Client::set_buffer_size(const uint16_t& buffer_size) {
@@ -257,6 +262,7 @@ void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_bas
     switch (event_id) {
         case esp_mqtt_event_id_t::MQTT_EVENT_CONNECTED:
             m_connected = true;
+            m_connected_callback();
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_DISCONNECTED:
             m_connected = false;

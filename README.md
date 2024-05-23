@@ -423,7 +423,11 @@ For that a `class` needs to inherit the `IMQTT_Client` interface and `override` 
 
 class Custom_MQTT_Client : public IMQTT_Client {
   public:
-    void set_callback(function cb) override {
+    void set_data_callback(data_function cb) override {
+        // Nothing to do
+    }
+
+    void set_connect_callback(connect_function cb) override {
         // Nothing to do
     }
 
