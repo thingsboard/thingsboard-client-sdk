@@ -36,15 +36,21 @@ class IMQTT_Client {
   public:
       /// @brief Callback signature
 #if THINGSBOARD_ENABLE_STL
-    using function = std::function<void(char * topic, uint8_t * payload, unsigned int length)>;
+    using data_function = std::function<void(char * topic, uint8_t * payload, unsigned int length)>;
+    using connect_function = std::function<void(void)>;
 #else
-    using function = void (*)(char * topic, uint8_t * payload, unsigned int length);
+    using data_function = void (*)(char * topic, uint8_t * payload, unsigned int length);
+    using connect_function = void (*)(void);
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
     /// as well as the payload data and the size of that payload data
     /// @param callback Method that should be called on received MQTT response
-    virtual void set_callback(function callback) = 0;
+    virtual void set_data_callback(data_function callback) = 0;
+
+    /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker
+    /// @param callback Method that should be called on established MQTT connection
+    virtual void set_connect_callback(connect_function callback) = 0;
 
     /// @brief Changes the size of the buffer for sent and received MQTT messages,
     /// using a bigger value than uint16_t for passing the buffer size does not make any sense because the maximum message size received
@@ -94,7 +100,7 @@ class IMQTT_Client {
     virtual bool publish(char const * const topic, uint8_t const * const payload, size_t const & length) = 0;
 
     /// @brief Subscribes to MQTT message on the given topic, which will cause an internal callback to be called for each message received on that topic from the server,
-    /// it should then, call the previously configured callback with set_callback() with the received data
+    /// it should then, call the previously configured callback with set_data_callback() with the received data
     /// @param topic Topic we want to receive a notification about if messages are sent by the server
     /// @return Wheter subscribing the given topic was possible or not, should return false and a warning should be printed,
     /// if the connection has been lost or the topic does not exist

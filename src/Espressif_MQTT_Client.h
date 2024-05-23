@@ -87,7 +87,9 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @param enqueue_messages Whether to enqueue published messages or not, where setting the value to true means that the messages are enqueued and therefor non blocking on the called from task
     void set_enqueue_messages(bool const & enqueue_messages);
 
-    void set_callback(function callback) override;
+    void set_data_callback(data_function callback) override;
+
+    void set_connect_callback(connect_function cb) override;
 
     bool set_buffer_size(uint16_t const & buffer_size) override;
 
@@ -110,7 +112,8 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     bool connected() override;
 
 private:
-    function m_received_data_callback;             // Callback that will be called as soon as the mqtt client receives any data
+    data_function m_received_data_callback;        // Callback that will be called as soon as the mqtt client receives any data
+    connect_function m_connected_callback;         // Callback that will be called as soon as the mqtt client has connected
     bool m_connected;                              // Whether the client has received the connected or disconnected event
     bool m_enqueue_messages;                       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
     esp_mqtt_client_config_t m_mqtt_configuration; // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings

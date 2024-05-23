@@ -27,7 +27,9 @@ class Arduino_MQTT_Client : public IMQTT_Client {
     /// but the actual type of connection does not matter (Ethernet or WiFi)
     void set_client(Client & transport_client);
 
-    void set_callback(function cb) override;
+    void set_data_callback(data_function cb) override;
+
+    void set_connect_callback(connect_function cb) override;
 
     bool set_buffer_size(uint16_t const & buffer_size) override;
 
@@ -66,6 +68,7 @@ class Arduino_MQTT_Client : public IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
   private:
+    connect_function m_cb;      // Callback that will be called as soon as the mqtt client has connected
     PubSubClient m_mqtt_client; // Underlying MQTT client instance used to send data
 };
 
