@@ -122,7 +122,7 @@ class Array {
     /// @brief Removes the element at the given iterator, has to move all element one to the left if the index is not at the end of the array
     /// @param iterator Iterator the element should be removed at from the underlying data container
     void erase(T const * const iterator) {
-        size_t const index = Helper::distance(this->cbegin(), iterator);
+        size_t const index = Helper::distance(cbegin(), iterator);
         // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left

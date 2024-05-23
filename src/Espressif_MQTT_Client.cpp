@@ -232,11 +232,21 @@ bool Espressif_MQTT_Client::publish(const char *topic, const uint8_t *payload, c
 }
 
 bool Espressif_MQTT_Client::subscribe(const char *topic) {
+    // The esp_mqtt_client_subscribe method does not return false, if we send a subscribe request while not being connected to a broker,
+    // so we have to check for that case to ensure the end user is informed that their subscribe request could not be sent and has been ignored.
+    if (!connected()) {
+        return false;
+    }
     const int message_id = esp_mqtt_client_subscribe(m_mqtt_client, topic, 0U);
     return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
 bool Espressif_MQTT_Client::unsubscribe(const char *topic) {
+    // The esp_mqtt_client_unsubscribe method does not return false, if we send a unsubscribe request while not being connected to a broker,
+    // so we have to check for that case to ensure the end user is informed that their unsubscribe request could not be sent and has been ignored.
+    if (!connected()) {
+        return false;
+    }
     const int message_id = esp_mqtt_client_unsubscribe(m_mqtt_client, topic);
     return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
