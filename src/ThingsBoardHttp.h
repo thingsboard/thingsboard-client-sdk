@@ -75,7 +75,9 @@ class ThingsBoardHttpSized {
       , m_token(access_token)
     {
         m_client.set_keep_alive(keepAlive);
-        m_client.connect(host, port);
+        if (m_client.connect(host, port) != 0) {
+            Logger::println(CONNECT_FAILED);
+        }
     }
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
@@ -95,7 +97,7 @@ class ThingsBoardHttpSized {
         // Check if allocating needed memory failed when trying to create the JsonObject,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
-            Logger::println(UNABLE_TO_ALLOCATE_MEMORY);
+            Logger::println(UNABLE_TO_ALLOCATE_JSON);
             return false;
         }
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -107,7 +109,7 @@ class ThingsBoardHttpSized {
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
         bool result = false;
         if (getMaximumStackSize() < jsonSize) {
-            char * json = new char[jsonSize];
+            char * json = new char[jsonSize]();
             if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
             }
@@ -120,7 +122,7 @@ class ThingsBoardHttpSized {
             json = nullptr;
         }
         else {
-            char json[jsonSize];
+            char json[jsonSize] = {};
             if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
                 return result;
@@ -139,8 +141,8 @@ class ThingsBoardHttpSized {
             return false;
         }
 
-        char path[Helper::detectSize(topic, m_token)];
-        snprintf(path, sizeof(path), topic, m_token);
+        char path[Helper::detectSize(topic, m_token)] = {};
+        (void)snprintf(path, sizeof(path), topic, m_token);
         return postMessage(path, json);
     }
 

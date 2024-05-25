@@ -32,7 +32,7 @@ class IHTTP_Client {
     /// Should be either 80 for unencrypted HTTP or 443 for HTTPS with encryption.
     /// The latter is recommended if relevant data is sent or if the client receives and handles requests from the server,
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways.
-    /// @return Whether the client could establish the connection successfully or not
+    /// @return Whether the client could establish the connection successfully with return code 0 or failed with error code otherwise
     virtual int connect(char const * const host, uint16_t const & port) = 0;
 
     /// @brief Disconnects the given device from the current host and clears about any remaining bytes still in the reponse body
