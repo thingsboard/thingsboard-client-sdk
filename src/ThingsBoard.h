@@ -268,6 +268,7 @@ char constexpr FW_UP_TO_DATE[] PROGMEM = "Firmware version (%s) already up to da
 char constexpr FW_NOT_FOR_US[] PROGMEM = "Firmware title (%s) not same as received title (%s)";
 char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] PROGMEM = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
+char constexpr UNABLE_TO_ALLOCATE_BUFFER[] PROGMEM = "Allocating memory for the internal MQTT buffer failed";
 char constexpr RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr PAGE_BREAK[] PROGMEM = "=================================";
@@ -282,6 +283,7 @@ char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
 char constexpr FW_NOT_FOR_US[] = "Firmware title (%s) not same as received title (%s)";
 char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
+char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
 char constexpr RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr PAGE_BREAK[] = "=================================";
@@ -367,8 +369,7 @@ class ThingsBoardSized {
       , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
 #endif // THINGSBOARD_ENABLE_OTA
     {
-        setBufferSize(bufferSize);
-
+        (void)setBufferSize(bufferSize);
         // Initalize callback.
 #if THINGSBOARD_ENABLE_STL
         m_client.set_data_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -419,7 +420,11 @@ class ThingsBoardSized {
     /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it
     /// @return Whether allocating the needed memory for the given bufferSize was successful or not
     bool setBufferSize(uint16_t const & bufferSize) {
-        return m_client.set_buffer_size(bufferSize);
+        bool const result = m_client.set_buffer_size(bufferSize);
+        if (!result) {
+            Logger::println(UNABLE_TO_ALLOCATE_BUFFER);
+        }
+        return result;
     }
 
     /// @brief Clears all currently subscribed callbacks and unsubscribed from all
@@ -429,16 +434,17 @@ class ThingsBoardSized {
     /// because connect() method now reconencts to all previously subscribed MQTT topics instead,
     /// therefore there is no need anymore to discard all previously subscribed callbacks and letting the user resubscribe
     void Cleanup_Subscriptions() {
+        // Results are ignored, because the important part of clearing internal data structures always succeeds.
         // Cleanup all server-side RPC subscriptions
-        RPC_Unsubscribe();
+        (void)RPC_Unsubscribe();
         // Cleanup all client-side RPC requests
-        RPC_Request_Unsubscribe();
+        (void)RPC_Request_Unsubscribe();
         // Cleanup all shared attributes subscriptions
-        Shared_Attributes_Unsubscribe();
+        (void)Shared_Attributes_Unsubscribe();
         // Cleanup all client-side or shared attributes requests
-        Attributes_Request_Unsubscribe();
+        (void)Attributes_Request_Unsubscribe();
         // Cleanup all provision requests
-        Provision_Unsubscribe();
+        (void)Provision_Unsubscribe();
         // Stop any ongoing Firmware update,
         // which will in turn cleanup the internal member variables of the OTAHandler class
         // as well as all firmware subscriptions
@@ -494,7 +500,7 @@ class ThingsBoardSized {
         // Check if allocating needed memory failed when trying to create the JsonObject,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
-            Logger::println(UNABLE_TO_ALLOCATE_MEMORY);
+            Logger::println(UNABLE_TO_ALLOCATE_JSON);
             return false;
         }
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -520,7 +526,7 @@ class ThingsBoardSized {
         else
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
         if (getMaximumStackSize() < jsonSize) {
-            char* json = new char[jsonSize];
+            char* json = new char[jsonSize]();
             if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
             }
@@ -868,7 +874,7 @@ class ThingsBoardSized {
         registeredCallback->Set_Request_ID(m_request_id);
 
         char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)] = {};
-        snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
+        (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
 
         size_t const objectSize = Helper::Measure_Json(requestBuffer);
         return Send_Json(topic, requestBuffer, objectSize);
@@ -1116,12 +1122,12 @@ class ThingsBoardSized {
 
         // Convert the interger size into a readable string
         char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)] = {};
-        snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
+        (void)snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
         size_t const jsonSize = strlen(size);
 
         // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
         char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)] = {};
-        snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
+        (void)snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
 
         return m_client.publish(topic, reinterpret_cast<uint8_t *>(size), jsonSize);
     }
@@ -1222,7 +1228,7 @@ class ThingsBoardSized {
         registeredCallback->Set_Attribute_Key(attributeResponseKey);
 
         char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)] = {};
-        snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
+        (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
 
         size_t const objectSize = Helper::Measure_Json(requestBuffer);
         return Send_Json(topic, requestBuffer, objectSize);
@@ -1273,8 +1279,10 @@ class ThingsBoardSized {
     /// @return Whether subscribing to the firmware response topic was successful or not
     bool Firmware_OTA_Subscribe() {
         if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
-            Firmware_Send_State(FW_STATE_FAILED, SUBSCRIBE_TOPIC_FAILED);
+            char message[JSON_STRING_SIZE(strlen(SUBSCRIBE_TOPIC_FAILED)) + JSON_STRING_SIZE(strlen(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC))] = {};
+            (void)snprintf(message, sizeof(message), SUBSCRIBE_TOPIC_FAILED, FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
+            Logger::println(message);
+            Firmware_Send_State(FW_STATE_FAILED, message);
             return false;
         }
         return true;
@@ -1288,7 +1296,7 @@ class ThingsBoardSized {
         // to allow to receive ota chunck packets that might be much bigger than the normal
         // buffer size would allow, therefore we return to the previous value to decrease overall memory usage
         if (m_change_buffer_size) {
-            m_client.set_buffer_size(m_previous_buffer_size);
+            (void)setBufferSize(m_previous_buffer_size);
         }
         // Reset now not needed private member variables
         m_fw_callback = OTA_Update_Callback();
@@ -1324,7 +1332,7 @@ class ThingsBoardSized {
         // If firmware version and title is the same, we do not initiate an update, because we expect the type of binary to be the same one we are currently using and therefore updating would be useless
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
             char message[JSON_STRING_SIZE(strlen(FW_UP_TO_DATE)) + JSON_STRING_SIZE(strlen(curr_fw_version))] = {};
-            snprintf(message, sizeof(message), FW_UP_TO_DATE, curr_fw_version);
+            (void)snprintf(message, sizeof(message), FW_UP_TO_DATE, curr_fw_version);
             Logger::println(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return;
@@ -1332,7 +1340,7 @@ class ThingsBoardSized {
         // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device and downloading it on this device could possibly cause hardware issues
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
             char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(curr_fw_title)) + JSON_STRING_SIZE(strlen(fw_title))] = {};
-            snprintf(message, sizeof(message), FW_NOT_FOR_US, curr_fw_title, fw_title);
+            (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, curr_fw_title, fw_title);
             Logger::println(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return;
@@ -1354,7 +1362,7 @@ class ThingsBoardSized {
         }
         else {
             char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(strlen(fw_algorithm))] = {};
-            snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
+            (void)snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
             Logger::println(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return;
@@ -1368,7 +1376,7 @@ class ThingsBoardSized {
         Logger::println(PAGE_BREAK);
         Logger::println(NEW_FW);
         char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))] = {};
-        snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
+        (void)snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
         Logger::println(firmware);
         Logger::println(DOWNLOADING_FW);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -1382,7 +1390,7 @@ class ThingsBoardSized {
         m_change_buffer_size = m_previous_buffer_size < (chunk_size + 50U);
 
         // Increase size of receive buffer
-        if (m_change_buffer_size && !m_client.set_buffer_size(chunk_size + 50U)) {
+        if (m_change_buffer_size && !setBufferSize(chunk_size + 50U)) {
             Logger::println(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
             return;
@@ -1399,7 +1407,7 @@ class ThingsBoardSized {
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
     /// @return Whether connecting to ThingsBoard was successful or not
     bool connect_to_host(char const * const access_token, char const * const client_id, char const * const password) {
-        const bool connection_result = m_client.connect(client_id, access_token, password);
+        bool const connection_result = m_client.connect(client_id, access_token, password);
         if (!connection_result) {
             Logger::println(CONNECT_FAILED);
         }
@@ -1419,9 +1427,9 @@ class ThingsBoardSized {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
         }
         // Clean up any not yet answered single event subscriptions
-        RPC_Request_Unsubscribe();
-        Attributes_Request_Unsubscribe();
-        Provision_Unsubscribe();
+        (void)RPC_Request_Unsubscribe();
+        (void)Attributes_Request_Unsubscribe();
+        (void)Provision_Unsubscribe();
     }
 
     /// @brief Subscribes to the client-side RPC response topic
@@ -1539,7 +1547,7 @@ class ThingsBoardSized {
         // if we are not waiting for any further responses with shared attributes from the server.
         // Will be resubscribed if another request is sent anyway
         if (m_rpc_request_callbacks.empty()) {
-            RPC_Request_Unsubscribe();
+            (void)RPC_Request_Unsubscribe();
         }
     }
 
@@ -1602,7 +1610,7 @@ class ThingsBoardSized {
 
             size_t const request_id = Helper::parseRequestId(RPC_REQUEST_TOPIC, topic);
             char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
-            snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
+            (void)snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
 
             size_t const jsonSize = Helper::Measure_Json(jsonBuffer);
             Send_Json(responseTopic, jsonBuffer, jsonSize);
@@ -1623,8 +1631,8 @@ class ThingsBoardSized {
         // Check if the remaining stack size of the current task would overflow the stack,
         // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
         if (getMaximumStackSize() < length) {
-            uint8_t* binary = new uint8_t[length];
-            memcpy(binary, payload, length);
+            uint8_t* binary = new uint8_t[length]();
+            (void)memcpy(binary, payload, length);
             m_ota.Process_Firmware_Packet(request_id, binary, length);
             // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
             // and set the pointer to null so we do not have a dangling reference.
@@ -1633,7 +1641,7 @@ class ThingsBoardSized {
         }
         else {
             uint8_t binary[length] = {};
-            memcpy(binary, payload, length);
+            (void)memcpy(binary, payload, length);
             m_ota.Process_Firmware_Packet(request_id, binary, length);
         }
     }
@@ -1747,7 +1755,7 @@ class ThingsBoardSized {
         // if we are not waiting for any further responses with shared attributes from the server.
         // Will be resubscribed if another request is sent anyway
         if (m_attribute_request_callbacks.empty()) {
-            Attributes_Request_Unsubscribe();
+            (void)Attributes_Request_Unsubscribe();
         }
     }
 
@@ -1759,7 +1767,7 @@ class ThingsBoardSized {
         m_provision_callback.template Call_Callback<Logger>(data);
         // Unsubscribe from the provision response topic,
         // Will be resubscribed if another request is sent anyway
-        Provision_Unsubscribe();
+        (void)Provision_Unsubscribe();
     }
 
     /// @brief Attempts to send aggregated attribute or telemetry data

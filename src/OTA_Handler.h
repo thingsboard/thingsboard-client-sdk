@@ -102,7 +102,7 @@ class OTA_Handler {
         m_fw_callback = &fw_callback;
         m_fw_size = fw_size;
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
-        strncpy(m_fw_checksum, fw_checksum, sizeof(m_fw_checksum));
+        (void)strncpy(m_fw_checksum, fw_checksum, sizeof(m_fw_checksum));
         m_fw_checksum_algorithm = fw_checksum_algorithm;
         m_fw_updater = m_fw_callback->Get_Updater();
 
@@ -157,8 +157,10 @@ class OTA_Handler {
         // Write received binary data to flash partition
         size_t const written_bytes = m_fw_updater->write(payload, total_bytes);
         if (written_bytes != total_bytes) {
-            Logger::printfln(ERROR_UPDATE_WRITE, written_bytes, total_bytes);
-            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_WRITE);
+            char message[Helper::detectSize(ERROR_UPDATE_WRITE, written_bytes, total_bytes)] = {};
+            (void)snprintf(message, sizeof(message), ERROR_UPDATE_WRITE, written_bytes, total_bytes);
+            Logger::println(message);
+            return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, message);
         }
 
         // Update value only if writing to flash was a success, result is ignored,
@@ -257,7 +259,7 @@ class OTA_Handler {
         // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed.
         if (memcmp(m_fw_checksum, calculated_hash, sizeof(m_fw_checksum)) == 0) {
             char message[Helper::detectSize(CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum)] = {};
-            snprintf(message, sizeof(message), CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum);
+            (void)snprintf(message, sizeof(message), CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum);
             Logger::println(message);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, message);
         }
@@ -318,7 +320,7 @@ class OTA_Handler {
     void Handle_Request_Timeout()  {
         uint64_t const & timeout = m_fw_callback->Get_Timeout();
         char message[Helper::detectSize(CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout)] = {};
-        snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout);
+        (void)snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout);
         Logger::println(message);
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }

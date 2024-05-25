@@ -32,9 +32,9 @@ class Telemetry {
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
     Telemetry(char const * const key, T const & value)
-      : m_type(DataType::TYPE_INT),
-      m_key(key),
-      m_value()
+      : m_type(DataType::TYPE_INT)
+      , m_key(key)
+      , m_value()
     {
         m_value.integer = value;
     }

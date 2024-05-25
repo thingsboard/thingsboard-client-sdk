@@ -26,11 +26,11 @@ class DefaultLogger {
     /// @return Either the written amount of characters or an error indicator (being a negative number) if one occured
     template<typename ...Args>
     static int printfln(char const * const format, Args const &... args) {
-        const int size = Helper::detectSize(format, args...);
+        int const size = Helper::detectSize(format, args...);
         char arguments[size] = {};
-        const int written_characters = snprintf(arguments, size, format, args...);
+        int const written_characters = snprintf(arguments, size, format, args...);
         // Written characters is expected to be one less, because of the null termination character
-        const bool result = (written_characters == (size - 1));
+        bool const result = (written_characters == (size - 1));
         return println(result ? arguments : FAILED_MESSAGE);
     }
 

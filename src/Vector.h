@@ -115,7 +115,7 @@ class Vector {
     void push_back(T const & element) {
         if (m_size == m_capacity) {
             m_capacity = (m_capacity == 0) ? 1 : 2 * m_capacity;
-            T* newElements = new T[m_capacity];
+            T* newElements = new T[m_capacity]();
             if (m_elements != nullptr) {
                 memcpy(newElements, m_elements, m_size * sizeof(T));
                 delete[] m_elements;
