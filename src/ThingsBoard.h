@@ -109,6 +109,7 @@ char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
 #if THINGSBOARD_ENABLE_PROGMEM
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 char constexpr INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+char constexpr UNABLE_TO_ALLOCATE_BUFFER[] PROGMEM = "Allocating memory for the internal MQTT buffer failed";
 #if THINGSBOARD_ENABLE_OTA
 char constexpr NUMBER_PRINTF[] PROGMEM = "%u";
 #endif // THINGSBOARD_ENABLE_OTA
@@ -144,6 +145,7 @@ char constexpr SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger 
 #else
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
 #if THINGSBOARD_ENABLE_OTA
 char constexpr NUMBER_PRINTF[] = "%u";
 #endif // THINGSBOARD_ENABLE_OTA
@@ -268,7 +270,6 @@ char constexpr FW_UP_TO_DATE[] PROGMEM = "Firmware version (%s) already up to da
 char constexpr FW_NOT_FOR_US[] PROGMEM = "Firmware title (%s) not same as received title (%s)";
 char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] PROGMEM = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
-char constexpr UNABLE_TO_ALLOCATE_BUFFER[] PROGMEM = "Allocating memory for the internal MQTT buffer failed";
 char constexpr RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr PAGE_BREAK[] PROGMEM = "=================================";
@@ -283,7 +284,6 @@ char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
 char constexpr FW_NOT_FOR_US[] = "Firmware title (%s) not same as received title (%s)";
 char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
-char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
 char constexpr RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr PAGE_BREAK[] = "=================================";
@@ -445,11 +445,13 @@ class ThingsBoardSized {
         (void)Attributes_Request_Unsubscribe();
         // Cleanup all provision requests
         (void)Provision_Unsubscribe();
+#if THINGSBOARD_ENABLE_OTA
         // Stop any ongoing Firmware update,
         // which will in turn cleanup the internal member variables of the OTAHandler class
         // as well as all firmware subscriptions
         // and inform the user of the failed firmware update
         Stop_Firmware_Update();
+#endif // THINGSBOARD_ENABLE_OTA
     }
 
     /// @brief Connects to the specified ThingsBoard server over the given port as the given device.
