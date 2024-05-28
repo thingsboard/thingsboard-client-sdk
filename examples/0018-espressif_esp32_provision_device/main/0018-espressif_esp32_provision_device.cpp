@@ -2,6 +2,9 @@
 #include <esp_log.h>
 #include <esp_wifi.h>
 #include <string.h>
+#include <nvs_flash.h>
+#include <nvs.h>
+#include "stdio.h"
 
 // Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
@@ -24,7 +27,8 @@ constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
-constexpr char TOKEN[] = "YOUR_DEVICE_ACCESS_TOKEN";
+char accessToken[21] = "";
+size_t accessTokenLen = sizeof(accessToken);
 constexpr char PROVISION_DEVICE_KEY[] = "YOUR_PROVISION_DEVICE_KEY";
 constexpr char PROVISION_DEVICE_SECRET[] = "YOUR_PROVISION_DEVICE_SECRET";
 constexpr char DEVICE_NAME[] = "";
@@ -102,6 +106,8 @@ typedef struct {
 credentials_t credentials;
 bool provisionRequestSent = false;
 bool provisionResponseProcessed = false;
+bool WIFIConnectState = false;
+nvs_handle_t my_handle;
 
 /**
  * @brief Event handler for the IP_EVENT_STA_GOT_IP event.
@@ -121,6 +127,28 @@ static void on_got_ip(void* arg, esp_event_base_t event_base,
     ESP_LOGI(TAG, "Got IP address");
 }
 
+static void on_wifi_event(void* arg, esp_event_base_t event_base,
+                          int32_t event_id, void* event_data){
+    switch (event_id) {
+        case WIFI_EVENT_STA_START:
+            ESP_LOGI(TAG, "WiFi started, attempting to connect...");
+            esp_wifi_connect();
+            break;
+        case WIFI_EVENT_STA_CONNECTED:
+            ESP_LOGI(TAG, "WiFi connected");
+            WIFIConnectState = true;
+            break;
+        case WIFI_EVENT_STA_DISCONNECTED:
+            ESP_LOGI(TAG, "WiFi disconnected, retrying...");
+            WIFIConnectState = false;   
+            esp_wifi_connect();
+            break;
+        default:
+            break;
+    }
+}
+
+
 /**
  * @brief Initialize WiFi and connect to the specified access point.
  *
@@ -135,6 +163,26 @@ static void on_got_ip(void* arg, esp_event_base_t event_base,
  * @return void
  */
 void InitWiFi() {
+    // /* Initialize NVS partition */
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        /* NVS partition was truncated
+         * and needs to be erased */
+        ESP_ERROR_CHECK(nvs_flash_erase());
+
+        /* Retry nvs_flash_init */
+        ESP_ERROR_CHECK(nvs_flash_init());
+    }
+    nvs_open("storage", NVS_READWRITE, &my_handle);
+    if(nvs_get_str(my_handle, "ACCESS_TOKEN", accessToken, &accessTokenLen) != ESP_OK)
+    {
+        nvs_set_str(my_handle, "ACCESS_TOKEN", accessToken);
+        nvs_commit(my_handle);
+    }
+    nvs_close(my_handle);
+    ESP_LOGI(TAG, "Access Token from NVS: %s", accessToken);
+
     // Initialize the TCP/IP stack
     ESP_ERROR_CHECK(esp_netif_init());
     
@@ -150,6 +198,7 @@ void InitWiFi() {
 
     // Register event handler for IP_EVENT_STA_GOT_IP
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_got_ip, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi_event, NULL));
 
     // Configure WiFi connection settings
     wifi_config_t wifi_config = {};
@@ -165,8 +214,8 @@ void InitWiFi() {
     // Start WiFi
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    // Connect to the AP
-    ESP_ERROR_CHECK(esp_wifi_connect());
+    // // Connect to the AP
+    // ESP_ERROR_CHECK(esp_wifi_connect());
 }
 
 /**
@@ -198,6 +247,14 @@ void processProvisionResponse(const Provision_Data &data) {
     // Check if the provisioning was successful
     if (strcmp(data["status"], "SUCCESS") != 0) {
         ESP_LOGE(TAG, "Provision response contains the error: %s", data["errorMsg"].as<const char*>());
+        // Disconnect from the cloud client connected to the provision account
+        // because the device has been provisioned and can reconnect with new credentials
+        if (tb.connected()) {
+            tb.disconnect();
+        }
+
+        // Set the provision response processed flag to true
+        provisionResponseProcessed = true;
         return;
     }
 
@@ -206,6 +263,13 @@ void processProvisionResponse(const Provision_Data &data) {
         credentials.client_id = "";
         credentials.username = data["credentialsValue"].as<std::string>();
         credentials.password = "";
+        ESP_LOGI(TAG, "Access Token from thingsboard: %s", data["credentialsValue"].as<std::string>().c_str());
+        strncpy(accessToken, data["credentialsValue"].as<std::string>().c_str(), sizeof(accessToken) - 1);
+        accessToken[sizeof(accessToken) - 1] = '\0'; // 确保以空字符结尾
+        nvs_open("storage", NVS_READWRITE, &my_handle);
+        nvs_set_str(my_handle, "ACCESS_TOKEN", accessToken);
+        nvs_commit(my_handle);
+        nvs_close(my_handle);
     } else if (strcmp(data["credentialsType"], "MQTT_BASIC") == 0) {
         auto credentials_value = data["credentialsValue"].as<JsonObjectConst>();
         credentials.client_id = credentials_value["clientId"].as<std::string>();
@@ -213,7 +277,6 @@ void processProvisionResponse(const Provision_Data &data) {
         credentials.password = credentials_value["password"].as<std::string>();
     } else {
         ESP_LOGE(TAG, "Unexpected provision credentialsType: %s", data["credentialsType"].as<const char*>());
-        return;
     }
 
     // Disconnect from the cloud client connected to the provision account
@@ -249,34 +312,50 @@ void provision_device(void *pvParameters) {
         sprintf(mac_str, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         dev_name = mac_str;
     }
+    printf("Device name: %s\n", dev_name.c_str());
 
     // Connect to the ThingsBoard server as a client wanting to provision a new device
-    if (!tb.connect(THINGSBOARD_SERVER, "provision", THINGSBOARD_PORT)) {
-        ESP_LOGE(TAG, "Failed to connect to ThingsBoard server with provision account");
-        return;
-    }
-
-    // Prepare and send the provision request
-    Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, dev_name.c_str());
-    provisionRequestSent = tb.Provision_Request(provisionCallback);
-
-    // Wait for the provisioning response to be processed
-    while (!provisionResponseProcessed) {
+    while(1)
+    {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+        if(WIFIConnectState == false)
+        {
+            continue;
+        }
+        if(!provisionRequestSent)
+        {
+            if(!tb.connected())
+            {
+                ESP_LOGI(TAG, "Connecting to: (%s)\n", THINGSBOARD_SERVER);
+                if (!tb.connect(THINGSBOARD_SERVER, "provision", THINGSBOARD_PORT)) {
+                    ESP_LOGE(TAG, "Failed to connect to ThingsBoard server with provision account");
+                    continue;
+                }
+            }
+            Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, dev_name.c_str());
+            provisionRequestSent = tb.Provision_Request(provisionCallback);
+        }
+        else if(provisionResponseProcessed)
+        {
+            if(!tb.connected())
+            {
+                if(!tb.connect(THINGSBOARD_SERVER, accessToken, THINGSBOARD_PORT)){
+                    ESP_LOGE(TAG, "Failed to connect to ThingsBoard server with provision account");
+                    continue;
+                }
+                else
+                {
+                    ESP_LOGI(TAG, "Connected!");
+                }
+            }
+            else
+            {
+                tb.sendTelemetryData("TEMPERATURE_KEY", 22);
+            }
+        }
+        
         tb.loop();
     }
-
-    // Disconnect from the cloud client connected to the provision account
-    // because the device has been provisioned and can reconnect with new credentials
-    if (tb.connected()) {
-        tb.disconnect();
-    }
-
-    // Reconnect to the ThingsBoard server using the new credentials
-    tb.connect(THINGSBOARD_SERVER, credentials.username.c_str(), THINGSBOARD_PORT, credentials.client_id.c_str(), credentials.password.c_str());
-
-    // Run the ThingsBoard loop
-    tb.loop();
 }
 
 
