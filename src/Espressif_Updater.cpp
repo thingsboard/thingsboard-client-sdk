@@ -1,30 +1,20 @@
 // Header include.
 #include "Espressif_Updater.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
-#if THINGSBOARD_USE_ESP_PARTITION
+#if THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
 
 // Library include.
 #include <esp_ota_ops.h>
 
-
-Espressif_Updater::Espressif_Updater() :
-    m_ota_handle(0U),
-    m_update_partition(nullptr)
-{
-    // Nothing to do
-}
-
-bool Espressif_Updater::begin(const size_t& firmware_size) {
-    const esp_partition_t *running = esp_ota_get_running_partition();
-    const esp_partition_t *configured = esp_ota_get_boot_partition();
+bool Espressif_Updater::begin(size_t const & firmware_size) {
+    esp_partition_t const * const running = esp_ota_get_running_partition();
+    esp_partition_t const * const configured = esp_ota_get_boot_partition();
 
     if (configured != running) {
         return false;
     }
 
-    const esp_partition_t *update_partition = esp_ota_get_next_update_partition(nullptr);
+    esp_partition_t const * const update_partition = esp_ota_get_next_update_partition(nullptr);
 
     if (update_partition == nullptr) {
         return false;
@@ -34,7 +24,7 @@ bool Espressif_Updater::begin(const size_t& firmware_size) {
     // allowing us to only include the esp_ota_ops header in the defintion (.cpp) file,
     // instead of also needing to declare it in the declaration (.h) header file
     esp_ota_handle_t ota_handle;
-    const esp_err_t error = esp_ota_begin(update_partition, firmware_size, &ota_handle);
+    esp_err_t const error = esp_ota_begin(update_partition, firmware_size, &ota_handle);
 
     if (error != ESP_OK) {
         return false;
@@ -45,9 +35,9 @@ bool Espressif_Updater::begin(const size_t& firmware_size) {
     return true;
 }
 
-size_t Espressif_Updater::write(uint8_t* payload, const size_t& total_bytes) {
-    const esp_err_t error = esp_ota_write(m_ota_handle, payload, total_bytes);
-    const size_t written_bytes = (error == ESP_OK) ? total_bytes : 0U;
+size_t Espressif_Updater::write(uint8_t * payload, size_t const & total_bytes) {
+    esp_err_t const error = esp_ota_write(m_ota_handle, payload, total_bytes);
+    size_t const written_bytes = (error == ESP_OK) ? total_bytes : 0U;
     return written_bytes;
 }
 
@@ -65,6 +55,4 @@ bool Espressif_Updater::end() {
     return error == ESP_OK;
 }
 
-#endif // THINGSBOARD_USE_ESP_PARTITION
-
-#endif // THINGSBOARD_ENABLE_OTA
+#endif // THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION

@@ -1,8 +1,5 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-// Disable PROGMEM because the ESP8266WiFi library,
-// does not support flash strings.
-#define THINGSBOARD_ENABLE_PROGMEM 0
 #else
 #ifdef ESP32
 #include <WiFi.h>
@@ -267,7 +264,7 @@ void setup() {
   previous_processing_time = millis();
 }
 
-void processProvisionResponse(const Provision_Data &data) {
+void processProvisionResponse(const JsonObjectConst &data) {
   const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);

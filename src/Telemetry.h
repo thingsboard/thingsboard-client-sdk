@@ -31,10 +31,10 @@ class Telemetry {
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    inline Telemetry(const char *key, T value)
-      : m_type(DataType::TYPE_INT),
-      m_key(key),
-      m_value()
+    Telemetry(char const * const key, T const & value)
+      : m_type(DataType::TYPE_INT)
+      , m_key(key)
+      , m_value()
     {
         m_value.integer = value;
     }
@@ -52,35 +52,68 @@ class Telemetry {
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_floating_point declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_floating_point<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    Telemetry(const char *key, T value)
-      : m_type(DataType::TYPE_REAL),
-      m_key(key),
-      m_value()
+    Telemetry(char const * const key, T const & value)
+      : m_type(DataType::TYPE_REAL)
+      , m_key(key)
+      , m_value()
     {
         m_value.real = value;
     }
 
     /// @brief Constructs telemetry record from boolean value	
     /// @param key Key of the key value pair we want to create	
-    /// @param val Value of the key value pair we want to create	
-    Telemetry(const char *key, bool val);
+    /// @param value Value of the key value pair we want to create	
+    Telemetry(char const * const key, bool value);
 
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
     /// @param value Value of the key value pair we want to create
-    Telemetry(const char *key, const char *value);
+    Telemetry(char const * const key, char const * const value);
 
     /// @brief Whether this record is empty or not
     /// @return Whether there is any data in this record or not
     bool IsEmpty() const;
 
-    /// @brief Serializes the key-value pair depending on the constructor used
-    /// @param jsonObj Object the value will be copied into with the given key
+    /// @brief Serializes a key-value pair or a value, depending on the constructor used
+    /// @tparam TSource Source class that the given key value pair or a value, should be copied into
+    /// @param source Data source that should contain the key value pair or a value
     /// @return Whether serializing was successful or not
-    bool SerializeKeyValue(const JsonVariant &jsonObj) const;
+    template <typename TSource>
+    bool SerializeKeyValue(TSource & source) const {
+        switch (m_type) {
+            case DataType::TYPE_BOOL:
+                if (m_key) {
+                    source[m_key] = m_value.boolean;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.boolean);
+            case DataType::TYPE_INT:
+                if (m_key) {
+                    source[m_key] = m_value.integer;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.integer);
+            case DataType::TYPE_REAL:
+                if (m_key) {
+                    source[m_key] = m_value.real;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.real);
+            case DataType::TYPE_STR:
+                if (m_key) {
+                    source[m_key] = m_value.str;
+                    return source.containsKey(m_key);
+                }
+                return source.set(m_value.str);
+            default:
+                // Nothing to do
+                break;
+        }
+        return false;
+    }
 
   private:
-    // Data container
+    /// @brief Data container, which contains one of the possibly passed values
     union Data {
         const char  *str;
         bool        boolean;
@@ -88,7 +121,7 @@ class Telemetry {
         double      real;
     };
 
-    // Data type that is set inside the container
+    /// @brief Data type that the data container currently holds
     enum class DataType: const uint8_t {
         TYPE_NONE, // Telemetry instance is empty and has not been assigned a value
         TYPE_BOOL, // Telemetry instance is a key value-pair with a boolean value
@@ -102,7 +135,7 @@ class Telemetry {
     Data         m_value; // Data value of the key-value pair
 };
 
-// Convenient aliases
+/// @brief Telemetry and attributes are only different on the database side (one has a history the other one does not), but both are simply key-value pairs
 using Attribute = Telemetry;
 
 #endif // Telemetry_h

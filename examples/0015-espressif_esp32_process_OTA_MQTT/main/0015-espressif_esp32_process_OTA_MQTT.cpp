@@ -11,9 +11,10 @@
 #define ENCRYPTED false
 
 
-#include <Espressif_Updater.h>
+#include <SDCard_Updater.h>
 #include <Espressif_MQTT_Client.h>
 #include <ThingsBoard.h>
+#include "esp_ota_ops.h"
 
 
 // Firmware title and version used to compare with remote version, to check if an update is needed.
@@ -98,13 +99,16 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
+constexpr char FW_STATE_UPDATED[] = "UPDATED";
+constexpr char UPDAT_FILE_PATH[] = "/sd/update.bin";
+
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 // Initalize the Updater client instance used to flash binary to flash memory
-Espressif_Updater updater;
+SDCard_Updater updater(UPDAT_FILE_PATH);
 
 
 // Status for successfully connecting to the given WiFi
@@ -113,13 +117,71 @@ bool wifi_connected = false;
 bool currentFWSent = false;
 bool updateRequestSent = false;
 
+struct binary_data_t {
+    size_t size;
+    size_t remaining_size;
+    void * data;
+};
+
+
+/// @brief Attempts to write all received data on the given file into flash memory,
+/// allows to write binary data from an sd card into flash memory
+/// @param pvParameter Always null
+void otaSDToFlashTask(void* pvParameter) {
+    FILE * ota_bin_file = fopen(UPDAT_FILE_PATH, "rb");
+    esp_ota_handle_t update_handle;
+    esp_partition_t const * update_partition = esp_ota_get_next_update_partition(NULL);
+    binary_data_t data;
+
+    if (ota_bin_file == nullptr) {
+        ESP_LOGE("MAIN", "Failed to open file for Update");
+        vTaskDelete(NULL);
+    } else {
+        esp_err_t error = ESP_OK;
+        ESP_LOGI("MAIN", "Opened File for Update");
+        fseek(ota_bin_file, 0, SEEK_END);
+        data.size = ftell(ota_bin_file);
+        data.remaining_size = data.size;
+        ESP_LOGI("MAIN", "Update Size: %u", data.size);
+        data.data = malloc(FIRMWARE_PACKET_SIZE);
+        fseek(ota_bin_file, 0, SEEK_SET);
+        esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
+        while (data.remaining_size > 0) {
+            size_t const size = data.remaining_size <= FIRMWARE_PACKET_SIZE ? data.remaining_size : FIRMWARE_PACKET_SIZE;
+            fread(data.data, size, 1, ota_bin_file);
+            error = esp_ota_write(update_handle, data.data, size);
+            if (data.remaining_size <= FIRMWARE_PACKET_SIZE) {
+                break;
+            }
+            data.remaining_size -= FIRMWARE_PACKET_SIZE;
+            vTaskDelay(0);
+        }
+        if (error != ESP_OK) {
+            ESP_LOGE("MAIN", "Failed to write OTA data: 0x%X (%s)", error, esp_err_to_name(error));
+        }
+        error = esp_ota_end(update_handle);
+        if (error != ESP_OK) {
+            ESP_LOGE("MAIN", "Failed to end OTA update: 0x%X (%s)", error, esp_err_to_name(error));
+        }
+
+        error = esp_ota_set_boot_partition(update_partition);
+        if (error != ESP_OK) {
+            ESP_LOGE("MAIN", "Failed to set boot partition: 0x%X (%s)", error, esp_err_to_name(error));
+        } else {
+            ESP_LOGI("MAIN", "Updated with data from SD card, Restarting");
+            esp_restart();
+        }
+        vTaskDelete(NULL);
+        return;
+    }
+}
 
 /// @brief Updated callback that will be called as soon as the firmware update finishes
 /// @param success Either true (update successful) or false (update failed)
 void updatedCallback(const bool& success) {
   if (success) {
-    ESP_LOGI("MAIN", "Done, Reboot now");
-    esp_restart();
+    ESP_LOGI("MAIN", "Done updated to sd card. Write from SD card to flash");
+    xTaskCreate(otaSDToFlashTask, "OTA_SD_TO_FLASH", FIRMWARE_PACKET_SIZE + 1024 * 1, NULL, 16, NULL);
     return;
   }
   ESP_LOGI("MAIN", "Downloading firmware failed");

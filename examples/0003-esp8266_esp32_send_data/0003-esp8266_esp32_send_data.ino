@@ -1,8 +1,5 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-// Disable PROGMEM because the ESP8266WiFi library,
-// does not support flash strings.
-#define THINGSBOARD_ENABLE_PROGMEM 0
 #else
 #ifdef ESP32
 #include <WiFi.h>
@@ -13,7 +10,7 @@
 
 // Sending data can either be done over MQTT and the PubSubClient
 // or HTTPS and the HTTPClient, when using the ESP32 or ESP8266
-#define USING_HTTPS false
+#define USING_HTTPS true
 
 // Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
@@ -24,13 +21,22 @@
 // Enables sending messages that are bigger than the predefined message size,
 // where the message will be sent byte by byte as a fallback instead.
 // Requires an additional library, see https://github.com/bblanchon/ArduinoStreamUtils for more information.
-#define THINGSBOARD_ENABLE_STREAM_UTILS 1
+// Simply install that library and the feature will be enabled automatically.
+
+// Enables the ThingsBoard class to be fully dynamic instead of requiring template arguments to statically allocate memory.
+// If enabled the program might be slightly slower and all the memory will be placed onto the heap instead of the stack.
+#define THINGSBOARD_ENABLE_DYNAMIC 1
+
+// If the THINGSBOARD_ENABLE_DYNAMIC 1 setting causes this error log message to appear [TB] Unable to de-serialize received json data with error (DeserializationError::NoMemory).
+// Simply add this configuration line as well.
+//#define THINGSBOARD_ENABLE_PSRAM 0
 
 
-#include <Arduino_MQTT_Client.h>
 #if USING_HTTPS
+#include <Arduino_HTTP_Client.h>
 #include <ThingsBoardHttp.h>
 #else
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
 #endif
 
@@ -184,9 +190,11 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr char TEMPERATURE_KEY[] PROGMEM = "temperature";
 constexpr char HUMIDITY_KEY[] PROGMEM = "humidity";
 #else
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr char TEMPERATURE_KEY[] = "temperature";
 constexpr char HUMIDITY_KEY[] = "humidity";
 #endif
@@ -198,12 +206,14 @@ WiFiClientSecure espClient;
 #else
 WiFiClient espClient;
 #endif
-// Initalize the Mqtt client instance
-Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
 #if USING_HTTPS
-ThingsBoardHttp tb(mqttClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+// Initalize the Http client instance
+Arduino_HTTP_Client httpClient(espClient, THINGSBOARD_SERVER, THINGSBOARD_PORT);
+ThingsBoardHttp tb(httpClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 #endif
 
@@ -274,7 +284,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));

@@ -164,7 +164,7 @@ void loop() {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
     char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
-    snprintf_P(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
+    snprintf(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
@@ -200,7 +200,9 @@ void loop() {
   // Uploads new telemetry to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api 
   // for more details
-  tb.sendTelemetry(data, data_items);
+  Telemetry* begin = data;
+  Telemetry* end = data + data_items;
+  tb.sendTelemetry(begin, end);
 
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Sending attributes data..."));
@@ -226,7 +228,9 @@ void loop() {
   // Publish attribute update to ThingsBoard using MQTT. 
   // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server 
   // for more details
-  tb.sendAttributes(attributes, attribute_items);
+  begin = attributes;
+  end = attributes + attribute_items;
+  tb.sendAttributes(begin, end);
 
   tb.loop();
 }
