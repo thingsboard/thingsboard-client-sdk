@@ -12,7 +12,8 @@
 #else
 #include <Seeed_mbedtls.h>
 #endif // THINGSBOARD_USE_MBED_TLS
-#include <string>
+#include <stdint.h>
+#include <stddef.h>
 
 
 /// @brief Wrapper class which allows generating a hash of the given type from any arbitrary byte payload, which is hashable in chunks.
@@ -26,31 +27,35 @@
 class HashGenerator {
   public:
     /// @brief Constructor
-    HashGenerator(void);
+    HashGenerator(void) = default;
 
     /// @brief Destructor
     ~HashGenerator(void);
 
     /// @brief Starts the hashing process
     /// @param type Supported type of hash that should be generated from this class
-    void start(const mbedtls_md_type_t& type);
+    /// @return Whether initalizing and starting the hash calculation was successful or not
+    bool start(mbedtls_md_type_t const & type);
 
     /// @brief Update the current hash value with new data
     /// @param data Data that should be added to generate the hash
-    /// @param len Length of data entered
+    /// @param length Length of data entered
     /// @return Whether updating the hash for the given bytes was successful or not
-    bool update(const uint8_t* data, const size_t& len);
+    bool update(uint8_t const * const data, size_t const & length);
 
-    /// @brief Returns the final hash value as a string
-    /// @return String containing the final hash value for the passed bytes
-    std::string get_hash_string();
+    /// @brief Calculates the final hash value and stops the hash calculation no further calls to update() will work,
+    /// instead the same context can be reused to start another hash calculation operation with start()
+    /// @param hash Output byte array that the hash value will be copied into, needs to be MBEDTLS_MD_MAX_SIZE (64 bytes).
+    /// Because it needs to be able to hold the biggest possible hash value which is SHA512 being 512 bit = 64 bytes big
+    /// @return Whether stopping and caculating the final hash for the given bytes was successful or not
+    bool finish(unsigned char * hash);
 
   private:
     mbedtls_md_context_t m_ctx; // Context used to access the already written bytes and update them latter
 
-    /// @brief Calculates the final hash value
-    /// @param hash Output byte array that the hash value will be copied into
-    void finish(unsigned char *hash);
+    /// @brief Frees all internally allocated memory to ensure no memory leak occurs, additionally check if a hash calculation was ever started,
+    /// before freeing, because freeing without having started a hash calculation causes a crash.
+    void free();
 };
 
 #endif // THINGSBOARD_ENABLE_OTA

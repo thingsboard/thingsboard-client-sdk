@@ -13,6 +13,7 @@ Espressif_MQTT_Client *Espressif_MQTT_Client::m_instance = nullptr;
 
 Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_received_data_callback(nullptr),
+    m_connected_callback(nullptr),
     m_connected(false),
     m_enqueue_messages(false),
     m_mqtt_configuration(),
@@ -104,8 +105,12 @@ void Espressif_MQTT_Client::set_enqueue_messages(const bool& enqueue_messages) {
     m_enqueue_messages = enqueue_messages;
 }
 
-void Espressif_MQTT_Client::set_callback(function callback) {
+void Espressif_MQTT_Client::set_data_callback(data_function callback) {
     m_received_data_callback = callback;
+}
+
+void Espressif_MQTT_Client::set_connect_callback(connect_function callback) {
+    m_connected_callback = callback;
 }
 
 bool Espressif_MQTT_Client::set_buffer_size(const uint16_t& buffer_size) {
@@ -227,11 +232,21 @@ bool Espressif_MQTT_Client::publish(const char *topic, const uint8_t *payload, c
 }
 
 bool Espressif_MQTT_Client::subscribe(const char *topic) {
+    // The esp_mqtt_client_subscribe method does not return false, if we send a subscribe request while not being connected to a broker,
+    // so we have to check for that case to ensure the end user is informed that their subscribe request could not be sent and has been ignored.
+    if (!connected()) {
+        return false;
+    }
     const int message_id = esp_mqtt_client_subscribe(m_mqtt_client, topic, 0U);
     return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
 bool Espressif_MQTT_Client::unsubscribe(const char *topic) {
+    // The esp_mqtt_client_unsubscribe method does not return false, if we send a unsubscribe request while not being connected to a broker,
+    // so we have to check for that case to ensure the end user is informed that their unsubscribe request could not be sent and has been ignored.
+    if (!connected()) {
+        return false;
+    }
     const int message_id = esp_mqtt_client_unsubscribe(m_mqtt_client, topic);
     return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
@@ -257,6 +272,7 @@ void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_bas
     switch (event_id) {
         case esp_mqtt_event_id_t::MQTT_EVENT_CONNECTED:
             m_connected = true;
+            m_connected_callback();
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_DISCONNECTED:
             m_connected = false;

@@ -8,11 +8,11 @@
 // Library include.
 #include <Updater.h>
 
-bool Arduino_ESP8266_Updater::begin(const size_t& firmware_size) {
+bool Arduino_ESP8266_Updater::begin(size_t const & firmware_size) {
     return Update.begin(firmware_size);
 }
 
-size_t Arduino_ESP8266_Updater::write(uint8_t* payload, const size_t& total_bytes) {
+size_t Arduino_ESP8266_Updater::write(uint8_t * const payload, size_t const & total_bytes) {
     return Update.write(payload, total_bytes);
 }
 

@@ -1,15 +1,15 @@
-menu "ThingsBoard Arduino SDK Configurations"
+menu "ThingsBoard Client SDK Configurations"
 
     config THINGSBOARD_ENABLE_DYNAMIC
-        bool "Removes the need to set MaxFieldAmts in template class, but saves json into DynamicJsonDocument, requiring heap instead of stack memory"
+        bool "Replace static with dynami library usage"
         default n
         help
-            If this is disabled the library will use StaticJsonDocument to receive messages from the MQTT broker instead
+            If this is enabled the library will use DynamicJsonDocument to receive messages from the MQTT broker and use Vector to hold Subscription data instead of Arrays. Removing the need to declare MaxFieldsAmount, MaxSubscribtions, MaxAttributes and MaxRPC template arguments. But instead increasing heap allocation and usage drastically.
 
     config THINGSBOARD_ENABLE_DEBUG
-        bool "Enables debug messages in the ThingsBoard client"
+        bool "Enable additional debug log messages"
         default n
         help
-            If this is enabled the library uses more global constant variables containg messages that are printed
+            If this is enabled the library uses more global constant variables, but will print more about the currently ongoing internal processes. Which might help debug certain issues.
 
 endmenu

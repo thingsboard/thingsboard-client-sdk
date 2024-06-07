@@ -1,8 +1,5 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-// Disable PROGMEM because the ESP8266WiFi library,
-// does not support flash strings.
-#define THINGSBOARD_ENABLE_PROGMEM 0
 #else
 #ifdef ESP32
 #include <WiFi.h>
@@ -76,6 +73,14 @@ constexpr uint16_t MAX_MESSAGE_SIZE = 128U;
 constexpr uint32_t SERIAL_DEBUG_BAUD PROGMEM = 115200U;
 #else
 constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
+#endif
+
+// Maximum amount of attributs we can request or subscribe, has to be set both in the ThingsBoard template list and Attribute_Request_Callback template list
+// and should be the same as the amount of variables in the passed array. If it is less not all variables will be requested or subscribed
+#if THINGSBOARD_ENABLE_PROGMEM
+constexpr size_t MAX_ATTRIBUTES PROGMEM = 6U;
+#else
+constexpr size_t MAX_ATTRIBUTES = 6U;
 #endif
 
 #if ENCRYPTED
@@ -152,8 +157,10 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr char CONNECTING_MSG[] PROGMEM = "Connecting to: (%s) with token (%s)\n";
 constexpr const char FW_TAG_KEY[] PROGMEM = "fw_tag";
 #else
+constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr const char FW_TAG_KEY[] = "fw_tag";
 #endif
 
@@ -167,7 +174,7 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoardSized<Default_Fields_Amount, Default_Subscriptions_Amount, MAX_ATTRIBUTES> tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to shared attributes
 bool subscribed = false;
@@ -219,7 +226,7 @@ bool reconnect() {
 /// @brief Update callback that will be called as soon as one of the provided shared attributes changes value,
 /// if none are provided we subscribe to any shared attribute change instead
 /// @param data Data containing the shared attributes that were changed and their current value
-void processSharedAttributeUpdate(const Shared_Attribute_Data &data) {
+void processSharedAttributeUpdate(const JsonObjectConst &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     Serial.println(it->key().c_str());
     // Shared attributes have to be parsed by their type.
@@ -249,7 +256,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+    Serial.printf(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to connect"));
@@ -267,8 +274,8 @@ void loop() {
     Serial.println("Subscribing for shared attribute updates...");
 #endif
     // Shared attributes we want to request from the server
-    constexpr std::array<const char*, 6U> SUBSCRIBED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
-    const Shared_Attribute_Callback callback(&processSharedAttributeUpdate, SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend());
+    constexpr std::array<const char*, MAX_ATTRIBUTES> SUBSCRIBED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
+    const Shared_Attribute_Callback<MAX_ATTRIBUTES> callback(&processSharedAttributeUpdate, SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend());
     if (!tb.Shared_Attributes_Subscribe(callback)) {
 #if THINGSBOARD_ENABLE_PROGMEM
       Serial.println(F("Failed to subscribe for shared attribute updates"));

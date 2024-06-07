@@ -1,8 +1,5 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-// Disable PROGMEM because the ESP8266WiFi library,
-// does not support flash strings.
-#define THINGSBOARD_ENABLE_PROGMEM 0
 #else
 #ifdef ESP32
 #include <WiFi.h>
@@ -152,17 +149,17 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 #if THINGSBOARD_ENABLE_PROGMEM
+constexpr const char RPC_JSON_METHOD[] PROGMEM = "example_json";
 constexpr const char RPC_TEMPERATURE_METHOD[] PROGMEM = "example_set_temperature";
 constexpr const char RPC_SWITCH_METHOD[] PROGMEM = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] PROGMEM = "temp";
 constexpr const char RPC_SWITCH_KEY[] PROGMEM = "switch";
-constexpr const char RPC_RESPONSE_KEY[] PROGMEM = "example_response";
 #else
+constexpr const char RPC_JSON_METHOD[] = "example_json";
 constexpr const char RPC_TEMPERATURE_METHOD[] = "example_set_temperature";
 constexpr const char RPC_SWITCH_METHOD[] = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] = "temp";
 constexpr const char RPC_SWITCH_KEY[] PROGMEM = "switch";
-constexpr const char RPC_RESPONSE_KEY[] = "example_response";
 #endif
 
 
@@ -174,8 +171,8 @@ WiFiClient espClient;
 #endif
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
-// Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initialize ThingsBoard instance with the maximum needed buffer size and the adjusted maximum amount of rpc key value pairs we want to send as a response
+ThingsBoardSized<Default_Fields_Amount, 3U, Default_Attributes_Amount, 5U> tb(mqttClient, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -224,12 +221,33 @@ bool reconnect() {
   return true;
 }
 
-/// @brief Processes function for RPC call "example_set_temperature"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
+/// @brief Processes function for RPC call "example_json"
+/// JsonVariantConst is a JSON variant, that can be queried using operator[]
 /// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
 /// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processTemperatureChange(const RPC_Data &data) {
+/// @param response Data containgin the response value, any number, string or json, that should be sent to the cloud. Useful for getMethods
+void processGetJson(const JsonVariantConst &data, JsonDocument &response) {
+#if THINGSBOARD_ENABLE_PROGMEM
+  Serial.println(F("Received the json RPC method"));
+#else
+  Serial.println("Received the json RPC method");
+#endif
+
+  // Size of the response document needs to be configured to the size of the innerDoc + 1.
+  StaticJsonDocument<JSON_OBJECT_SIZE(4)> innerDoc;
+  innerDoc["string"] = "exampleResponseString";
+  innerDoc["int"] = 5;
+  innerDoc["float"] = 5.0f;
+  innerDoc["bool"] = true;
+  response["json_data"] = innerDoc;
+}
+
+/// @brief Processes function for RPC call "example_set_temperature"
+/// JsonVariantConst is a JSON variant, that can be queried using operator[]
+/// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
+/// @param data Data containing the rpc data that was called and its current value
+/// @param response Data containgin the response value, any number, string or json, that should be sent to the cloud. Useful for getMethods
+void processTemperatureChange(const JsonVariantConst &data, JsonDocument &response) {
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Received the set temperature RPC method"));
 #else
@@ -246,18 +264,21 @@ RPC_Response processTemperatureChange(const RPC_Data &data) {
 #endif
   Serial.println(example_temperature);
 
-  // Just an response example
-  StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
-  doc[RPC_RESPONSE_KEY] = 42;
-  return RPC_Response(doc);
+  // Ensure to only pass values do not store by copy, or if they do increase the MaxRPC template parameter accordingly to ensure that the value can be deserialized.RPC_Callback.
+  // See https://arduinojson.org/v6/api/jsondocument/add/ for more information on which variables cause a copy to be created
+  response["string"] = "exampleResponseString";
+  response["int"] = 5;
+  response["float"] = 5.0f;
+  response["double"] = 10.0d;
+  response["bool"] = true;
 }
 
 /// @brief Processes function for RPC call "example_set_switch"
-/// RPC_Data is a JSON variant, that can be queried using operator[]
+/// JsonVariantConst is a JSON variant, that can be queried using operator[]
 /// See https://arduinojson.org/v5/api/jsonvariant/subscript/ for more details
 /// @param data Data containing the rpc data that was called and its current value
-/// @return Response that should be sent to the cloud. Useful for getMethods
-RPC_Response processSwitchChange(const RPC_Data &data) {
+/// @param response Data containgin the response value, any number, string or json, that should be sent to the cloud. Useful for getMethods
+void processSwitchChange(const JsonVariantConst &data, JsonDocument &response) {
 #if THINGSBOARD_ENABLE_PROGMEM
   Serial.println(F("Received the set switch method"));
 #else
@@ -274,10 +295,7 @@ RPC_Response processSwitchChange(const RPC_Data &data) {
 #endif
   Serial.println(switch_state);
 
-  // Just an response example
-  StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
-  doc[RPC_RESPONSE_KEY] = 22.02;
-  return RPC_Response(doc);
+  response.set(22.02);
 }
 
 void setup() {
@@ -314,8 +332,12 @@ void loop() {
 #else
     Serial.println("Subscribing for RPC...");
 #endif
-    const std::array<RPC_Callback, 2U> callbacks = {
+    const std::array<RPC_Callback, 3U> callbacks = {
+      // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
+      RPC_Callback{ RPC_JSON_METHOD,           processGetJson },
+      // Requires additional memory in the JsonDocument for 5 key-value pairs that do not copy their value into the JsonDocument itself
       RPC_Callback{ RPC_TEMPERATURE_METHOD,    processTemperatureChange },
+       // Internal size can be 0, because if we use the JsonDocument as a JsonVariant and then set the value we do not require additional memory
       RPC_Callback{ RPC_SWITCH_METHOD,         processSwitchChange }
     };
     // Perform a subscription. All consequent data processing will happen in
