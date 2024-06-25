@@ -345,9 +345,9 @@ class ThingsBoardSized {
     /// @brief Receives / sends any outstanding messages from and to the MQTT broker
     /// @return Whether sending or receiving the oustanding the messages was successful or not
     bool loop() {
-#if !THINGSBOARD_USE_ESP_TIMER
+#if THINGSBOARD_ENABLE_OTA && !THINGSBOARD_USE_ESP_TIMER
         m_ota.update();
-#endif // !THINGSBOARD_USE_ESP_TIMER
+#endif // THINGSBOARD_ENABLE_OTA && !THINGSBOARD_USE_ESP_TIMER
         return m_client.loop();
     }
 
