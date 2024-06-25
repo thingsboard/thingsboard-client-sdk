@@ -88,7 +88,11 @@ bool
 #endif // THINGSBOARD_USE_ESP_TIMER
 Callback_Watchdog::oneshot_timer_callback(void *arg) {
     if (arg == nullptr) {
+#if THINGSBOARD_USE_ESP_TIMER
         return;
+#else
+    return false;
+#endif // THINGSBOARD_USE_ESP_TIMER
     }
     auto instance = static_cast<Callback_Watchdog *>(arg);
     instance->m_callback();
