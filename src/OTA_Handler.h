@@ -157,6 +157,14 @@ class OTA_Handler {
         Request_Next_Firmware_Packet();
     }
 
+#if !THINGSBOARD_USE_ESP_TIMER
+    /// @brief Used to update the watchdog timer which uses a simple software time in the background. Ensure to call recently often for higher precision.
+    /// Meaning the timer is actually triggered closer to the specified waiting time
+    void update() {
+        m_watchdog.update();
+    }
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
   private:
     const OTA_Update_Callback *m_fw_callback;                                 // Callback method that contains configuration information, about the over the air update
     std::function<bool(const size_t&)> m_publish_callback;                    // Callback that is used to request the firmware chunk of the firmware binary with the given chunk number

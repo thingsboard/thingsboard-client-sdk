@@ -80,9 +80,10 @@ Following dependencies are installed automatically or must be installed, too:
 **Needs to be installed manually:**
  - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`.
  - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`.
- - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update (`ESP8266` only, already included in `ESP32` base firmware).
+ - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update for non `Espressif` boards.
+ - [Arduino Timer](https://github.com/contrem/arduino-timer) - needed to create non-blocking callback timers for non `Espressif` boards.
  - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` with a `ESP8266`.
- - [StreamUtils](https://github.com/bblanchon/StreamUtils) — needed when sending arbitrary amount of payload even if the buffer size is too small to hold that complete payload is wanted, aforementioned feature is automatically enabled if the library is installed
+ - [StreamUtils](https://github.com/bblanchon/StreamUtils) — needed when sending arbitrary amount of payload even if the buffer size is too small to hold that complete payload is wanted, aforementioned feature is automatically enabled if the library is installed.
 
 ## Supported ThingsBoard Features
 

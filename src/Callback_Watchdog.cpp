@@ -29,8 +29,6 @@ Callback_Watchdog::~Callback_Watchdog() {
     // But besides that the same timer can simply be stopped and restarted without needing to delete and create the timer again everytime.
     (void)esp_timer_delete(static_cast<esp_timer_handle_t>(m_oneshot_timer));
     m_oneshot_timer = nullptr;
-#else
-    m_oneshot_timer.detach();
 #endif // THINGSBOARD_USE_ESP_TIMER
     m_instance = nullptr;
 }
@@ -40,8 +38,7 @@ void Callback_Watchdog::once(uint64_t const & timeout_microseconds) {
     create_timer();
     (void)esp_timer_start_once(static_cast<esp_timer_handle_t>(m_oneshot_timer), timeout_microseconds);
 #else
-    const uint32_t timeout_millis = timeout_microseconds / 1000U;
-    m_oneshot_timer.once_ms(timeout_millis, &Callback_Watchdog::oneshot_timer_callback);
+    m_oneshot_timer.in(timeout_microseconds, &Callback_Watchdog::oneshot_timer_callback);
 #endif // THINGSBOARD_USE_ESP_TIMER
 }
 
@@ -49,9 +46,15 @@ void Callback_Watchdog::detach() {
 #if THINGSBOARD_USE_ESP_TIMER
     (void)esp_timer_stop(static_cast<esp_timer_handle_t>(m_oneshot_timer));
 #else
-    m_oneshot_timer.detach();
+    m_oneshot_timer.cancel();
 #endif // THINGSBOARD_USE_ESP_TIMER
 }
+
+#if !THINGSBOARD_USE_ESP_TIMER
+void Callback_Watchdog::update() {
+    m_oneshot_timer.tick();
+}
+#endif // !THINGSBOARD_USE_ESP_TIMER
 
 #if THINGSBOARD_USE_ESP_TIMER
 void Callback_Watchdog::create_timer() {
@@ -81,11 +84,7 @@ void Callback_Watchdog::create_timer() {
 }
 #endif // THINGSBOARD_USE_ESP_TIMER
 
-#if THINGSBOARD_USE_ESP_TIMER
 void Callback_Watchdog::oneshot_timer_callback(void *arg) {
-#else
-void Callback_Watchdog::oneshot_timer_callback() {
-#endif // THINGSBOARD_USE_ESP_TIMER
     if (m_instance == nullptr) {
         return;
     }

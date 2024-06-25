@@ -114,10 +114,8 @@ void InitWiFi() {
     // Delay 500ms until a connection has been successfully established
     delay(500);
     Serial.print(".");
-#endif
   }
   Serial.println("Connected to AP");
-#endif
 #if ENCRYPTED
   espClient.setCACert(ROOT_CERT);
 #endif
