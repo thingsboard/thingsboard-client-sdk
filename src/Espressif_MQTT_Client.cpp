@@ -9,8 +9,6 @@
 // to ensure other errors are indentified as well
 constexpr int MQTT_FAILURE_MESSAGE_ID = -1;
 
-Espressif_MQTT_Client *Espressif_MQTT_Client::m_instance = nullptr;
-
 Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_received_data_callback(nullptr),
     m_connected_callback(nullptr),
@@ -19,11 +17,10 @@ Espressif_MQTT_Client::Espressif_MQTT_Client() :
     m_mqtt_configuration(),
     m_mqtt_client(nullptr)
 {
-    m_instance = this;
+    // Nothing to do
 }
 
 Espressif_MQTT_Client::~Espressif_MQTT_Client() {
-    m_instance = nullptr;
     (void)esp_mqtt_client_destroy(m_mqtt_client);
 }
 
@@ -190,10 +187,7 @@ bool Espressif_MQTT_Client::connect(const char *client_id, const char *user_name
     // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
     // additionally before we attempt to connect with the client we have to ensure it is configued by then.
     m_mqtt_client = esp_mqtt_client_init(&m_mqtt_configuration);
-
-    // The last argument may be used to pass data to the event handler, here that would be the static_mqtt_event_handler. But for our use case this is not needed,
-    // because the static_mqtt_event_handler calls a private method on this class again anyway, meaning we already have access to all private member variables that are required
-    esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, nullptr);
+    esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, this);
 
     if (error != ESP_OK) {
         return false;
@@ -266,7 +260,7 @@ bool Espressif_MQTT_Client::update_configuration() {
     return error == ESP_OK;
 }
 
-void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data) {
+void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data) {
     const esp_mqtt_event_handle_t event = static_cast<esp_mqtt_event_handle_t>(event_data);
 
     switch (event_id) {
@@ -310,11 +304,12 @@ void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_bas
 }
 
 void Espressif_MQTT_Client::static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
-    if (m_instance == nullptr) {
+    if (handler_args == nullptr) {
         return;
     }
 
-    m_instance->mqtt_event_handler(handler_args, base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
+    auto instance = static_cast<Espressif_MQTT_Client *>(handler_args);
+    instance->mqtt_event_handler(base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
 }
 
 #endif // THINGSBOARD_USE_ESP_MQTT

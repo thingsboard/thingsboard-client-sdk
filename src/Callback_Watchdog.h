@@ -55,8 +55,6 @@ class Callback_Watchdog {
     Timer<1, micros> m_oneshot_timer;     // Ticker instance that handles the timer under the hood, if possible we directly use esp timer instead because it is more efficient
 #endif // THINGSBOARD_USE_ESP_TIMER
 
-    static Callback_Watchdog *m_instance; // Instance to the created class, will be set once the constructor has been called and reset once the destructor has been called, used to call private member method from static callback
-
 #if THINGSBOARD_USE_ESP_TIMER
     /// @brief Creates and initally configures the timer, has to be done once before either esp_timer_start_once or esp_timer_stop is called
     /// It can not be created in the constructor, because that would possibly be called before we have executed the main app code, meaning the esp timer base is not initalized yet.

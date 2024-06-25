@@ -10,8 +10,6 @@
 constexpr char WATCHDOG_TIMER_NAME[] = "watchdog_timer";
 #endif // THINGSBOARD_USE_ESP_TIMER
 
-Callback_Watchdog *Callback_Watchdog::m_instance = nullptr;
-
 Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback)
   : m_callback(callback)
 #if THINGSBOARD_USE_ESP_TIMER
@@ -20,7 +18,7 @@ Callback_Watchdog::Callback_Watchdog(std::function<void(void)> callback)
   , m_oneshot_timer()
 #endif // THINGSBOARD_USE_ESP_TIMER
 {
-    m_instance = this;
+    // Nothing to do
 }
 
 Callback_Watchdog::~Callback_Watchdog() {
@@ -30,7 +28,6 @@ Callback_Watchdog::~Callback_Watchdog() {
     (void)esp_timer_delete(static_cast<esp_timer_handle_t>(m_oneshot_timer));
     m_oneshot_timer = nullptr;
 #endif // THINGSBOARD_USE_ESP_TIMER
-    m_instance = nullptr;
 }
 
 void Callback_Watchdog::once(uint64_t const & timeout_microseconds) {
@@ -38,7 +35,7 @@ void Callback_Watchdog::once(uint64_t const & timeout_microseconds) {
     create_timer();
     (void)esp_timer_start_once(static_cast<esp_timer_handle_t>(m_oneshot_timer), timeout_microseconds);
 #else
-    m_oneshot_timer.in(timeout_microseconds, &Callback_Watchdog::oneshot_timer_callback);
+    m_oneshot_timer.in(timeout_microseconds, &Callback_Watchdog::oneshot_timer_callback, this);
 #endif // THINGSBOARD_USE_ESP_TIMER
 }
 
@@ -65,7 +62,7 @@ void Callback_Watchdog::create_timer() {
 
     const esp_timer_create_args_t oneshot_timer_args = {
         .callback = &oneshot_timer_callback,
-        .arg = nullptr,
+        .arg = this,
         .dispatch_method = esp_timer_dispatch_t::ESP_TIMER_TASK,
         .name = WATCHDOG_TIMER_NAME,
         .skip_unhandled_events = false
@@ -85,11 +82,11 @@ void Callback_Watchdog::create_timer() {
 #endif // THINGSBOARD_USE_ESP_TIMER
 
 void Callback_Watchdog::oneshot_timer_callback(void *arg) {
-    if (m_instance == nullptr) {
+    if (arg == nullptr) {
         return;
     }
-
-    m_instance->m_callback();
+    auto instance = static_cast<Callback_Watchdog *>(arg);
+    instance->m_callback();
 }
 
 #endif // THINGSBOARD_ENABLE_OTA

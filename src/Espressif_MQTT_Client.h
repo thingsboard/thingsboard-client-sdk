@@ -119,8 +119,6 @@ private:
     esp_mqtt_client_config_t m_mqtt_configuration; // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
     esp_mqtt_client_handle_t m_mqtt_client;        // Handle to the underlying mqtt client, used to establish the communication
 
-    static Espressif_MQTT_Client *m_instance;      // Instance to the created class, will be set once the constructor has been called and reset once the destructor has been called, used to call private member method from static callback
-
     /// @brief Is internally used to allow changes to the underlying configuration of the esp_mqtt_client_handle_t after it has connected,
     /// to for example increase the buffer size or increase the timeouts or stack size, allows to change the underlying client configuration,
     /// without the need to completly disconnect and reconnect the client
@@ -128,11 +126,10 @@ private:
     bool update_configuration();
 
     /// @brief Event handler registered to receive MQTT events. Is called by the MQTT client event loop, whenever a new event occurs
-    /// @param handler_args User data registered to the event
     /// @param base Event base for the handler
     /// @param event_id The id for the received event
     /// @param event_data The data for the event, esp_mqtt_event_handle_t
-    void mqtt_event_handler(void *handler_args, esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void *event_data);
+    void mqtt_event_handler(esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void *event_data);
 
     static void static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 };
