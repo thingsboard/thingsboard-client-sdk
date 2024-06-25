@@ -14,9 +14,7 @@
 
 #define TAG "Provision Device"
 
-// Examples using arduino used PROGMEM to save constants into flash memory,
-// this is not needed when using Espressif IDF because per default
-// all read only variables will be saved into DROM (flash memory).
+
 // See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/memory-types.html#drom-data-stored-in-flash
 // for more information about the aforementioned feature
 constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
