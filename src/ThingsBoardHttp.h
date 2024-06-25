@@ -16,30 +16,16 @@
 
 
 // HTTP topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr HTTP_TELEMETRY_TOPIC[] PROGMEM = "/api/v1/%s/telemetry";
-char constexpr HTTP_ATTRIBUTES_TOPIC[] PROGMEM = "/api/v1/%s/attributes";
-char constexpr HTTP_POST_PATH[] PROGMEM = "application/json";
-int constexpr HTTP_RESPONSE_SUCCESS_RANGE_START PROGMEM = 200;
-int constexpr HTTP_RESPONSE_SUCCESS_RANGE_END PROGMEM = 299;
-#else
 char constexpr HTTP_TELEMETRY_TOPIC[] = "/api/v1/%s/telemetry";
 char constexpr HTTP_ATTRIBUTES_TOPIC[] = "/api/v1/%s/attributes";
 char constexpr HTTP_POST_PATH[] = "application/json";
 int constexpr HTTP_RESPONSE_SUCCESS_RANGE_START = 200;
 int constexpr HTTP_RESPONSE_SUCCESS_RANGE_END = 299;
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr POST[] PROGMEM = "POST";
-char constexpr GET[] PROGMEM = "GET";
-char constexpr HTTP_FAILED[] PROGMEM = "(%s) failed HTTP response (%d)";
-#else
 char constexpr POST[] = "POST";
 char constexpr GET[] = "GET";
 char constexpr HTTP_FAILED[] = "(%s) failed HTTP response (%d)";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 #if THINGSBOARD_ENABLE_DYNAMIC

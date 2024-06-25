@@ -5,9 +5,6 @@
 #include "Configuration.h"
 
 // Library includes.
-#if THINGSBOARD_ENABLE_PROGMEM
-#include <pgmspace.h>
-#endif // THINGSBOARD_ENABLE_PROGMEM
 #if THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 #include <ArduinoJson.h>
 #endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
@@ -24,15 +21,6 @@
 
 
 // Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr UNABLE_TO_SERIALIZE[] PROGMEM = "Unable to serialize key-value json";
-#if !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr TOO_MANY_JSON_FIELDS[] PROGMEM = "Too many JSON fields passed (%u), increase MaxFieldsAmount (%u) accordingly";
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr CONNECT_FAILED[] PROGMEM = "Connecting to server failed";
-char constexpr UNABLE_TO_SERIALIZE_JSON[] PROGMEM = "Unable to serialize json data";
-char constexpr UNABLE_TO_ALLOCATE_JSON[] PROGMEM = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
-#else
 char constexpr UNABLE_TO_SERIALIZE[] = "Unable to serialize key-value json";
 #if !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr TOO_MANY_JSON_FIELDS[] = "Too many JSON fields passed (%u), increase MaxFieldsAmount (%u) accordingly";
@@ -40,7 +28,6 @@ char constexpr TOO_MANY_JSON_FIELDS[] = "Too many JSON fields passed (%u), incre
 char constexpr CONNECT_FAILED[] = "Connecting to server failed";
 char constexpr UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 char constexpr UNABLE_TO_ALLOCATE_JSON[] = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 #if THINGSBOARD_ENABLE_PSRAM

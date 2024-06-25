@@ -8,11 +8,7 @@
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
 
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
-#else
 char constexpr ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 /// @brief Shared attribute update callback wrapper,

@@ -124,17 +124,6 @@ If the device is causing problems that are not already described in more detail 
 #include <ThingsBoard.h>
 ```
 
-### No PROGMEM support causing crashes
-
-If the device is crashing with a `Exception` especially `Exception (3)`, more specifically `LoadStoreError` or `LoadStoreErrorCause` this might be caused because all constant variables are per default in flash memory to decrease the overall memory footprint of the library. This can cause crashes if the underlying used libraries or the board itself don't support `PROGMEM`, to mitigate that add a `#define THINGSBOARD_ENABLE_PROGMEM 0` before including the ThingsBoard header file. This will simply remove all constants from the flash memory region and should therefore resolve any incompatibilities.
-
-```cpp
-// If not set the value is 1 per default if the pgmspace include exists,
-// set to 0 if the board has problems with PROGMEM variables and does not seem to work correctly
-#define THINGSBOARD_ENABLE_PROGMEM 0
-#include <ThingsBoard.h>
-```
-
 ### Not enough space for JSON serialization
 
 The buffer size for the serialized JSON is fixed to 64 bytes. The SDK will not send data if the size of it is bigger than the configured internal buffer size. Respective logs in the `"Serial Monitor"` window will indicate the condition:

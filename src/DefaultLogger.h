@@ -6,13 +6,8 @@
 
 
 // Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr FAILED_MESSAGE[] PROGMEM = "Invalid arguments passed to format specifiers (%) in Logger::printfln";
-char constexpr LOG_MESSAGE_FORMAT[] PROGMEM = "[TB] %s\n";
-#else
 char constexpr FAILED_MESSAGE[] = "Invalid arguments passed to format specifiers (%) in Logger::printfln";
 char constexpr LOG_MESSAGE_FORMAT[] = "[TB] %s\n";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 /// @brief Default logger class used by the ThingsBoard class to log messages into the console output

@@ -1,11 +1,7 @@
 // Header include.
 #include "RPC_Request_Callback.h"
 
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr RPC_REQUEST_CB_NULL[] PROGMEM = "Client-side RPC request callback is NULL";
-#else
 char constexpr RPC_REQUEST_CB_NULL[] = "Client-side RPC request callback is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 RPC_Request_Callback::RPC_Request_Callback(char const * const methodName, function callback) :
     RPC_Request_Callback(methodName, nullptr, callback)

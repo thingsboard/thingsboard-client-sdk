@@ -18,36 +18,12 @@
 
 
 // Firmware data keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr FW_STATE_DOWNLOADING[] PROGMEM = "DOWNLOADING";
-char constexpr FW_STATE_DOWNLOADED[] PROGMEM = "DOWNLOADED";
-char constexpr FW_STATE_UPDATING[] PROGMEM = "UPDATING";
-char constexpr FW_STATE_FAILED[] PROGMEM = "FAILED";
-#else
 char constexpr FW_STATE_DOWNLOADING[] = "DOWNLOADING";
 char constexpr FW_STATE_DOWNLOADED[] = "DOWNLOADED";
 char constexpr FW_STATE_UPDATING[] = "UPDATING";
 char constexpr FW_STATE_FAILED[] = "FAILED";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr UNABLE_TO_REQUEST_CHUNCKS[] PROGMEM = "Unable to request firmware chunk";
-char constexpr RECEIVED_UNEXPECTED_CHUNK[] PROGMEM = "Received chunk (%u), not the same as requested chunk (%u)";
-char constexpr RECEIVED_UNEXPECTED_CHUNK_SIZE[] PROGMEM = "Received chunk size (%u), not the same as expected chunk size (%u)";
-char constexpr ERROR_UPDATE_BEGIN[] = "Failed to initalize flash updater, ensure that the partition scheme has two app sections";
-char constexpr ERROR_UPDATE_WRITE[] PROGMEM = "Only wrote (%u) bytes of binary data instead of expected (%u)";
-char constexpr ERROR_UPDATE_END[] PROGMEM = "Error (%u) during flash updater not all bytes written";
-char constexpr CHECKSUM_VERIFICATION_FAILED[] PROGMEM = "Calculated checksum (%s), not the same as expected checksum (%s)";
-char constexpr FW_UPDATE_ABORTED[] PROGMEM = "Firmware update aborted";
-char constexpr CHUNK_REQUEST_TIMED_OUT[] PROGMEM = "Failed to receive requested chunk (%u) in (%llu) us. Internet connection might have been lost";
-#if THINGSBOARD_ENABLE_DEBUG
-char constexpr FW_CHUNK[] PROGMEM = "Receive chunk (%u), with size (%u) bytes";
-char constexpr HASH_EXPECTED[] PROGMEM = "(%s) expected checksum: (%s)";
-char constexpr CHECKSUM_VERIFICATION_SUCCESS[] PROGMEM = "Checksum is the same as expected";
-char constexpr FW_UPDATE_SUCCESS[] PROGMEM = "Update success";
-#endif // THINGSBOARD_ENABLE_DEBUG
-#else
 char constexpr UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
 char constexpr RECEIVED_UNEXPECTED_CHUNK[] = "Received chunk (%u), not the same as requested chunk (%u)";
 char constexpr RECEIVED_UNEXPECTED_CHUNK_SIZE[] = "Received chunk size (%u), not the same as expected chunk size (%u)";
@@ -63,7 +39,6 @@ char constexpr HASH_EXPECTED[] = "Expected checksum: (%s)";
 char constexpr CHECKSUM_VERIFICATION_SUCCESS[] = "Checksum is the same as expected";
 char constexpr FW_UPDATE_SUCCESS[] = "Update success";
 #endif // THINGSBOARD_ENABLE_DEBUG
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 /// @brief Handles the complete processing of received binary firmware data, including flashing it onto the device,

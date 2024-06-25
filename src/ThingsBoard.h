@@ -22,127 +22,44 @@
 
 
 // Publish data topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr ATTRIBUTE_TOPIC[] PROGMEM = "v1/devices/me/attributes";
-char constexpr TELEMETRY_TOPIC[] PROGMEM = "v1/devices/me/telemetry";
-#else
 char constexpr ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
 char constexpr TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // RPC topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr RPC_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/+";
-char constexpr RPC_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response/+";
-char constexpr RPC_SEND_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request/%u";
-char constexpr RPC_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/rpc/request";
-char constexpr RPC_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/rpc/response";
-char constexpr RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
-#else
 char constexpr RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
 char constexpr RPC_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/response/+";
 char constexpr RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
 char constexpr RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
 char constexpr RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
 char constexpr RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Firmware topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr FIRMWARE_RESPONSE_TOPIC[] PROGMEM = "v2/fw/response/0/chunk";
-#else
 char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/0/chunk";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr ATTRIBUTE_REQUEST_TOPIC[] PROGMEM = "v1/devices/me/attributes/request/%u";
-char constexpr ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response/+";
-char constexpr ATTRIBUTE_RESPONSE_TOPIC[] PROGMEM = "v1/devices/me/attributes/response";
-#else
 char constexpr ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
 char constexpr ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
 char constexpr ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Provision topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-uint16_t constexpr PROGMEM DEFAULT_MQTT_PORT = 1883U;
-char constexpr PROV_ACCESS_TOKEN[] PROGMEM = "provision";
-char constexpr PROV_RESPONSE_TOPIC[] PROGMEM = "/provision/response";
-#else
 uint16_t constexpr DEFAULT_MQTT_PORT = 1883U;
 char constexpr PROV_ACCESS_TOKEN[] = "provision";
 char constexpr PROV_RESPONSE_TOPIC[] = "/provision/response";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Shared attribute request keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr SHARED_REQUEST_KEY[] PROGMEM = "sharedKeys";
-char constexpr SHARED_RESPONSE_KEY[] PROGMEM = "shared";
-#else
 char constexpr SHARED_REQUEST_KEY[] = "sharedKeys";
 char constexpr SHARED_RESPONSE_KEY[] = "shared";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Client side attribute request keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr CLIENT_REQUEST_KEYS[] PROGMEM = "clientKeys";
-char constexpr CLIENT_RESPONSE_KEY[] PROGMEM = "client";
-#else
 char constexpr CLIENT_REQUEST_KEYS[] = "clientKeys";
 char constexpr CLIENT_RESPONSE_KEY[] = "client";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // RPC data keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr RPC_METHOD_KEY[] PROGMEM = "method";
-char constexpr RPC_PARAMS_KEY[] PROGMEM = "params";
-char constexpr RPC_EMPTY_PARAMS_VALUE[] PROGMEM = "{}";
-#else
 char constexpr RPC_METHOD_KEY[] = "method";
 char constexpr RPC_PARAMS_KEY[] = "params";
 char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] PROGMEM = "Unable to de-serialize received json data with error (DeserializationError::%s)";
-char constexpr INVALID_BUFFER_SIZE[] PROGMEM = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
-char constexpr UNABLE_TO_ALLOCATE_BUFFER[] PROGMEM = "Allocating memory for the internal MQTT buffer failed";
-#if THINGSBOARD_ENABLE_OTA
-char constexpr NUMBER_PRINTF[] PROGMEM = "%u";
-#endif // THINGSBOARD_ENABLE_OTA
-#if !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr RPC_RESPONSE_OVERFLOWED[] PROGMEM = "Server-side RPC response overflowed, increase MaxRPC (%u)";
-char constexpr SERVER_SIDE_RPC_SUBSCRIPTIONS[] PROGMEM = "server-side RPC";
-char constexpr CLIENT_SIDE_RPC_SUBSCRIPTIONS[] PROGMEM = "client-side RPC";
-char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] PROGMEM = "shared attribute update";
-char constexpr CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS[] PROGMEM = "client or shared attribute request";
-char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] PROGMEM = "Too many (%s) subscriptions, increase MaxSubscribtions or unsubscribe";
-#else
-char constexpr RPC_RESPONSE_OVERFLOWED[] PROGMEM = "Server-side RPC response overflowed, increase responseSize (%u)";
-char constexpr COLON PROGMEM = ':';
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr COMMA[] PROGMEM = ",";
-char constexpr NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
-char constexpr RPC_METHOD_NULL[] PROGMEM = "RPC methodName is NULL";
-char constexpr SUBSCRIBE_TOPIC_FAILED[] PROGMEM = "Subscribing the given topic (%s) failed";
-#if THINGSBOARD_ENABLE_DEBUG
-char constexpr NO_RPC_PARAMS_PASSED[] PROGMEM = "No parameters passed with RPC, passing null JSON";
-char constexpr NOT_FOUND_ATT_UPDATE[] PROGMEM = "Shared attribute update key not found";
-char constexpr ATT_KEY_NOT_FOUND[] PROGMEM = "Attribute key not found";
-char constexpr ATT_CB_NO_KEYS[] PROGMEM = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
-char constexpr ATT_IS_NULL[] PROGMEM = "Subscribed shared attribute update key is NULL";
-char constexpr ATT_NO_CHANGE[] PROGMEM = "No keys that we subscribed too were changed, skipping callback";
-char constexpr CALLING_RPC_CB[] PROGMEM = "Calling subscribed callback for rpc with methodname (%s)";
-char constexpr CALLING_ATT_CB[] PROGMEM = "Calling subscribed callback for updated shared attribute (%s)";
-char constexpr CALLING_REQUEST_CB[] PROGMEM = "Calling subscribed callback for request with response id (%u)";
-char constexpr RECEIVE_MESSAGE[] PROGMEM = "Received data from server over topic (%s)";
-char constexpr SEND_MESSAGE[] PROGMEM = "Sending data to server over topic (%s) with data (%s)";
-char constexpr SEND_SERIALIZED[] PROGMEM = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
-#endif // THINGSBOARD_ENABLE_DEBUG
-#else
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
 char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
@@ -178,36 +95,14 @@ char constexpr RECEIVE_MESSAGE[] = "Received data from server over topic (%s)";
 char constexpr SEND_MESSAGE[] = "Sending data to server over topic (%s) with data (%s)";
 char constexpr SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr CLAIM_TOPIC[] PROGMEM = "v1/devices/me/claim";
-#else
 char constexpr CLAIM_TOPIC[] = "v1/devices/me/claim";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Provision topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr PROV_REQUEST_TOPIC[] PROGMEM = "/provision/request";
-#else
 char constexpr PROV_REQUEST_TOPIC[] = "/provision/request";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Claim data keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr SECRET_KEY[] PROGMEM = "secretKey";
-char constexpr DURATION_KEY[] PROGMEM = "durationMs";
-char constexpr DEVICE_NAME_KEY[] PROGMEM = "deviceName";
-char constexpr PROV_DEVICE_KEY[] PROGMEM = "provisionDeviceKey";
-char constexpr PROV_DEVICE_SECRET_KEY[] PROGMEM = "provisionDeviceSecret";
-char constexpr PROV_CRED_TYPE_KEY[] PROGMEM = "credentialsType";
-char constexpr PROV_TOKEN[] PROGMEM = "token";
-char constexpr PROV_CRED_USERNAME[] PROGMEM = "username";
-char constexpr PROV_CRED_PASSWORD[] PROGMEM = "password";
-char constexpr PROV_CRED_CLIENT_ID[] PROGMEM = "clientId";
-char constexpr PROV_CRED_HASH[] PROGMEM = "hash";
-#else
 char constexpr SECRET_KEY[] = "secretKey";
 char constexpr DURATION_KEY[] = "durationMs";
 char constexpr DEVICE_NAME_KEY[] = "deviceName";
@@ -219,34 +114,13 @@ char constexpr PROV_CRED_USERNAME[] = "username";
 char constexpr PROV_CRED_PASSWORD[] = "password";
 char constexpr PROV_CRED_CLIENT_ID[] = "clientId";
 char constexpr PROV_CRED_HASH[] = "hash";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 #if THINGSBOARD_ENABLE_OTA
 // Firmware topics.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] PROGMEM = "v2/fw/response/#";
-char constexpr FIRMWARE_REQUEST_TOPIC[] PROGMEM = "v2/fw/request/0/chunk/%u";
-#else
 char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
 char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Firmware data keys.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr CURR_FW_TITLE_KEY[] PROGMEM = "current_fw_title";
-char constexpr CURR_FW_VER_KEY[] PROGMEM = "current_fw_version";
-char constexpr FW_ERROR_KEY[] PROGMEM = "fw_error";
-char constexpr FW_STATE_KEY[] PROGMEM = "fw_state";
-char constexpr FW_VER_KEY[] PROGMEM = "fw_version";
-char constexpr FW_TITLE_KEY[] PROGMEM = "fw_title";
-char constexpr FW_CHKS_KEY[] PROGMEM = "fw_checksum";
-char constexpr FW_CHKS_ALGO_KEY[] PROGMEM = "fw_checksum_algorithm";
-char constexpr FW_SIZE_KEY[] PROGMEM = "fw_size";
-char constexpr CHECKSUM_AGORITM_MD5[] PROGMEM = "MD5";
-char constexpr CHECKSUM_AGORITM_SHA256[] PROGMEM = "SHA256";
-char constexpr CHECKSUM_AGORITM_SHA384[] PROGMEM = "SHA384";
-char constexpr CHECKSUM_AGORITM_SHA512[] PROGMEM = "SHA512";
-#else
 char constexpr CURR_FW_TITLE_KEY[] = "current_fw_title";
 char constexpr CURR_FW_VER_KEY[] = "current_fw_version";
 char constexpr FW_ERROR_KEY[] = "fw_error";
@@ -260,24 +134,8 @@ char constexpr CHECKSUM_AGORITM_MD5[] = "MD5";
 char constexpr CHECKSUM_AGORITM_SHA256[] = "SHA256";
 char constexpr CHECKSUM_AGORITM_SHA384[] = "SHA384";
 char constexpr CHECKSUM_AGORITM_SHA512[] = "SHA512";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // Log messages.
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr NO_FW[] PROGMEM = "No new firmware assigned on the given device";
-char constexpr EMPTY_FW[] PROGMEM = "Given firmware was NULL";
-char constexpr FW_UP_TO_DATE[] PROGMEM = "Firmware version (%s) already up to date";
-char constexpr FW_NOT_FOR_US[] PROGMEM = "Firmware title (%s) not same as received title (%s)";
-char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] PROGMEM = "Checksum algorithm (%s) is not supported";
-char constexpr NOT_ENOUGH_RAM[] PROGMEM = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
-char constexpr RESETTING_FAILED[] PROGMEM = "Preparing for OTA firmware updates failed, attributes might be NULL";
-#if THINGSBOARD_ENABLE_DEBUG
-char constexpr PAGE_BREAK[] PROGMEM = "=================================";
-char constexpr NEW_FW[] PROGMEM = "A new Firmware is available:";
-char constexpr FROM_TOO[] PROGMEM = "(%s) => (%s)";
-char constexpr DOWNLOADING_FW[] PROGMEM = "Attempting to download over MQTT...";
-#endif // THINGSBOARD_ENABLE_DEBUG
-#else
 char constexpr NO_FW[] = "No new firmware assigned on the given device";
 char constexpr EMPTY_FW[] = "Given firmware was NULL";
 char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
@@ -291,7 +149,6 @@ char constexpr NEW_FW[] = "A new Firmware is available:";
 char constexpr FROM_TOO[] = "(%s) => (%s)";
 char constexpr DOWNLOADING_FW[] = "Attempting to download over MQTT...";
 #endif // THINGSBOARD_ENABLE_DEBUG
-#endif // THINGSBOARD_ENABLE_PROGMEM
 #endif // THINGSBOARD_ENABLE_OTA
 
 

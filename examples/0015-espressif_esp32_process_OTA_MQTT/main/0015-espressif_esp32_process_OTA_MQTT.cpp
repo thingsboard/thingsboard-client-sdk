@@ -28,9 +28,6 @@ constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
 // increased packet size, might increase download speed
 constexpr uint16_t FIRMWARE_PACKET_SIZE = 4096U;
 
-// Examples using arduino used PROGMEM to save constants into flash memory,
-// this is not needed when using Espressif IDF because per default
-// all read only variables will be saved into DROM (flash memory).
 // See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/memory-types.html#drom-data-stored-in-flash
 // for more information about the aforementioned feature
 constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";

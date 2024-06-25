@@ -6,11 +6,7 @@
 #include "Constants.h"
 
 
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr RPC_CB_NULL[] PROGMEM = "Server-side RPC callback is NULL";
-#else
 char constexpr RPC_CB_NULL[] = "Server-side RPC callback is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 /// @brief Server-side RPC callback wrapper,

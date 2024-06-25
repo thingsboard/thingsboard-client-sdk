@@ -10,22 +10,12 @@
 #include "IUpdater.h"
 
 
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr OTA_CB_IS_NULL[] PROGMEM = "OTA update callback is NULL";
-#else
 char constexpr OTA_CB_IS_NULL[] = "OTA update callback is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 // OTA default values.
-#if THINGSBOARD_ENABLE_PROGMEM
-uint8_t constexpr CHUNK_RETRIES PROGMEM = 12U;
-uint16_t constexpr CHUNK_SIZE PROGMEM = (4U * 1024U);
-uint64_t constexpr REQUEST_TIMEOUT PROGMEM = (5U * 1000U * 1000U);
-#else
 uint8_t constexpr CHUNK_RETRIES = 12U;
 uint16_t constexpr CHUNK_SIZE = (4U * 1024U);
 uint64_t constexpr REQUEST_TIMEOUT = (5U * 1000U * 1000U);
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 /// @brief Over the air firmware update callback wrapper,

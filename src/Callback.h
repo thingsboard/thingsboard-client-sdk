@@ -15,9 +15,6 @@
 #include <functional>
 #include <vector>
 #endif // THINGSBOARD_ENABLE_STL
-#if THINGSBOARD_ENABLE_PROGMEM
-#include <pgmspace.h>
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 #if THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
