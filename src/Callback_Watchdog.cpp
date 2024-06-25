@@ -81,12 +81,22 @@ void Callback_Watchdog::create_timer() {
 }
 #endif // THINGSBOARD_USE_ESP_TIMER
 
-void Callback_Watchdog::oneshot_timer_callback(void *arg) {
+#if THINGSBOARD_USE_ESP_TIMER
+void
+#else
+bool
+#endif // THINGSBOARD_USE_ESP_TIMER
+Callback_Watchdog::oneshot_timer_callback(void *arg) {
     if (arg == nullptr) {
         return;
     }
     auto instance = static_cast<Callback_Watchdog *>(arg);
     instance->m_callback();
+#if !THINGSBOARD_USE_ESP_TIMER
+    // Returning true will simply reset the internal time and start the timer once again,
+    // where as returning false will remove the timer internally so it can be added again
+    return false;
+#endif // !THINGSBOARD_USE_ESP_TIMER
 }
 
 #endif // THINGSBOARD_ENABLE_OTA
