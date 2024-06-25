@@ -65,7 +65,7 @@ class Callback_Watchdog {
 #endif // THINGSBOARD_USE_ESP_TIMER
 
     /// @brief Static callback used to call the initally subscribed callback, if the internal watchdog has not been reset in time with detach()
-    static void oneshot_timer_callback();
+    static void oneshot_timer_callback(void *arg);
 };
 
 #endif // THINGSBOARD_ENABLE_OTA
