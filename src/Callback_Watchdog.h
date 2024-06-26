@@ -134,7 +134,7 @@ class Callback_Watchdog : public Callback<void> {
         }
 
         auto instance = static_cast<Callback_Watchdog *>(arg);
-        instance->Call_Callback<Logger>();
+        instance->template Call_Callback<Logger>();
 #if !THINGSBOARD_USE_ESP_TIMER
         return false;
 #endif // !THINGSBOARD_USE_ESP_TIMER
