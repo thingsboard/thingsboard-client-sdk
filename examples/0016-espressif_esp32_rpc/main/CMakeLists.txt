@@ -6,7 +6,6 @@ set(srcs
     ../../../src/Arduino_HTTP_Client.cpp
     ../../../src/Arduino_MQTT_Client.cpp
     ../../../src/Attribute_Request_Callback.cpp
-    ../../../src/Callback_Watchdog.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
     ../../../src/Arduino_ESP8266_Updater.cpp
     ../../../src/Espressif_Updater.cpp

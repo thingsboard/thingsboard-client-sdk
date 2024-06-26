@@ -5,7 +5,6 @@ set(srcs
     0015-espressif_esp32_process_OTA_MQTT.cpp
     ../../../src/Arduino_HTTP_Client.cpp
     ../../../src/Arduino_MQTT_Client.cpp
-    ../../../src/Callback_Watchdog.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
     ../../../src/Arduino_ESP8266_Updater.cpp
     ../../../src/Espressif_Updater.cpp
