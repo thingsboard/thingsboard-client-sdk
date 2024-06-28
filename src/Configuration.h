@@ -45,7 +45,7 @@
 // Enable the usage of OTA (Over the air) updates, only possible with STL base functionality, theoretically possible without STL support,
 // but the code would have to be adjusted at compile time depending on if the C++ STL is supported or not and that has not been implemented for OTA yet.
 #  ifndef THINGSBOARD_ENABLE_OTA
-#     define THINGSBOARD_ENABLE_OTA THINGSBOARD_ENABLE_STL
+#     define THINGSBOARD_ENABLE_OTA 1
 #  endif
 
 // Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,

@@ -223,7 +223,11 @@ class ThingsBoardSized {
       , m_fw_callback()
       , m_previous_buffer_size(0U)
       , m_change_buffer_size(false)
+#if THINGSBOARD_ENABLE_STL
       , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
+#else
+      , m_ota(ThingsBoardSized::staticPublishChunk, ThingsBoardSized::staticFirmwareSend, ThingsBoardSized::staticUnsubscribe)
+#endif // THINGSBOARD_ENABLE_STL
 #endif // THINGSBOARD_ENABLE_OTA
     {
         (void)setBufferSize(bufferSize);
@@ -233,7 +237,7 @@ class ThingsBoardSized {
         m_client.set_connect_callback(std::bind(&ThingsBoardSized::Resubscribe_Topics, this));
 #else
         m_client.set_data_callback(ThingsBoardSized::onStaticMQTTMessage);
-        m_client.set_connect_callback(ThingsBoardSized::onStaticMQTTConnect);
+        m_client.set_connect_callback(ThingsBoardSized::staticMQTTConnect);
         m_subscribedInstance = this;
 #endif // THINGSBOARD_ENABLE_STL
     }
@@ -746,7 +750,6 @@ class ThingsBoardSized {
     // Firmware OTA API
 
 #if THINGSBOARD_ENABLE_OTA
-
     /// @brief Checks if firmware settings are assigned to the connected device and if they are attempts to use those settings to start a firmware update.
     /// Will only be checked once and if there is no firmware assigned or if the assigned firmware is already installed this method will not update.
     /// This firmware status is only checked once, meaning to recheck the status either call this method again or use the Subscribe_Firmware_Update method.
@@ -762,11 +765,25 @@ class ThingsBoardSized {
 
         // Request the firmware information
 #if THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_STL
         constexpr std::array<char const *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
         const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
 #else
+        char constexpr * array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char constexpr * begin = array;
+        char constexpr * end = array + 5U;
+        const Attribute_Request_Callback fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+#endif // THINGSBOARD_ENABLE_STL
+#else
+#if THINGSBOARD_ENABLE_STL
         constexpr std::array<char const *, MaxAttributes> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
         const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+#else
+        char constexpr * array[MaxAttributes] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char constexpr * begin = array;
+        char constexpr * end = array + MaxAttributes;
+        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+#endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return Shared_Attributes_Request(fw_request_callback);
     }
@@ -793,11 +810,25 @@ class ThingsBoardSized {
 
         // Subscribes to changes of the firmware information
 #if THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_STL
         constexpr std::array<char const *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
         const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
 #else
+        char constexpr * array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char constexpr * begin = array;
+        char constexpr * end = array + 5U;
+        const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+#endif // THINGSBOARD_ENABLE_STL
+#else
+#if THINGSBOARD_ENABLE_STL
         constexpr std::array<char const *, MaxAttributes> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
         const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+#else
+        char constexpr * array[MaxAttributes] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char constexpr * begin = array;
+        char constexpr * end = array + MaxAttributes;
+        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+#endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return Shared_Attributes_Subscribe(fw_update_callback);
     }
@@ -829,7 +860,6 @@ class ThingsBoardSized {
         currentFirmwareState[FW_STATE_KEY] = currFwState;
         return sendTelemetryJson(currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
     }
-
 #endif // THINGSBOARD_ENABLE_OTA
 
     //----------------------------------------------------------------------------
@@ -1739,11 +1769,39 @@ class ThingsBoardSized {
         m_subscribedInstance->onMQTTMessage(topic, payload, length);
     }
 
-    static void onStaticMQTTConnect() {
+    static void staticMQTTConnect() {
         if (m_subscribedInstance == nullptr) {
             return;
         }
         m_subscribedInstance->Resubscribe_Topics();
+    }
+
+    static bool staticPublishChunk(size_t const & request_chunck) {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
+        m_subscribedInstance->Publish_Chunk_Request(request_chunck);
+    }
+
+    static bool staticFirmwareSend(char const * const currFwState, char const * const fwError = nullptr) {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
+        m_subscribedInstance->Firmware_Send_State(currFwState, fwError);
+    }
+
+    static bool staticUnsubscribe() {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
+        m_subscribedInstance->Firmware_OTA_Unsubscribe();
+    }
+
+    static void onStaticFirmwareReceived(JsonObjectConst const & data) {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
+        m_subscribedInstance->Firmware_Shared_Attribute_Received(data);
     }
 #endif // !THINGSBOARD_ENABLE_STL
 };

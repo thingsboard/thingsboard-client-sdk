@@ -9,7 +9,7 @@ OTA_Update_Callback::OTA_Update_Callback(function endCb, char const * const curr
     // Nothing to do
 }
 
-OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, char const * const currFwTitle, char const * const currFwVersion, IUpdater * updater, uint8_t const & chunkRetries, uint16_t const & chunkSize, uint64_t const & timeout)
+OTA_Update_Callback::OTA_Update_Callback(progress_function progressCb, function endCb, char const * const currFwTitle, char const * const currFwVersion, IUpdater * updater, uint8_t const & chunkRetries, uint16_t const & chunkSize, uint64_t const & timeout)
   : Callback(endCb, OTA_CB_IS_NULL)
   , m_progressCb(progressCb)
   , m_fwTitel(currFwTitle)
@@ -22,7 +22,7 @@ OTA_Update_Callback::OTA_Update_Callback(progressFn progressCb, function endCb, 
     // Nothing to do
 }
 
-void OTA_Update_Callback::Set_Progress_Callback(progressFn progressCb) {
+void OTA_Update_Callback::Set_Progress_Callback(progress_function progressCb) {
     m_progressCb = progressCb;
 }
 
