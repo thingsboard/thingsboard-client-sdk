@@ -761,9 +761,9 @@ class ThingsBoardSized {
         }
 
         // Request the firmware information
-        char constexpr * array[5] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char constexpr * begin = array;
-        char constexpr * end = array + 5;
+        char const * const array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char const * const * const begin = array;
+        char const * const * const end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
         const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
@@ -801,9 +801,9 @@ class ThingsBoardSized {
         }
 
         // Subscribes to changes of the firmware information
-        char constexpr * array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char constexpr * begin = array;
-        char constexpr * end = array + 5U;
+        char const * const array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char const * const * const begin = array;
+        char const * const * const end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
         const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
