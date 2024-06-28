@@ -71,12 +71,12 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     /// @param current Already received and processs amount of chunks
     /// @param total Total amount of chunks we need to receive and process until the update has completed
     template <typename Logger>
-    returnType Call_Progress_Callback(progressArgumentType current, progressArgumentType total) const {
+    void Call_Progress_Callback(size_t const & current, size_t const & total) const {
         if (!m_progressCb) {
           Logger::println(OTA_CB_IS_NULL);
-          return returnType();
+          return;
         }
-        return m_progressCb(current, total);
+        m_progressCb(current, total);
     }
 
     /// @brief Sets the progress callback method that will be called every time our current progress of downloading the complete firmware data changed,

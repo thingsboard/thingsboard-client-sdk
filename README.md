@@ -282,7 +282,7 @@ Arduino_MQTT_Client mqttClient(espClient);
 // ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 2 possible key-value pairs that can be passed as a response from a server-side RPC call
-ThingsBoardSized<32, 8, 6, 5> tb(mqttClient, 128);
+ThingsBoardSized<32, 8, 6, 2> tb(mqttClient, 128);
 ```
 
 Alternatively, to remove the need for the `MaxRPC` template argument in the constructor template list, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This will instead expect an additional parameter `responseSize` in the `RPC_Callback` constructor argument list, which shows the internal size the [`JsonDocument`](https://arduinojson.org/v6/api/jsondocument/) needs to have to contain the response. Use `JSON_OBJECT_SIZE()` and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information.
@@ -537,7 +537,7 @@ Arduino_MQTT_Client mqttClient(espClient);
 // ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback, 2 possible key-value pairs that can be passed as a response from a server-side RPC call and a custom logging instance (CustomLogger)
-ThingsBoardSized<32, 8, 6, 5, CustomLogger> tb(mqttClient, 128);
+ThingsBoardSized<32, 8, 6, 2, CustomLogger> tb(mqttClient, 128);
 ```
 
 ## Have a question or proposal?

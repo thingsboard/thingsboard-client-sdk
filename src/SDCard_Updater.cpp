@@ -4,7 +4,7 @@
 #if THINGSBOARD_ENABLE_OTA
 
 // Library include.
-#include <cstdio>
+#include <stdio.h>
 
 
 SDCard_Updater::SDCard_Updater(char const * const file_path)

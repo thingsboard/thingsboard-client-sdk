@@ -16,9 +16,6 @@
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #include <StreamUtils.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-#if THINGSBOARD_ENABLE_OTA
-#include <array>
-#endif // THINGSBOARD_ENABLE_OTA
 
 
 // Publish data topics.
@@ -764,24 +761,19 @@ class ThingsBoardSized {
         }
 
         // Request the firmware information
+        char constexpr * array[5] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char constexpr * begin = array;
+        char constexpr * end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        constexpr std::array<char const *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+        const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
 #else
-        char constexpr * array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char constexpr * begin = array;
-        char constexpr * end = array + 5U;
         const Attribute_Request_Callback fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        constexpr std::array<char const *, MaxAttributes> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
 #else
-        char constexpr * array[MaxAttributes] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char constexpr * begin = array;
-        char constexpr * end = array + MaxAttributes;
         const Attribute_Request_Callback<MaxAttributes> fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
@@ -809,24 +801,19 @@ class ThingsBoardSized {
         }
 
         // Subscribes to changes of the firmware information
-#if THINGSBOARD_ENABLE_DYNAMIC
-#if THINGSBOARD_ENABLE_STL
-        constexpr std::array<char const *, 5U> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
-#else
         char constexpr * array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
         char constexpr * begin = array;
         char constexpr * end = array + 5U;
+#if THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_STL
+        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+#else
         const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        constexpr std::array<char const *, MaxAttributes> fw_shared_keys{FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), fw_shared_keys.cbegin(), fw_shared_keys.cend());
+        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
 #else
-        char constexpr * array[MaxAttributes] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char constexpr * begin = array;
-        char constexpr * end = array + MaxAttributes;
         const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
