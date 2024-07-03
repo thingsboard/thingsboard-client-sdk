@@ -1,13 +1,12 @@
 // Header include.
 #include "Provision_Callback.h"
 
-constexpr char PROVISION_CB_IS_NULL[] = "Provisioning callback is NULL";
 constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
 constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
 constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
 
 Provision_Callback::Provision_Callback(Access_Token, function callback, char const * const provisionDeviceKey, char const * const provisionDeviceSecret, char const * const deviceName)
-  : Callback(callback, PROVISION_CB_IS_NULL)
+  : Callback(callback)
   , m_deviceKey(provisionDeviceKey)
   , m_deviceSecret(provisionDeviceSecret)
   , m_deviceName(deviceName)
@@ -22,7 +21,7 @@ Provision_Callback::Provision_Callback(Access_Token, function callback, char con
 }
 
 Provision_Callback::Provision_Callback(Device_Access_Token, function callback, char const * const provisionDeviceKey, char const * const provisionDeviceSecret, char const * const accessToken, char const * const deviceName)
-  : Callback(callback, PROVISION_CB_IS_NULL)
+  : Callback(callback)
   , m_deviceKey(provisionDeviceKey)
   , m_deviceSecret(provisionDeviceSecret)
   , m_deviceName(deviceName)
@@ -37,7 +36,7 @@ Provision_Callback::Provision_Callback(Device_Access_Token, function callback, c
 }
 
 Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback, char const * const provisionDeviceKey, char const * const provisionDeviceSecret, char const * const username, char const * const password, char const * const clientID, char const * const deviceName)
-  : Callback(callback, PROVISION_CB_IS_NULL)
+  : Callback(callback)
   , m_deviceKey(provisionDeviceKey)
   , m_deviceSecret(provisionDeviceSecret)
   , m_deviceName(deviceName)
@@ -52,7 +51,7 @@ Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback
 }
 
 Provision_Callback::Provision_Callback(X509_Certificate, function callback, char const * const provisionDeviceKey, char const * const provisionDeviceSecret, char const * const hash, char const * const deviceName)
-  : Callback(callback, PROVISION_CB_IS_NULL)
+  : Callback(callback)
   , m_deviceKey(provisionDeviceKey)
   , m_deviceSecret(provisionDeviceSecret)
   , m_deviceName(deviceName)

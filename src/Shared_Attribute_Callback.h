@@ -8,9 +8,6 @@
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
 
-char constexpr ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
-
-
 /// @brief Shared attribute update callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
@@ -28,7 +25,7 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
     /// of any existing or new shared attribute on the given device
     /// @param cb Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     explicit Shared_Attribute_Callback(function cb)
-      : Callback(cb, ATT_CB_IS_NULL)
+      : Callback(cb)
       , m_attributes()
     {
         // Nothing to do
@@ -50,7 +47,7 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
     /// @param ...args Arguments that will be forwarded into the overloaded vector constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
     Shared_Attribute_Callback(function callback, Args const &... args)
-      : Callback(callback, ATT_CB_IS_NULL)
+      : Callback(callback)
       , m_attributes(args...)
     {
         // Nothing to do

@@ -37,10 +37,10 @@ class IMQTT_Client {
       /// @brief Callback signature
 #if THINGSBOARD_ENABLE_STL
     using data_function = std::function<void(char * topic, uint8_t * payload, unsigned int length)>;
-    using connect_function = std::function<void(void)>;
+    using connect_function = std::function<void()>;
 #else
     using data_function = void (*)(char * topic, uint8_t * payload, unsigned int length);
-    using connect_function = void (*)(void);
+    using connect_function = void (*)();
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,

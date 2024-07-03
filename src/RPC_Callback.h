@@ -6,9 +6,6 @@
 #include "Constants.h"
 
 
-char constexpr RPC_CB_NULL[] = "Server-side RPC callback is NULL";
-
-
 /// @brief Server-side RPC callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of Server-side RPC in ThingsBoard can be found here https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc
@@ -29,7 +26,7 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
 #else
     RPC_Callback(char const * const methodName, function cb)
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-      : Callback(cb, RPC_CB_NULL)
+      : Callback(cb)
       , m_methodName(methodName)
 #if THINGSBOARD_ENABLE_DYNAMIC
       , m_responseSize(responseSize)

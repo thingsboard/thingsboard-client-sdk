@@ -10,8 +10,6 @@
 #include "IUpdater.h"
 
 
-char constexpr OTA_CB_IS_NULL[] = "OTA update callback is NULL";
-
 // OTA default values.
 uint8_t constexpr CHUNK_RETRIES = 12U;
 uint16_t constexpr CHUNK_SIZE = (4U * 1024U);
@@ -73,7 +71,6 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     template <typename Logger>
     void Call_Progress_Callback(size_t const & current, size_t const & total) const {
         if (!m_progressCb) {
-          Logger::println(OTA_CB_IS_NULL);
           return;
         }
         m_progressCb(current, total);

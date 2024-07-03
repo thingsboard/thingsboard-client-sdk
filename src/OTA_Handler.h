@@ -189,7 +189,7 @@ class OTA_Handler {
     size_t m_total_chunks;                     // Total amount of chunks that need to be received to get the complete firmware binary
     size_t m_requested_chunks;                 // Amount of successfully requested and received firmware binary chunks
     uint8_t m_retries;                         // Amount of request retries we attempt for each chunk, increasing makes the connection more stable
-    Callback_Watchdog<Logger> m_watchdog;      // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
+    Callback_Watchdog m_watchdog;              // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
 
     /// @brief Checks whether the received chunk size matches the expected chunk size, should be the configured chunk size of the OTA_Update_Callback, CHUNK_SIZE (4096) per default
     /// and it should be the remaining bytes to fill the total firmware size with the last received chunk. If that is not the case then something went wrong with the request and we have to rerequest that specific chunk,
@@ -272,7 +272,7 @@ class OTA_Handler {
     #endif // THINGSBOARD_ENABLE_DEBUG
 
         (void)m_send_fw_state_callback(FW_STATE_UPDATING, nullptr);
-        m_fw_callback->Call_Callback<Logger>(true);
+        m_fw_callback->Call_Callback(true);
         (void)m_finish_callback();
     }
 
@@ -283,7 +283,7 @@ class OTA_Handler {
     void Handle_Failure(OTA_Failure_Response const & failure_response, char const * const error_message = nullptr)  {
         if (m_retries <= 0) {
             (void)m_send_fw_state_callback(FW_STATE_FAILED, error_message);
-            m_fw_callback->Call_Callback<Logger>(false);
+            m_fw_callback->Call_Callback(false);
             (void)m_finish_callback();
             return;
         }
@@ -301,7 +301,7 @@ class OTA_Handler {
                 break;
             case OTA_Failure_Response::RETRY_NOTHING:
                 (void)m_send_fw_state_callback(FW_STATE_FAILED, error_message);
-                m_fw_callback->Call_Callback<Logger>(false);
+                m_fw_callback->Call_Callback(false);
                 (void)m_finish_callback();
                 break;
             default:

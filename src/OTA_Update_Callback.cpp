@@ -10,7 +10,7 @@ OTA_Update_Callback::OTA_Update_Callback(function endCb, char const * const curr
 }
 
 OTA_Update_Callback::OTA_Update_Callback(progress_function progressCb, function endCb, char const * const currFwTitle, char const * const currFwVersion, IUpdater * updater, uint8_t const & chunkRetries, uint16_t const & chunkSize, uint64_t const & timeout)
-  : Callback(endCb, OTA_CB_IS_NULL)
+  : Callback(endCb)
   , m_progressCb(progressCb)
   , m_fwTitel(currFwTitle)
   , m_fwVersion(currFwVersion)

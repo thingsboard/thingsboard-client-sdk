@@ -113,6 +113,9 @@ char constexpr PROV_CRED_CLIENT_ID[] = "clientId";
 char constexpr PROV_CRED_HASH[] = "hash";
 
 #if THINGSBOARD_ENABLE_OTA
+uint64_t constexpr OTA_REQUEST_TIMEOUT = 5000U * 1000U;
+char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys in (%lu) microseconds. Aborting firmware update, restart with the same call again after ensure the keys actually exist on the device and ensuring the device is connected to the MQTT broker";
+
 // Firmware topics.
 char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
 char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
@@ -346,6 +349,14 @@ class ThingsBoardSized {
     /// @brief Receives / sends any outstanding messages from and to the MQTT broker
     /// @return Whether sending or receiving the oustanding the messages was successful or not
     bool loop() {
+#if !THINGSBOARD_USE_ESP_TIMER
+        for (auto const & rpc_request : m_rpc_request_callbacks) {
+            rpc_request.Update_Timeout_Timer();
+        }
+        for (auto const & attribute_request : m_attribute_request_callbacks) {
+            attribute_request.Update_Timeout_Timer();
+        }
+#endif // !THINGSBOARD_USE_ESP_TIMER
 #if THINGSBOARD_ENABLE_OTA && !THINGSBOARD_USE_ESP_TIMER
         m_ota.update();
 #endif // THINGSBOARD_ENABLE_OTA && !THINGSBOARD_USE_ESP_TIMER
@@ -735,6 +746,7 @@ class ThingsBoardSized {
 
         m_request_id++;
         registeredCallback->Set_Request_ID(m_request_id);
+        registeredCallback->Start_Timeout_Timer(registeredCallback->Get_Timeout());
 
         char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)] = {};
         (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
@@ -766,15 +778,15 @@ class ThingsBoardSized {
         char const * const * const end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+        const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
 #else
-        const Attribute_Request_Callback fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+        const Attribute_Request_Callback fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
 #else
-        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return Shared_Attributes_Request(fw_request_callback);
@@ -806,15 +818,15 @@ class ThingsBoardSized {
         char const * const * const end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
 #else
-        const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+        const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
 #else
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
+        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return Shared_Attributes_Subscribe(fw_update_callback);
@@ -1105,6 +1117,7 @@ class ThingsBoardSized {
         m_request_id++;
         registeredCallback->Set_Request_ID(m_request_id);
         registeredCallback->Set_Attribute_Key(attributeResponseKey);
+        registeredCallback->Start_Timeout_Timer(registeredCallback->Get_Timeout());
 
         char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)] = {};
         (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
@@ -1181,6 +1194,12 @@ class ThingsBoardSized {
         m_fw_callback = OTA_Update_Callback();
         // Unsubscribe from the topic
         return m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
+    }
+
+    /// @brief Handler if the firmware shared attribute request times out without getting a response.
+    /// Is used to signal that the update could not be started, because the current firmware information could not be fetched
+    void Request_Timeout() {
+        Logger::printfln(NO_FW_REQUEST_RESPONSE, OTA_REQUEST_TIMEOUT);
     }
 
     /// @brief Callback that will be called upon firmware shared attribute arrival
@@ -1414,8 +1433,8 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::printfln(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
-
-            rpc_request.template Call_Callback<Logger>(data);
+            rpc_request.Stop_Timeout_Timer();
+            rpc_request.Call_Callback(data);
 
             // Delete callback because the changes have been requested and the callback is no longer needed
             Helper::remove(m_rpc_request_callbacks, it);
@@ -1476,7 +1495,7 @@ class ThingsBoardSized {
             size_t constexpr rpc_response_size = MaxRPC;
             StaticJsonDocument<JSON_OBJECT_SIZE(MaxRPC)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-            rpc.template Call_Callback<Logger>(param, jsonBuffer);
+            rpc.Call_Callback(param, jsonBuffer);
 
             if (jsonBuffer.isNull()) {
                 // Message is ignored and not sent at all.
@@ -1549,7 +1568,7 @@ class ThingsBoardSized {
                 Logger::println(ATT_CB_NO_KEYS);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 // No specifc keys were subscribed so we call the callback anyway, assumed to be subscribed to any update
-                shared_attribute.template Call_Callback<Logger>(data);
+                shared_attribute.Call_Callback(data);
                 continue;
             }
 
@@ -1582,8 +1601,7 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::printfln(CALLING_ATT_CB, requested_att);
 #endif // THINGSBOARD_ENABLE_DEBUG
-
-            shared_attribute.template Call_Callback<Logger>(data);
+            shared_attribute.Call_Callback(data);
         }
     }
 
@@ -1621,8 +1639,8 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::printfln(CALLING_REQUEST_CB, request_id);
 #endif // THINGSBOARD_ENABLE_DEBUG
-
-            attribute_request.template Call_Callback<Logger>(data);
+            attribute_request.Stop_Timeout_Timer();
+            attribute_request.Call_Callback(data);
 
             delete_callback:
             // Delete callback because the changes have been requested and the callback is no longer needed
@@ -1643,7 +1661,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     void process_provisioning_response(char * const topic, JsonObjectConst const & data) {
-        m_provision_callback.template Call_Callback<Logger>(data);
+        m_provision_callback.Call_Callback(data);
         // Unsubscribe from the provision response topic,
         // Will be resubscribed if another request is sent anyway
         (void)Provision_Unsubscribe();
@@ -1790,6 +1808,13 @@ class ThingsBoardSized {
         }
         m_subscribedInstance->Firmware_Shared_Attribute_Received(data);
     }
+
+    static void onStaticRequestTimeout() {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
+        m_subscribedInstance->Request_Timeout();
+    }    
 #endif // !THINGSBOARD_ENABLE_STL
 };
 
