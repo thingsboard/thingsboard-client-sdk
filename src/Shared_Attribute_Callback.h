@@ -22,16 +22,6 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
     Shared_Attribute_Callback() = default;
 
     /// @brief Constructs callback, will be called upon shared attribute update arrival,
-    /// of any existing or new shared attribute on the given device
-    /// @param cb Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
-    explicit Shared_Attribute_Callback(function cb)
-      : Callback(cb)
-      , m_attributes()
-    {
-        // Nothing to do
-    }
-
-    /// @brief Constructs callback, will be called upon shared attribute update arrival,
     /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
     /// If the update does not include any of the given shared attributes the callback is not called.
     /// Directly forwards the given arguments to the overloaded vector constructor,

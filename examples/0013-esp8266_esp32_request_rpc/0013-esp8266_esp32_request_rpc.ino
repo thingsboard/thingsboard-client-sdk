@@ -171,7 +171,7 @@ void loop() {
   if (!subscribed) {
     Serial.println("Requesting RPC...");
     // RPC Request without any parameters
-    RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime);
+    RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime, nullptr, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC without arguments");
@@ -184,7 +184,7 @@ void loop() {
     array.add("example");
     array.add(true);
     array.add(145);
-    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
+    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime, &array, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC with multiple arguments");
@@ -197,7 +197,7 @@ void loop() {
     array = doc2.to<JsonArray>();
     innerDoc["example"] = "test";
     array.add(innerDoc);
-    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
+    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime, &array, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC with one inner json argument");

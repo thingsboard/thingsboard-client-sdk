@@ -818,15 +818,15 @@ class ThingsBoardSized {
         char const * const * const end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
+        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
 #else
-        const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
+        const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
+        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
 #else
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
+        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return Shared_Attributes_Subscribe(fw_update_callback);
