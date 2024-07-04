@@ -1423,7 +1423,7 @@ class ThingsBoardSized {
     void process_rpc_request_message(char * const topic, JsonObjectConst const & data) {
         size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
-        for (auto it = m_rpc_request_callbacks.cbegin(); it != m_rpc_request_callbacks.cend(); ++it) {
+        for (auto it = m_rpc_request_callbacks.begin(); it != m_rpc_request_callbacks.end(); ++it) {
             auto & rpc_request = *it;
 
             if (rpc_request.Get_Request_ID() != request_id) {
@@ -1612,7 +1612,7 @@ class ThingsBoardSized {
     void process_attribute_request_message(char * const topic, JsonObjectConst & data) {
         size_t const request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
 
-        for (auto it = m_attribute_request_callbacks.cbegin(); it != m_attribute_request_callbacks.cend(); ++it) {
+        for (auto it = m_attribute_request_callbacks.begin(); it != m_attribute_request_callbacks.end(); ++it) {
             auto & attribute_request = *it;
 
             if (attribute_request.Get_Request_ID() != request_id) {
