@@ -350,10 +350,10 @@ class ThingsBoardSized {
     /// @return Whether sending or receiving the oustanding the messages was successful or not
     bool loop() {
 #if !THINGSBOARD_USE_ESP_TIMER
-        for (auto const & rpc_request : m_rpc_request_callbacks) {
+        for (auto & rpc_request : m_rpc_request_callbacks) {
             rpc_request.Update_Timeout_Timer();
         }
-        for (auto const & attribute_request : m_attribute_request_callbacks) {
+        for (auto & attribute_request : m_attribute_request_callbacks) {
             attribute_request.Update_Timeout_Timer();
         }
 #endif // !THINGSBOARD_USE_ESP_TIMER

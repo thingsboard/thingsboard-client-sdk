@@ -134,7 +134,7 @@ bool reconnect() {
 
 /// @brief Attribute request did not receive a response in the expected amount of microseconds 
 void requestTimedOut() {
-  Serial.printf("RPC request timed out did not receive a response in (%lu) microseconds. Ensure client is connected to the MQTT broker and that the RPC method actually exist on the device Rule chain\n", REQUEST_TIMEOUT_MICROSECONDS)
+  Serial.printf("RPC request timed out did not receive a response in (%llu) microseconds. Ensure client is connected to the MQTT broker and that the RPC method actually exist on the device Rule chain\n", REQUEST_TIMEOUT_MICROSECONDS);
 }
 
 /// @brief Processes function for RPC response of "getCurrentTime".

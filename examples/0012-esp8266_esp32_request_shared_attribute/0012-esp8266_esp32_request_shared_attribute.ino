@@ -140,7 +140,7 @@ bool reconnect() {
 
 /// @brief Attribute request did not receive a response in the expected amount of microseconds 
 void requestTimedOut() {
-  Serial.printf("Attribute request timed out did not receive a response in (%lu) microseconds. Ensure client is connected to the MQTT broker and that the keys actually exist on the target device\n", REQUEST_TIMEOUT_MICROSECONDS)
+  Serial.printf("Attribute request timed out did not receive a response in (%llu) microseconds. Ensure client is connected to the MQTT broker and that the keys actually exist on the target device\n", REQUEST_TIMEOUT_MICROSECONDS);
 }
 
 /// @brief Update callback that will be called as soon as the requested shared attributes, have been received.
