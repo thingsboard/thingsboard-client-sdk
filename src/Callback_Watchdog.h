@@ -30,6 +30,9 @@ constexpr char WATCHDOG_TIMER_NAME[] = "watchdog_timer";
 /// Documentation about the specific use and caviates of the ESP Timer implementation can be found here https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
 class Callback_Watchdog : public Callback<void> {
   public:
+    /// @brief Constructs empty timeout timer callback, will result in never being called. Internals are simply default constructed as nullptr
+    Callback_Watchdog() = default;
+
     /// @brief Constructs callback, will be called if the timeout time passes without detach() being called
     /// @param cb Callback method that will be called as soon as the internal software timers have processed that the given timeout time passed
     explicit Callback_Watchdog(function cb)

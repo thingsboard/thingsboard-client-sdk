@@ -4,7 +4,7 @@
 RPC_Request_Callback::RPC_Request_Callback(char const * const methodName, function received_callback, JsonArray const * const parameters, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback) :
     Callback(received_callback),
     m_methodName(methodName),
-    m_parameters(parameteres),
+    m_parameters(parameters),
     m_request_id(0U),
     m_timeout_microseconds(timeout_microseconds),
     m_timeout_callback(timeout_callback)

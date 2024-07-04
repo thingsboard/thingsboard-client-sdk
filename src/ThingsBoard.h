@@ -746,7 +746,7 @@ class ThingsBoardSized {
 
         m_request_id++;
         registeredCallback->Set_Request_ID(m_request_id);
-        registeredCallback->Start_Timeout_Timer(registeredCallback->Get_Timeout());
+        registeredCallback->Start_Timeout_Timer();
 
         char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)] = {};
         (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
@@ -774,8 +774,8 @@ class ThingsBoardSized {
 
         // Request the firmware information
         constexpr char const * const array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        constexpr char const * const * const begin = array;
-        constexpr char const * const * const end = array + 5;
+        char const * const * const begin = array;
+        char const * const * const end = array + 5;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
         const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
@@ -1117,7 +1117,7 @@ class ThingsBoardSized {
         m_request_id++;
         registeredCallback->Set_Request_ID(m_request_id);
         registeredCallback->Set_Attribute_Key(attributeResponseKey);
-        registeredCallback->Start_Timeout_Timer(registeredCallback->Get_Timeout());
+        registeredCallback->Start_Timeout_Timer();
 
         char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)] = {};
         (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
