@@ -83,6 +83,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 constexpr char RPC_REQUEST_CALLBACK_METHOD_NAME[] = "getCurrentTime";
+constexpr uint16_t REQUEST_TIMEOUT_MICROSECONDS = 50000 * 1000U;
 
 
 // Initialize underlying client, used to establish a connection
@@ -129,6 +130,11 @@ bool reconnect() {
   // If we aren't establish a new connection to the given WiFi network
   InitWiFi();
   return true;
+}
+
+/// @brief Attribute request did not receive a response in the expected amount of microseconds 
+void requestTimedOut() {
+  Serial.printf("RPC request timed out did not receive a response in (%lu) microseconds. Ensure client is connected to the MQTT broker and that the RPC method actually exist on the device Rule chain\n", REQUEST_TIMEOUT_MICROSECONDS)
 }
 
 /// @brief Processes function for RPC response of "getCurrentTime".
@@ -178,7 +184,7 @@ void loop() {
     array.add("example");
     array.add(true);
     array.add(145);
-    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime);
+    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC with multiple arguments");
@@ -191,7 +197,7 @@ void loop() {
     array = doc2.to<JsonArray>();
     innerDoc["example"] = "test";
     array.add(innerDoc);
-    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime);
+    callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &array, &processTime, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
     if (!tb.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC with one inner json argument");

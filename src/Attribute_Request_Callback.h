@@ -2,7 +2,7 @@
 #define Attribute_Request_Callback_h
 
 // Local includes.
-#include "Callback.h"
+#include "Callback_Watchdog.h"
 #if !THINGSBOARD_ENABLE_DYNAMIC
 #include "Constants.h"
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

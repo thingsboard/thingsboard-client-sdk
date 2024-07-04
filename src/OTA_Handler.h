@@ -24,6 +24,7 @@ char constexpr FW_STATE_UPDATING[] = "UPDATING";
 char constexpr FW_STATE_FAILED[] = "FAILED";
 
 // Log messages.
+char constexpr OTA_CB_IS_NULL[] = "OTA update callback is NULL";
 char constexpr UNABLE_TO_REQUEST_CHUNCKS[] = "Unable to request firmware chunk";
 char constexpr RECEIVED_UNEXPECTED_CHUNK[] = "Received chunk (%u), not the same as requested chunk (%u)";
 char constexpr RECEIVED_UNEXPECTED_CHUNK_SIZE[] = "Received chunk size (%u), not the same as expected chunk size (%u)";

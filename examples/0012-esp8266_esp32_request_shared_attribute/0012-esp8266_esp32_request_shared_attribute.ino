@@ -88,6 +88,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 constexpr const char FW_TAG_KEY[] = "fw_tag";
 constexpr const char TEST_KEY[] = "test";
+constexpr uint16_t REQUEST_TIMEOUT_MICROSECONDS = 50000 * 1000U;
 
 
 // Initialize underlying client, used to establish a connection
@@ -135,6 +136,11 @@ bool reconnect() {
   // If we aren't establish a new connection to the given WiFi network
   InitWiFi();
   return true;
+}
+
+/// @brief Attribute request did not receive a response in the expected amount of microseconds 
+void requestTimedOut() {
+  Serial.printf("Attribute request timed out did not receive a response in (%lu) microseconds. Ensure client is connected to the MQTT broker and that the keys actually exist on the target device\n", REQUEST_TIMEOUT_MICROSECONDS)
 }
 
 /// @brief Update callback that will be called as soon as the requested shared attributes, have been received.
@@ -197,7 +203,7 @@ void loop() {
     Serial.println("Requesting shared attributes...");
     // Shared attributes we want to request from the server
     constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
-    const Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
+    const Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
     requestedShared = tb.Shared_Attributes_Request(sharedCallback);
     if (!requestedShared) {
       Serial.println("Failed to request shared attributes");
@@ -208,7 +214,7 @@ void loop() {
     Serial.println("Requesting client-side attributes...");
     // Client-side attributes we want to request from the server
     constexpr std::array<const char*, 1U> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
-    const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
+    const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
     requestedClient = tb.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
       Serial.println("Failed to request client-side attributes");

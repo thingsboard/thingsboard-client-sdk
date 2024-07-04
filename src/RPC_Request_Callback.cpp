@@ -2,7 +2,7 @@
 #include "RPC_Request_Callback.h"
 
 RPC_Request_Callback::RPC_Request_Callback(char const * const methodName, function received_callback, JsonArray const * const parameters, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback) :
-    Callback(callback),
+    Callback(received_callback),
     m_methodName(methodName),
     m_parameters(parameteres),
     m_request_id(0U),
@@ -45,19 +45,19 @@ void RPC_Request_Callback::Set_Timeout(uint64_t const & timeout_microseconds) {
 }
 
 #if !THINGSBOARD_USE_ESP_TIMER
-void Update_Timeout_Timer() {
+void RPC_Request_Callback::Update_Timeout_Timer() {
     m_timeout_callback.update();
 }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
-void Start_Timeout_Timer() {
+void RPC_Request_Callback::Start_Timeout_Timer() {
     if (m_timeout_microseconds == 0U) {
         return;
     }
     m_timeout_callback.once(m_timeout_microseconds);
 }
 
-void Stop_Timeout_Timer() {
+void RPC_Request_Callback::Stop_Timeout_Timer() {
     m_timeout_callback.detach();
 }
 
