@@ -83,7 +83,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 constexpr char RPC_REQUEST_CALLBACK_METHOD_NAME[] = "getCurrentTime";
-constexpr uint16_t REQUEST_TIMEOUT_MICROSECONDS = 50000 * 1000U;
+constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 
 // Initialize underlying client, used to establish a connection

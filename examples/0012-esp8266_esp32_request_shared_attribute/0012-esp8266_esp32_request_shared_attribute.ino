@@ -88,7 +88,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 constexpr const char FW_TAG_KEY[] = "fw_tag";
 constexpr const char TEST_KEY[] = "test";
-constexpr uint16_t REQUEST_TIMEOUT_MICROSECONDS = 50000 * 1000U;
+constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 
 // Initialize underlying client, used to establish a connection
