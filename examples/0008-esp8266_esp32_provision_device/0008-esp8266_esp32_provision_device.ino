@@ -169,6 +169,8 @@ void setup() {
   previous_processing_time = millis();
 }
 
+/// @brief Process the provisioning response received from the server
+/// @param data Reference to the object containing the provisioning response
 void processProvisionResponse(const JsonObjectConst &data) {
   const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
