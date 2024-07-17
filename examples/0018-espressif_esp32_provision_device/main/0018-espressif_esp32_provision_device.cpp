@@ -166,10 +166,10 @@ void processProvisionResponse(const JsonObjectConst &data) {
     const size_t jsonSize = Helper::Measure_Json(data);
     char buffer[jsonSize];
     serializeJson(data, buffer, jsonSize);
-    ESP_LOGI(TAG, "Received device provision response: (%s)", buffer);
+    ESP_LOGI("MAIN", "Received device provision response: (%s)", buffer);
 
     if (strcmp(data["status"], "SUCCESS") != 0) {
-        ESP_LOGE(TAG, "Provision response contains the error: (%s)", data["errorMsg"].as<const char*>());
+        ESP_LOGE("MAIN", "Provision response contains the error: (%s)", data["errorMsg"].as<const char*>());
         return;
     }
 
@@ -186,7 +186,7 @@ void processProvisionResponse(const JsonObjectConst &data) {
         credentials.password = credentials_value[CLIENT_PASSWORD].as<std::string>();
     }
     else {
-        ESP_LOGE(TAG, "Unexpected provision credentialsType: (%s)", data[CREDENTIALS_VALUE].as<const char*>());
+        ESP_LOGE("MAIN", "Unexpected provision credentialsType: (%s)", data[CREDENTIALS_VALUE].as<const char*>());
         return;
     }
 
@@ -219,7 +219,7 @@ void provision_device(void *pvParameters) {
 
     // Connect to the ThingsBoard server as a client wanting to provision a new device
     if (!tb.connect(THINGSBOARD_SERVER, "provision", THINGSBOARD_PORT)) {
-        ESP_LOGE(TAG, "Failed to connect to ThingsBoard server with provision account");
+        ESP_LOGE("MAIN", "Failed to connect to ThingsBoard server with provision account");
         return;
     }
 

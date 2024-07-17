@@ -122,17 +122,11 @@ void InitWiFi() {
   strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), WIFI_SSID, strlen(WIFI_SSID) + 1);
   strncpy(reinterpret_cast<char*>(wifi_config.sta.password), WIFI_PASSWORD, strlen(WIFI_PASSWORD) + 1);
 
-  ESP_LOGI("MAIN", "Connecting to %s...", wifi_config.sta.ssid);
+  ESP_LOGI("MAIN", "Connecting to (%s) ...", wifi_config.sta.ssid);
   ESP_ERROR_CHECK(esp_wifi_set_mode(wifi_mode_t::WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(wifi_interface_t::WIFI_IF_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
   ESP_ERROR_CHECK(esp_wifi_connect());
-}
-
-void processSharedAttributeUpdate(const Shared_Attribute_Data& data) {
-    for (auto it = data.begin(); it != data.end(); ++it) {
-        ESP_LOGI("Attribute Update", "Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
-    }
 }
 
 /// @brief Update callback that will be called as soon as one of the provided shared attributes changes value,
@@ -140,13 +134,13 @@ void processSharedAttributeUpdate(const Shared_Attribute_Data& data) {
 /// @param data Data containing the shared attributes that were changed and their current value
 void processSharedAttributeUpdate(const JsonObjectConst &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
-    ESP_LOGI("Attribute Update", "Key: (%s), Value: (%s)", it->key().c_str(), it->value().as<const char*>());
+    ESP_LOGI("MAIN", "Attribute Update", "Key: (%s), Value: (%s)", it->key().c_str(), it->value().as<const char*>());
   }
 
   const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
-  ESP_LOGI(buffer);
+  ESP_LOGI("MAIN", buffer);
 }
 
 extern "C" void app_main(void) {
