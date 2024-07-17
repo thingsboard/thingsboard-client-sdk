@@ -5,7 +5,6 @@ set(srcs
     0016-espressif_esp32_rpc.cpp
     ../../../src/Arduino_HTTP_Client.cpp
     ../../../src/Arduino_MQTT_Client.cpp
-    ../../../src/Attribute_Request_Callback.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
     ../../../src/Arduino_ESP8266_Updater.cpp
     ../../../src/Espressif_Updater.cpp
