@@ -140,7 +140,7 @@ void processSharedAttributeUpdate(const JsonObjectConst &data) {
   const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);
-  ESP_LOGI("MAIN", buffer);
+  ESP_LOGI("MAIN", "%s", buffer);
 }
 
 extern "C" void app_main(void) {
