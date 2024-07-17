@@ -41,16 +41,16 @@ jobs:
       with:
         esp_idf_version: v5.1
         target: esp32
-        path: 'examples/0016-espressif_esp32_rpc.cpp'
+        path: 'examples/0016-espressif_esp32_rpc'
     - name: Build process Shared Attribute example on v5.1
       uses: espressif/esp-idf-ci-action@v1
       with:
         esp_idf_version: v5.1
         target: esp32
-        path: 'examples/0017-espressif_esp32_process_shared_attribute_update.cpp'
+        path: 'examples/0017-espressif_esp32_process_shared_attribute_update'
     - name: Build process Provision example on v5.1
       uses: espressif/esp-idf-ci-action@v1
       with:
         esp_idf_version: v5.1
         target: esp32
-        path: 'examples/0018-espressif_esp32_provision_device.cpp'
+        path: 'examples/0018-espressif_esp32_provision_device'
