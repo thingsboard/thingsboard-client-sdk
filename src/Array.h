@@ -24,9 +24,9 @@ class Array {
     /// @param first Iterator pointing to the first element we want to copy into our underlying data container
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     template<typename InputIterator>
-    Array(InputIterator const & first, InputIterator const & last) :
-        m_elements(),
-        m_size(0U)
+    Array(InputIterator const & first, InputIterator const & last)
+      : m_elements(nullptr)
+      , m_size(0U)
     {
         insert(nullptr, first, last);
     }
@@ -124,7 +124,7 @@ class Array {
     /// @param first Iterator pointing to the first element we want to copy into our underlying data container
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     template<typename InputIterator>
-    void insert(InputIterator const & first, InputIterator const & last) {
+    void insert(T const * const position, InputIterator const & first, InputIterator const & last) {
         for (auto it = first; it != last; ++it) {
             push_back(*first);
         }

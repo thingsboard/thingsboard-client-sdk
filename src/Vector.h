@@ -2,7 +2,7 @@
 #define Vector_h
 
 // Local include.
-#include "Configuration.h"
+#include "Helper.h"
 
 // Library includes.
 #include <assert.h>
@@ -14,18 +14,16 @@ template <typename T>
 class Vector {
   public:
     /// @brief Constructor
-    Vector(void)
-      : m_elements(nullptr)
-      , m_capacity(0U)
-      , m_size(0U)
-    {
-        // Nothing to do
-    }
+    Vector(void) = default;
 
     /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
-    /// @param first Beginning of the elements we want to copy into our underlying data container
-    /// @param last One past the end of the elements we want to copy into our underlying data container
-    Vector(T const * const first, T const * const last)
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
+    template<typename InputIterator>
+    Vector(InputIterator const & first, InputIterator const & last)
       : m_elements(nullptr)
       , m_capacity(0U)
       , m_size(0U)
@@ -40,9 +38,13 @@ class Vector {
     }
 
     /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
-    /// @param first Beginning of the elements we want to copy into our underlying data container
-    /// @param last One past the end of the elements we want to copy into our underlying data container
-    void assign(T const * const first, T const * const last) {
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
+    template<typename InputIterator>
+    void assign(InputIterator const & first, InputIterator const & last) {
         insert(nullptr, first, last);
     }
 
@@ -54,30 +56,30 @@ class Vector {
 
     /// @brief Gets the current amount of elements in the underlying data container
     /// @return The amount of items currently in the underlying data container
-    size_t const & size() const {
+    size_t size() const {
         return m_size;
     }
 
     /// @brief Gets the maximum amount of elements that can currently be stored in the underlying data container
     /// @return The maximum amount of items that can currently be stored in the underlying data container
-    size_t const & capacity() const {
-        return m_capacity;
+    size_t capacity() const {
+        return Capacity;
     }
 
-    /// @brief Returns a pointer to the first element of the vector
-    /// @return Pointer to the first element of the vector
+    /// @brief Returns a iterator to the first element of the underlying data container
+    /// @return Iterator pointing to the first element of the underlying data container
     T * begin() {
         return m_elements;
     }
 
-    /// @brief Returns a constant pointer to the first element of the vector
-    /// @return Constant pointer to the first element of the vector
+    /// @brief Returns a constant iterator to the first element of the underlying data container
+    /// @return Constant iterator pointing to the first element of the underlying data container
     T const * begin() const {
         return m_elements;
     }
 
-    /// @brief Returns a constant pointer to the first element of the vector
-    /// @return Constant pointer to the first element of the vector
+    /// @brief Returns a constant iterator to the first element of the underlying data container
+    /// @return Constant iterator pointing to the first element of the underlying data container
     T const * cbegin() const {
         return m_elements;
     }
@@ -89,28 +91,28 @@ class Vector {
         return m_elements[m_size - 1U];
     }
 
-    /// @brief Returns a pointer to one-past-the-end element of the vector
-    /// @return Pointer to one-past-the-end element of the vector
+    /// @brief Returns a iterator to one-past-the-end element of the underlying data container
+    /// @return Iterator pointing to one-past-the-end element of the underlying data container
     T * end() {
         return m_elements + m_size;
     }
 
-    /// @brief Returns a constant pointer to one-past-the-end element of the vector
-    /// @return Constant pointer to one-past-the-end element of the vector
+    /// @brief Returns a constantiterator to one-past-the-end element of the underlying data container
+    /// @return Constant iterator pointing to one-past-the-end element of the underlying data container
     T const * end() const {
         return m_elements + m_size;
     }
 
-    /// @brief Returns a constant pointer to one-past-the-end element of the vector
-    /// @return Constant pointer to one-past-the-end element of the vector
+    /// @brief Returns a constant iterator to one-past-the-end element of the underlying data container
+    /// @return Constant iterator pointing to one-past-the-end element of the underlying data container
     T const * cend() const {
         return m_elements + m_size;
     }
 
-    /// @brief Inserts the given element at the end of the underlying data container.
-    /// Increases the size of the underlying data container if it is already full and has no remaining space for new elements.
-    /// The growth is exponential meaning it doubles every time the underlying data container has to be increased.
-    /// This results in an amortized insertion speed of O(1), but might require 0(n) when the container has to be reallocated to be increased
+    /// @brief Inserts the given element at the end of the underlying data container,
+    /// If the interal data structure is full already then this method will assert and stop the application.
+    /// Because if we do not we could cause an out of bounds write, which could possibly overwrite other memory.
+    /// Causing hard to debug issues, therefore this behaviour is not allowed in the first place
     /// @param element Element that should be inserted at the end
     void push_back(T const & element) {
         if (m_size == m_capacity) {
@@ -126,21 +128,30 @@ class Vector {
         m_size++;
     }
 
-    /// @brief Inserts all element from the given start to the given end iterator into the underlying data container. Simply calls push_back on each element
+    /// @brief Inserts all element from the given start to the given end iterator into the underlying data container.
+    /// Simply calls push_back on each element, meaning if the initally allocated size if not big enough to hold all elements,
+    /// then this method will simply not insert those elements instead
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param position Attribute is not used and can be left as nullptr, simply there to keep compatibility with std::vector insert method
-    /// @param first Beginning of the elements we want to copy into our underlying data container
-    /// @param last One past the end of the elements we want to copy into our underlying data container
-    void insert(T const * const position, T const * first, T const * const last) {
-        while (first < last) {
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
+    template<typename InputIterator>
+    void insert(T const * const position, InputIterator const & first, InputIterator const & last) {
+        for (auto it = first; it != last; ++it) {
             push_back(*first);
-            first++;
         }
     }
 
-    /// @brief Removes the element at the given iterator, has to move all element one to the left if the index is not at the end of the array
-    /// @param iterator Iterator the element should be removed at from the underlying data container
-    void erase(T const * const iterator) {
-        size_t const index = Helper::distance(cbegin(), iterator);
+    /// @brief Removes the element at the given position, has to move all element one to the left if the index is not at the end of the array
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param position Iterator pointing to the element, that should be removed from the underlying data container
+    template<typename InputIterator>
+    void erase(InputIterator const & position) {
+        size_t const index = Helper::distance(begin(), position);
         // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left
