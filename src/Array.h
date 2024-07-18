@@ -25,7 +25,7 @@ class Array {
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     template<typename InputIterator>
     Array(InputIterator const & first, InputIterator const & last)
-      : m_elements(nullptr)
+      : m_elements()
       , m_size(0U)
     {
         insert(nullptr, first, last);
