@@ -60,22 +60,21 @@ class Array {
         return Capacity;
     }
 
-    /// @brief Returns an iterator to the first element of the underlying data container
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @brief Returns a iterator to the first element of the underlying data container
     /// @return Iterator pointing to the first element of the underlying data container
-    template<typename InputIterator>
-    InputIterator const & begin() {
+    T * begin() {
         return m_elements;
     }
-    /// @brief Returns an iterator to the first element of the underlying data container
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
-    /// @return Iterator pointing to the first element of the underlying data container
-    template<typename InputIterator>
-    InputIterator const & cbegin() const {
+
+    /// @brief Returns a constant iterator to the first element of the underlying data container
+    /// @return Constant iterator pointing to the first element of the underlying data container
+    T const * begin() const {
+        return m_elements;
+    }
+
+    /// @brief Returns a constant iterator to the first element of the underlying data container
+    /// @return Constant iterator pointing to the first element of the underlying data container
+    T const * cbegin() const {
         return m_elements;
     }
 
@@ -86,23 +85,21 @@ class Array {
         return m_elements[m_size - 1U];
     }
 
-    /// @brief Returns an iterator to one-past-the-end element of the underlying data container
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @brief Returns a iterator to one-past-the-end element of the underlying data container
     /// @return Iterator pointing to one-past-the-end element of the underlying data container
-    template<typename InputIterator>
-    InputIterator const & end() {
+    T * end() {
         return m_elements + m_size;
     }
 
-    /// @brief Returns an iterator to one-past-the-end element of the underlying data container
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
-    /// @return Iterator pointing to one-past-the-end element of the underlying data container
-    template<typename InputIterator>
-    InputIterator const & cend() const {
+    /// @brief Returns a constantiterator to one-past-the-end element of the underlying data container
+    /// @return Constant iterator pointing to one-past-the-end element of the underlying data container
+    T const * end() const {
+        return m_elements + m_size;
+    }
+
+    /// @brief Returns a constant iterator to one-past-the-end element of the underlying data container
+    /// @return Constant iterator pointing to one-past-the-end element of the underlying data container
+    T const * cend() const {
         return m_elements + m_size;
     }
 
@@ -140,7 +137,7 @@ class Array {
     /// @param position Iterator pointing to the element, that should be removed from the underlying data container
     template<typename InputIterator>
     void erase(InputIterator const & position) {
-        size_t const index = Helper::distance(cbegin(), position);
+        size_t const index = Helper::distance(begin(), position);
         // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left
