@@ -96,10 +96,7 @@ class Helper {
         // This allows the edge case where an end-user uses this method themselves in the code with their own implemented list data type.
         size_t size = 0U;
         auto it = first;
-        while (it != last) {
-            ++it;
-            ++size;
-        }
+        for (auto it = first; it != last; ++it, ++size) {}
         return size;
 #endif // THINGSBOARD_ENABLE_STL
     }

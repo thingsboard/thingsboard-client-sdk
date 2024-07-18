@@ -50,7 +50,7 @@ class Array {
 
     /// @brief Gets the current amount of elements in the underlying data container
     /// @return The amount of items currently in the underlying data container
-    size_t const & size() const {
+    size_t size() const {
         return m_size;
     }
 
@@ -60,21 +60,22 @@ class Array {
         return Capacity;
     }
 
-    /// @brief Returns a constant pointer to the first element of the vector
-    /// @return Constant pointer to the first element of the vector
-    T * begin() {
+    /// @brief Returns an iterator to the first element of the underlying data container
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @return Iterator pointing to the first element of the underlying data container
+    template<typename InputIterator>
+    InputIterator const & begin() {
         return m_elements;
     }
-
-    /// @brief Returns a constant pointer to the first element of the vector
-    /// @return Constant pointer to the first element of the vector
-    T const * begin() const {
-        return m_elements;
-    }
-
-    /// @brief Returns a constant pointer to the first element of the vector
-    /// @return Constant pointer to the first element of the vector
-    T const * cbegin() const {
+    /// @brief Returns an iterator to the first element of the underlying data container
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @return Iterator pointing to the first element of the underlying data container
+    template<typename InputIterator>
+    InputIterator const & cbegin() const {
         return m_elements;
     }
 
@@ -85,21 +86,23 @@ class Array {
         return m_elements[m_size - 1U];
     }
 
-    /// @brief Returns a pointer to one-past-the-end element of the vector
-    /// @return Pointer to one-past-the-end element of the vector
-    T * end() {
+    /// @brief Returns an iterator to one-past-the-end element of the underlying data container
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @return Iterator pointing to one-past-the-end element of the underlying data container
+    template<typename InputIterator>
+    InputIterator const & end() {
         return m_elements + m_size;
     }
 
-    /// @brief Returns a constant pointer to one-past-the-end element of the vector
-    /// @return Constant pointer to one-past-the-end element of the vector
-    T const * end() const {
-        return m_elements + m_size;
-    }
-
-    /// @brief Returns a constant pointer to one-past-the-end element of the vector
-    /// @return Constant pointer to one-past-the-end element of the vector
-    T const * cend() const {
+    /// @brief Returns an iterator to one-past-the-end element of the underlying data container
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @return Iterator pointing to one-past-the-end element of the underlying data container
+    template<typename InputIterator>
+    InputIterator const & cend() const {
         return m_elements + m_size;
     }
 
@@ -152,7 +155,7 @@ class Array {
     /// @brief Method to access an element at a given index,
     /// ensures the device crashes if we attempted to access in an invalid location
     /// @param index Index we want to get the corresponding element for
-    T& at(size_t const & index) {
+    T & at(size_t const & index) {
         assert(index < m_size);
         return m_elements[index];
     }
@@ -160,7 +163,7 @@ class Array {
     /// @brief Bracket operator to access an element at a given index.
     /// Does not do any bounds checks, meaning the access is more efficient but it is possible to read out of bounds data
     /// @param index Index we want to get the corresponding element for
-    T& operator[](size_t const & index) {
+    T & operator[](size_t const & index) {
         return m_elements[index];
     }
 
