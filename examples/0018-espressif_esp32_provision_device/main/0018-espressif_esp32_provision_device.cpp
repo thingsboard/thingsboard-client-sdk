@@ -1,6 +1,7 @@
 #include <esp_netif.h>
 #include <esp_log.h>
 #include <esp_wifi.h>
+#include <nvs_flash.h>
 #include <string.h>
 
 // Whether the given script is using encryption or not,
