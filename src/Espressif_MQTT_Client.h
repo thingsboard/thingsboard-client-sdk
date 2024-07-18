@@ -36,6 +36,12 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @return Whether changing the internal server certificate was successful or not, ensure to disconnect and reconnect to actually apply the change
     bool set_server_certificate(char const * const server_certificate_pem);
 
+    /// @brief Configure a bundle of root certificates for verification, which allows for connecting to the MQTT broker over a secure TLS / SSL connection.
+    /// Instead of providing a single server certificate, this allows providing a collection of root certificates, including the bundle that can be automatically included by enabling CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
+    /// @param crt_bundle_attach Function pointer that attaches the root certificates, e.g. esp_crt_bundle_attach
+    /// @return Whether changing the bundle was successful or not, ensure to disconnect and reconnect to actually apply the change
+    bool set_server_crt_bundle_attach(esp_err_t (*crt_bundle_attach)(void *conf));
+
     /// @brief Sets the keep alive timeout in seconds, if the value is 0 then the default of 120 seconds is used instead to disable the keep alive mechanism use set_disable_keep_alive() instead.
     /// The default timeout value ThingsBoard expectes to receive any message including a keep alive to not show the device as inactive can be found here https://thingsboard.io/docs/user-guide/install/config/#mqtt-server-parameters
     /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning a value bigger than 300 seconds with the default config defeats the purpose of the keep alive alltogether
