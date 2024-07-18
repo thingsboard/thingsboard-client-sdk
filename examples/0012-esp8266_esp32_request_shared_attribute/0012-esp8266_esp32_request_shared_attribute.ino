@@ -213,7 +213,7 @@ void loop() {
   if (!requestedClient) {
     Serial.println("Requesting client-side attributes...");
     // Client-side attributes we want to request from the server
-    constexpr std::vector<const char*> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
+    const std::vector<const char*> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
     const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
     requestedClient = tb.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
