@@ -18,9 +18,13 @@ class Array {
     Array(void) = default;
 
     /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
-    /// @param first Beginning of the elements we want to copy into our underlying data container
-    /// @param last One past the end of the elements we want to copy into our underlying data container
-    Array(T const * const first, T const * const last) :
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
+    template<typename InputIterator>
+    Array(InputIterator const & first, InputIterator const & last) :
         m_elements(),
         m_size(0U)
     {
@@ -28,9 +32,13 @@ class Array {
     }
 
     /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
-    /// @param first Beginning of the elements we want to copy into our underlying data container
-    /// @param last One past the end of the elements we want to copy into our underlying data container
-    void assign(T const * const first, T const * const last) {
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
+    template<typename InputIterator>
+    void assign(InputIterator const & first, InputIterator const & last) {
         insert(nullptr, first, last);
     }
 
@@ -109,20 +117,27 @@ class Array {
     /// @brief Inserts all element from the given start to the given end iterator into the underlying data container.
     /// Simply calls push_back on each element, meaning if the initally allocated size if not big enough to hold all elements,
     /// then this method will simply not insert those elements instead
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param position Attribute is not used and can be left as nullptr, simply there to keep compatibility with std::vector insert method
-    /// @param first Beginning of the elements we want to copy into our underlying data container
-    /// @param last One past the end of the elements we want to copy into our underlying data container
-    void insert(T const * const position, T const * first, T const * const last) {
-        while (first < last) {
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
+    template<typename InputIterator>
+    void insert(InputIterator const & first, InputIterator const & last) {
+        for (auto it = first; it != last; ++it) {
             push_back(*first);
-            first++;
         }
     }
 
-    /// @brief Removes the element at the given iterator, has to move all element one to the left if the index is not at the end of the array
-    /// @param iterator Iterator the element should be removed at from the underlying data container
-    void erase(T const * const iterator) {
-        size_t const index = Helper::distance(cbegin(), iterator);
+    /// @brief Removes the element at the given position, has to move all element one to the left if the index is not at the end of the array
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param position Iterator pointing to the element, that should be removed from the underlying data container
+    template<typename InputIterator>
+    void erase(InputIterator const & position) {
+        size_t const index = Helper::distance(cbegin(), position);
         // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
         if (index < m_size) {
             // Move all elements after the index one position to the left

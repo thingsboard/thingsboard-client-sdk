@@ -37,4 +37,4 @@ if(ESP_PLATFORM)
 	return()
 endif()
 
-project(ThingsBoardClientSDK VERSION 0.13.0)
+project(ThingsBoardClientSDK VERSION 0.13.1)
