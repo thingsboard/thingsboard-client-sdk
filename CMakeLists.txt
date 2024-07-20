@@ -20,10 +20,13 @@ set(srcs
 set(dependencies
     mqtt
     mbedtls
+    bblanchon__arduinojson
 )
 
 set(private_dependencies
     esp_timer
+    app_update
+    esp_common
 )
 
 if(ESP_PLATFORM)
