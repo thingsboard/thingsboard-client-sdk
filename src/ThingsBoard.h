@@ -3,7 +3,7 @@
 
 // Local includes.
 #include "API_Implementation.h"
-#include "OTA_Handler.h"
+#include "OTA_Firmware_Update"
 #include "IMQTT_Client.h"
 #include "DefaultLogger.h"
 #include "Telemetry.h"
@@ -14,122 +14,25 @@
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
 
-// Total amount of possible endpoints
-uint8_t constexpr API_ENDPOINT_AMOUNT = 5U;
-
-// Publish data topics.
-char constexpr TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
-
-// Firmware topics.
-char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/0/chunk";
-
-// Provision topics.
+uint8_t constexpr API_ENDPOINT_AMOUNT = 7U;
 uint16_t constexpr DEFAULT_MQTT_PORT = 1883U;
 char constexpr PROV_ACCESS_TOKEN[] = "provision";
-char constexpr PROV_RESPONSE_TOPIC[] = "/provision/response";
-
-// Shared attribute request keys.
-char constexpr SHARED_REQUEST_KEY[] = "sharedKeys";
-char constexpr SHARED_RESPONSE_KEY[] = "shared";
-
-// Client side attribute request keys.
-char constexpr CLIENT_REQUEST_KEYS[] = "clientKeys";
-char constexpr CLIENT_RESPONSE_KEY[] = "client";
-
-// RPC data keys.
-char constexpr RPC_METHOD_KEY[] = "method";
-char constexpr RPC_PARAMS_KEY[] = "params";
-char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
-
+// Publish data topics.
+char constexpr TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
 // Log messages.
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
 char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
-char constexpr NUMBER_PRINTF[] = "%u";
-#if !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr RPC_RESPONSE_OVERFLOWED[] = "Server-side RPC response overflowed, increase MaxRPC (%u)";
-char constexpr SERVER_SIDE_RPC_SUBSCRIPTIONS[] = "server-side RPC";
-char constexpr CLIENT_SIDE_RPC_SUBSCRIPTIONS[] = "client-side RPC";
-char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] = "shared attribute update";
-char constexpr CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS[] = "client or shared attribute request";
-char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] = "Too many (%s) subscriptions, increase MaxSubscribtions or unsubscribe";
-#else
-char constexpr RPC_RESPONSE_OVERFLOWED[] = "Server-side RPC response overflowed, increase responseSize (%u)";
-char constexpr COLON = ':';
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr COMMA[] = ",";
-char constexpr NO_KEYS_TO_REQUEST[] = "No keys to request were given";
-char constexpr RPC_METHOD_NULL[] = "RPC methodName is NULL";
 #if THINGSBOARD_ENABLE_DEBUG
-char constexpr NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
-char constexpr NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
-char constexpr ATT_KEY_NOT_FOUND[] = "Attribute key not found";
-char constexpr ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
-char constexpr ATT_IS_NULL[] = "Subscribed shared attribute update key is NULL";
-char constexpr ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
-char constexpr CALLING_RPC_CB[] = "Calling subscribed callback for rpc with methodname (%s)";
-char constexpr CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
-char constexpr CALLING_REQUEST_CB[] = "Calling subscribed callback for request with response id (%u)";
 char constexpr RECEIVE_MESSAGE[] = "Received data from server over topic (%s)";
 char constexpr SEND_MESSAGE[] = "Sending data to server over topic (%s) with data (%s)";
 char constexpr SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
-
 // Claim topics.
 char constexpr CLAIM_TOPIC[] = "v1/devices/me/claim";
-
-// Provision topics.
-char constexpr PROV_REQUEST_TOPIC[] = "/provision/request";
-
 // Claim data keys.
 char constexpr SECRET_KEY[] = "secretKey";
 char constexpr DURATION_KEY[] = "durationMs";
-char constexpr DEVICE_NAME_KEY[] = "deviceName";
-char constexpr PROV_DEVICE_KEY[] = "provisionDeviceKey";
-char constexpr PROV_DEVICE_SECRET_KEY[] = "provisionDeviceSecret";
-char constexpr PROV_CRED_TYPE_KEY[] = "credentialsType";
-char constexpr PROV_TOKEN[] = "token";
-char constexpr PROV_CRED_USERNAME[] = "username";
-char constexpr PROV_CRED_PASSWORD[] = "password";
-char constexpr PROV_CRED_CLIENT_ID[] = "clientId";
-char constexpr PROV_CRED_HASH[] = "hash";
-
-uint64_t constexpr OTA_REQUEST_TIMEOUT = 5000U * 1000U;
-char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys in (%lu) microseconds. Aborting firmware update, restart with the same call again after ensure the keys actually exist on the device and ensuring the device is connected to the MQTT broker";
-
-// Firmware topics.
-char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
-char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
-
-// Firmware data keys.
-char constexpr CURR_FW_TITLE_KEY[] = "current_fw_title";
-char constexpr CURR_FW_VER_KEY[] = "current_fw_version";
-char constexpr FW_ERROR_KEY[] = "fw_error";
-char constexpr FW_STATE_KEY[] = "fw_state";
-char constexpr FW_VER_KEY[] = "fw_version";
-char constexpr FW_TITLE_KEY[] = "fw_title";
-char constexpr FW_CHKS_KEY[] = "fw_checksum";
-char constexpr FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
-char constexpr FW_SIZE_KEY[] = "fw_size";
-char constexpr CHECKSUM_AGORITM_MD5[] = "MD5";
-char constexpr CHECKSUM_AGORITM_SHA256[] = "SHA256";
-char constexpr CHECKSUM_AGORITM_SHA384[] = "SHA384";
-char constexpr CHECKSUM_AGORITM_SHA512[] = "SHA512";
-
-// Log messages.
-char constexpr NO_FW[] = "No new firmware assigned on the given device";
-char constexpr EMPTY_FW[] = "Given firmware was NULL";
-char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
-char constexpr FW_NOT_FOR_US[] = "Firmware title (%s) not same as received title (%s)";
-char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
-char constexpr NOT_ENOUGH_RAM[] = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
-char constexpr RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
-#if THINGSBOARD_ENABLE_DEBUG
-char constexpr PAGE_BREAK[] = "=================================";
-char constexpr NEW_FW[] = "A new Firmware is available:";
-char constexpr FROM_TOO[] = "(%s) => (%s)";
-char constexpr DOWNLOADING_FW[] = "Attempting to download over MQTT...";
-#endif // THINGSBOARD_ENABLE_DEBUG
 
 
 #if THINGSBOARD_ENABLE_DYNAMIC
@@ -151,18 +54,18 @@ template <typename Logger = DefaultLogger>
 /// Changing is only possible if a new instance of this class is created. If these values should be automatically deduced at runtime instead then, and then dynamically allocated on the heap,
 /// simply set THINGSBOARD_ENABLE_DYNAMIC to 1, before including ThingsBoard.h
 /// @tparam MaxFieldsAmount Maximum amount of key value pair that we will be able to sent or received by ThingsBoard in one call, default = Default_Fields_Amount (8)
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback or the Shared_Attribute_Callback, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost.
-/// Furthermore, if OTA Updates are utilized the size should never be decreased to less than 5, because that amount of attributes needs to be requested or updated to start the OTA update.
-/// Meaning if the number is decreased the OTA update will not work correctly anymore and will not be able to be started anymore, default = Default_Attributes_Amount (5)
 /// @tparam Logger Implementation that should be used to print error messages generated by internal processes and additional debugging messages if THINGSBOARD_ENABLE_DEBUG is set, default = DefaultLogger
-template<size_t MaxFieldsAmount = Default_Fields_Amount, size_t MaxAttributes = Default_Attributes_Amount, typename Logger = DefaultLogger>
+template<size_t MaxFieldsAmount = Default_Fields_Amount, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class ThingsBoardSized {
   public:
     /// @brief Constructs a ThingsBoardSized instance with the given network client that should be used to establish the connection to ThingsBoard
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param client MQTT Client implementation that should be used to establish the connection to ThingsBoard
-    /// @param logger Logger implementation that should be used to print messages generated by internal processes
+    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
     /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
@@ -176,27 +79,32 @@ class ThingsBoardSized {
     /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger.
     /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it, default = Default_Payload (64)
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size (1024)
+    template<typename InputIterator>
 #if !THINGSBOARD_ENABLE_STREAM_UTILS
-    ThingsBoardSized(IMQTT_Client& client, uint16_t const & bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size)
+    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t const & bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size)
 #else
     /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
-    ThingsBoardSized(IMQTT_Client& client, uint16_t const & bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size)
+    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t const & bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
       : m_client(client)
       , m_max_stack(maxStackSize)
 #if THINGSBOARD_ENABLE_STREAM_UTILS
       , m_buffering_size(bufferingSize)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-      , m_api_implementations()
-      , m_fw_callback()
-      , m_previous_buffer_size(0U)
-      , m_change_buffer_size(false)
 #if THINGSBOARD_ENABLE_STL
-      , m_ota(std::bind(&ThingsBoardSized::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Firmware_OTA_Unsubscribe, this))
+      , m_ota_api_implementation(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&IMQTT_Client::get_buffer_size, m_client), std::bind(&IMQTT_Client::subscribe, m_client, std::placeholders::_1), std::bind(&IMQTT_Client::unsubscribe, m_client, std::placeholders::_1))
 #else
-      , m_ota(ThingsBoardSized::staticPublishChunk, ThingsBoardSized::staticFirmwareSend, ThingsBoardSized::staticUnsubscribe)
+      , m_ota_api_implementation(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe)
 #endif // THINGSBOARD_ENABLE_STL
+      , m_api_implementations(first, last)
     {
+        for (auto & api : m_api_implementations) {
+#if THINGSBOARD_ENABLE_STL
+            api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&IMQTT_Client::subscribe, m_client, std::placeholders::_1), std::bind(&IMQTT_Client::unsubscribe, m_client, std::placeholders::_1));
+#else
+            api.Set_Client_Callbacks(ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe);
+#endif // THINGSBOARD_ENABLE_STL
+        }
         (void)setBufferSize(bufferSize);
         // Initalize callback.
 #if THINGSBOARD_ENABLE_STL
@@ -262,22 +170,13 @@ class ThingsBoardSized {
     /// because connect() method now reconencts to all previously subscribed MQTT topics instead,
     /// therefore there is no need anymore to discard all previously subscribed callbacks and letting the user resubscribe
     void Cleanup_Subscriptions() {
-        // Results are ignored, because the important part of clearing internal data structures always succeeds.
-        // Cleanup all server-side RPC subscriptions
-        (void)RPC_Unsubscribe();
-        // Cleanup all client-side RPC requests
-        (void)RPC_Request_Unsubscribe();
-        // Cleanup all shared attributes subscriptions
-        (void)Shared_Attributes_Unsubscribe();
-        // Cleanup all client-side or shared attributes requests
-        (void)Attributes_Request_Unsubscribe();
-        // Cleanup all provision requests
-        (void)Provision_Unsubscribe();
-        // Stop any ongoing Firmware update,
-        // which will in turn cleanup the internal member variables of the OTAHandler class
-        // as well as all firmware subscriptions
-        // and inform the user of the failed firmware update
-        Stop_Firmware_Update();
+        // Results are ignored, because the important part of clearing internal data structures always succeeds
+        for (auto & api : m_api_implementations) {
+            (void)api.Unsubscribe_Topic();
+        }
+        // Stop any ongoing Firmware update, which will in turn cleanup the internal member variables of the OTAHandler class
+        // as well as all firmware subscriptions and inform the user of the failed firmware update
+        m_ota_api_implementation.Stop_Firmware_Update();
     }
 
     /// @brief Connects to the specified ThingsBoard server over the given port as the given device.
@@ -319,7 +218,7 @@ class ThingsBoardSized {
         for (auto & api : m_api_implementations) {
             api.loop();
         }
-        m_ota.update();
+        m_ota_api_implementation.loop();
 #endif // !THINGSBOARD_USE_ESP_TIMER
         return m_client.loop();
     }
@@ -413,6 +312,15 @@ class ThingsBoardSized {
         return m_client.publish(topic, reinterpret_cast<uint8_t const *>(json), jsonSize);
     }
 
+    /// @brief Copies the given API implementation, into the local data container,
+    // Ensure it is big enough to hold the newly pushed values as well
+    /// @param api Additional API that we want to be handled
+    /// @return Newly inserted and subscribed API implementation
+    API_Implementation & Subscribe_API_Implementation(const API_Implementation & api) {
+        m_api_implementations.push_back(api);
+        return m_api_implementations.back();
+    }
+
     //----------------------------------------------------------------------------
     // Claiming API
 
@@ -434,68 +342,6 @@ class ThingsBoardSized {
 
         size_t const objectSize = Helper::Measure_Json(requestBuffer);
         return Send_Json(CLAIM_TOPIC, requestBuffer, objectSize);
-    }
-
-    //----------------------------------------------------------------------------
-    // Provisioning API
-
-    /// @brief Sends provisioning request for a new device, meaning we want to create a device that we can then connect over,
-    /// where the given provision device key / secret decide which device profile is used to create the given device with.
-    /// Optionally a device name can be passed or be left empty (cloud will use a random string as the name instead).
-    /// The cloud then sends back json data containing our credentials, that will call the given callback, if creating the device was successful.
-    /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device.
-    /// See https://thingsboard.io/docs/user-guide/device-provisioning/ for more information
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
-    /// @return Whether sending the provisioning request was successful or not
-    bool Provision_Request(Provision_Callback const & callback) {
-        char const * provisionDeviceKey = callback.Get_Device_Key();
-        char const * provisionDeviceSecret = callback.Get_Device_Secret();
-
-        if (Helper::stringIsNullorEmpty(provisionDeviceKey) || Helper::stringIsNullorEmpty(provisionDeviceSecret)) {
-            return false;
-        }
-        else if (!Provision_Subscribe(callback)) {
-            return false;
-        }
-
-        StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
-        char const * deviceName = callback.Get_Device_Name();
-        char const * accessToken = callback.Get_Device_Access_Token();
-        char const * credUsername = callback.Get_Credentials_Username();
-        char const * credPassword = callback.Get_Credentials_Password();
-        char const * credClientID = callback.Get_Credentials_Client_ID();
-        char const * hash = callback.Get_Certificate_Hash();
-        char const * credentialsType = callback.Get_Credentials_Type();
-
-        // Deciding which underlying provisioning method is restricted, by the Provision_Callback class.
-        // Meaning only the key-value pairs that are needed for the given provisioning method are set,
-        // resulting in the rest not being sent and therefore the provisioning request having the correct formatting
-        if (!Helper::stringIsNullorEmpty(deviceName)) {
-            requestBuffer[DEVICE_NAME_KEY] = deviceName;
-        }
-        if (!Helper::stringIsNullorEmpty(accessToken)) {
-            requestBuffer[PROV_TOKEN] = accessToken;
-        }
-        if (!Helper::stringIsNullorEmpty(credUsername)) {
-            requestBuffer[PROV_CRED_USERNAME] = credUsername;
-        }
-        if (!Helper::stringIsNullorEmpty(credPassword)) {
-            requestBuffer[PROV_CRED_PASSWORD] = credPassword;
-        }
-        if (!Helper::stringIsNullorEmpty(credClientID)) {
-            requestBuffer[PROV_CRED_CLIENT_ID] = credClientID;
-        }
-        if (!Helper::stringIsNullorEmpty(hash)) {
-            requestBuffer[PROV_CRED_HASH] = hash;
-        }
-        if (!Helper::stringIsNullorEmpty(credentialsType)) {
-            requestBuffer[PROV_CRED_TYPE_KEY] = credentialsType;
-        }
-        requestBuffer[PROV_DEVICE_KEY] = provisionDeviceKey;
-        requestBuffer[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
-
-        size_t const objectSize = Helper::Measure_Json(requestBuffer);
-        return Send_Json(PROV_REQUEST_TOPIC, requestBuffer, objectSize);
     }
 
     //----------------------------------------------------------------------------
@@ -588,124 +434,7 @@ class ThingsBoardSized {
         return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
     }
 
-    //----------------------------------------------------------------------------
-    // Firmware OTA API
-
-    /// @brief Checks if firmware settings are assigned to the connected device and if they are attempts to use those settings to start a firmware update.
-    /// Will only be checked once and if there is no firmware assigned or if the assigned firmware is already installed this method will not update.
-    /// This firmware status is only checked once, meaning to recheck the status either call this method again or use the Subscribe_Firmware_Update method.
-    /// to be automatically informed and start the update if firmware has been assigned and it is not already installed.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param callback Callback method that will be called
-    /// @return Whether subscribing the given callback was successful or not
-    bool Start_Firmware_Update(OTA_Update_Callback const & callback) {
-        if (!Prepare_Firmware_Settings(callback))  {
-            Logger::println(RESETTING_FAILED);
-            return false;
-        }
-
-        // Request the firmware information
-        constexpr char const * const array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char const * const * const begin = array;
-        char const * const * const end = array + 5;
-#if THINGSBOARD_ENABLE_DYNAMIC
-#if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
-#else
-        const Attribute_Request_Callback fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
-#endif // THINGSBOARD_ENABLE_STL
-#else
-#if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&ThingsBoardSized::Request_Timeout, this), begin, end);
-#else
-        const Attribute_Request_Callback<MaxAttributes> fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
-#endif // THINGSBOARD_ENABLE_STL
-#endif //THINGSBOARD_ENABLE_DYNAMIC
-        return Shared_Attributes_Request(fw_request_callback);
-    }
-
-    /// @brief Stops the currently ongoing firmware update, calls the subscribed user finish callback with a failure if any update was stopped.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    void Stop_Firmware_Update() {
-        m_ota.Stop_Firmware_Update();
-    }
-
-    /// @brief Subscribes to any changes of the assigned firmware information on the connected device,
-    /// meaning once we subscribed if we register any changes we will start the update if the given firmware is not already installed.
-    /// Unlike Start_Firmware_Update this method only registers changes to the firmware information,
-    /// meaning if the change occured while this device was asleep or turned off we will not update,
-    /// to achieve that, it is instead recommended to call the Start_Firmware_Update method when the device has started once to check for that edge case.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param callback Callback method that will be called
-    /// @return Whether subscribing the given callback was successful or not
-    bool Subscribe_Firmware_Update(OTA_Update_Callback const & callback) {
-        if (!Prepare_Firmware_Settings(callback))  {
-            Logger::println(RESETTING_FAILED);
-            return false;
-        }
-
-        // Subscribes to changes of the firmware information
-        char const * const array[5U] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char const * const * const begin = array;
-        char const * const * const end = array + 5;
-#if THINGSBOARD_ENABLE_DYNAMIC
-#if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
-#else
-        const Shared_Attribute_Callback fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
-#endif // THINGSBOARD_ENABLE_STL
-#else
-#if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(std::bind(&ThingsBoardSized::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
-#else
-        const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
-#endif // THINGSBOARD_ENABLE_STL
-#endif //THINGSBOARD_ENABLE_DYNAMIC
-        return Shared_Attributes_Subscribe(fw_update_callback);
-    }
-
-    /// @brief Sends the given firmware title and firmware version to the cloud.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param currFwTitle Current device firmware title
-    /// @param currFwVersion Current device firmware version
-    /// @return Whether sending the current device firmware information was successful or not
-    bool Firmware_Send_Info(char const * const currFwTitle, char const * const currFwVersion) {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
-        currentFirmwareInfo[CURR_FW_TITLE_KEY] = currFwTitle;
-        currentFirmwareInfo[CURR_FW_VER_KEY] = currFwVersion;
-        return sendTelemetryJson(currentFirmwareInfo, Helper::Measure_Json(currentFirmwareInfo));
-    }
-
-    /// @brief Sends the given firmware state to the cloud.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param currFwState Current firmware download state
-    /// @param fwError Firmware error message that describes the current firmware state,
-    /// pass nullptr or an empty string if the current state is not a failure state
-    /// and therefore does not require any firmware error messsages, default = nullptr
-    /// @return Whether sending the current firmware download state was successful or not
-    bool Firmware_Send_State(char const * const currFwState, char const * const fwError = nullptr) {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareState;
-        if (!Helper::stringIsNullorEmpty(fwError)) {
-            currentFirmwareState[FW_ERROR_KEY] = fwError;
-        }
-        currentFirmwareState[FW_STATE_KEY] = currFwState;
-        return sendTelemetryJson(currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
-    }
-
   private:
-    IMQTT_Client&                                  m_client;               // MQTT client instance.
-    size_t                                         m_max_stack;            // Maximum stack size we allocate at once.
-#if THINGSBOARD_ENABLE_STREAM_UTILS
-    size_t                                         m_buffering_size;       // Buffering size used to serialize directly into client.
-#endif // THINGSBOARD_ENABLE_STREAM_UTILS
-
-    Array<API_Implementation, API_ENDPOINT_AMOUNT> m_api_implementations;  // Can hold all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request)                    
-
-    OTA_Update_Callback                            m_fw_callback;          // Ota update response callback
-    uint16_t                                       m_previous_buffer_size; // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
-    bool                                           m_change_buffer_size;   // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
-    OTA_Handler<Logger>                            m_ota;                  // Class instance that handles the flashing and creating a hash from the given received binary firmware data
-
 #if THINGSBOARD_ENABLE_STREAM_UTILS
     /// @brief Serialize the custom attribute source into the underlying client.
     /// Sends the given bytes to the client without requiring any temporary buffer at the cost of hugely increased send times
@@ -730,26 +459,6 @@ class ThingsBoardSized {
     }
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
-    /// @brief Publishes a request via MQTT to request the given firmware chunk
-    /// @param request_chunck Chunk index that should be requested from the server
-    /// @return Whether publishing the message was successful or not
-    bool Publish_Chunk_Request(size_t const & request_chunck) {
-        // Calculate the number of chuncks we need to request,
-        // in order to download the complete firmware binary
-        uint16_t const & chunk_size = m_fw_callback.Get_Chunk_Size();
-
-        // Convert the interger size into a readable string
-        char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)] = {};
-        (void)snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
-        size_t const jsonSize = strlen(size);
-
-        // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
-        char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)] = {};
-        (void)snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
-
-        return m_client.publish(topic, reinterpret_cast<uint8_t *>(size), jsonSize);
-    }
-
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
     size_t const & getMaximumStackSize() const {
@@ -764,176 +473,6 @@ class ThingsBoardSized {
       return m_buffering_size;
     }
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-
-    /// @brief Subscribes one provision callback,
-    /// that will be called if a provision response from the server is received
-    /// @param callback Callback method that will be called
-    /// @return Whether requesting the given callback was successful or not
-    bool Provision_Subscribe(Provision_Callback const & callback) {
-        if (!m_client.subscribe(PROV_RESPONSE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, PROV_RESPONSE_TOPIC);
-            return false;
-        }
-        m_provision_callback = callback;
-        return true;
-    }
-
-    /// @brief Unsubcribes the provision callback
-    /// @return Whether unsubcribing the previously subscribed callback
-    /// and from the provision response topic, was successful or not
-    bool Provision_Unsubscribe() {
-        m_provision_callback = Provision_Callback();
-        return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
-    }
-
-    /// @brief Checks the included information in the callback,
-    /// and attempts to sends the current device firmware information to the cloud
-    /// @param callback Callback method that will be called
-    /// @return Whether checking and sending the current device firmware information was successful or not
-    bool Prepare_Firmware_Settings(OTA_Update_Callback const & callback) {
-        char const * const currFwTitle = callback.Get_Firmware_Title();
-        char const * const currFwVersion = callback.Get_Firmware_Version();
-
-        if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
-            return false;
-        }
-        else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
-            return false;
-        }
-
-        m_fw_callback = callback;
-        return true;
-    }
-
-    /// @brief Subscribes to the firmware response topic
-    /// @return Whether subscribing to the firmware response topic was successful or not
-    bool Firmware_OTA_Subscribe() {
-        if (!m_client.subscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
-            char message[JSON_STRING_SIZE(strlen(SUBSCRIBE_TOPIC_FAILED)) + JSON_STRING_SIZE(strlen(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC))] = {};
-            (void)snprintf(message, sizeof(message), SUBSCRIBE_TOPIC_FAILED, FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
-            Logger::println(message);
-            Firmware_Send_State(FW_STATE_FAILED, message);
-            return false;
-        }
-        return true;
-    }
-
-    /// @brief Unsubscribes from the firmware response topic and clears any memory associated with the firmware update,
-    /// should not be called before actually fully completing the firmware update.
-    /// @return Whether unsubscribing from the firmware response topic was successful or not
-    bool Firmware_OTA_Unsubscribe() {
-        // Buffer size has been set to another value before the update,
-        // to allow to receive ota chunck packets that might be much bigger than the normal
-        // buffer size would allow, therefore we return to the previous value to decrease overall memory usage
-        if (m_change_buffer_size) {
-            (void)setBufferSize(m_previous_buffer_size);
-        }
-        // Reset now not needed private member variables
-        m_fw_callback = OTA_Update_Callback();
-        // Unsubscribe from the topic
-        return m_client.unsubscribe(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
-    }
-
-    /// @brief Handler if the firmware shared attribute request times out without getting a response.
-    /// Is used to signal that the update could not be started, because the current firmware information could not be fetched
-    void Request_Timeout() {
-        Logger::printfln(NO_FW_REQUEST_RESPONSE, OTA_REQUEST_TIMEOUT);
-    }
-
-    /// @brief Callback that will be called upon firmware shared attribute arrival
-    /// @param data Json data containing key-value pairs for the needed firmware information,
-    /// to ensure we have a firmware assigned and can start the update over MQTT
-    void Firmware_Shared_Attribute_Received(JsonObjectConst const & data) {
-        // Check if firmware is available for our device
-        if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY) || !data.containsKey(FW_CHKS_KEY) || !data.containsKey(FW_CHKS_ALGO_KEY) || !data.containsKey(FW_SIZE_KEY)) {
-            Logger::println(NO_FW);
-            Firmware_Send_State(FW_STATE_FAILED, NO_FW);
-            return;
-        }
-
-        char const * const fw_title = data[FW_TITLE_KEY];
-        char const * const fw_version = data[FW_VER_KEY];
-        char const * const fw_checksum = data[FW_CHKS_KEY];
-        char const * const fw_algorithm = data[FW_CHKS_ALGO_KEY];
-        size_t const fw_size = data[FW_SIZE_KEY];
-
-        char const * const curr_fw_title = m_fw_callback.Get_Firmware_Title();
-        char const * const curr_fw_version = m_fw_callback.Get_Firmware_Version();
-
-        if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm == nullptr || fw_checksum == nullptr) {
-            Logger::println(EMPTY_FW);
-            Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
-            return;
-        }
-        // If firmware version and title is the same, we do not initiate an update, because we expect the type of binary to be the same one we are currently using and therefore updating would be useless
-        else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
-            char message[JSON_STRING_SIZE(strlen(FW_UP_TO_DATE)) + JSON_STRING_SIZE(strlen(curr_fw_version))] = {};
-            (void)snprintf(message, sizeof(message), FW_UP_TO_DATE, curr_fw_version);
-            Logger::println(message);
-            Firmware_Send_State(FW_STATE_FAILED, message);
-            return;
-        }
-        // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device and downloading it on this device could possibly cause hardware issues
-        else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
-            char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(curr_fw_title)) + JSON_STRING_SIZE(strlen(fw_title))] = {};
-            (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, curr_fw_title, fw_title);
-            Logger::println(message);
-            Firmware_Send_State(FW_STATE_FAILED, message);
-            return;
-        }
-
-        mbedtls_md_type_t fw_checksum_algorithm = mbedtls_md_type_t{};
-
-        if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, strlen(CHECKSUM_AGORITM_MD5)) == 0) {
-            fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
-        }
-        else if (strncmp(CHECKSUM_AGORITM_SHA256, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA256)) == 0) {
-            fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA256;
-        }
-        else if (strncmp(CHECKSUM_AGORITM_SHA384, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA384)) == 0) {
-            fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA384;
-        }
-        else if (strncmp(CHECKSUM_AGORITM_SHA512, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA512)) == 0) {
-            fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
-        }
-        else {
-            char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(strlen(fw_algorithm))] = {};
-            (void)snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
-            Logger::println(message);
-            Firmware_Send_State(FW_STATE_FAILED, message);
-            return;
-        }
-
-        if (!Firmware_OTA_Subscribe()) {
-            return;
-        }
-
-#if THINGSBOARD_ENABLE_DEBUG
-        Logger::println(PAGE_BREAK);
-        Logger::println(NEW_FW);
-        char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))] = {};
-        (void)snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
-        Logger::println(firmware);
-        Logger::println(DOWNLOADING_FW);
-#endif // THINGSBOARD_ENABLE_DEBUG
-
-        // Calculate the number of chuncks we need to request,
-        // in order to download the complete firmware binary
-        const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
-
-        // Get the previous buffer size and cache it so the previous settings can be restored.
-        m_previous_buffer_size = m_client.get_buffer_size();
-        m_change_buffer_size = m_previous_buffer_size < (chunk_size + 50U);
-
-        // Increase size of receive buffer
-        if (m_change_buffer_size && !setBufferSize(chunk_size + 50U)) {
-            Logger::println(NOT_ENOUGH_RAM);
-            Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
-            return;
-        }
-
-        m_ota.Start_Firmware_Update(m_fw_callback, fw_size, fw_checksum, fw_checksum_algorithm);
-    }
 
     /// @brief Connects to the previously set ThingsBoard server, as the given client with the given access token
     /// @param access_token Access token that connects this device with a created device on the ThingsBoard server,
@@ -955,16 +494,10 @@ class ThingsBoardSized {
     // once we establish a connection again. This is the case because we connect with the cleanSession attribute set to true.
     // Therefore we can also clear the buffer of all non-permanent topics.
     void Resubscribe_Topics() {
-        if (!m_rpc_callbacks.empty() && !m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
+        // Results are ignored, because the important part of clearing internal data structures always succeeds
+        for (auto & api : m_api_implementations) {
+            (void)api.Resubscribe_Topics();
         }
-        if (!m_shared_attribute_update_callbacks.empty() && !m_client.subscribe(ATTRIBUTE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
-        }
-        // Clean up any not yet answered single event subscriptions
-        (void)RPC_Request_Unsubscribe();
-        (void)Attributes_Request_Unsubscribe();
-        (void)Provision_Unsubscribe();
     }
 
     /// @brief Attempts to send a single key-value pair with the given key and value of the given type
@@ -985,45 +518,7 @@ class ThingsBoardSized {
             Logger::println(UNABLE_TO_SERIALIZE);
             return false;
         }
-
         return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
-    }
-
-    /// @brief Process callback that will be called upon firmware response arrival
-    /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
-    /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    void process_firmware_response(char * const topic, uint8_t * const payload, size_t const & length) {
-        size_t const request_id = Helper::parseRequestId(FIRMWARE_RESPONSE_TOPIC, topic);
-
-        // Check if the remaining stack size of the current task would overflow the stack,
-        // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-        if (getMaximumStackSize() < length) {
-            uint8_t* binary = new uint8_t[length]();
-            (void)memcpy(binary, payload, length);
-            m_ota.Process_Firmware_Packet(request_id, binary, length);
-            // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-            // and set the pointer to null so we do not have a dangling reference.
-            delete[] binary;
-            binary = nullptr;
-        }
-        else {
-            uint8_t binary[length] = {};
-            (void)memcpy(binary, payload, length);
-            m_ota.Process_Firmware_Packet(request_id, binary, length);
-        }
-    }
-
-    /// @brief Process callback that will be called upon provision response arrival
-    /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
-    /// @param topic Previously subscribed topic, we got the response over
-    /// @param data Payload sent by the server over our given topic, that contains our key value pairs
-    void process_provisioning_response(char * const topic, JsonObjectConst const & data) {
-        m_provision_callback.Call_Callback(data);
-        // Unsubscribe from the provision response topic,
-        // Will be resubscribed if another request is sent anyway
-        (void)Provision_Unsubscribe();
     }
 
     /// @brief Attempts to send aggregated attribute or telemetry data
@@ -1053,7 +548,6 @@ class ThingsBoardSized {
                 return false;
             }
         }
-
         return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
     }
 
@@ -1068,8 +562,8 @@ class ThingsBoardSized {
 
         // When receiving the ota binary payload we do not want to deserialize it into json, because it only contains
         // firmware bytes that should be directly writtin into flash, therefore we can skip that step and directly process those bytes
-        if (strncmp(FIRMWARE_RESPONSE_TOPIC, topic, strlen(FIRMWARE_RESPONSE_TOPIC)) == 0) {
-            process_firmware_response(topic, payload, length);
+        if (strncmp(topic, m_ota_api_implementation.Get_Response_Topic_String(), strlen(topic)) == 0) {
+            m_ota_api_implementation.Process_Response(topic, payload, length);
             return;
         }
 
@@ -1077,7 +571,7 @@ class ThingsBoardSized {
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char *>(payload), COLON)));
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char *>(payload), ':')));
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
@@ -1098,83 +592,65 @@ class ThingsBoardSized {
         for (const auto & api : m_api_implementations) {
             // Checks to ensure we forward the already json serialized data to the correct process function.
             // Data is only ever handled by one response callback therefore we can break out of the loop after calling it
-            if (strncmp(topic, api.get_response_topic_string(), strlen(topic)) == 0) {
-                api.get_process_response_callback(topic, data);
+            if (strncmp(topic, api.Get_Response_Topic_String(), strlen(topic)) == 0) {
+                api.get_Process_Response_callback(topic, data);
                 break;
             }
-        }
-
-        // Checks to ensure we forward the already json serialized data to the correct process function,
-        // especially important is the order of ATTRIBUTE_RESPONSE_TOPIC and ATTRIBUTE_TOPIC,
-        // that is the case because the more specific one that is longer but contains the same text has to be checked first,
-        // because if we do not do that then even if we receive a message from the ATTRIBUTE_RESPONSE_TOPIC
-        // we would call the process method for the ATTRIBUTE_TOPIC because we only compare until the end of the ATTRIBUTE_TOPIC string,
-        // therefore the received topic is exactly the same. Therefore the ordering needs to stay the same for thoose two specific checks
-        else if (strncmp(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC)) == 0) {
-            process_provisioning_response(topic, data);
         }
     }
 
 #if !THINGSBOARD_ENABLE_STL
-    // PubSub client cannot call a method when message arrives on subscribed topic.
-    // Only free-standing function is allowed.
-    // To be able to forward event to an instance, rather than to a function, this pointer exists.
-    static ThingsBoardSized *m_subscribedInstance;
-
     static void onStaticMQTTMessage(char * const topic, uint8_t * const payload, unsigned int length) {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
         m_subscribedInstance->onMQTTMessage(topic, payload, length);
     }
 
     static void staticMQTTConnect() {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
         m_subscribedInstance->Resubscribe_Topics();
     }
 
-    static bool staticPublishChunk(size_t const & request_chunck) {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
-        m_subscribedInstance->Publish_Chunk_Request(request_chunck);
+    static API_Implementation & staticSubscribeImplementation(const API_Implementation & api) {
+        return m_subscribedInstance->Subscribe_API_Implementation(api);
     }
 
-    static bool staticFirmwareSend(char const * const currFwState, char const * const fwError = nullptr) {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
-        m_subscribedInstance->Firmware_Send_State(currFwState, fwError);
+    static bool staticSendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
+        return m_subscribedInstance->sendTelemetryJson(source, jsonSize);
     }
 
-    static bool staticUnsubscribe() {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
-        m_subscribedInstance->Firmware_OTA_Unsubscribe();
+    static bool staticSendJson(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
+        return m_subscribedInstance->Send_Json(topic, source, jsonSize);
     }
 
-    static void onStaticFirmwareReceived(JsonObjectConst const & data) {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
-        m_subscribedInstance->Firmware_Shared_Attribute_Received(data);
+    static uint16_t staticGetClientBufferSize() {
+        return m_subscribedInstance->m_client.get_buffer_size();
     }
 
-    static void onStaticRequestTimeout() {
-        if (m_subscribedInstance == nullptr) {
-            return;
-        }
-        m_subscribedInstance->Request_Timeout();
-    }    
+    static bool staticClientSubscribe(char const * const topic) {
+        return m_subscribedInstance->m_client.subscribe(topic);
+    }
+
+    static bool staticClientUnsubscribe(char const * const topic) {
+        return m_subscribedInstance->m_client.unsubscribe(topic);
+    }
+
+    // PubSub client cannot call a instanced method when message arrives on subscribed topic.
+    // Only free-standing function is allowed.
+    // To be able to forward event to an instance, rather than to a function, this pointer exists.
+    static ThingsBoardSized *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
+
+    IMQTT_Client&                                  m_client;                 // MQTT client instance.
+    size_t                                         m_max_stack;              // Maximum stack size we allocate at once.
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+    size_t                                         m_buffering_size;         // Buffering size used to serialize directly into client.
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
+
+    OTA_Firmware_Update                            m_ota_api_implementation; // OTA firmware update API implementation
+    Array<API_Implementation, API_ENDPOINT_AMOUNT> m_api_implementations;    // Can hold all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)                    
 };
 
 #if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
-template<size_t MaxFieldsAmount, size_t MaxAttributes, typename Logger>
-ThingsBoardSized<MaxFieldsAmount, MaxAttributes, Logger> *ThingsBoardSized<MaxFieldsAmount, MaxAttributes, Logger>::m_subscribedInstance = nullptr;
+template<size_t MaxFieldsAmount, typename Logger>
+ThingsBoardSized<MaxFieldsAmount, Logger> *ThingsBoardSized<MaxFieldsAmount, Logger>::m_subscribedInstance = nullptr;
 #elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 template<typename Logger>
 ThingsBoardSized<Logger> *ThingsBoardSized<Logger>::m_subscribedInstance = nullptr;

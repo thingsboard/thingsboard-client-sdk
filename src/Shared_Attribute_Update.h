@@ -1,29 +1,38 @@
 #ifndef Shared_Attribute_Update_h
 #define Shared_Attribute_Update_h
 
-// Local include.
+// Local includes.
 #include "Shared_Attribute_Callback.h"
-#include "IAPI_Implementation.h"
+#include "API_Implementation.h"
 
 
 // Shared attribute update API topics.
 char constexpr ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
+// Log messages.
+#if THINGSBOARD_ENABLE_DEBUG
+char constexpr NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
+char constexpr ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
+char constexpr ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
+char constexpr SHARED_KEY_IS_NULL[] = "Subscribed shared attribute update key is NULL";
+char constexpr CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
+#endif // THINGSBOARD_ENABLE_DEBUG
+#if THINGSBOARD_ENABLE_DYNAMIC
+char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] = "shared attribute update";
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 
 
-/// @brief Handles the internal implementation of the ThingsBoard server side RPC API.
-/// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
+/// @brief Handles the internal implementation of the ThingsBoard shared attribute update API.
+    /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
 #if !THINGSBOARD_ENABLE_DYNAMIC
 /// @tparam MaxSubscribtions Maximum amount of simultaneous server side rpc subscriptions.
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (2)
-/// @tparam MaxRPC Maximum amount of key-value pairs that will ever be sent in the subscribed callback method of an RPC_Callback, allows to use a StaticJsonDocument on the stack in the background.
-/// If we simply use .to<JsonVariant>(); on the received document and use .set() to change the internal value then the size requirements are 0.
-/// However if we attempt to send multiple key-value pairs, we have to adjust the size accordingly. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the reulst by 16 to receive the required MaxRPC value, default = Default_RPC_Amount (0)
-template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxRPC = Default_RPC_Amount>
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback, allows to use an array on the stack in the background, default = Default_Attributes_Amount (5)
+template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-class Server_Side_RPC : public IAPI_Implementation {
+class Shared_Attribute_Update : public API_Implementation {
   public:
     /// @brief Constructor
-    Server_Side_RPC() = default;
+    Shared_Attribute_Update() = default;
 
     /// @brief Subscribes multiple shared attribute callbacks,
     /// that will be called if the key-value pair from the server for the given shared attributes is received.
@@ -88,11 +97,22 @@ class Server_Side_RPC : public IAPI_Implementation {
         return m_unsubscribe_callback.Call_Callback(ATTRIBUTE_TOPIC);
     }
 
-    const char * const get_response_topic_string() const override {
+    const char * const Get_Response_Topic_String() const override {
         return ATTRIBUTE_TOPIC;
     }
 
-    void process_response(char * const topic, JsonObjectConst const & data) const override {
+    bool Unsubscribe_Topic() override {
+        return Shared_Attributes_Unsubscribe();
+    }
+
+    bool Resubscribe_Topic() override {
+        if (!m_shared_attribute_update_callbacks.empty() && !m_client.subscribe(ATTRIBUTE_TOPIC)) {
+            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
+        }
+        return true;
+    }
+
+    void Process_Response(char * const topic, JsonObjectConst const & data) const override {
         if (!data) {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::println(NOT_FOUND_ATT_UPDATE);
@@ -119,7 +139,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             for (auto const & att : shared_attribute.Get_Attributes()) {
                 if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
-                    Logger::println(ATT_IS_NULL);
+                    Logger::println(SHARED_KEY_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
                     continue;
                 }

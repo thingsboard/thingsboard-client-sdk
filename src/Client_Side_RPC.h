@@ -1,15 +1,20 @@
 #ifndef Client_Side_RPC_h
 #define Client_Side_RPC_h
 
-// Local include.
+// Local includes.
 #include "RPC_Request_Callback.h"
-#include "IAPI_Implementation.h"
+#include "API_Implementation.h"
 
 
 // Client side RPC topics.
 char constexpr RPC_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/response/+";
 char constexpr RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response";
 char constexpr RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
+// Log messages.
+char constexpr CLIENT_RPC_METHOD_NULL[] = "Client-side RPC methodName is NULL";
+#if THINGSBOARD_ENABLE_DYNAMIC
+char constexpr CLIENT_SIDE_RPC_SUBSCRIPTIONS[] = "client-side RPC";
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 
 
 /// @brief Handles the internal implementation of the ThingsBoard client side RPC API.
@@ -19,7 +24,7 @@ char constexpr RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (2)
 template<size_t MaxSubscribtions = Default_Subscriptions_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-class Client_Side_RPC : public IAPI_Implementation {
+class Client_Side_RPC : public API_Implementation {
   public:
     /// @brief Constructor
     Client_Side_RPC() = default;
@@ -33,7 +38,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         char const * methodName = callback.Get_Name();
 
         if (Helper::stringIsNullorEmpty(methodName)) {
-            Logger::println(RPC_METHOD_NULL);
+            Logger::println(CLIENT_RPC_METHOD_NULL);
             return false;
         }
         RPC_Request_Callback * registeredCallback = nullptr;
@@ -109,8 +114,12 @@ class Client_Side_RPC : public IAPI_Implementation {
         return m_unsubscribe_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    const char * const get_response_topic_string() const override {
+    const char * const Get_Response_Topic_String() const override {
         return RPC_RESPONSE_TOPIC;
+    }
+
+    bool Unsubscribe_Topic() override {
+        return RPC_Request_Unsubscribe();
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
@@ -121,7 +130,7 @@ class Client_Side_RPC : public IAPI_Implementation {
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
-    void process_response(char * const topic, JsonObjectConst const & data) const override {
+    void Process_Response(char * const topic, JsonObjectConst const & data) const override {
         size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
         for (auto it = m_rpc_request_callbacks.begin(); it != m_rpc_request_callbacks.end(); ++it) {
@@ -130,10 +139,6 @@ class Client_Side_RPC : public IAPI_Implementation {
             if (rpc_request.Get_Request_ID() != request_id) {
                 continue;
             }
-
-#if THINGSBOARD_ENABLE_DEBUG
-            Logger::printfln(CALLING_REQUEST_CB, request_id);
-#endif // THINGSBOARD_ENABLE_DEBUG
             rpc_request.Stop_Timeout_Timer();
             rpc_request.Call_Callback(data);
 
@@ -163,7 +168,7 @@ class Client_Side_RPC : public IAPI_Implementation {
 #else
     Array<RPC_Callback, MaxSubscribtions> m_rpc_request_callbacks; // Server side RPC callbacks array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    size_t                                m_request_id;            // Allows nearly 4.3 million requests before wrapping back to 0
+    static size_t                         m_request_id;            // Allows nearly 4.3 million requests before wrapping back to 0, static so we actually keep track of the current request id even if we use multiple instances
 };
 
 #endif // Client_Side_RPC_h

@@ -300,7 +300,6 @@ class ThingsBoardHttpSized {
             success = false;
             goto cleanup;
         }
-
         response = m_client.get_response_body();
 
         cleanup:
@@ -335,7 +334,6 @@ class ThingsBoardHttpSized {
                 return false;
             }
         }
-
         return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
     }
 
@@ -358,7 +356,6 @@ class ThingsBoardHttpSized {
             Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
-
         return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
     }
 };

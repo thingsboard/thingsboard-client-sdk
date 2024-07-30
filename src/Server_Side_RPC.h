@@ -1,15 +1,25 @@
 #ifndef Server_Side_RPC_h
 #define Server_Side_RPC_h
 
-// Local include.
+// Local includes.
 #include "RPC_Callback.h"
-#include "IAPI_Implementation.h"
+#include "API_Implementation.h"
 
 
 // Server side RPC topics.
 char constexpr RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
 char constexpr RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
 char constexpr RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
+// Log messages.
+char constexpr SERVER_RPC_METHOD_NULL[] = "Server-side RPC methodName is NULL";
+char constexpr RPC_RESPONSE_OVERFLOWED[] = "Server-side RPC response overflowed, increase MaxRPC (%u)";
+#if THINGSBOARD_ENABLE_DYNAMIC
+char constexpr SERVER_SIDE_RPC_SUBSCRIPTIONS[] = "server-side RPC";
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_DEBUG
+char constexpr NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
+char constexpr CALLING_RPC_CB[] = "Calling subscribed callback for rpc with methodname (%s)";
+#endif // THINGSBOARD_ENABLE_DEBUG
 
 
 /// @brief Handles the internal implementation of the ThingsBoard server side RPC API.
@@ -22,7 +32,7 @@ char constexpr RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
 /// However if we attempt to send multiple key-value pairs, we have to adjust the size accordingly. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the reulst by 16 to receive the required MaxRPC value, default = Default_RPC_Amount (0)
 template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxRPC = Default_RPC_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-class Server_Side_RPC : public IAPI_Implementation {
+class Server_Side_RPC : public API_Implementation {
   public:
     /// @brief Constructor
     Server_Side_RPC() = default;
@@ -86,22 +96,33 @@ class Server_Side_RPC : public IAPI_Implementation {
         return m_unsubscribe_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC);
     }
 
-    const char * const get_response_topic_string() const override {
+    const char * const Get_Response_Topic_String() const override {
         return RPC_REQUEST_TOPIC;
     }
 
-    void process_response(char * const topic, JsonObjectConst const & data) const override {
+    bool Unsubscribe_Topic() override {
+        return RPC_Unsubscribe();
+    }
+
+    bool Resubscribe_Topic() override {
+        if (!m_rpc_callbacks.empty() && !m_client.subscribe(RPC_SUBSCRIBE_TOPIC)) {
+            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
+        }
+        return true;
+    }
+
+    void Process_Response(char * const topic, JsonObjectConst const & data) const override {
         char const * const methodName = data[RPC_METHOD_KEY];
 
         if (methodName == nullptr) {
-            Logger::println(RPC_METHOD_NULL);
+            Logger::println(SERVER_RPC_METHOD_NULL);
             return;
         }
 
         for (auto const & rpc : m_rpc_callbacks) {
             char const * const subscribedMethodName = rpc.Get_Name();
             if (Helper::stringIsNullorEmpty(subscribedMethodName)) {
-              Logger::println(RPC_METHOD_NULL);
+              Logger::println(SERVER_RPC_METHOD_NULL);
               continue;
             }
             // Strncmp returns the ascii value difference of the ascii characters that are different,

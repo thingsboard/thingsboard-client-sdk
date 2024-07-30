@@ -1,30 +1,42 @@
-#ifndef Client_Side_RPC_h
-#define Client_Side_RPC_h
+#ifndef Attribute_Request_h
+#define Attribute_Request_h
 
-// Local include.
+// Local includes.
 #include "Attribute_Request_Callback.h"
-#include "IAPI_Implementation.h"
+#include "API_Implementation.h"
 
 
 // Attribute request API topics.
 char constexpr ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
 char constexpr ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
 char constexpr ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
+// Client side attribute request keys.
+char constexpr CLIENT_REQUEST_KEYS[] = "clientKeys";
+char constexpr CLIENT_RESPONSE_KEY[] = "client";
+// Shared attribute request keys.
+char constexpr SHARED_REQUEST_KEY[] = "sharedKeys";
+char constexpr SHARED_RESPONSE_KEY[] = "shared";
+// Log messages.
+#if THINGSBOARD_ENABLE_DEBUG
+char constexpr ATT_KEY_NOT_FOUND[] = "Attribute key not found";
+char constexpr ATT_KEY_IS_NULL[] = "Requested attribute key is NULL";
+char constexpr NO_KEYS_TO_REQUEST[] = "No keys to request were given";
+#endif // THINGSBOARD_ENABLE_DEBUG
+#if !THINGSBOARD_ENABLE_DYNAMIC
+char constexpr CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS[] = "client or shared attribute request";
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 
 
 /// @brief Handles the internal implementation of the ThingsBoard shared and server-side Attribute API.
 /// More specifically it handles the part for both types, where we can request the current value from the cloud.
-/// See https://thingsboard.io/docs/user-guide/attributes/#shared-attributes and https://thingsboard.io/docs/user-guide/attributes/#client-side-attributes for more information
+/// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
 #if !THINGSBOARD_ENABLE_DYNAMIC
 /// @tparam MaxSubscribtions Maximum amount of simultaneous shared or client scope attribute requests.
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (2)
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost.
-/// Furthermore, if OTA Updates are utilized the size should never be decreased to less than 5, because that amount of attributes needs to be requested or updated to start the OTA update.
-/// Meaning if the number is decreased the OTA update will not work correctly anymore and will not be able to be started anymore, default = Default_Attributes_Amount (5)
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback, allows to use an array on the stack in the background, default = Default_Attributes_Amount (5)
 template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-class Attribute_Request : public IAPI_Implementation {
+class Attribute_Request : public API_Implementation {
   public:
     /// @brief Constructor
     Attribute_Request() = default;
@@ -106,7 +118,7 @@ class Attribute_Request : public IAPI_Implementation {
             }
 
             size += strlen(att);
-            size += strlen(COMMA);
+            size += strlen(",");
         }
 
         // Initalizes complete array to 0, required because strncat needs both destination and source to contain proper null terminated strings
@@ -114,15 +126,15 @@ class Attribute_Request : public IAPI_Implementation {
         for (const auto & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_IS_NULL);
+                Logger::println(ATT_KEY_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 continue;
             }
 
             strncat(request, att, size);
             size -= strlen(att);
-            strncat(request, COMMA, size);
-            size -= strlen(COMMA);
+            strncat(request, ",", size);
+            size -= strlen(",");
         }
 
         // Ensure to cast to const, this is done so that ArduinoJson does not copy the value but instead simply store the pointer, which does not require any more memory,
@@ -176,8 +188,12 @@ class Attribute_Request : public IAPI_Implementation {
         return m_unsubscribe_callback.Call_Callback(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    const char * const get_response_topic_string() const override {
+    const char * const Get_Response_Topic_String() const override {
         return ATTRIBUTE_RESPONSE_TOPIC;
+    }
+
+    bool Unsubscribe_Topic() override {
+        return Attributes_Request_Unsubscribe();
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
@@ -214,10 +230,6 @@ class Attribute_Request : public IAPI_Implementation {
             if (data.containsKey(attributeResponseKey)) {
                 data = data[attributeResponseKey];
             }
-
-#if THINGSBOARD_ENABLE_DEBUG
-            Logger::printfln(CALLING_REQUEST_CB, request_id);
-#endif // THINGSBOARD_ENABLE_DEBUG
             attribute_request.Stop_Timeout_Timer();
             attribute_request.Call_Callback(data);
 
@@ -248,7 +260,7 @@ class Attribute_Request : public IAPI_Implementation {
 #else
     Array<Attribute_Request_Callback, MaxSubscribtions> m_attribute_request_callbacks; // Client-side or shared attribute request callback array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    size_t                                              m_request_id;                  // Allows nearly 4.3 million requests before wrapping back to 0
+    static size_t                                       m_request_id;                  // Allows nearly 4.3 million requests before wrapping back to 0, static so we actually keep track of the current request id even if we use multiple instances
 };
 
-#endif // Client_Side_RPC_h
+#endif // Attribute_Request_h
