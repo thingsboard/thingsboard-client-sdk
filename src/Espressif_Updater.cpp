@@ -1,7 +1,7 @@
 // Header include.
 #include "Espressif_Updater.h"
 
-#if THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
+#if THINGSBOARD_USE_ESP_PARTITION
 
 // Library include.
 #include <esp_ota_ops.h>
@@ -59,4 +59,4 @@ bool Espressif_Updater::end() {
     return error == ESP_OK;
 }
 
-#endif // THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
+#endif // THINGSBOARD_USE_ESP_PARTITION

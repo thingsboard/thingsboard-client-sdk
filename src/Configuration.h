@@ -42,12 +42,6 @@
 #    endif
 #  endif
 
-// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality, theoretically possible without STL support,
-// but the code would have to be adjusted at compile time depending on if the C++ STL is supported or not and that has not been implemented for OTA yet.
-#  ifndef THINGSBOARD_ENABLE_OTA
-#     define THINGSBOARD_ENABLE_OTA 1
-#  endif
-
 // Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
 // Only exists following major version 3 minor version 0 on ESP32 (https://github.com/espressif/esp-idf/releases/tag/v3.0-rc1)and major version 3 minor version 1 on ESP8266 (https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.1-rc1)

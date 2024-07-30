@@ -1,8 +1,6 @@
 // Header include.
 #include "OTA_Update_Callback.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 OTA_Update_Callback::OTA_Update_Callback(function endCb, char const * const currFwTitle, char const * const currFwVersion, IUpdater * updater, uint8_t const & chunkRetries, uint16_t const & chunkSize, uint64_t const & timeout)
   : OTA_Update_Callback(nullptr, endCb, currFwTitle, currFwVersion, updater, chunkRetries, chunkSize, timeout)
 {
@@ -73,5 +71,3 @@ uint64_t const & OTA_Update_Callback::Get_Timeout() const {
 void OTA_Update_Callback::Set_Timeout(const uint64_t &timeout_microseconds) {
     m_timeout = timeout_microseconds;
 }
-
-#endif // THINGSBOARD_ENABLE_OTA

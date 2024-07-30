@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Local include.
 #include "Callback_Watchdog.h"
 #include "HashGenerator.h"
@@ -320,7 +318,5 @@ class OTA_Handler {
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // OTA_Handler_h

@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Library include.
 #include <stddef.h>
 #include <stdint.h>
@@ -32,7 +30,5 @@ class IUpdater {
     /// @return Whether the complete amount of bytes initally given was successfully written or not
     virtual bool end() = 0;
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // IUpdater_h

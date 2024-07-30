@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Local include.
 #include <IUpdater.h>
 
@@ -26,7 +24,5 @@ class SDCard_Updater : public IUpdater {
   private:
     char const * const m_path;
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // SDCard_Updater_h

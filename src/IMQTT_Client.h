@@ -44,11 +44,13 @@ class IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
-    /// as well as the payload data and the size of that payload data
+    /// as well as the payload data and the size of that payload data. Directly set by the used ThingsBoard client to its internal methods,
+    /// therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on received MQTT response
     virtual void set_data_callback(data_function callback) = 0;
 
-    /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker
+    /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker.
+    /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on established MQTT connection
     virtual void set_connect_callback(connect_function callback) = 0;
 

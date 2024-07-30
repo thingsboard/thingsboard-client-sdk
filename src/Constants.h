@@ -27,7 +27,8 @@ char constexpr TOO_MANY_JSON_FIELDS[] = "Too many JSON fields passed (%u), incre
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr CONNECT_FAILED[] = "Connecting to server failed";
 char constexpr UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
-char constexpr UNABLE_TO_ALLOCATE_JSON[] = "Allocating memory for the JsonDocument failed, passed JsonObject or JsonVariant is NULL";
+char constexpr UNABLE_TO_ALLOCATE_JSON[] = "Allocating memory for the JsonDocument failed, passed JsonDocument is NULL";
+char constexpr JSON_SIZE_TO_SMALL[] = "JsonDocument too small to store all values. Ensure every key value pair gets JSON_OBJECT_SIZE(1) capacity + size required by value / key that is inserted";
 
 
 #if THINGSBOARD_ENABLE_PSRAM

@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 #if defined(ESP32) && defined(ARDUINO)
 
 // Local include.
@@ -26,7 +24,5 @@ class Arduino_ESP32_Updater : public IUpdater {
 };
 
 #endif // defined(ESP32) && defined(ARDUINO)
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // Arduino_ESP32_Updater_h

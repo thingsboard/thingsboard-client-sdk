@@ -4,7 +4,7 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
+#if THINGSBOARD_USE_ESP_PARTITION
 
 // Local include.
 #include "IUpdater.h"
@@ -29,6 +29,6 @@ class Espressif_Updater : public IUpdater {
     void const * m_update_partition; // Non active OTA partition that we write our data into
 };
 
-#endif // THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
+#endif // THINGSBOARD_USE_ESP_PARTITION
 
 #endif // Espressif_Updater_h

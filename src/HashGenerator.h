@@ -4,8 +4,6 @@
 // Local includes.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Library includes.
 #if THINGSBOARD_USE_MBED_TLS
 #include <mbedtls/md.h>
@@ -57,7 +55,5 @@ class HashGenerator {
     /// before freeing, because freeing without having started a hash calculation causes a crash.
     void free();
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // Hash_Generator_h

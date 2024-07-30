@@ -1,8 +1,6 @@
 // Header include.
 #include "Arduino_ESP8266_Updater.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 #if defined(ESP8266) && defined(ARDUINO)
 
 // Library include.
@@ -25,5 +23,3 @@ bool Arduino_ESP8266_Updater::end() {
 }
 
 #endif // defined(ESP8266) && defined(ARDUINO)
-
-#endif // THINGSBOARD_ENABLE_OTA

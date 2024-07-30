@@ -4,8 +4,6 @@
 // Local includes.
 #include "Callback.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Local includes.
 #include "IUpdater.h"
 
@@ -152,7 +150,5 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     uint16_t          m_size;       // Size of chunks the firmware data will be split into
     uint64_t          m_timeout;    // How long we wait for each chunck to arrive before declaring it as failed
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // OTA_Update_Callback_h

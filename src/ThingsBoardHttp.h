@@ -73,17 +73,22 @@ class ThingsBoardHttpSized {
     }
 
     /// @brief Attempts to send key value pairs from custom source over the given topic to the server
-    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param topic Topic we want to send the data over
-    /// @param source Data source containing our json key value pairs we want to send
+    /// @param source JsonDocument containing our json key value pairs we want to send,
+    /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    template <typename TSource>
-    bool Send_Json(char const * const topic, TSource const & source, size_t const & jsonSize) {
-        // Check if allocating needed memory failed when trying to create the JsonObject,
+    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
+        // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
             Logger::println(UNABLE_TO_ALLOCATE_JSON);
+            return false;
+        }
+        // Check if inserting any of the internal values failed because the JsonDocument was too small,
+        // if it did the overflowed() method will return true. See https://arduinojson.org/v6/api/jsondocument/overflowed/ for more information
+        if (source.overflowed()) {
+            Logger::println(JSON_SIZE_TO_SMALL);
             return false;
         }
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -169,13 +174,12 @@ class ThingsBoardHttpSized {
 
     /// @brief Attempts to send telemetry key value pairs from custom source to the server.
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
-    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
-    /// @param source Data source containing our json key value pairs we want to send
+    /// @param source JsonDocument containing our json key value pairs we want to send,
+    /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    template <typename TSource>
-    bool sendTelemetryJson(TSource const & source, size_t const & jsonSize) {
-        return Send_Json(HTTP_TELEMETRY_TOPIC, source, jsonSize);
+    bool sendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
+        return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
     }
 
     /// @brief Attempts to send a GET request over HTTP or HTTPS
@@ -236,13 +240,12 @@ class ThingsBoardHttpSized {
 
     /// @brief Attempts to send attribute key value pairs from custom source to the server.
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
-    /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
-    /// @param source Data source containing our json key value pairs we want to send
+    /// @param source JsonDocument containing our json key value pairs we want to send,
+    /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    template <typename TSource>
-    bool sendAttributeJson(TSource const & source, size_t const & jsonSize) {
-        return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
+    bool sendAttributeJson(JsonDocument const & source, size_t const & jsonSize) {
+        return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
     }
 
   private:
