@@ -9,6 +9,7 @@
 #include <ArduinoJson.h>
 #endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 
+#define Default_Endpoints_Amount 7
 #define Default_Fields_Amount 8
 #define Default_Subscriptions_Amount 2
 #define Default_Attributes_Amount 5

@@ -130,7 +130,7 @@ class Client_Side_RPC : public API_Implementation {
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
-    void Process_Response(char * const topic, JsonObjectConst const & data) const override {
+    void Process_Json_Response(char * const topic, JsonObjectConst const & data) const override {
         size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
         for (auto it = m_rpc_request_callbacks.begin(); it != m_rpc_request_callbacks.end(); ++it) {

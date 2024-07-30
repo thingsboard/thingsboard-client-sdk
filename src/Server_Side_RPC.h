@@ -111,7 +111,7 @@ class Server_Side_RPC : public API_Implementation {
         return true;
     }
 
-    void Process_Response(char * const topic, JsonObjectConst const & data) const override {
+    void Process_Json_Response(char * const topic, JsonObjectConst const & data) const override {
         char const * const methodName = data[RPC_METHOD_KEY];
 
         if (methodName == nullptr) {

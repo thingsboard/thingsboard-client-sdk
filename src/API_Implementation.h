@@ -23,10 +23,19 @@ class API_Implementation {
     API_Implementation() = default;
 
     /// @brief Process callback that will be called upon response arrival
-    /// and is responsible for handling the payload and calling the appropriate previously subscribed callbacks
+    /// and is responsible for handling the payload before serialization and calling the appropriate previously subscribed callbacks
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
+    virtual void Process_Response(char * const topic, uint8_t * const payload, unsigned int length) const {
+        // Nothing to do
+    }
+
+    /// @brief Process callback that will be called upon response arrival
+    /// and is responsible for handling the alredy serialized payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
-    virtual void Process_Response(char * const topic, JsonObjectConst const & data) const = 0;
+    virtual void Process_Json_Response(char * const topic, JsonObjectConst const & data) const = 0;
 
     /// @brief Returns a non-owning pointer to the respone topic string, that we should have received the actual data on.
     /// Used to check, which API Implementation needs to handle the current response to a previously sent request
@@ -49,26 +58,35 @@ class API_Implementation {
     /// Only exists on boards that can not use the ESP Timer, because that one uses the FreeRTOS timer in the background instead
     /// and therefore does not require calling a loop method
     virtual void loop() {
-        // Nothing to do.
+        // Nothing to do
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
     /// @brief Sets the underlying callbacks that are required for the different API Implementation to communicate with the cloud.
     /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding
     /// as a user ist not recommended, unless you know what you are doing
-    /// @param send Method which allows to send arbitrary Json payload, points to Send_Json per default
-    /// @param subscribe Method which allows to subscribe to arbitrary topics, points to m_client.subscribe per default
-    /// @param unsubscribe Method which allows to subscribe to arbitrary topics, points to m_client.unsubscribe per default
-    void Set_Client_Callbacks(Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> send_callback, allback<bool, char const * const topic> subscribe_callback, Callback<bool, char const * const topic> unsubscribe_callback) {
+    /// @param subscribe_api_callback Method which allows to subscribe additional API endpoints, points to Subscribe_API_Implementation per default
+    /// @param send_telemtry_callback Method which allows to send arbitrary Json payload, points to sendTelemetryJson per default
+    /// @param send_callback Method which allows to send arbitrary Json payload, points to Send_Json per default
+    /// @param subscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.subscribe per default
+    /// @param unsubscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.unsubscribe per default
+    /// @param get_size_callback Method which allows to send arbitrary Json payload, points to m_client.get_buffer_size per default
+    void Set_Client_Callbacks(Callback<API_Implementation*, API_Implementation> subscribe_api_callback, Callback<bool, JsonDocument const & source, size_t const & jsonSize> send_telemtry_callback, Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> send_callback, Callback<bool, char const * const topic> subscribe_callback, Callback<bool, char const * const topic> unsubscribe_callback, Callback<uint16_t, void> get_size_callback) {
+        m_subscribe_api_callback = subscribe_api_callback;
+        m_send_telemtry_callback = send_telemtry_callback;
         m_send_callback = send_callback;
         m_subscribe_callback = subscribe_callback;
         m_unsubscribe_callback = unsubscribe_callback;
+        m_get_size_callback = get_size_callback;
     }
 
   protected:
-    Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> m_send_callback;        // Send json callback
-    Callback<bool, char const * const topic>                                                       m_subscribe_callback;   // Subscribe topic callback
-    Callback<bool, char const * const topic>                                                       m_unsubscribe_callback; // Unsubscribe topic callback
+    Callback<API_Implementation*, API_Implementation>                                              m_subscribe_api_callback; // Subscribe API callback
+    Callback<bool, JsonDocument const & source, size_t const & jsonSize>                           m_send_telemtry_callback; // Send Telemtry callback
+    Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> m_send_callback;          // Send json callback
+    Callback<bool, char const * const topic>                                                       m_subscribe_callback;     // Subscribe topic callback
+    Callback<bool, char const * const topic>                                                       m_unsubscribe_callback;   // Unsubscribe topic callback
+    Callback<uint16_t, void>                                                                       m_get_size_callback;      // Get client size callback
 };
 
 #endif // API_Implementation_h

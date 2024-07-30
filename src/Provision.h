@@ -116,7 +116,7 @@ class Provision : public API_Implementation {
         return Provision_Unsubscribe();
     }
 
-    void Process_Response(char * const topic, JsonObjectConst const & data) const override {
+    void Process_Json_Response(char * const topic, JsonObjectConst const & data) const override {
         m_provision_callback.Call_Callback(data);
         // Unsubscribe from the provision response topic,
         // Will be resubscribed if another request is sent anyway

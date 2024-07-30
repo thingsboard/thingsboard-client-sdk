@@ -48,10 +48,10 @@ char constexpr DOWNLOADING_FW[] = "Attempting to download over MQTT...";
 
 /// @brief Handles the internal implementation of the ThingsBoard over the air firmware update API.
 /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-class OTA_Firmware_Update {
+class OTA_Firmware_Update : public API_Implementation {
   public:
     /// @brief Constructor
-    OTA_Firmware_Update(Callback<API_Implementation&, API_Implementation> subscribe_api_callback, Callback<bool, JsonDocument const & source, size_t const & jsonSize> send_telemtry_callback, Callback<uint16_t, void> get_size_callback, Callback<bool, const char *topic> subscribe_callback, Callback<bool, const char *topic> unsubscribe_callback)
+    OTA_Firmware_Update()
       : m_fw_callback()
       , m_previous_buffer_size(0U)
       , m_change_buffer_size(false)
@@ -60,10 +60,6 @@ class OTA_Firmware_Update {
 #else
       , m_ota(OTA_Firmware_Update::staticPublishChunk, OTA_Firmware_Update::staticFirmwareSend, OTA_Firmware_Update::staticUnsubscribe)
 #endif // THINGSBOARD_ENABLE_STL
-      , m_send_telemtry_callback(send_telemtry_callback)
-      , m_get_size_callback(get_size_callback)
-      , m_subscribe_callback(subscribe_callback)
-      , m_unsubscribe_callback(unsubscribe_callback)
       , m_fw_attribute_update(nullptr)
       , m_fw_attribute_request(nullptr)
     {
@@ -74,8 +70,8 @@ class OTA_Firmware_Update {
         Shared_Attribute_Update fw_attribute_update;
         Attribute_Request fw_attribute_request;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        m_fw_attribute_update = &subscribe_api_callback.Call_Callback(fw_attribute_update);
-        m_fw_attribute_request = &subscribe_api_callback.Call_Callback(fw_attribute_request);
+        m_fw_attribute_update = subscribe_api_callback.Call_Callback(fw_attribute_update);
+        m_fw_attribute_request = subscribe_api_callback.Call_Callback(fw_attribute_request);
 #if THINGSBOARD_ENABLE_STL
         m_subscribedInstance = nullptr;
 #endif // THINGSBOARD_ENABLE_STL
@@ -186,11 +182,6 @@ class OTA_Firmware_Update {
         return FIRMWARE_RESPONSE_TOPIC;
     }
 
-    /// @brief Process callback that will be called upon firmware response arrival
-    /// and is responsible for handling the payload and calling the appropriate previously subscribed callback
-    /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
     void Process_Response(char * const topic, uint8_t * const payload, size_t const & length) {
         size_t const request_id = Helper::parseRequestId(FIRMWARE_RESPONSE_TOPIC, topic);
 
@@ -210,6 +201,18 @@ class OTA_Firmware_Update {
             (void)memcpy(binary, payload, length);
             m_ota.Process_Firmware_Packet(request_id, binary, length);
         }
+    }
+
+    void Process_Json_Response(char * const topic, JsonObjectConst const & data) const override {
+        // Nothing to do
+    }
+
+    bool Unsubscribe_Topic() override {
+        Stop_Firmware_Update();
+    }
+
+    bool Resubscribe_Topic() {
+        // Nothing to do.
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
@@ -420,11 +423,6 @@ class OTA_Firmware_Update {
     uint16_t                                                             m_previous_buffer_size;   // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
     bool                                                                 m_change_buffer_size;     // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
     OTA_Handler<Logger>                                                  m_ota;                    // Class instance that handles the flashing and creating a hash from the given received binary firmware data
-    Callback<bool, JsonDocument const & source, size_t const & jsonSize> m_send_telemtry_callback; // Send telemetry data callback
-    Callback<uint16_t, void>                                             m_get_size_callback;      // Get the current size of the internal client buffer callback
-    Callback<bool, const char *topic>                                    m_subscribe_callback;     // Subscribe topic callback
-    Callback<bool, const char *topic>                                    m_unsubscribe_callback;   // Unsubscribe topic callback
-
 #if !THINGSBOARD_ENABLE_DYNAMIC
     Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>               *m_fw_attribute_update;   // API implementation to be informed if needed fw attributes have been updated
     Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>                     *m_fw_attribute_request;  // API implementation to request the needed fw attributes to start updating
