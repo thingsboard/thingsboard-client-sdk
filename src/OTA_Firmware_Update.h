@@ -60,18 +60,11 @@ class OTA_Firmware_Update : public API_Implementation {
 #else
       , m_ota(OTA_Firmware_Update::staticPublishChunk, OTA_Firmware_Update::staticFirmwareSend, OTA_Firmware_Update::staticUnsubscribe)
 #endif // THINGSBOARD_ENABLE_STL
-      , m_fw_attribute_update(nullptr)
-      , m_fw_attribute_request(nullptr)
+      , m_fw_attribute_update()
+      , m_fw_attribute_request()
     {
-#if !THINGSBOARD_ENABLE_DYNAMIC
-        Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT> fw_attribute_update;
-        Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT> fw_attribute_request;
-#else
-        Shared_Attribute_Update fw_attribute_update;
-        Attribute_Request fw_attribute_request;
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-        m_fw_attribute_update = m_subscribe_api_callback.Call_Callback(fw_attribute_update);
-        m_fw_attribute_request = m_subscribe_api_callback.Call_Callback(fw_attribute_request);
+        m_subscribe_api_callback.Call_Callback(m_fw_attribute_update);
+        m_subscribe_api_callback.Call_Callback(m_fw_attribute_request);
 #if THINGSBOARD_ENABLE_STL
         m_subscribedInstance = nullptr;
 #endif // THINGSBOARD_ENABLE_STL
@@ -107,7 +100,7 @@ class OTA_Firmware_Update : public API_Implementation {
         const Attribute_Request_Callback<MaxAttributes> fw_request_callback(ThingsBoardSized::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, ThingsBoardSized::onStaticRequestTimeout, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
-        return m_fw_attribute_request->Shared_Attributes_Request(fw_request_callback);
+        return m_fw_attribute_request.Shared_Attributes_Request(fw_request_callback);
     }
 
     /// @brief Stops the currently ongoing firmware update, calls the subscribed user finish callback with a failure if any update was stopped.
@@ -147,7 +140,7 @@ class OTA_Firmware_Update : public API_Implementation {
         const Shared_Attribute_Callback<MaxAttributes> fw_update_callback(ThingsBoardSized::onStaticFirmwareReceived, begin, end);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
-        return m_fw_attribute_update->Shared_Attributes_Subscribe(fw_update_callback);
+        return m_fw_attribute_update.Shared_Attributes_Subscribe(fw_update_callback);
     }
 
     /// @brief Sends the given firmware title and firmware version to the cloud.
@@ -232,10 +225,7 @@ class OTA_Firmware_Update : public API_Implementation {
         char const * const currFwTitle = callback.Get_Firmware_Title();
         char const * const currFwVersion = callback.Get_Firmware_Version();
 
-        if (m_fw_attribute_request == nullptr || m_fw_attribute_update == nullptr) {
-            return false;
-        }
-        else if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
+        if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
             return false;
         }
         else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
@@ -442,11 +432,11 @@ class OTA_Firmware_Update : public API_Implementation {
     bool                                                                 m_change_buffer_size;     // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
     OTA_Handler<Logger>                                                  m_ota;                    // Class instance that handles the flashing and creating a hash from the given received binary firmware data
 #if !THINGSBOARD_ENABLE_DYNAMIC
-    Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>               *m_fw_attribute_update;   // API implementation to be informed if needed fw attributes have been updated
-    Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>                     *m_fw_attribute_request;  // API implementation to request the needed fw attributes to start updating
+        Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>           m_fw_attribute_update;   // API implementation to be informed if needed fw attributes have been updated
+        Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>                 m_fw_attribute_request;  // API implementation to request the needed fw attributes to start updating
 #else
-    Shared_Attribute_Update                                              *m_fw_attribute_update;   // API implementation to be informed if needed fw attributes have been updated
-    Attribute_Request                                                    *m_fw_attribute_request;  // API implementation to request the needed fw attributes to start updating
+        Shared_Attribute_Update                                          m_fw_attribute_update;   // API implementation to be informed if needed fw attributes have been updated
+        Attribute_Request                                                m_fw_attribute_request;  // API implementation to request the needed fw attributes to start updating
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 };
 

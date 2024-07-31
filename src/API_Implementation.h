@@ -13,6 +13,8 @@ char constexpr SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic (%s) fail
 // RPC data keys.
 char constexpr RPC_METHOD_KEY[] = "method";
 char constexpr RPC_PARAMS_KEY[] = "params";
+// Shared attribute update API topics.
+char constexpr ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
 
 
 /// @brief Base functionality required by all API implementation
@@ -34,16 +36,22 @@ class API_Implementation {
     /// and is responsible for handling the alredy serialized payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
-    virtual void Process_Json_Response(char * const topic, JsonObjectConst const & data) const = 0;
+    virtual void Process_Json_Response(char * const topic, JsonObjectConst const & data) const {
+        // Nothing to do
+    }
 
     /// @brief Returns a non-owning pointer to the respone topic string, that we should have received the actual data on.
     /// Used to check, which API Implementation needs to handle the current response to a previously sent request
     /// @return Response topic null-terminated string
-    virtual char const * Get_Response_Topic_String() const = 0;
+    virtual char const * Get_Response_Topic_String() const {
+        return nullptr;
+    }
 
     /// @brief Forwards the call to let the API clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
     /// @return Whether unsubscribing was successfull or not
-    virtual bool Unsubscribe_Topic() = 0;
+    virtual bool Unsubscribe_Topic()  {
+        return true;
+    }
 
     /// @brief Forwards the call to let the API clear up any ongoing single-event subscriptions (Provision, Attribute Request, RPC Request)
     /// and simply resubscribes the topic for all permanent subscriptions (RPC, Shared Attribute Update)
@@ -70,7 +78,7 @@ class API_Implementation {
     /// @param subscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.subscribe per default
     /// @param unsubscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.unsubscribe per default
     /// @param get_size_callback Method which allows to send arbitrary Json payload, points to m_client.get_buffer_size per default
-    void Set_Client_Callbacks(Callback<API_Implementation*, API_Implementation> subscribe_api_callback, Callback<bool, JsonDocument const & source, size_t const & jsonSize> send_telemtry_callback, Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> send_callback, Callback<bool, char const * const topic> subscribe_callback, Callback<bool, char const * const topic> unsubscribe_callback, Callback<uint16_t> get_size_callback) {
+    void Set_Client_Callbacks(Callback<void, API_Implementation &> subscribe_api_callback, Callback<bool, JsonDocument const &, size_t const &> send_telemtry_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &> send_callback, Callback<bool, char const * const> subscribe_callback, Callback<bool, char const * const> unsubscribe_callback, Callback<uint16_t> get_size_callback) {
         m_subscribe_api_callback = subscribe_api_callback;
         m_send_telemtry_callback = send_telemtry_callback;
         m_send_callback = send_callback;
@@ -80,12 +88,12 @@ class API_Implementation {
     }
 
   protected:
-    Callback<API_Implementation*, API_Implementation>                                              m_subscribe_api_callback; // Subscribe API callback
-    Callback<bool, JsonDocument const & source, size_t const & jsonSize>                           m_send_telemtry_callback; // Send Telemtry callback
-    Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> m_send_callback;          // Send json callback
-    Callback<bool, char const * const topic>                                                       m_subscribe_callback;     // Subscribe topic callback
-    Callback<bool, char const * const topic>                                                       m_unsubscribe_callback;   // Unsubscribe topic callback
-    Callback<uint16_t>                                                                             m_get_size_callback;      // Get client size callback
+    Callback<void, API_Implementation &>                                     m_subscribe_api_callback; // Subscribe API callback
+    Callback<bool, JsonDocument const &, size_t const &>                     m_send_telemtry_callback; // Send Telemtry callback
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_callback;          // Send json callback
+    Callback<bool, char const * const>                                       m_subscribe_callback;     // Subscribe topic callback
+    Callback<bool, char const * const>                                       m_unsubscribe_callback;   // Unsubscribe topic callback
+    Callback<uint16_t>                                                       m_get_size_callback;      // Get client size callback
 };
 
 #endif // API_Implementation_h

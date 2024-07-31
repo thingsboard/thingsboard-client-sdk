@@ -2,6 +2,7 @@
 #define ThingsBoard_h
 
 // Local includes.
+#include "Constants.h"
 #include "API_Implementation.h"
 #include "IMQTT_Client.h"
 #include "DefaultLogger.h"
@@ -63,7 +64,9 @@ class ThingsBoardSized {
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param client MQTT Client implementation that should be used to establish the connection to ThingsBoard
-    /// @param first Iterator pointing to the first element we want to copy into our underlying data container
+    /// @param first Iterator pointing to the first API implementation that we want to be handled by this class.
+    /// The API implementation by itself does nothing, it needs to be connected to actively send and receive information.
+    /// Additionally to save memory we only save non-owning pointers to the actual implementations, therefore the implementations from the user must be kept alive, for as long as the connected instance
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
@@ -93,10 +96,13 @@ class ThingsBoardSized {
       , m_api_implementations(first, last)
     {
         for (auto & api : m_api_implementations) {
+            if (api == nullptr) {
+                continue;
+            }
 #if THINGSBOARD_ENABLE_STL
-            api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&IMQTT_Client::subscribe, m_client, std::placeholders::_1), std::bind(&IMQTT_Client::unsubscribe, m_client, std::placeholders::_1), std::bind(&IMQTT_Client::get_buffer_size, m_client));
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this));
 #else
-            api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize);
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
         }
         (void)setBufferSize(bufferSize);
@@ -166,7 +172,10 @@ class ThingsBoardSized {
     void Cleanup_Subscriptions() {
         // Results are ignored, because the important part of clearing internal data structures always succeeds
         for (auto & api : m_api_implementations) {
-            (void)api.Unsubscribe_Topic();
+            if (api == nullptr) {
+                continue;
+            }
+            (void)api->Unsubscribe_Topic();
         }
     }
 
@@ -186,7 +195,7 @@ class ThingsBoardSized {
             return false;
         }
         m_client.set_server(host, port);
-        return connect_to_host(access_token, (client_id == nullptr) ? access_token : client_id, password);
+        return connectToHost(access_token, (client_id == nullptr) ? access_token : client_id, password);
     }
 
     /// @brief Disconnects any connection that has been established already
@@ -207,6 +216,9 @@ class ThingsBoardSized {
     bool loop() {
 #if !THINGSBOARD_USE_ESP_TIMER
         for (auto & api : m_api_implementations) {
+            if (api == nullptr) {
+                continue;
+            }
             api.loop();
         }
 #endif // !THINGSBOARD_USE_ESP_TIMER
@@ -302,13 +314,16 @@ class ThingsBoardSized {
         return m_client.publish(topic, reinterpret_cast<uint8_t const *>(json), jsonSize);
     }
 
-    /// @brief Copies the given API implementation, into the local data container,
-    // Ensure it is big enough to hold the newly pushed values as well
+    /// @brief Copies a non-owning pointer to the given API implementation, into the local data container.
+    /// Ensure the actual variable is kept alive for as long as the instance of this class
     /// @param api Additional API that we want to be handled
-    /// @return Newly inserted and subscribed API implementation
-    API_Implementation * Subscribe_API_Implementation(const API_Implementation & api) {
-        m_api_implementations.push_back(api);
-        return &m_api_implementations.back();
+    void Subscribe_API_Implementation(API_Implementation & api) {
+#if THINGSBOARD_ENABLE_STL
+        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this));
+#else
+        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize);
+#endif // THINGSBOARD_ENABLE_STL
+        m_api_implementations.push_back(&api);
     }
 
     //----------------------------------------------------------------------------
@@ -455,6 +470,26 @@ class ThingsBoardSized {
         return m_max_stack;
     }
 
+    /// @brief Returns the current buffer size of the underlying client interface
+    /// @return Current internal buffer size
+    uint16_t getClientBufferSize() {
+        return m_client.get_buffer_size();
+    }
+
+    /// @brief Subscribes the given topic with the underlying client interface
+    /// @param topic Topic that should be subscribed
+    /// @return Whether subscribing was successfull or not
+    bool clientSubscribe(char const * const topic) {
+        return m_client.subscribe(topic);
+    }
+
+    /// @brief Unsubscribes the given topic with the underlying client interface
+    /// @param topic Topic that should be unsubscribed
+    /// @return Whether unsubscribing was successfull or not
+    bool clientUnsubscribe(char const * const topic) {
+        return m_client.unsubscribe(topic);
+    }
+
 #if THINGSBOARD_ENABLE_STREAM_UTILS
     /// @brief Returns the amount of bytes that can be allocated to speed up fall back serialization with the StreamUtils class
     /// See https://github.com/bblanchon/ArduinoStreamUtils for more information on the underlying class used
@@ -470,7 +505,7 @@ class ThingsBoardSized {
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
     /// @return Whether connecting to ThingsBoard was successful or not
-    bool connect_to_host(char const * const access_token, char const * const client_id, char const * const password) {
+    bool connectToHost(char const * const access_token, char const * const client_id, char const * const password) {
         bool const connection_result = m_client.connect(client_id, access_token, password);
         if (!connection_result) {
             Logger::println(CONNECT_FAILED);
@@ -486,7 +521,10 @@ class ThingsBoardSized {
     void Resubscribe_Topics() {
         // Results are ignored, because the important part of clearing internal data structures always succeeds
         for (auto & api : m_api_implementations) {
-            (void)api.Resubscribe_Topics();
+            if (api == nullptr) {
+                continue;
+            }
+            (void)api->Resubscribe_Topics();
         }
     }
 
@@ -550,10 +588,13 @@ class ThingsBoardSized {
         Logger::printfln(RECEIVE_MESSAGE, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-        for (const auto & api : m_api_implementations) {
+        for (auto const & api : m_api_implementations) {
+            if (api == nullptr) {
+                continue;
+            }
             // Process all possible api responses that require the data in an unserialized manner
             if (strncmp(topic, api.Get_Response_Topic_String(), strlen(topic)) == 0) {
-                api.Process_Response(topic, payload, length);
+                api->Process_Response(topic, payload, length);
             }
         }
 
@@ -579,10 +620,13 @@ class ThingsBoardSized {
         // and .to() would result in the data being cleared ()"null"), instead .as() which allows accessing the data over a JsonObjectConst instead
         JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-        for (const auto & api : m_api_implementations) {
+        for (auto const api : m_api_implementations) {
+            if (api == nullptr) {
+                continue;
+            }
             // Process all possible api responses that require the data in a serialized manner
             if (strncmp(topic, api.Get_Response_Topic_String(), strlen(topic)) == 0) {
-                api.Process_Json_Response(topic, data);
+                api->Process_Json_Response(topic, data);
             }
         }
     }
@@ -602,11 +646,11 @@ class ThingsBoardSized {
         m_subscribedInstance->Resubscribe_Topics();
     }
 
-    static API_Implementation * staticSubscribeImplementation(const API_Implementation & api) {
+    static void staticSubscribeImplementation(API_Implementation & api) {
         if (m_subscribedInstance == nullptr) {
-            return nullptr;
+            return;
         }
-        return m_subscribedInstance->Subscribe_API_Implementation(api);
+        m_subscribedInstance->Subscribe_API_Implementation(api);
     }
 
     static bool staticSendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
@@ -627,21 +671,21 @@ class ThingsBoardSized {
         if (m_subscribedInstance == nullptr) {
             return 0U;
         }
-        return m_subscribedInstance->m_client.get_buffer_size();
+        return m_subscribedInstance->getClientBufferSize();
     }
 
     static bool staticClientSubscribe(char const * const topic) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->m_client.subscribe(topic);
+        return m_subscribedInstance->clientSubscribe(topic);
     }
 
     static bool staticClientUnsubscribe(char const * const topic) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->m_client.unsubscribe(topic);
+        return m_subscribedInstance->clientUnsubscribe(topic);
     }
 
     // PubSub client cannot call a instanced method when message arrives on subscribed topic.
@@ -650,15 +694,15 @@ class ThingsBoardSized {
     static ThingsBoardSized *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 
-    IMQTT_Client&                                 m_client;                 // MQTT client instance.
-    size_t                                        m_max_stack;              // Maximum stack size we allocate at once.
+    IMQTT_Client&                                 m_client;              // MQTT client instance.
+    size_t                                        m_max_stack;           // Maximum stack size we allocate at once.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-    size_t                                        m_buffering_size;         // Buffering size used to serialize directly into client.
+    size_t                                        m_buffering_size;      // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #if !THINGSBOARD_ENABLE_DYNAMIC
-    Array<API_Implementation, MaxEndpointsAmount> m_api_implementations;    // Can hold all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
+    Array<API_Implementation*, MaxEndpointsAmount> m_api_implementations; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #else
-    Vector<API_Implementation>                    m_api_implementations;    // Can hold all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
+    Vector<API_Implementation*>                    m_api_implementations; // Can hold a pointer to all  possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #endif // !THINGSBOARD_ENABLE_DYNAMIC                
 };
 

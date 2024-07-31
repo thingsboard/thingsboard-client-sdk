@@ -6,8 +6,6 @@
 #include "API_Implementation.h"
 
 
-// Shared attribute update API topics.
-char constexpr ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
 // Log messages.
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
