@@ -177,6 +177,7 @@ class Server_Side_RPC : public API_Implementation {
         }
     }
 
+  private:
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
     // This can be done because all Callback methods mostly consists of pointers to actual object so copying them

@@ -100,9 +100,9 @@ class ThingsBoardSized {
                 continue;
             }
 #if THINGSBOARD_ENABLE_STL
-            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
 #else
-            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
         }
         (void)setBufferSize(bufferSize);
@@ -319,9 +319,9 @@ class ThingsBoardSized {
     /// @param api Additional API that we want to be handled
     void Subscribe_API_Implementation(API_Implementation & api) {
 #if THINGSBOARD_ENABLE_STL
-        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
+        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
 #else
-        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
+        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
         m_api_implementations.push_back(&api);
     }
@@ -675,6 +675,13 @@ class ThingsBoardSized {
             return false;
         }
         return m_subscribedInstance->Send_Json(topic, source, jsonSize);
+    }
+
+    static bool staticSendJsonString(char const * const topic, char const * const json) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
+        return m_subscribedInstance->Send_Json_String(topic, json);
     }
 
     static bool staticClientSubscribe(char const * const topic) {

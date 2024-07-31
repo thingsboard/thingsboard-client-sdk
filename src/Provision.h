@@ -89,6 +89,22 @@ class Provision : public API_Implementation {
         return m_send_callback.Call_Callback(PROV_REQUEST_TOPIC, requestBuffer, objectSize);
     }
 
+    char const * Get_Response_Topic_String() const override {
+        return PROV_RESPONSE_TOPIC;
+    }
+
+    bool Unsubscribe_Topic() override {
+        return Provision_Unsubscribe();
+    }
+
+    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+        m_provision_callback.Call_Callback(data);
+        // Unsubscribe from the provision response topic,
+        // Will be resubscribed if another request is sent anyway
+        (void)Provision_Unsubscribe();
+    }
+
+private:
     /// @brief Subscribes one provision callback,
     /// that will be called if a provision response from the server is received
     /// @param callback Callback method that will be called
@@ -110,22 +126,6 @@ class Provision : public API_Implementation {
         return m_unsubscribe_callback.Call_Callback(PROV_RESPONSE_TOPIC);
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return PROV_RESPONSE_TOPIC;
-    }
-
-    bool Unsubscribe_Topic() override {
-        return Provision_Unsubscribe();
-    }
-
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
-        m_provision_callback.Call_Callback(data);
-        // Unsubscribe from the provision response topic,
-        // Will be resubscribed if another request is sent anyway
-        (void)Provision_Unsubscribe();
-    }
-
-private:
     Provision_Callback m_provision_callback; // Provision response callback
 };
 

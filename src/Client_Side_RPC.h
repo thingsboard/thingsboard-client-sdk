@@ -13,6 +13,7 @@ char constexpr RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
 // Log messages.
 char constexpr CLIENT_RPC_METHOD_NULL[] = "Client-side RPC methodName is NULL";
 #if !THINGSBOARD_ENABLE_DYNAMIC
+char constexpr RPC_REQUEST_OVERFLOWED[] = "Client-side RPC request overflowed, increase MaxRequestRPC (%u)";
 char constexpr CLIENT_SIDE_RPC_SUBSCRIPTIONS[] = "client-side RPC";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
@@ -78,6 +79,13 @@ class Client_Side_RPC : public API_Implementation {
             requestBuffer[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
         }
 
+#if !THINGSBOARD_ENABLE_DYNAMIC
+        if (requestBuffer.overflowed()) {
+            Logger::printfln(RPC_REQUEST_OVERFLOWED, MaxRequestRPC);
+            return;
+        }
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
+
         m_request_id++;
         registeredCallback->Set_Request_ID(m_request_id);
         registeredCallback->Start_Timeout_Timer();
@@ -87,38 +95,6 @@ class Client_Side_RPC : public API_Implementation {
 
         size_t const objectSize = Helper::Measure_Json(requestBuffer);
         return m_send_callback.Call_Callback(topic, requestBuffer, objectSize);
-    }
-
-    /// @brief Subscribes to the client-side RPC response topic,
-    /// that will be called if a reponse from the server for the method with the given name is received.
-    /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
-    /// @param callback Callback method that will be called
-    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
-    /// @return Whether requesting the given callback was successful or not
-    bool RPC_Request_Subscribe(RPC_Request_Callback const & callback, RPC_Request_Callback * & registeredCallback) {
-#if !THINGSBOARD_ENABLE_DYNAMIC
-        if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, CLIENT_SIDE_RPC_SUBSCRIPTIONS);
-            return false;
-        }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_RESPONSE_SUBSCRIBE_TOPIC);
-            return false;
-        }
-
-        // Push back given callback into our local vector
-        m_rpc_request_callbacks.push_back(callback);
-        registeredCallback = &m_rpc_request_callbacks.back();
-        return true;
-    }
-
-    /// @brief Unsubscribes all client-side RPC request callbacks
-    /// @return Whether unsubcribing the previously subscribed callbacks
-    /// and from the client-side RPC response topic, was successful or not
-    bool RPC_Request_Unsubscribe() {
-        m_rpc_request_callbacks.clear();
-        return m_unsubscribe_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
     char const * Get_Response_Topic_String() const override {
@@ -160,6 +136,39 @@ class Client_Side_RPC : public API_Implementation {
         if (m_rpc_request_callbacks.empty()) {
             (void)RPC_Request_Unsubscribe();
         }
+    }
+
+  private:
+    /// @brief Subscribes to the client-side RPC response topic,
+    /// that will be called if a reponse from the server for the method with the given name is received.
+    /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
+    /// @param callback Callback method that will be called
+    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
+    /// @return Whether requesting the given callback was successful or not
+    bool RPC_Request_Subscribe(RPC_Request_Callback const & callback, RPC_Request_Callback * & registeredCallback) {
+#if !THINGSBOARD_ENABLE_DYNAMIC
+        if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, CLIENT_SIDE_RPC_SUBSCRIPTIONS);
+            return false;
+        }
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
+        if (!m_subscribe_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC)) {
+            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_RESPONSE_SUBSCRIBE_TOPIC);
+            return false;
+        }
+
+        // Push back given callback into our local vector
+        m_rpc_request_callbacks.push_back(callback);
+        registeredCallback = &m_rpc_request_callbacks.back();
+        return true;
+    }
+
+    /// @brief Unsubscribes all client-side RPC request callbacks
+    /// @return Whether unsubcribing the previously subscribed callbacks
+    /// and from the client-side RPC response topic, was successful or not
+    bool RPC_Request_Unsubscribe() {
+        m_rpc_request_callbacks.clear();
+        return m_unsubscribe_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,

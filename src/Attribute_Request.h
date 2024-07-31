@@ -69,6 +69,66 @@ class Attribute_Request : public API_Implementation {
         return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
 
+    char const * Get_Response_Topic_String() const override {
+        return ATTRIBUTE_RESPONSE_TOPIC;
+    }
+
+    bool Unsubscribe_Topic() override {
+        return Attributes_Request_Unsubscribe();
+    }
+
+#if !THINGSBOARD_USE_ESP_TIMER
+    void loop() override {
+        for (auto & attribute_request : m_attribute_request_callbacks) {
+            attribute_request.Update_Timeout_Timer();
+        }
+    }
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
+    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+        size_t const request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
+
+        for (auto it = m_attribute_request_callbacks.begin(); it != m_attribute_request_callbacks.end(); ++it) {
+            auto & attribute_request = *it;
+
+            if (attribute_request.Get_Request_ID() != request_id) {
+                continue;
+            }
+            char const * const attributeResponseKey = attribute_request.Get_Attribute_Key();
+            if (attributeResponseKey == nullptr) {
+#if THINGSBOARD_ENABLE_DEBUG
+                Logger::println(ATT_KEY_NOT_FOUND);
+#endif // THINGSBOARD_ENABLE_DEBUG
+                goto delete_callback;
+            }
+            else if (!data) {
+#if THINGSBOARD_ENABLE_DEBUG
+                Logger::println(ATT_KEY_NOT_FOUND);
+#endif // THINGSBOARD_ENABLE_DEBUG
+                goto delete_callback;
+            }
+
+            if (data.containsKey(attributeResponseKey)) {
+                data = data[attributeResponseKey];
+            }
+            attribute_request.Stop_Timeout_Timer();
+            attribute_request.Call_Callback(data);
+
+            delete_callback:
+            // Delete callback because the changes have been requested and the callback is no longer needed
+            Helper::remove(m_attribute_request_callbacks, it);
+            break;
+        }
+
+        // Unsubscribe from the shared attribute request topic,
+        // if we are not waiting for any further responses with shared attributes from the server.
+        // Will be resubscribed if another request is sent anyway
+        if (m_attribute_request_callbacks.empty()) {
+            (void)Attributes_Request_Unsubscribe();
+        }
+    }
+
+  private:
     /// @brief Requests one client-side or shared attribute calllback,
     /// that will be called if the key-value pair from the server for the given client-side or shared attributes is received
     /// @param callback Callback method that will be called
@@ -190,65 +250,6 @@ class Attribute_Request : public API_Implementation {
     bool Attributes_Request_Unsubscribe() {
         m_attribute_request_callbacks.clear();
         return m_unsubscribe_callback.Call_Callback(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
-    }
-
-    char const * Get_Response_Topic_String() const override {
-        return ATTRIBUTE_RESPONSE_TOPIC;
-    }
-
-    bool Unsubscribe_Topic() override {
-        return Attributes_Request_Unsubscribe();
-    }
-
-#if !THINGSBOARD_USE_ESP_TIMER
-    void loop() override {
-        for (auto & attribute_request : m_attribute_request_callbacks) {
-            attribute_request.Update_Timeout_Timer();
-        }
-    }
-#endif // !THINGSBOARD_USE_ESP_TIMER
-
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
-        size_t const request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
-
-        for (auto it = m_attribute_request_callbacks.begin(); it != m_attribute_request_callbacks.end(); ++it) {
-            auto & attribute_request = *it;
-
-            if (attribute_request.Get_Request_ID() != request_id) {
-                continue;
-            }
-            char const * const attributeResponseKey = attribute_request.Get_Attribute_Key();
-            if (attributeResponseKey == nullptr) {
-#if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_NOT_FOUND);
-#endif // THINGSBOARD_ENABLE_DEBUG
-                goto delete_callback;
-            }
-            else if (!data) {
-#if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_NOT_FOUND);
-#endif // THINGSBOARD_ENABLE_DEBUG
-                goto delete_callback;
-            }
-
-            if (data.containsKey(attributeResponseKey)) {
-                data = data[attributeResponseKey];
-            }
-            attribute_request.Stop_Timeout_Timer();
-            attribute_request.Call_Callback(data);
-
-            delete_callback:
-            // Delete callback because the changes have been requested and the callback is no longer needed
-            Helper::remove(m_attribute_request_callbacks, it);
-            break;
-        }
-
-        // Unsubscribe from the shared attribute request topic,
-        // if we are not waiting for any further responses with shared attributes from the server.
-        // Will be resubscribed if another request is sent anyway
-        if (m_attribute_request_callbacks.empty()) {
-            (void)Attributes_Request_Unsubscribe();
-        }
     }
 
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
