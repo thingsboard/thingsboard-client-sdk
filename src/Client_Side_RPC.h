@@ -115,7 +115,7 @@ class Client_Side_RPC : public API_Implementation {
         return m_unsubscribe_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    const char * const Get_Response_Topic_String() const override {
+    char const * Get_Response_Topic_String() const override {
         return RPC_RESPONSE_TOPIC;
     }
 

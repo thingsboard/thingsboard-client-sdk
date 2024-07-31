@@ -108,7 +108,7 @@ class Provision : public API_Implementation {
         return m_client.unsubscribe(PROV_RESPONSE_TOPIC);
     }
 
-    const char * const Get_Response_Topic_String() const override {
+    char const * Get_Response_Topic_String() const override {
         return PROV_RESPONSE_TOPIC;
     }
 

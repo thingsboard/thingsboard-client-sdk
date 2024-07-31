@@ -178,7 +178,7 @@ class OTA_Firmware_Update : public API_Implementation {
         return m_send_telemtry_callback.Call_Callback(currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
     }
 
-    const char * const Get_Response_Topic_String() const {
+    char const * Get_Response_Topic_String() const {
         return FIRMWARE_RESPONSE_TOPIC;
     }
 

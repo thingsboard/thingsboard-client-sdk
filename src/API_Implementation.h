@@ -39,7 +39,7 @@ class API_Implementation {
     /// @brief Returns a non-owning pointer to the respone topic string, that we should have received the actual data on.
     /// Used to check, which API Implementation needs to handle the current response to a previously sent request
     /// @return Response topic null-terminated string
-    virtual const char const * Get_Response_Topic_String() const = 0;
+    virtual char const * Get_Response_Topic_String() const = 0;
 
     /// @brief Forwards the call to let the API clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
     /// @return Whether unsubscribing was successfull or not
@@ -70,7 +70,7 @@ class API_Implementation {
     /// @param subscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.subscribe per default
     /// @param unsubscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.unsubscribe per default
     /// @param get_size_callback Method which allows to send arbitrary Json payload, points to m_client.get_buffer_size per default
-    void Set_Client_Callbacks(Callback<API_Implementation*, API_Implementation> subscribe_api_callback, Callback<bool, JsonDocument const & source, size_t const & jsonSize> send_telemtry_callback, Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> send_callback, Callback<bool, char const * const topic> subscribe_callback, Callback<bool, char const * const topic> unsubscribe_callback, Callback<uint16_t, void> get_size_callback) {
+    void Set_Client_Callbacks(Callback<API_Implementation*, API_Implementation> subscribe_api_callback, Callback<bool, JsonDocument const & source, size_t const & jsonSize> send_telemtry_callback, Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> send_callback, Callback<bool, char const * const topic> subscribe_callback, Callback<bool, char const * const topic> unsubscribe_callback, Callback<uint16_t> get_size_callback) {
         m_subscribe_api_callback = subscribe_api_callback;
         m_send_telemtry_callback = send_telemtry_callback;
         m_send_callback = send_callback;
@@ -85,7 +85,7 @@ class API_Implementation {
     Callback<bool, char const * const topic, JsonDocument const & source, size_t const & jsonSize> m_send_callback;          // Send json callback
     Callback<bool, char const * const topic>                                                       m_subscribe_callback;     // Subscribe topic callback
     Callback<bool, char const * const topic>                                                       m_unsubscribe_callback;   // Unsubscribe topic callback
-    Callback<uint16_t, void>                                                                       m_get_size_callback;      // Get client size callback
+    Callback<uint16_t>                                                                             m_get_size_callback;      // Get client size callback
 };
 
 #endif // API_Implementation_h

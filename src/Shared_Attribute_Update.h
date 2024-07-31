@@ -97,7 +97,7 @@ class Shared_Attribute_Update : public API_Implementation {
         return m_unsubscribe_callback.Call_Callback(ATTRIBUTE_TOPIC);
     }
 
-    const char * const Get_Response_Topic_String() const override {
+    char const * Get_Response_Topic_String() const override {
         return ATTRIBUTE_TOPIC;
     }
 

@@ -188,7 +188,7 @@ class Attribute_Request : public API_Implementation {
         return m_unsubscribe_callback.Call_Callback(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    const char * const Get_Response_Topic_String() const override {
+    char const * Get_Response_Topic_String() const override {
         return ATTRIBUTE_RESPONSE_TOPIC;
     }
 
