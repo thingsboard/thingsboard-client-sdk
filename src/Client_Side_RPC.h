@@ -15,6 +15,7 @@ char constexpr CLIENT_RPC_METHOD_NULL[] = "Client-side RPC methodName is NULL";
 #if THINGSBOARD_ENABLE_DYNAMIC
 char constexpr CLIENT_SIDE_RPC_SUBSCRIPTIONS[] = "client-side RPC";
 #endif // THINGSBOARD_ENABLE_DYNAMIC
+char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
 
 
 /// @brief Handles the internal implementation of the ThingsBoard client side RPC API.

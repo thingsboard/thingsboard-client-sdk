@@ -13,7 +13,6 @@ char constexpr SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic (%s) fail
 // RPC data keys.
 char constexpr RPC_METHOD_KEY[] = "method";
 char constexpr RPC_PARAMS_KEY[] = "params";
-char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
 
 
 /// @brief Base functionality required by all API implementation

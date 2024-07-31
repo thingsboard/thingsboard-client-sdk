@@ -179,7 +179,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     bool sendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
-        return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
+        return Send_Json(HTTP_TELEMETRY_TOPIC, source, jsonSize);
     }
 
     /// @brief Attempts to send a GET request over HTTP or HTTPS
@@ -245,7 +245,7 @@ class ThingsBoardHttpSized {
     /// @param jsonSize Size of the data inside the source
     /// @return Whether sending the data was successful or not
     bool sendAttributeJson(JsonDocument const & source, size_t const & jsonSize) {
-        return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
+        return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
     }
 
   private:
