@@ -70,8 +70,8 @@ class OTA_Firmware_Update : public API_Implementation {
         Shared_Attribute_Update fw_attribute_update;
         Attribute_Request fw_attribute_request;
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        m_fw_attribute_update = subscribe_api_callback.Call_Callback(fw_attribute_update);
-        m_fw_attribute_request = subscribe_api_callback.Call_Callback(fw_attribute_request);
+        m_fw_attribute_update = m_subscribe_api_callback.Call_Callback(fw_attribute_update);
+        m_fw_attribute_request = m_subscribe_api_callback.Call_Callback(fw_attribute_request);
 #if THINGSBOARD_ENABLE_STL
         m_subscribedInstance = nullptr;
 #endif // THINGSBOARD_ENABLE_STL
@@ -232,7 +232,10 @@ class OTA_Firmware_Update : public API_Implementation {
         char const * const currFwTitle = callback.Get_Firmware_Title();
         char const * const currFwVersion = callback.Get_Firmware_Version();
 
-        if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
+        if (m_fw_attribute_request == nullptr || m_fw_attribute_update == nullptr) {
+            return false;
+        }
+        else if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
             return false;
         }
         else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
@@ -394,22 +397,37 @@ class OTA_Firmware_Update : public API_Implementation {
 
 #if !THINGSBOARD_ENABLE_STL
     static void onStaticFirmwareReceived(JsonObjectConst const & data) {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
         m_subscribedInstance->Firmware_Shared_Attribute_Received(data);
     }
 
     static void onStaticRequestTimeout() {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
         m_subscribedInstance->Request_Timeout();
     }
 
     static bool staticPublishChunk(size_t const & request_chunck) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->Publish_Chunk_Request(request_chunck);
     }
 
     static bool staticFirmwareSend(char const * const currFwState, char const * const fwError = nullptr) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->Firmware_Send_State(currFwState, fwError);
     }
 
     static bool staticUnsubscribe() {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->Firmware_OTA_Unsubscribe();
     }
 

@@ -592,34 +592,58 @@ class ThingsBoardSized {
 
 #if !THINGSBOARD_ENABLE_STL
     static void onStaticMQTTMessage(char * const topic, uint8_t * const payload, unsigned int length) {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
         m_subscribedInstance->onMQTTMessage(topic, payload, length);
     }
 
     static void staticMQTTConnect() {
+        if (m_subscribedInstance == nullptr) {
+            return;
+        }
         m_subscribedInstance->Resubscribe_Topics();
     }
 
-    static API_Implementation & staticSubscribeImplementation(const API_Implementation & api) {
+    static API_Implementation * staticSubscribeImplementation(const API_Implementation & api) {
+        if (m_subscribedInstance == nullptr) {
+            return nullptr;
+        }
         return m_subscribedInstance->Subscribe_API_Implementation(api);
     }
 
     static bool staticSendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->sendTelemetryJson(source, jsonSize);
     }
 
     static bool staticSendJson(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->Send_Json(topic, source, jsonSize);
     }
 
     static uint16_t staticGetClientBufferSize() {
+        if (m_subscribedInstance == nullptr) {
+            return 0U;
+        }
         return m_subscribedInstance->m_client.get_buffer_size();
     }
 
     static bool staticClientSubscribe(char const * const topic) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->m_client.subscribe(topic);
     }
 
     static bool staticClientUnsubscribe(char const * const topic) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
         return m_subscribedInstance->m_client.unsubscribe(topic);
     }
 

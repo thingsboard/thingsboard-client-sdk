@@ -317,7 +317,6 @@ void Espressif_MQTT_Client::static_mqtt_event_handler(void *handler_args, esp_ev
     if (handler_args == nullptr) {
         return;
     }
-
     auto instance = static_cast<Espressif_MQTT_Client *>(handler_args);
     instance->mqtt_event_handler(base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
 }
