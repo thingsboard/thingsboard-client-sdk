@@ -100,9 +100,9 @@ class ThingsBoardSized {
                 continue;
             }
 #if THINGSBOARD_ENABLE_STL
-            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this));
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
 #else
-            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize);
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
         }
         (void)setBufferSize(bufferSize);
@@ -155,7 +155,7 @@ class ThingsBoardSized {
     /// but in that case if a message was too big to be sent the user will be informed with a message to the logger implementation.
     /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it
     /// @return Whether allocating the needed memory for the given bufferSize was successful or not
-    bool setBufferSize(uint16_t const & bufferSize) {
+    bool setBufferSize(uint16_t bufferSize) {
         bool const result = m_client.set_buffer_size(bufferSize);
         if (!result) {
             Logger::println(UNABLE_TO_ALLOCATE_BUFFER);
@@ -319,9 +319,9 @@ class ThingsBoardSized {
     /// @param api Additional API that we want to be handled
     void Subscribe_API_Implementation(API_Implementation & api) {
 #if THINGSBOARD_ENABLE_STL
-        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this));
+        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::sendTelemetryJson, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
 #else
-        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize);
+        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendTelemetryJson, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
         m_api_implementations.push_back(&api);
     }
@@ -380,7 +380,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool sendTelemetryJson(char const * const json) {
+    bool sendTelemtryString(char const * const json) {
         return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
@@ -425,7 +425,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool sendAttributeJson(char const * const json) {
+    bool sendAttributeString(char const * const json) {
         return Send_Json_String(ATTRIBUTE_TOPIC, json);
     }
 
@@ -524,7 +524,7 @@ class ThingsBoardSized {
             if (api == nullptr) {
                 continue;
             }
-            (void)api->Resubscribe_Topics();
+            (void)api->Resubscribe_Topic();
         }
     }
 
@@ -583,19 +583,32 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over 
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    void onMQTTMessage(char * const topic, uint8_t * const payload, unsigned int length) {
+    void onMQTTMessage(char * topic, uint8_t * payload, unsigned int length) {
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(RECEIVE_MESSAGE, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-        for (auto const & api : m_api_implementations) {
-            if (api == nullptr) {
+        for (auto & api : m_api_implementations) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || strncmp(topic, api->Get_Response_Topic_String(), strlen(topic)) != 0) {
                 continue;
             }
-            // Process all possible api responses that require the data in an unserialized manner
-            if (strncmp(topic, api.Get_Response_Topic_String(), strlen(topic)) == 0) {
-                api->Process_Response(topic, payload, length);
+            // Check if the remaining stack size of the current task would overflow the stack,
+            // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
+            if (getMaximumStackSize() < length) {
+                uint8_t* binary = new uint8_t[length]();
+                (void)memcpy(binary, payload, length);
+                api->Process_Response(topic, binary, length);
+                // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+                // and set the pointer to null so we do not have a dangling reference.
+                delete[] binary;
+                binary = nullptr;
             }
+            else {
+                uint8_t binary[length] = {};
+                (void)memcpy(binary, payload, length);
+                api->Process_Response(topic, binary, length);
+            }
+            return;
         }
 
 #if THINGSBOARD_ENABLE_DYNAMIC
@@ -620,19 +633,16 @@ class ThingsBoardSized {
         // and .to() would result in the data being cleared ()"null"), instead .as() which allows accessing the data over a JsonObjectConst instead
         JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
-        for (auto const api : m_api_implementations) {
-            if (api == nullptr) {
+        for (auto & api : m_api_implementations) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || strncmp(topic, api->Get_Response_Topic_String(), strlen(topic)) != 0) {
                 continue;
             }
-            // Process all possible api responses that require the data in a serialized manner
-            if (strncmp(topic, api.Get_Response_Topic_String(), strlen(topic)) == 0) {
-                api->Process_Json_Response(topic, data);
-            }
+            api->Process_Json_Response(topic, data);
         }
     }
 
 #if !THINGSBOARD_ENABLE_STL
-    static void onStaticMQTTMessage(char * const topic, uint8_t * const payload, unsigned int length) {
+    static void onStaticMQTTMessage(char * topic, uint8_t * payload, unsigned int length) {
         if (m_subscribedInstance == nullptr) {
             return;
         }
@@ -667,13 +677,6 @@ class ThingsBoardSized {
         return m_subscribedInstance->Send_Json(topic, source, jsonSize);
     }
 
-    static uint16_t staticGetClientBufferSize() {
-        if (m_subscribedInstance == nullptr) {
-            return 0U;
-        }
-        return m_subscribedInstance->getClientBufferSize();
-    }
-
     static bool staticClientSubscribe(char const * const topic) {
         if (m_subscribedInstance == nullptr) {
             return false;
@@ -686,6 +689,20 @@ class ThingsBoardSized {
             return false;
         }
         return m_subscribedInstance->clientUnsubscribe(topic);
+    }
+
+    static uint16_t staticGetClientBufferSize() {
+        if (m_subscribedInstance == nullptr) {
+            return 0U;
+        }
+        return m_subscribedInstance->getClientBufferSize();
+    }
+
+    static bool staticSetBufferSize(uint16_t bufferSize) {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
+        return m_subscribedInstance->setBufferSize(bufferSize);
     }
 
     // PubSub client cannot call a instanced method when message arrives on subscribed topic.

@@ -120,7 +120,7 @@ void Espressif_MQTT_Client::set_connect_callback(connect_function callback) {
     m_connected_callback = callback;
 }
 
-bool Espressif_MQTT_Client::set_buffer_size(const uint16_t& buffer_size) {
+bool Espressif_MQTT_Client::set_buffer_size(uint16_t buffer_size) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.buffer_size = buffer_size;

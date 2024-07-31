@@ -14,4 +14,4 @@ enum class OTA_Failure_Response : const uint8_t {
     RETRY_NOTHING // Initally passed arguments are invalid and would cause crashes or the update was forcefully stopped by the user, therefore we immediately stop the update and do not restart it
 };
 
-#endif // OTA_Failure_Response
+#endif // OTA_Failure_Response_h

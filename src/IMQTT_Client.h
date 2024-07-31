@@ -61,7 +61,7 @@ class IMQTT_Client {
     /// expected behaviour is that, if bigger packets are received they are discarded and a warning is printed to the console
     /// and if we attempt to send data that is bigger, it will simply not be sent and a message is printed to the console instead
     /// @return Whether allocating the needed memory for the given buffer_size was successful or not
-    virtual bool set_buffer_size(uint16_t const & buffer_size) = 0;
+    virtual bool set_buffer_size(uint16_t buffer_size) = 0;
 
     /// @brief Gets the previously set size of the internal buffer size for sent and received MQTT
     /// @return Internal size of the buffer

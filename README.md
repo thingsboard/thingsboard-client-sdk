@@ -421,11 +421,11 @@ class Custom_MQTT_Client : public IMQTT_Client {
         // Nothing to do
     }
 
-    bool set_buffer_size(const uint16_t& buffer_size) override{
+    bool set_buffer_size(uint16_t buffer_size) override {
         return true;
     }
 
-    uint16_t get_buffer_size() override  {
+    uint16_t get_buffer_size() override {
         return 0U;
     }
 

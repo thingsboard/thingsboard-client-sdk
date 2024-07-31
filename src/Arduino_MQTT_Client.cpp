@@ -22,7 +22,7 @@ void Arduino_MQTT_Client::set_connect_callback(connect_function cb) {
     m_cb = cb;
 }
 
-bool Arduino_MQTT_Client::set_buffer_size(uint16_t const & buffer_size) {
+bool Arduino_MQTT_Client::set_buffer_size(uint16_t buffer_size) {
     return m_mqtt_client.setBufferSize(buffer_size);
 }
 

@@ -168,7 +168,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    bool sendTelemetryJson(char const * const json) {
+    bool sendTelemetryString(char const * const json) {
         return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
     }
 
@@ -234,7 +234,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    bool sendAttributeJson(char const * const json) {
+    bool sendAttributeString(char const * const json) {
         return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
     }
 

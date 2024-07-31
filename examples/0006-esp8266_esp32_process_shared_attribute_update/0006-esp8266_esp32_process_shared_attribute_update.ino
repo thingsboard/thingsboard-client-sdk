@@ -8,6 +8,7 @@
 #endif // ESP8266
 
 #include <Arduino_MQTT_Client.h>
+#include <Shared_Attribute_Update.h>
 #include <ThingsBoard.h>
 
 
@@ -88,6 +89,11 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 constexpr char CONNECTING_MSG[] = "Connecting to: (%s) with token (%s)\n";
 constexpr const char FW_TAG_KEY[] = "fw_tag";
+char constexpr FW_VER_KEY[] = "fw_version";
+char constexpr FW_TITLE_KEY[] = "fw_title";
+char constexpr FW_CHKS_KEY[] = "fw_checksum";
+char constexpr FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
+char constexpr FW_SIZE_KEY[] = "fw_size";
 
 
 // Initialize underlying client, used to establish a connection
@@ -98,8 +104,12 @@ WiFiClient espClient;
 #endif
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
+Shared_Attribute_Update<1U, MAX_ATTRIBUTES> shared_update;
+std::array<API_Implementation*, 1U> apis = {
+    &shared_update
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoardSized<Default_Fields_Amount, Default_Subscriptions_Amount, MAX_ATTRIBUTES> tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.begin(), apis.end(), MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to shared attributes
 bool subscribed = false;
@@ -181,7 +191,7 @@ void loop() {
     // Shared attributes we want to request from the server
     constexpr std::array<const char*, MAX_ATTRIBUTES> SUBSCRIBED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
     const Shared_Attribute_Callback<MAX_ATTRIBUTES> callback(&processSharedAttributeUpdate, SUBSCRIBED_SHARED_ATTRIBUTES.cbegin(), SUBSCRIBED_SHARED_ATTRIBUTES.cend());
-    if (!tb.Shared_Attributes_Subscribe(callback)) {
+    if (!shared_update.Shared_Attributes_Subscribe(callback)) {
       Serial.println("Failed to subscribe for shared attribute updates");
       return;
     }

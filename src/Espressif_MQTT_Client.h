@@ -97,7 +97,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 
     void set_connect_callback(connect_function cb) override;
 
-    bool set_buffer_size(uint16_t const & buffer_size) override;
+    bool set_buffer_size(uint16_t buffer_size) override;
 
     uint16_t get_buffer_size() override;
 

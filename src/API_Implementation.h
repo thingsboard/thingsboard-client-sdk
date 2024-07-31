@@ -3,6 +3,8 @@
 
 // Local include.
 #include "Callback.h"
+#include "DefaultLogger.h"
+#include "API_Process_Type.h"
 
 
 // Log messages.
@@ -15,6 +17,8 @@ char constexpr RPC_METHOD_KEY[] = "method";
 char constexpr RPC_PARAMS_KEY[] = "params";
 // Shared attribute update API topics.
 char constexpr ATTRIBUTE_TOPIC[] = "v1/devices/me/attributes";
+// Shared attribute request keys.
+char constexpr SHARED_RESPONSE_KEY[] = "shared";
 
 
 /// @brief Base functionality required by all API implementation
@@ -23,12 +27,20 @@ class API_Implementation {
     /// @brief Constructor
     API_Implementation() = default;
 
+    /// @brief Returns the way the server response should be processed.
+    /// Only ever uses one at the time, because the response is either unserialized data which we need to process as such (OTA Firmware Update)
+    /// or actually JSON which needs to be serialized (everything else)
+    /// @return How the API implementation should be passed the response
+    virtual API_Process_Type Get_Process_Type() {
+        return API_Process_Type::JSON;
+    }
+
     /// @brief Process callback that will be called upon response arrival
     /// and is responsible for handling the payload before serialization and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    virtual void Process_Response(char * const topic, uint8_t * const payload, unsigned int length) const {
+    virtual void Process_Response(char * const topic, uint8_t * payload, unsigned int length) {
         // Nothing to do
     }
 
@@ -36,7 +48,7 @@ class API_Implementation {
     /// and is responsible for handling the alredy serialized payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
-    virtual void Process_Json_Response(char * const topic, JsonObjectConst const & data) const {
+    virtual void Process_Json_Response(char * const topic, JsonObjectConst & data) {
         // Nothing to do
     }
 
@@ -73,18 +85,20 @@ class API_Implementation {
     /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding
     /// as a user ist not recommended, unless you know what you are doing
     /// @param subscribe_api_callback Method which allows to subscribe additional API endpoints, points to Subscribe_API_Implementation per default
-    /// @param send_telemtry_callback Method which allows to send arbitrary Json payload, points to sendTelemetryJson per default
-    /// @param send_callback Method which allows to send arbitrary Json payload, points to Send_Json per default
+    /// @param send_telemtry_callback Method which allows to send arbitrary JSON payload, points to sendTelemetryJson per default
+    /// @param send_callback Method which allows to send arbitrary JSON payload, points to Send_Json per default
     /// @param subscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.subscribe per default
-    /// @param unsubscribe_callback Method which allows to subscribe to arbitrary topics, points to m_client.unsubscribe per default
-    /// @param get_size_callback Method which allows to send arbitrary Json payload, points to m_client.get_buffer_size per default
-    void Set_Client_Callbacks(Callback<void, API_Implementation &> subscribe_api_callback, Callback<bool, JsonDocument const &, size_t const &> send_telemtry_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &> send_callback, Callback<bool, char const * const> subscribe_callback, Callback<bool, char const * const> unsubscribe_callback, Callback<uint16_t> get_size_callback) {
-        m_subscribe_api_callback = subscribe_api_callback;
-        m_send_telemtry_callback = send_telemtry_callback;
-        m_send_callback = send_callback;
-        m_subscribe_callback = subscribe_callback;
-        m_unsubscribe_callback = unsubscribe_callback;
-        m_get_size_callback = get_size_callback;
+    /// @param unsubscribe_callback Method which allows to unsubscribe from arbitrary topics, points to m_client.unsubscribe per default
+    /// @param get_size_callback Method which allows to get the current underlying size of the buffer, points to m_client.get_buffer_size per default
+    /// @param set_buffer_size_callback Method which allows to set the current underlying size of the buffer, points to m_client.set_buffer_size per default
+    void Set_Client_Callbacks(Callback<void, API_Implementation &>::function subscribe_api_callback, Callback<bool, JsonDocument const &, size_t const &>::function send_telemtry_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_callback, Callback<bool, char const * const>::function subscribe_callback, Callback<bool, char const * const>::function unsubscribe_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) {
+        m_subscribe_api_callback.Set_Callback(subscribe_api_callback);
+        m_send_telemtry_callback.Set_Callback(send_telemtry_callback);
+        m_send_callback.Set_Callback(send_callback);
+        m_subscribe_callback.Set_Callback(subscribe_callback);
+        m_unsubscribe_callback.Set_Callback(unsubscribe_callback);
+        m_get_size_callback.Set_Callback(get_size_callback);
+        m_set_buffer_size.Set_Callback(set_buffer_size_callback);
     }
 
   protected:
@@ -94,6 +108,7 @@ class API_Implementation {
     Callback<bool, char const * const>                                       m_subscribe_callback;     // Subscribe topic callback
     Callback<bool, char const * const>                                       m_unsubscribe_callback;   // Unsubscribe topic callback
     Callback<uint16_t>                                                       m_get_size_callback;      // Get client size callback
+    Callback<bool, uint16_t>                                                 m_set_buffer_size;        // Set client buffer size callback
 };
 
 #endif // API_Implementation_h

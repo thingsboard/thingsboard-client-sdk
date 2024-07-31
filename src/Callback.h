@@ -46,7 +46,7 @@ class Callback {
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types
     /// @param message Message that is logged if the callback given initally is a nullptr and can therefore not be called,
     /// used to ensure users are informed that the initalization of the child class is invalid
-    Callback(function callback)
+    explicit Callback(function callback)
       : m_callback(callback)
     {
         // Nothing to do
