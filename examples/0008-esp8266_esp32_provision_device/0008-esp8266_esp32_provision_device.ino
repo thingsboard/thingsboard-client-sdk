@@ -8,6 +8,7 @@
 #endif // ESP8266
 
 #include <Arduino_MQTT_Client.h>
+#include <Provision.h>
 #include <ThingsBoard.h>
 
 
@@ -112,8 +113,13 @@ WiFiClient espClient;
 #endif
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
+// Initialize used apis
+Provision<> prov;
+std::array<API_Implementation*, 1U> apis = {
+    &prov
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.begin(), apis.end(), MAX_MESSAGE_SIZE);
 
 uint32_t previous_processing_time = 0U;
 
@@ -126,8 +132,7 @@ struct Credentials {
   std::string client_id;
   std::string username;
   std::string password;
-};
-Credentials credentials;
+} credentials;
 
 
 /// @brief Initalizes WiFi connection,
@@ -244,7 +249,7 @@ void loop() {
 #endif
 
     const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str());
-    provisionRequestSent = tb.Provision_Request(provisionCallback);
+    provisionRequestSent = prov.Provision_Request(provisionCallback);
   }
   else if (provisionResponseProcessed) {
     if (!tb.connected()) {

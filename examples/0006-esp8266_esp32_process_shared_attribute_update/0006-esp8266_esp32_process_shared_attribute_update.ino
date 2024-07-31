@@ -104,6 +104,7 @@ WiFiClient espClient;
 #endif
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
+// Initialize used apis
 Shared_Attribute_Update<1U, MAX_ATTRIBUTES> shared_update;
 std::array<API_Implementation*, 1U> apis = {
     &shared_update

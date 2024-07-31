@@ -125,6 +125,7 @@ class Provision : public API_Implementation {
         (void)Provision_Unsubscribe();
     }
 
+private:
     Provision_Callback m_provision_callback; // Provision response callback
 };
 

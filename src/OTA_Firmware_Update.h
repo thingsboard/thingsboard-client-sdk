@@ -268,7 +268,7 @@ class OTA_Firmware_Update : public API_Implementation {
         char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)] = {};
         (void)snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
 
-        return Send_Json_String(topic, size);
+        return m_send_string_callback.Call_Callback(topic, size);
     }
 
     /// @brief Handler if the firmware shared attribute request times out without getting a response.

@@ -723,13 +723,15 @@ class ThingsBoardSized {
 #endif // !THINGSBOARD_ENABLE_DYNAMIC                
 };
 
-#if !THINGSBOARD_ENABLE_STL && !THINGSBOARD_ENABLE_DYNAMIC
+#if !THINGSBOARD_ENABLE_STL
+#if !THINGSBOARD_ENABLE_DYNAMIC
 template<size_t MaxFieldsAmount, size_t MaxEndpointsAmount, typename Logger>
 ThingsBoardSized<MaxFieldsAmount, MaxEndpointsAmount, Logger> *ThingsBoardSized<MaxFieldsAmount, Logger>::m_subscribedInstance = nullptr;
-#elif !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
+#else
 template<typename Logger>
 ThingsBoardSized<Logger> *ThingsBoardSized<Logger>::m_subscribedInstance = nullptr;
-#endif
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
+#endif // !THINGSBOARD_ENABLE_STL
 
 using ThingsBoard = ThingsBoardSized<>;
 

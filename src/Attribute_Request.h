@@ -267,4 +267,12 @@ class Attribute_Request : public API_Implementation {
     static size_t                                                      m_request_id;                  // Allows nearly 4.3 million requests before wrapping back to 0, static so we actually keep track of the current request id even if we use multiple instances
 };
 
+#if THINGSBOARD_ENABLE_DYNAMIC
+template <typename Logger>
+size_t Attribute_Request<Logger>::m_request_id = 0U;
+#else
+template<size_t MaxSubscribtions, size_t MaxAttributes, typename Logger>
+size_t Attribute_Request<MaxSubscribtions, MaxAttributes, Logger>::m_request_id = 0U;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
 #endif // Attribute_Request_h

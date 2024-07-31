@@ -91,10 +91,11 @@ class API_Implementation {
     /// @param unsubscribe_callback Method which allows to unsubscribe from arbitrary topics, points to m_client.unsubscribe per default
     /// @param get_size_callback Method which allows to get the current underlying size of the buffer, points to m_client.get_buffer_size per default
     /// @param set_buffer_size_callback Method which allows to set the current underlying size of the buffer, points to m_client.set_buffer_size per default
-    void Set_Client_Callbacks(Callback<void, API_Implementation &>::function subscribe_api_callback, Callback<bool, JsonDocument const &, size_t const &>::function send_telemtry_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_callback, Callback<bool, char const * const>::function subscribe_callback, Callback<bool, char const * const>::function unsubscribe_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) {
+    void Set_Client_Callbacks(Callback<void, API_Implementation &>::function subscribe_api_callback, Callback<bool, JsonDocument const &, size_t const &>::function send_telemtry_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_callback, Callback<bool, char const * const, char const * const>::function send_string_callback, Callback<bool, char const * const>::function subscribe_callback, Callback<bool, char const * const>::function unsubscribe_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) {
         m_subscribe_api_callback.Set_Callback(subscribe_api_callback);
         m_send_telemtry_callback.Set_Callback(send_telemtry_callback);
         m_send_callback.Set_Callback(send_callback);
+        m_send_string_callback.Set_Callback(send_string_callback);
         m_subscribe_callback.Set_Callback(subscribe_callback);
         m_unsubscribe_callback.Set_Callback(unsubscribe_callback);
         m_get_size_callback.Set_Callback(get_size_callback);
@@ -104,7 +105,8 @@ class API_Implementation {
   protected:
     Callback<void, API_Implementation &>                                     m_subscribe_api_callback; // Subscribe API callback
     Callback<bool, JsonDocument const &, size_t const &>                     m_send_telemtry_callback; // Send Telemtry callback
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_callback;          // Send json callback
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_callback;          // Send JSON callback
+    Callback<bool, char const * const, char const * const>                   m_send_string_callback;   // Send JSON string callback
     Callback<bool, char const * const>                                       m_subscribe_callback;     // Subscribe topic callback
     Callback<bool, char const * const>                                       m_unsubscribe_callback;   // Unsubscribe topic callback
     Callback<uint16_t>                                                       m_get_size_callback;      // Get client size callback

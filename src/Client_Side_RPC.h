@@ -178,4 +178,12 @@ class Client_Side_RPC : public API_Implementation {
     static size_t                         m_request_id;            // Allows nearly 4.3 million requests before wrapping back to 0, static so we actually keep track of the current request id even if we use multiple instances
 };
 
+#if THINGSBOARD_ENABLE_DYNAMIC
+template <typename Logger>
+size_t Client_Side_RPC<Logger>::m_request_id = 0U;
+#else
+template<size_t MaxSubscribtions, size_t MaxRequestRPC, typename Logger>
+size_t Client_Side_RPC<MaxSubscribtions, MaxRequestRPC, Logger>::m_request_id = 0U;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
 #endif // Client_Side_RPC_h
