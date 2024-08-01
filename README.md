@@ -146,10 +146,10 @@ Arduino_MQTT_Client mqttClient(espClient);
 std::array<API_Implementation*, 0U> apis = {};
 
 // The SDK setup with 64 bytes for JSON payload and 8 fields for JSON object
-// ThingsBoard tb(mqttClientapis.begin(), apis.cend());
+// ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend());
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
-ThingsBoardSized<32> tb(mqttClient, apis.cbegin, apis.cend(), 128);
+ThingsBoardSized<32> tb(mqttClient, apis.cbegin(), apis.cend(), 128);
 
 void setup() {
   // Increase internal buffer size after inital creation.
@@ -201,10 +201,10 @@ Arduino_MQTT_Client mqttClient(espClient);
 std::array<API_Implementation*, 0U> apis = {};
 
 // The SDK setup with 64 bytes for JSON payload and 8 fields for JSON object
-// ThingsBoard tb(mqttClientapis.begin(), apis.cend());
+// ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend());
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
-ThingsBoardSized<32> tb(mqttClient, apis.cbegin, apis.cend(), 128);
+ThingsBoardSized<32> tb(mqttClient, apis.cbegin(), apis.cend(), 128);
 ```
 
 Alternatively to remove the need for the `MaxFieldsAmount` template argument in the constructor template list and to ensure the size the buffer should have is always enough to hold sent or received messages, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/). Be aware though as this copies sent or received payloads onto the heap.
@@ -558,8 +558,14 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Custom_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload
-ThingsBoard tb(mqttClient);
+// Initialize used apis
+std::array<API_Implementation*, 0U> apis = {};
+
+// The SDK setup with 64 bytes for JSON payload and 8 fields for JSON object
+// ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend());
+
+// The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
+ThingsBoardSized<32> tb(mqttClient, apis.cbegin(), apis.cend(), 128);
 ```
 
 ### Custom Logger Instance
@@ -595,11 +601,14 @@ WiFiClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
 
-// The SDK setup with 64 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 5 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback and 0 possible key-value pairs that can be passed as a response from a server-side RPC call and the default logging instance (DefaultLogger)
-// ThingsBoard tb(mqttClient);
+// Initialize used apis
+std::array<API_Implementation*, 0U> apis = {};
 
-// The SDK setup with 128 bytes for JSON payload, 32 fields for JSON object, 8 maximum subscriptions of every possible type, 6 possible attribute values that can be passed to Shared_Attribute_Callback or Attribute_Request_Callback, 2 possible key-value pairs that can be passed as a response from a server-side RPC call and a custom logging instance (CustomLogger)
-ThingsBoardSized<32, 8, 6, 2, CustomLogger> tb(mqttClient, 128);
+// The SDK setup with 64 bytes for JSON payload and 8 fields for JSON object
+// ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend());
+
+// The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
+ThingsBoardSized<32, Default_Fields_Amount, CustomLogger> tb(mqttClient, apis.cbegin(), apis.cend(), 128);
 ```
 
 ## Have a question or proposal?

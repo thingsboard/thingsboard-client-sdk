@@ -6,6 +6,7 @@
 //  - ESP8266 connected to Arduino Uno
 
 #include <ThingsBoard.h>
+#include <Server_Side_RPC.h>
 #include <Arduino_MQTT_Client.h>
 #include <WiFiEspClient.h>
 #include <WiFiEsp.h>
@@ -40,6 +41,8 @@ constexpr const char RPC_TEMPERATURE_METHOD[] = "example_set_temperature";
 constexpr const char RPC_SWITCH_METHOD[] = "example_set_switch";
 constexpr const char RPC_TEMPERATURE_KEY[] = "temp";
 constexpr const char RPC_SWITCH_KEY[] = "switch";
+constexpr uint8_t MAX_RPC_SUBSCRIPTIONS = 3U;
+constexpr uint8_t MAX_RPC_RESPONSE = 5U;
 
 
 // Serial driver for ESP
@@ -48,8 +51,13 @@ SoftwareSerial soft(2U, 3U); // RX, TX
 WiFiEspClient espClient;
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
-// Initialize ThingsBoard instance with the maximum needed buffer size and the adjusted maximum amount of rpc key value pairs we want to send as a response
-ThingsBoardSized<Default_Fields_Amount, 3U, Default_Attributes_Amount, 5U> tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initialize used apis
+Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
+const API_Implementation* apis[1U] = {
+  &rpc
+};
+// Initialize ThingsBoard instance with the maximum needed buffer size
+ThingsBoard tb(mqttClient, apis + 0U, apis + 1U, MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -183,8 +191,7 @@ void loop() {
 
   if (!subscribed) {
     Serial.println("Subscribing for RPC...");
-    constexpr uint8_t CALLBACK_SIZE = 3U;
-    const RPC_Callback callbacks[CALLBACK_SIZE] = {
+    const RPC_Callback callbacks[MAX_RPC_SUBSCRIPTIONS] = {
       // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
       { RPC_JSON_METHOD,           processGetJson },
       // Requires additional memory in the JsonDocument for 5 key-value pairs that do not copy their value into the JsonDocument itself
@@ -195,9 +202,7 @@ void loop() {
     // Perform a subscription. All consequent data processing will happen in
     // processTemperatureChange() and processSwitchChange() functions,
     // as denoted by callbacks array.
-    const RPC_Callback* begin = callbacks;
-    const RPC_Callback* end = callbacks + CALLBACK_SIZE;
-    if (!tb.RPC_Subscribe(begin, end)) {
+    if (!rpc.RPC_Subscribe(callbacks + 0U, callbacks + MAX_RPC_SUBSCRIPTIONS)) {
       Serial.println("Failed to subscribe for RPC");
       return;
     }

@@ -84,8 +84,10 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
+// Initialize used apis
+const std::array<API_Implementation*, 0U> apis = {};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

@@ -219,7 +219,7 @@ class ThingsBoardSized {
             if (api == nullptr) {
                 continue;
             }
-            api.loop();
+            api->loop();
         }
 #endif // !THINGSBOARD_USE_ESP_TIMER
         return m_client.loop();
@@ -733,7 +733,7 @@ class ThingsBoardSized {
 #if !THINGSBOARD_ENABLE_STL
 #if !THINGSBOARD_ENABLE_DYNAMIC
 template<size_t MaxFieldsAmount, size_t MaxEndpointsAmount, typename Logger>
-ThingsBoardSized<MaxFieldsAmount, MaxEndpointsAmount, Logger> *ThingsBoardSized<MaxFieldsAmount, Logger>::m_subscribedInstance = nullptr;
+ThingsBoardSized<MaxFieldsAmount, MaxEndpointsAmount, Logger> *ThingsBoardSized<MaxFieldsAmount, MaxEndpointsAmount, Logger>::m_subscribedInstance = nullptr;
 #else
 template<typename Logger>
 ThingsBoardSized<Logger> *ThingsBoardSized<Logger>::m_subscribedInstance = nullptr;

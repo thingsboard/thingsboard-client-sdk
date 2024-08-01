@@ -64,8 +64,11 @@ TinyGsmClient client(modem);
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(client);
 
-// Initialize ThingsBoard instance
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initialize used apis
+const API_Implementation* apis[0U] = {};
+
+// Initialize ThingsBoard instance with the maximum needed buffer size
+ThingsBoard tb(mqttClient, apis + 0U, apis + 0U, MAX_MESSAGE_SIZE);
 
 // Set to true, if modem is connected
 bool modemConnected = false;

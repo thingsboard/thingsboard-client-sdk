@@ -133,7 +133,10 @@ ThingsBoardHttp tb(httpClient, TOKEN, THINGSBOARD_SERVER, THINGSBOARD_PORT);
 #else
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+// Initialize used apis
+const std::array<API_Implementation*, 0U> apis = {};
+// Initialize ThingsBoard instance with the maximum needed buffer size
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 #endif
 
 

@@ -87,19 +87,17 @@ class OTA_Firmware_Update : public API_Implementation {
 
         // Request the firmware information
         constexpr char const * const array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char const * const * const begin = array;
-        char const * const * const end = array + OTA_ATTRIBUTE_KEYS_AMOUNT;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&OTA_Firmware_Update::Request_Timeout, this), begin, end);
+        const Attribute_Request_Callback fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        const Attribute_Request_Callback fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, OTA_Firmware_Update::onStaticRequestTimeout, begin, end);
+        const Attribute_Request_Callback fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&OTA_Firmware_Update::Request_Timeout, this), begin, end);
+        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, OTA_Firmware_Update::onStaticRequestTimeout, begin, end);
+        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return m_fw_attribute_request.Shared_Attributes_Request(fw_request_callback);
@@ -127,19 +125,17 @@ class OTA_Firmware_Update : public API_Implementation {
 
         // Subscribes to changes of the firmware information
         char const * const array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
-        char const * const * const begin = array;
-        char const * const * const end = array + OTA_ATTRIBUTE_KEYS_AMOUNT;
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback fw_update_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+        const Shared_Attribute_Callback fw_update_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        const Shared_Attribute_Callback fw_update_callback(OTA_Firmware_Update::onStaticFirmwareReceived, begin, end);
+        const Shared_Attribute_Callback fw_update_callback(OTA_Firmware_Update::onStaticFirmwareReceived, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        const Shared_Attribute_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_update_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), begin, end);
+        const Shared_Attribute_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_update_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        const Shared_Attribute_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_update_callback(OTA_Firmware_Update::onStaticFirmwareReceived, begin, end);
+        const Shared_Attribute_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_update_callback(OTA_Firmware_Update::onStaticFirmwareReceived, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return m_fw_attribute_update.Shared_Attributes_Subscribe(fw_update_callback);

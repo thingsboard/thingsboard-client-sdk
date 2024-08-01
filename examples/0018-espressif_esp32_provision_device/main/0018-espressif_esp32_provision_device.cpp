@@ -11,6 +11,7 @@
 #define ENCRYPTED false
 
 #include <Espressif_MQTT_Client.h>
+#include <Provision.h>
 #include <ThingsBoard.h>
 
 
@@ -105,8 +106,13 @@ constexpr char PROVISION_DEVICE_TASK_NAME[] = "provision_device_task";
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
+// Initialize used apis
+Provision<> prov;
+const std::array<API_Implementation*, 1U> apis = {
+    &prov
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 
 uint32_t previous_processing_time = 0U;
 
@@ -226,7 +232,7 @@ void provision_device(void *pvParameters) {
 
     // Prepare and send the provision request
     const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str());
-    provisionRequestSent = tb.Provision_Request(provisionCallback);
+    provisionRequestSent = prov.Provision_Request(provisionCallback);
 
     // Wait for the provisioning response to be processed
     while (!provisionResponseProcessed) {

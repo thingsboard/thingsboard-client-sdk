@@ -11,6 +11,7 @@
 #define ENCRYPTED false
 
 #include <Espressif_MQTT_Client.h>
+#include <Server_Side_RPC.h>
 #include <ThingsBoard.h>
 
 
@@ -82,11 +83,18 @@ constexpr char RPC_SWITCH_METHOD[] = "example_set_switch";
 constexpr char RPC_TEMPERATURE_KEY[] = "temp";
 constexpr char RPC_SWITCH_KEY[] = "switch";
 constexpr char RPC_RESPONSE_KEY[] = "example_response";
+constexpr uint8_t MAX_RPC_SUBSCRIPTIONS = 3U;
+constexpr uint8_t MAX_RPC_RESPONSE = 5U;
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
+// Initialize used apis
+Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
+const std::array<API_Implementation*, 1U> apis = {
+    &rpc
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;
@@ -206,7 +214,7 @@ extern "C" void app_main(void) {
         }
 
         if (!subscribed) {
-            const std::array<RPC_Callback, 3U> callbacks = {
+            const std::array<RPC_Callback, MAX_RPC_SUBSCRIPTIONS> callbacks = {
               // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
               RPC_Callback{ RPC_JSON_METHOD,           processGetJson },
               // Requires additional memory in the JsonDocument for 5 key-value pairs that do not copy their value into the JsonDocument itself
@@ -217,7 +225,7 @@ extern "C" void app_main(void) {
             // Perform a subscription. All consequent data processing will happen in
             // processTemperatureChange() and processSwitchChange() functions,
             // as denoted by callbacks array.
-            subscribed = tb.RPC_Subscribe(callbacks.begin(), callbacks.end());
+            subscribed = rpc.RPC_Subscribe(callbacks.begin(), callbacks.end());
         }
 
         tb.loop();

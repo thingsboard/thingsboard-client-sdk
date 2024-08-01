@@ -13,6 +13,7 @@
 
 #include <SDCard_Updater.h>
 #include <Espressif_MQTT_Client.h>
+#include <OTA_Firmware_Update.h>
 #include <ThingsBoard.h>
 #include "esp_ota_ops.h"
 
@@ -102,8 +103,13 @@ constexpr char UPDAT_FILE_PATH[] = "/sd/update.bin";
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
+// Initialize used apis
+OTA_Firmware_Update<> ota;
+const std::array<API_Implementation*, 1U> apis = {
+    &ota
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 // Initalize the Updater client instance used to flash binary to flash memory
 SDCard_Updater updater(UPDAT_FILE_PATH);
 
@@ -260,14 +266,14 @@ extern "C" void app_main() {
             // especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
             // if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
             // to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
-            currentFWSent = tb.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && tb.Firmware_Send_State(FW_STATE_UPDATED);
+            currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && ota.Firmware_Send_State(FW_STATE_UPDATED);
         }
 
         if (!updateRequestSent) {
             const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
             // See https://thingsboard.io/docs/user-guide/ota-updates/
             // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
-            updateRequestSent = tb.Start_Firmware_Update(callback);
+            updateRequestSent = ota.Start_Firmware_Update(callback);
         }
 
         tb.loop();
