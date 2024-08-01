@@ -103,7 +103,7 @@ class Server_Side_RPC : public API_Implementation {
         return RPC_REQUEST_TOPIC;
     }
 
-    bool Unsubscribe_Topic() override {
+    bool Unsubscribe() override {
         return RPC_Unsubscribe();
     }
 

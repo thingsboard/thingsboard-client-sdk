@@ -8,6 +8,7 @@
 #endif // ESP8266
 
 #include <Arduino_MQTT_Client.h>
+#include <Client_Side_RPC.h>
 #include <ThingsBoard.h>
 
 
@@ -83,6 +84,8 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 #endif
 
 constexpr char RPC_REQUEST_CALLBACK_METHOD_NAME[] = "getCurrentTime";
+constexpr uint8_t MAX_RPC_SUBSCRIPTIONS = 3U;
+constexpr uint8_t MAX_RPC_REQUEST = 5U;
 constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 
@@ -94,8 +97,13 @@ WiFiClient espClient;
 #endif
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
+// Initialize used apis
+Client_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_REQUEST> rpc_request;
+const std::array<API_Implementation*, 1U> apis = {
+    &rpc_request
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
@@ -173,7 +181,7 @@ void loop() {
     // RPC Request without any parameters
     RPC_Request_Callback callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime, nullptr, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
-    if (!tb.RPC_Request(callback)) {
+    if (!rpc_request.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC without arguments");
       return;
     }
@@ -186,7 +194,7 @@ void loop() {
     array.add(145);
     callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime, &array, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
-    if (!tb.RPC_Request(callback)) {
+    if (!rpc_request.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC with multiple arguments");
       return;
     }
@@ -199,7 +207,7 @@ void loop() {
     array.add(innerDoc);
     callback = RPC_Request_Callback(RPC_REQUEST_CALLBACK_METHOD_NAME, &processTime, &array, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     // Perform a request of the given RPC method. Optional responses are handled in processTime
-    if (!tb.RPC_Request(callback)) {
+    if (!rpc_request.RPC_Request(callback)) {
       Serial.println("Failed to request for RPC with one inner json argument");
       return;
     }

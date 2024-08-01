@@ -115,11 +115,11 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 Provision<> prov;
-std::array<API_Implementation*, 1U> apis = {
+const std::array<API_Implementation*, 1U> apis = {
     &prov
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis.begin(), apis.end(), MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 
 uint32_t previous_processing_time = 0U;
 

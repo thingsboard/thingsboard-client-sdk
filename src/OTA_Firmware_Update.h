@@ -186,7 +186,7 @@ class OTA_Firmware_Update : public API_Implementation {
         m_ota.Process_Firmware_Packet(request_id, payload, length);
     }
 
-    bool Unsubscribe_Topic() override {
+    bool Unsubscribe() override {
         Stop_Firmware_Update();
         return true;
     }

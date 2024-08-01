@@ -8,6 +8,7 @@
 #endif // ESP8266
 
 #include <Arduino_MQTT_Client.h>
+#include <Attribute_Request.h>
 #include <ThingsBoard.h>
 
 
@@ -88,6 +89,11 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 constexpr const char FW_TAG_KEY[] = "fw_tag";
 constexpr const char TEST_KEY[] = "test";
+char constexpr FW_VER_KEY[] = "fw_version";
+char constexpr FW_TITLE_KEY[] = "fw_title";
+char constexpr FW_CHKS_KEY[] = "fw_checksum";
+char constexpr FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
+char constexpr FW_SIZE_KEY[] = "fw_size";
 constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 
@@ -99,8 +105,13 @@ WiFiClient espClient;
 #endif
 // Initalize the Mqtt client instance
 Arduino_MQTT_Client mqttClient(espClient);
+// Initialize used apis
+Attribute_Request<2U, MAX_ATTRIBUTES> attr_request;
+const std::array<API_Implementation*, 1U> apis = {
+    &attr_request
+};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoardSized<Default_Fields_Amount, Default_Subscriptions_Amount, MAX_ATTRIBUTES> tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
 
 // Statuses for requesting of attributes
 bool requestedClient = false;
@@ -204,7 +215,7 @@ void loop() {
     // Shared attributes we want to request from the server
     constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
     const Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
-    requestedShared = tb.Shared_Attributes_Request(sharedCallback);
+    requestedShared = attr_request.Shared_Attributes_Request(sharedCallback);
     if (!requestedShared) {
       Serial.println("Failed to request shared attributes");
     }
@@ -215,7 +226,7 @@ void loop() {
     // Client-side attributes we want to request from the server
     const std::vector<const char*> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
     const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
-    requestedClient = tb.Client_Attributes_Request(clientCallback);
+    requestedClient = attr_request.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
       Serial.println("Failed to request client-side attributes");
     }

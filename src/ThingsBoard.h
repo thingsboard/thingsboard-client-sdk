@@ -175,7 +175,7 @@ class ThingsBoardSized {
             if (api == nullptr) {
                 continue;
             }
-            (void)api->Unsubscribe_Topic();
+            (void)api->Unsubscribe();
         }
     }
 

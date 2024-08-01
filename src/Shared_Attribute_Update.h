@@ -102,7 +102,7 @@ class Shared_Attribute_Update : public API_Implementation {
         return ATTRIBUTE_TOPIC;
     }
 
-    bool Unsubscribe_Topic() override {
+    bool Unsubscribe() override {
         return Shared_Attributes_Unsubscribe();
     }
 

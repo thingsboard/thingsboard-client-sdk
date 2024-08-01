@@ -93,7 +93,7 @@ class Provision : public API_Implementation {
         return PROV_RESPONSE_TOPIC;
     }
 
-    bool Unsubscribe_Topic() override {
+    bool Unsubscribe() override {
         return Provision_Unsubscribe();
     }
 

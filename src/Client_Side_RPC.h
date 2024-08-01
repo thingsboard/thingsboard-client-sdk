@@ -29,7 +29,8 @@ template <typename Logger = DefaultLogger>
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (2)
 /// @tparam MaxRequestRPC Maximum amount of key-value pairs that will ever be received in the subscribed callback method of an RPC_Request_Callback, allows to use a StaticJsonDocument on the stack in the background.
 /// Is expected to only ever receive one key-value pair as a response. However if we attempt to receive multiple key-value pairs, we have to adjust the size accordingly.
-/// See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 to receive the required MaxRequestRPC value, default = Default_Request_RPC_Amount (1)
+/// Default value is big enough to hold no parameters, but simply the default methodName and params key needed for the request, if additional parameters are sent with the request the size has to be increased by one for each key-value pair.
+/// See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 and add 2 to receive the required MaxRequestRPC value, default = Default_Request_RPC_Amount (2)
 template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxRequestRPC = Default_Request_RPC_Amount, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class Client_Side_RPC : public API_Implementation {
@@ -65,8 +66,7 @@ class Client_Side_RPC : public API_Implementation {
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U));
 #else
-        // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud,
-        // therefore we set the size to the MaxFieldsAmount instead of JSON_OBJECT_SIZE(1), which will result in a JsonDocument with a size of 16 bytes
+        // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxRequestRPC)> requestBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
@@ -82,7 +82,7 @@ class Client_Side_RPC : public API_Implementation {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (requestBuffer.overflowed()) {
             Logger::printfln(RPC_REQUEST_OVERFLOWED, MaxRequestRPC);
-            return;
+            return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
@@ -101,7 +101,7 @@ class Client_Side_RPC : public API_Implementation {
         return RPC_RESPONSE_TOPIC;
     }
 
-    bool Unsubscribe_Topic() override {
+    bool Unsubscribe() override {
         return RPC_Request_Unsubscribe();
     }
 
@@ -180,11 +180,11 @@ class Client_Side_RPC : public API_Implementation {
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<RPC_Callback>                  m_rpc_request_callbacks; // Server side RPC callbacks vector
+    Vector<RPC_Request_Callback>                  m_rpc_request_callbacks; // Server side RPC callbacks vector
 #else
-    Array<RPC_Callback, MaxSubscribtions> m_rpc_request_callbacks; // Server side RPC callbacks array
+    Array<RPC_Request_Callback, MaxSubscribtions> m_rpc_request_callbacks; // Server side RPC callbacks array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    static size_t                         m_request_id;            // Allows nearly 4.3 million requests before wrapping back to 0, static so we actually keep track of the current request id even if we use multiple instances
+    static size_t                                 m_request_id;            // Allows nearly 4.3 million requests before wrapping back to 0, static so we actually keep track of the current request id even if we use multiple instances
 };
 
 #if THINGSBOARD_ENABLE_DYNAMIC

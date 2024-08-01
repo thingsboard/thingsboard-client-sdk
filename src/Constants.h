@@ -14,7 +14,7 @@
 #define Default_Subscriptions_Amount 1
 #define Default_Attributes_Amount 1
 #define Default_RPC_Amount 0
-#define Default_Request_RPC_Amount 1
+#define Default_Request_RPC_Amount 2
 #define Default_Payload 64
 #define Default_Max_Stack_Size 1024
 #if THINGSBOARD_ENABLE_STREAM_UTILS

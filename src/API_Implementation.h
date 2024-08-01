@@ -3,6 +3,7 @@
 
 // Local include.
 #include "Callback.h"
+#include "Constants.h"
 #include "DefaultLogger.h"
 #include "API_Process_Type.h"
 
@@ -59,9 +60,10 @@ class API_Implementation {
         return nullptr;
     }
 
-    /// @brief Forwards the call to let the API clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
-    /// @return Whether unsubscribing was successfull or not
-    virtual bool Unsubscribe_Topic()  {
+    /// @brief Unsubcribes all callbacks, to clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
+    /// @return Whether unsubcribing all the previously subscribed callbacks
+    /// and from the previously subscribed topic, was successful or not
+    virtual bool Unsubscribe()  {
         return true;
     }
 
@@ -69,7 +71,7 @@ class API_Implementation {
     /// and simply resubscribes the topic for all permanent subscriptions (RPC, Shared Attribute Update)
     /// @return Whether resubscribing was successfull or not
     virtual bool Resubscribe_Topic() {
-        return Unsubscribe_Topic();
+        return Unsubscribe();
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
