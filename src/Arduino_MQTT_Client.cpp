@@ -30,7 +30,7 @@ uint16_t Arduino_MQTT_Client::get_buffer_size() {
     return m_mqtt_client.getBufferSize();
 }
 
-void Arduino_MQTT_Client::set_server(char const * const domain, uint16_t const & port) {
+void Arduino_MQTT_Client::set_server(char const * const domain, uint16_t port) {
     m_mqtt_client.setServer(domain, port);
 }
 

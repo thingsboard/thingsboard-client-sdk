@@ -101,7 +101,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 
     uint16_t get_buffer_size() override;
 
-    void set_server(char const * const domain, uint16_t const & port) override;
+    void set_server(char const * const domain, uint16_t port) override;
 
     bool connect(char const * const client_id, char const * const user_name, char const * const password) override;
 

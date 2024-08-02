@@ -17,6 +17,7 @@ char constexpr RPC_RESPONSE_OVERFLOWED[] = "Server-side RPC response overflowed,
 char constexpr SERVER_SIDE_RPC_SUBSCRIPTIONS[] = "server-side RPC";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
+char constexpr RPC_RESPONSE_NULL[] = "Response JsonDocument is NULL, skipping sending";
 char constexpr NO_RPC_PARAMS_PASSED[] = "No parameters passed with RPC, passing null JSON";
 char constexpr CALLING_RPC_CB[] = "Calling subscribed callback for rpc with methodname (%s)";
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -159,7 +160,9 @@ class Server_Side_RPC : public API_Implementation {
             rpc.Call_Callback(param, jsonBuffer);
 
             if (jsonBuffer.isNull()) {
-                // Message is ignored and not sent at all.
+#if THINGSBOARD_ENABLE_DEBUG
+                Logger::println(RPC_RESPONSE_NULL);
+#endif // THINGSBOARD_ENABLE_DEBUG
                 break;
             }
             else if (jsonBuffer.overflowed()) {

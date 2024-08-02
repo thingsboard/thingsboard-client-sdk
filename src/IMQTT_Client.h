@@ -77,7 +77,7 @@ class IMQTT_Client {
     /// However if Over the Air udpates are enabled secure communication should definetly be enabled, because if that is not done a 3rd party might impersonate the server sending a malicious payload,
     /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or make it otherwise unusable.
     /// See https://stackoverflow.blog/2020/12/14/security-considerations-for-ota-software-updates-for-iot-gateway-devices/ for more information on the aforementioned security risk
-    virtual void set_server(char const * const domain, uint16_t const & port) = 0;
+    virtual void set_server(char const * const domain, uint16_t port) = 0;
 
     /// @brief Connects to the previously with set_server configured server instance that should be connected to over the previously defined port
     /// @param client_id Client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker

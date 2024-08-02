@@ -491,7 +491,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return 0U;
     }
 
-    void set_server(const char *domain, const uint16_t& port) override {
+    void set_server(const char *domain, uint16_t port) override {
         // Nothing to do
     }
 

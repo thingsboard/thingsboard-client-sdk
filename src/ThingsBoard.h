@@ -83,10 +83,10 @@ class ThingsBoardSized {
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size (1024)
     template<typename InputIterator>
 #if !THINGSBOARD_ENABLE_STREAM_UTILS
-    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t const & bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size)
+    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size)
 #else
     /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
-    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t const & bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size)
+    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
       : m_client(client)
       , m_max_stack(maxStackSize)
@@ -190,7 +190,7 @@ class ThingsBoardSized {
     /// so it possible to discern which device is communicating, default = Value of passed access token
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard, default = nullptr
     /// @return Whether connecting to ThingsBoard was successful or not
-    bool connect(char const * const host, char const * const access_token = PROV_ACCESS_TOKEN, uint16_t const & port = DEFAULT_MQTT_PORT, char const * const client_id = nullptr, char const * const password = nullptr) {
+    bool connect(char const * const host, char const * const access_token = PROV_ACCESS_TOKEN, uint16_t port = DEFAULT_MQTT_PORT, char const * const client_id = nullptr, char const * const password = nullptr) {
         if (host == nullptr) {
             return false;
         }
@@ -300,7 +300,7 @@ class ThingsBoardSized {
             return false;
         }
 
-        uint16_t const & currentBufferSize = m_client.get_buffer_size();
+        uint16_t currentBufferSize = m_client.get_buffer_size();
         size_t const jsonSize = strlen(json);
 
         if (currentBufferSize < jsonSize) {

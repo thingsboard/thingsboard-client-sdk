@@ -146,7 +146,7 @@ uint16_t Espressif_MQTT_Client::get_buffer_size() {
 #endif // ESP_IDF_VERSION_MAJOR < 5
 }
 
-void Espressif_MQTT_Client::set_server(const char *domain, const uint16_t& port) {
+void Espressif_MQTT_Client::set_server(const char *domain, uint16_t port) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.host = domain;
