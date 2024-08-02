@@ -73,7 +73,7 @@ class Attribute_Request : public API_Implementation {
         return ATTRIBUTE_RESPONSE_TOPIC;
     }
 
-    bool Unsubscribe_Topic() override {
+    bool Unsubscribe() override {
         return Attributes_Request_Unsubscribe();
     }
 
