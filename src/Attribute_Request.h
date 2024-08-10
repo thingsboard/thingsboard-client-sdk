@@ -213,9 +213,7 @@ class Attribute_Request : public API_Implementation {
 
         char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, m_request_id)] = {};
         (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, m_request_id);
-
-        size_t const objectSize = Helper::Measure_Json(requestBuffer);
-        return m_send_callback.Call_Callback(topic, requestBuffer, objectSize);
+        return m_send_callback.Call_Callback(topic, requestBuffer, Helper::Measure_Json(requestBuffer));
     }
 
     /// @brief Subscribes to attribute response topic

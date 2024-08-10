@@ -344,9 +344,7 @@ class ThingsBoardSized {
             requestBuffer[SECRET_KEY] = secretKey;
         }
         requestBuffer[DURATION_KEY] = durationMs;
-
-        size_t const objectSize = Helper::Measure_Json(requestBuffer);
-        return Send_Json(CLAIM_TOPIC, requestBuffer, objectSize);
+        return Send_Json(CLAIM_TOPIC, requestBuffer, Helper::Measure_Json(requestBuffer));
     }
 
     //----------------------------------------------------------------------------

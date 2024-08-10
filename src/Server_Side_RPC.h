@@ -173,9 +173,7 @@ class Server_Side_RPC : public API_Implementation {
             size_t const request_id = Helper::parseRequestId(RPC_REQUEST_TOPIC, topic);
             char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
             (void)snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
-
-            size_t const jsonSize = Helper::Measure_Json(jsonBuffer);
-            (void)m_send_callback.Call_Callback(responseTopic, jsonBuffer, jsonSize);
+            (void)m_send_callback.Call_Callback(responseTopic, jsonBuffer, Helper::Measure_Json(jsonBuffer));
             break;
         }
     }

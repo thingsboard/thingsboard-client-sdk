@@ -84,9 +84,7 @@ class Provision : public API_Implementation {
         }
         requestBuffer[PROV_DEVICE_KEY] = provisionDeviceKey;
         requestBuffer[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
-
-        size_t const objectSize = Helper::Measure_Json(requestBuffer);
-        return m_send_callback.Call_Callback(PROV_REQUEST_TOPIC, requestBuffer, objectSize);
+        return m_send_callback.Call_Callback(PROV_REQUEST_TOPIC, requestBuffer, Helper::Measure_Json(requestBuffer));
     }
 
     char const * Get_Response_Topic_String() const override {

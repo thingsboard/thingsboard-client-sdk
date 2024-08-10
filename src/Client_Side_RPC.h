@@ -92,9 +92,7 @@ class Client_Side_RPC : public API_Implementation {
 
         char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)] = {};
         (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
-
-        size_t const objectSize = Helper::Measure_Json(requestBuffer);
-        return m_send_callback.Call_Callback(topic, requestBuffer, objectSize);
+        return m_send_callback.Call_Callback(topic, requestBuffer, Helper::Measure_Json(requestBuffer));
     }
 
     char const * Get_Response_Topic_String() const override {
