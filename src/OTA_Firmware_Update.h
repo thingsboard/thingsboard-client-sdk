@@ -169,15 +169,15 @@ class OTA_Firmware_Update : public API_Implementation {
         return m_send_callback.Call_Callback(TELEMETRY_TOPIC, currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
     }
 
-    char const * Get_Response_Topic_String() const {
+    char const * Get_Response_Topic_String() const override {
         return FIRMWARE_RESPONSE_TOPIC;
     }
 
-    virtual API_Process_Type Get_Process_Type() {
+    virtual API_Process_Type Get_Process_Type() override {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, size_t const & length) {
+    void Process_Response(char * const topic, uint8_t * payload, size_t const & length) override {
         size_t const request_id = Helper::parseRequestId(FIRMWARE_RESPONSE_TOPIC, topic);
         m_ota.Process_Firmware_Packet(request_id, payload, length);
     }
@@ -187,14 +187,14 @@ class OTA_Firmware_Update : public API_Implementation {
         return true;
     }
 
-    bool Resubscribe_Topic() {
+    bool Resubscribe_Topic() override {
         return true;
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
     /// @brief Updates the internal OTA timeout timer, that is used to detect if a chunk of the firmware was not received in time.
     /// Has to be used for boards that do not have the ESP Timer, because they have to update the internal time by hand
-    void loop() {
+    void loop() override {
         m_ota.update();
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
