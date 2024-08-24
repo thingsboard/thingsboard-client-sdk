@@ -150,7 +150,7 @@ class OTA_Firmware_Update : public API_Implementation {
         StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
         currentFirmwareInfo[CURR_FW_TITLE_KEY] = currFwTitle;
         currentFirmwareInfo[CURR_FW_VER_KEY] = currFwVersion;
-        return m_send_telemtry_callback.Call_Callback(currentFirmwareInfo, Helper::Measure_Json(currentFirmwareInfo));
+        return m_send_callback.Call_Callback(TELEMETRY_TOPIC, currentFirmwareInfo, Helper::Measure_Json(currentFirmwareInfo));
     }
 
     /// @brief Sends the given firmware state to the cloud.
@@ -166,7 +166,7 @@ class OTA_Firmware_Update : public API_Implementation {
             currentFirmwareState[FW_ERROR_KEY] = fwError;
         }
         currentFirmwareState[FW_STATE_KEY] = currFwState;
-        return m_send_telemtry_callback.Call_Callback(currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
+        return m_send_callback.Call_Callback(TELEMETRY_TOPIC, currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
     }
 
     char const * Get_Response_Topic_String() const {

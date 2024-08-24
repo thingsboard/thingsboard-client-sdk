@@ -91,17 +91,17 @@ Example implementations for all base features, mentioned above, can be found in 
 
 ### Over `MQTT`:
 
-All possible features are implemented over `MQTT`:
+All possible features are implemented over `MQTT` over a specific `API Implementation` instance:
 
- - [Telemetry data upload](https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api)
- - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server)
- - [Server-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#server-side-rpc)
- - [Client-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#client-side-rpc)
- - [Request attribute values](https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server)
- - [Attribute update subscription](https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server)
- - [Device provisioning](https://thingsboard.io/docs/reference/mqtt-api/#device-provisioning)
- - [Device claiming](https://thingsboard.io/docs/reference/mqtt-api/#claiming-devices)
- - [Firmware OTA update](https://thingsboard.io/docs/reference/mqtt-api/#firmware-api)
+ - [Telemetry data upload](https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api) / `ThingsBoardSized`
+ - [Device attribute publish](https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server) / `ThingsBoardSized`
+ - [Server-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#server-side-rpc) / `Server_Side_RPC`
+ - [Client-side RPC](https://thingsboard.io/docs/reference/mqtt-api/#client-side-rpc) / `Client_Side_RPC`
+ - [Request attribute values](https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server) / `Attribute_Request_Callback`
+ - [Attribute update subscription](https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server) / `Shared_Attribute_Update`
+ - [Device provisioning](https://thingsboard.io/docs/reference/mqtt-api/#device-provisioning) / `Provision`
+ - [Device claiming](https://thingsboard.io/docs/reference/mqtt-api/#claiming-devices) / `ThingsBoardSized`
+ - [Firmware OTA update](https://thingsboard.io/docs/reference/mqtt-api/#firmware-api) / `OTA_Firmware_Update`
 
 ### Over `HTTP(S)`:
 
@@ -350,6 +350,63 @@ ThingsBoardSized<32> tb(mqttClient, apis.cbegin(), apis.cend(), 128);
 Alternatively, to remove the need for the `MaxRequestRPC` template argument in the constructor template list, see the [Dynamic ThingsBoard section](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#dynamic-thingsboard-usage) section. This makes the library use the [`DynamicJsonDocument`](https://arduinojson.org/v6/api/dynamicjsondocument/) instead of the default [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/). Be aware though as this copies the requests onto the heap.
 
 ## Tips and Tricks
+
+### Custom API Implementation Instance
+
+The `ThingsBoardSized` class instance only supports a minimal subset of the actual API, see the [Supported ThingsBoard Features](https://github.com/thingsboard/thingsboard-client-sdk?tab=readme-ov-file#supported-thingsboard-features) section. But with the usage of the `API_Implementation` base class, it is possible to write an own implementation that implements an additional API implementation or changes the behavior for an already existing API implementation.
+
+For that a `class` needs to inherit the `API_Implemenatation` class and `override` the needed methods shown below:
+
+```cpp
+#ifndef Custom_API_Implementation_h
+#define Custom_API_Implementation_h
+
+// Local includes.
+#include "API_Implementation.h"
+
+
+class Custom_API_Implementation : public API_Implementation {
+  public:
+    char const * Get_Response_Topic_String() const override {
+        return nullptr;
+    }
+
+    bool Unsubscribe() override {
+        return true;
+    }
+
+    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+        // Nothing to do
+    }
+};
+
+#endif // Custom_API_Implementation_h
+```
+
+Once that has been done it can simply be passed to the `ThingsBoard` instance, either using the constructor or using the `Subscribe_API_Implementation` method.
+
+```cpp
+// Initialize underlying client, used to establish a connection
+WiFiClient espClient;
+
+// Initalize the Mqtt client instance
+Arduino_MQTT_Client mqttClient(espClient);
+
+// Initialize used apis with Custom API
+Custom_API_Implementation custom_api;
+const std::array<API_Implementation*, 1U> apis = {
+    &custom_api
+};
+
+// The SDK setup with 64 bytes for JSON payload, 8 fields for JSON object and maximal 7 API endpoints subscribed at once
+// ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend());
+
+// The SDK setup with 128 bytes for JSON payload and 8 fields for JSON object and maximal 10 API endpoints subscribed at once
+ThingsBoardSized<8, 10> tb(mqttClient, apis.cbegin(), apis.cend(), 128);
+
+// Optional alternative way to subscribe the Custom API ater the class instance has already been created
+// tb.Subscribe_API_Implementation(custom_api);
+```
 
 ### Custom Updater Instance
 
