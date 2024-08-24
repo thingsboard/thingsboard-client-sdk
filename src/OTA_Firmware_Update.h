@@ -173,11 +173,11 @@ class OTA_Firmware_Update : public API_Implementation {
         return FIRMWARE_RESPONSE_TOPIC;
     }
 
-    virtual API_Process_Type Get_Process_Type() override {
+    API_Process_Type Get_Process_Type() override {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, size_t const & length) override {
+    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
         size_t const request_id = Helper::parseRequestId(FIRMWARE_RESPONSE_TOPIC, topic);
         m_ota.Process_Firmware_Packet(request_id, payload, length);
     }
