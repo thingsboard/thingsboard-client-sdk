@@ -169,7 +169,7 @@ void processTemperatureChange(const JsonVariantConst &data, JsonDocument &respon
     response["string"] = "exampleResponseString";
     response["int"] = 5;
     response["float"] = 5.0f;
-    response["double"] = 10.0d;
+    response["double"] = 10.0;
     response["bool"] = true;
 }
 

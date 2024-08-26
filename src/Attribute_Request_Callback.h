@@ -49,6 +49,8 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
       , m_attributes(args...)
       , m_request_id(0U)
       , m_attribute_key(nullptr)
+      , m_timeout_microseconds(timeout_microseconds)
+      , m_timeout_callback(timeout_callback)
     {
         // Nothing to do
     }
@@ -158,7 +160,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// @brief Sets the callback method that will be called upon request timeout (did not receive a response in the given timeout time)
     /// @param timeout_callback Callback function that will be called
     void Set_Timeout_Callback(Callback_Watchdog::function timeout_callback) {
-        m_timeout_callback = Callback_Watchdog(timeout_callback);
+        m_timeout_callback.Set_Callback(timeout_callback);
     }
 
   private:

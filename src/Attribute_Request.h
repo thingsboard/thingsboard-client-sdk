@@ -9,7 +9,7 @@
 // Attribute request API topics.
 char constexpr ATTRIBUTE_REQUEST_TOPIC[] = "v1/devices/me/attributes/request/%u";
 char constexpr ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/attributes/response/+";
-char constexpr ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response";
+char constexpr ATTRIBUTE_RESPONSE_TOPIC[] = "v1/devices/me/attributes/response/";
 // Client side attribute request keys.
 char constexpr CLIENT_REQUEST_KEYS[] = "clientKeys";
 char constexpr CLIENT_RESPONSE_KEY[] = "client";

@@ -126,7 +126,7 @@ class Array {
     template<typename InputIterator>
     void insert(T const * const position, InputIterator const & first, InputIterator const & last) {
         for (auto it = first; it != last; ++it) {
-            push_back(*first);
+            push_back(*it);
         }
     }
 

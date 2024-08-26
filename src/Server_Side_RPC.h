@@ -8,7 +8,7 @@
 
 // Server side RPC topics.
 char constexpr RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
-char constexpr RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request";
+char constexpr RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/";
 char constexpr RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
 // Log messages.
 char constexpr SERVER_RPC_METHOD_NULL[] = "Server-side RPC methodName is NULL";

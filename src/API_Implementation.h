@@ -85,6 +85,14 @@ class API_Implementation {
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
+    /// @brief Method that allows to construct internal objects, after the required callback member methods have been set already.
+    /// Required for API Implementations that subscribe further API calls, because immediately calling in the constructor can lead,
+    /// to attempted subscriptions before the m_subscribe_api_callback is actually subscribed. Therefore we have to call methods like that,
+    /// in this method instead, because it ensures all member methods are instantiated already
+    virtual void Initialize() {
+        // Nothing to do
+    }
+
     /// @brief Sets the underlying callbacks that are required for the different API Implementation to communicate with the cloud.
     /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding
     /// as a user ist not recommended, unless you know what you are doing

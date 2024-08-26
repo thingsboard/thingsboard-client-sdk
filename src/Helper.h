@@ -45,12 +45,11 @@ class Helper {
     static bool stringIsNullorEmpty(char const * const str);
 
     /// @brief Returns the portion of the received topic after the base topic as an integer.
-    /// Should contain the request id that the original request was sent with.
-    /// Is used to know which received response is connected to which inital request.
-    /// @param base_topic Base portion of the topic that does not contain any parameters,
-    /// should not contain trailing '/' character because the implementation already adds +1 to exclude that character as well (v1/devices/me/attributes/response)
+    /// Should contain the request id that the original request was sent with
+    /// Is used to know which received response is connected to which inital request
+    /// @param base_topic Base portion of the topic that does not contain any parameters (v1/devices/me/attributes/response/)
     /// @param received_topic Received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id)
-    /// @return Converted integral request id if possible or 0 if parsing as an integer failed.
+    /// @return Converted integral request id if possible or 0 if parsing as an integer failed
     static size_t parseRequestId(char const * const base_topic, char const * const received_topic);
 
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.

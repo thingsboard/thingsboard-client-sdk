@@ -102,9 +102,10 @@ class ThingsBoardSized {
 #else
             api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
+            api->Initialize();
         }
         (void)setBufferSize(bufferSize);
-        // Initalize callback.
+        // Initialize callback.
 #if THINGSBOARD_ENABLE_STL
         m_client.set_data_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
         m_client.set_connect_callback(std::bind(&ThingsBoardSized::Resubscribe_Topics, this));
@@ -321,6 +322,7 @@ class ThingsBoardSized {
 #else
         api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
 #endif // THINGSBOARD_ENABLE_STL
+        api.Initialize();
         m_api_implementations.push_back(&api);
     }
 
@@ -576,7 +578,7 @@ class ThingsBoardSized {
     }
 
     /// @brief MQTT callback that will be called if a publish message is received from the server
-    /// @param topic Previously subscribed topic, we got the response over 
+    /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
     void onMQTTMessage(char * topic, uint8_t * payload, unsigned int length) {
@@ -584,26 +586,38 @@ class ThingsBoardSized {
         Logger::printfln(RECEIVE_MESSAGE, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
+        // Copy the data locally, to ensure that if another thread overtakes and sends data it will not overwritte the data,
+        // this has to be done, because the MQTT input and output buffer are on and the same.
+        // Additionally we have to check if the remaining stack size of the current task would overflow the stack,
+        // if it would we allocate the memory on the heap instead to ensure no stack overflow occurs.
+        if (getMaximumStackSize() < length) {
+            uint8_t* binary = new uint8_t[length]();
+            (void)memcpy(binary, payload, length);
+            Process_Response(topic, binary, length);
+            // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
+            // and set the pointer to null so we do not have a dangling reference.
+            delete[] binary;
+            binary = nullptr;
+        }
+        else {
+            uint8_t binary[length] = {};
+            (void)memcpy(binary, payload, length);
+            Process_Response(topic, binary, length);
+        }
+    }
+
+    /// @brief Processes any received responses from the server, with the copied original payload,
+    /// this is done to ensure that the payload stays valid even if another thread overtakes this one and sends data over MQTT,
+    /// because that would overwrite the internal MQTT buffer because it handles both input and output 
+    /// @param topic Previously subscribed topic, we got the response over
+    /// @param payload Copied payload that was sent over the cloud and received over the given topic
+    /// @param length Total length of the received payload
+    void Process_Response(char * topic, uint8_t * payload, unsigned int length) {
         for (auto & api : m_api_implementations) {
-            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || strncmp(topic, api->Get_Response_Topic_String(), strlen(topic)) != 0) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
                 continue;
             }
-            // Check if the remaining stack size of the current task would overflow the stack,
-            // if it would allocate the memory on the heap instead to ensure no stack overflow occurs.
-            if (getMaximumStackSize() < length) {
-                uint8_t* binary = new uint8_t[length]();
-                (void)memcpy(binary, payload, length);
-                api->Process_Response(topic, binary, length);
-                // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-                // and set the pointer to null so we do not have a dangling reference.
-                delete[] binary;
-                binary = nullptr;
-            }
-            else {
-                uint8_t binary[length] = {};
-                (void)memcpy(binary, payload, length);
-                api->Process_Response(topic, binary, length);
-            }
+            api->Process_Response(topic, payload, length);
             return;
         }
 
@@ -630,7 +644,7 @@ class ThingsBoardSized {
         JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
 
         for (auto & api : m_api_implementations) {
-            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || strncmp(topic, api->Get_Response_Topic_String(), strlen(topic)) != 0) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
                 continue;
             }
             api->Process_Json_Response(topic, data);
