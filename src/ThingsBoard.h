@@ -20,8 +20,12 @@ char constexpr PROV_ACCESS_TOKEN[] = "provision";
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
 char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
+#if THINGSBOARD_ENABLE_DYNAMIC
+char constexpr HEAP_ALLOCATION_FAILED[] = "Could not allocate required size (%u) for JsonDocument, allocated only (%u). Ensure there is enough heap memory left";
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
-char constexpr RECEIVE_MESSAGE[] = "Received data from server over topic (%s)";
+char constexpr RECEIVE_MESSAGE[] = "Received (%u) bytes of data from server over topic (%s)";
+char constexpr ALLOCATING_JSON[] = "Allocated internal JsonDocument for MQTT server response with size (%u)";
 char constexpr SEND_MESSAGE[] = "Sending data to server over topic (%s) with data (%s)";
 char constexpr SEND_SERIALIZED[] = "Hidden, because json data is bigger than buffer, therefore showing in console is skipped";
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -583,7 +587,7 @@ class ThingsBoardSized {
     /// @param length Total length of the received payload
     void onMQTTMessage(char * topic, uint8_t * payload, unsigned int length) {
 #if THINGSBOARD_ENABLE_DEBUG
-        Logger::printfln(RECEIVE_MESSAGE, topic);
+        Logger::printfln(RECEIVE_MESSAGE, length, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Copy the data locally, to ensure that if another thread overtakes and sends data it will not overwritte the data,
@@ -625,10 +629,19 @@ class ThingsBoardSized {
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char *>(payload), ':')));
+        const size_t document_size = JSON_OBJECT_SIZE(Helper::getOccurences(payload, ':', length));
+        TBJsonDocument jsonBuffer(document_size);
+        if (jsonBuffer.capacity() != document_size) {
+            Logger::printfln(HEAP_ALLOCATION_FAILED, document_size, jsonBuffer.capacity());
+            return;
+        }
 #else
+        const size_t document_size = JSON_OBJECT_SIZE(MaxFieldsAmount);
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_DEBUG
+        Logger::printfln(ALLOCATING_JSON, document_size);
+#endif // THINGSBOARD_ENABLE_DEBUG
 
         // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
         // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.

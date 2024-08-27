@@ -7,16 +7,15 @@
 // Library includes.
 #include <string.h>
 
-size_t Helper::getOccurences(char const * const str, char symbol) {
+size_t Helper::getOccurences(uint8_t const * const bytes, char symbol, unsigned int length) {
     size_t count = 0;
-    if (str == nullptr) {
-      return count;
+    if (bytes == nullptr) {
+        return count;
     }
-    for (size_t i = 0; i < strlen(str); ++i) {
-      if (str[i] != symbol) {
-        continue;
-      }
-      count++;
+    for (size_t i = 0; i < length; ++i) {
+        if (bytes[i] == symbol) {
+            count++;
+        }
     }
     return count;
 }
