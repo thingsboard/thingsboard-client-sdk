@@ -43,6 +43,11 @@ class Server_Side_RPC : public IAPI_Implementation {
 
     /// @brief Subscribes multiple server side RPC callbacks,
     /// that will be called if a request from the server for the method with the given name is received.
+    /// Can be called even if we are currently not connected to the cloud,
+    /// this is the case because the only interaction that requires an active connection is the subscription of the topic that we receive the response on
+    /// and that subscription is also done automatically by the library once the device has established a connection to the cloud.
+    /// Therefore this method can simply be called once at startup before a connection has been established
+    /// and will then automatically handle the subscription of the topic once the connection has been established.
     /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @tparam InputIterator Class that points to the begin and end iterator
     /// of the given data container, allows for using / passing either std::vector or std::array.
@@ -59,11 +64,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
-            return false;
-        }
-
+        (void)m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)
         // Push back complete vector into our local m_rpc_callbacks vector.
         m_rpc_callbacks.insert(m_rpc_callbacks.end(), first, last);
         return true;
@@ -71,6 +72,11 @@ class Server_Side_RPC : public IAPI_Implementation {
 
     /// @brief Subscribe one server side RPC callback,
     /// that will be called if a request from the server for the method with the given name is received.
+    /// Can be called even if we are currently not connected to the cloud,
+    /// this is the case because the only interaction that requires an active connection is the subscription of the topic that we receive the response on
+    /// and that subscription is also done automatically by the library once the device has established a connection to the cloud.
+    /// Therefore this method can simply be called once at startup before a connection has been established
+    /// and will then automatically handle the subscription of the topic once the connection has been established.
     /// See https://thingsboard.io/docs/user-guide/rpc/#server-side-rpc for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
@@ -81,11 +87,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
-            return false;
-        }
-
+        (void)m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)
         // Push back given callback into our local vector
         m_rpc_callbacks.push_back(callback);
         return true;

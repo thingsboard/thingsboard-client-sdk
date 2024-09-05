@@ -106,8 +106,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-// Remove Default_Buffering_Size parameter if ArduinoStreamUtils is not installed (https://github.com/bblanchon/ArduinoStreamUtils)
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, Default_Buffering_Size, apis.cbegin(), apis.cend());
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis.cbegin(), apis.cend());
 
 // Statuses for subscribing to rpc
 bool subscribed = false;

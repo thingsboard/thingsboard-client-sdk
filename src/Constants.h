@@ -24,9 +24,6 @@
 
 // Log messages.
 char constexpr UNABLE_TO_SERIALIZE[] = "Unable to serialize key-value json";
-#if !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr TOO_MANY_JSON_FIELDS[] = "Too many JSON fields passed (%u), increase MaxFieldsAmount (%u) accordingly";
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr CONNECT_FAILED[] = "Connecting to server failed";
 char constexpr UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";
 char constexpr UNABLE_TO_ALLOCATE_JSON[] = "Allocating memory for the JsonDocument failed, passed JsonDocument is NULL";

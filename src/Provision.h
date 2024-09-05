@@ -7,8 +7,8 @@
 
 
 // Provision topics.
-char constexpr PROV_RESPONSE_TOPIC[] = "/provision/response";
-char constexpr PROV_REQUEST_TOPIC[] = "/provision/request";
+char constexpr PROV_RESPONSE_TOPIC[] = "/provision/response/";
+char constexpr PROV_REQUEST_TOPIC[] = "/provision/request/";
 // Provision data keys.
 char constexpr DEVICE_NAME_KEY[] = "deviceName";
 char constexpr PROV_DEVICE_KEY[] = "provisionDeviceKey";

@@ -31,9 +31,8 @@ jobs:
         - name: arduino-timer
         - name: TBPubSubClient
         - name: ArduinoHttpClient
-        - { name: ArduinoJson, version: 6.21.5 } 
+        - { name: ArduinoJson, version: 6.21.5 }
         - name: Seeed_Arduino_mbedtls
-        - name: StreamUtils
 
     strategy:
       matrix:

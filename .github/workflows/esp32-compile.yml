@@ -30,8 +30,7 @@ jobs:
         - source-path: ./
         - name: TBPubSubClient
         - name: ArduinoHttpClient
-        - { name: ArduinoJson, version: 6.21.5 } 
-        - name: StreamUtils
+        - { name: ArduinoJson, version: 6.21.5 }
 
     strategy:
       matrix:

@@ -13,7 +13,7 @@ uint64_t constexpr OTA_REQUEST_TIMEOUT = 5000U * 1000U;
 char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys in (%llu) us. Aborting firmware update, restart with the same call again after ensuring the keys actually exist on the device and that the device is connected to the MQTT broker";
 // Firmware topics.
 char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/0/chunk/";
-char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/#";
+char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/+";
 char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
 // Firmware data keys.
 char constexpr CURR_FW_TITLE_KEY[] = "current_fw_title";

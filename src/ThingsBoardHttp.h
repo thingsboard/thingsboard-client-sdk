@@ -91,13 +91,6 @@ class ThingsBoardHttpSized {
             Logger::println(JSON_SIZE_TO_SMALL);
             return false;
         }
-#if !THINGSBOARD_ENABLE_DYNAMIC
-        size_t const amount = source.size();
-        if (MaxFieldsAmount < amount) {
-            Logger::printfln(TOO_MANY_JSON_FIELDS, amount, MaxFieldsAmount);
-            return false;
-        }
-#endif // !THINGSBOARD_ENABLE_DYNAMIC
         bool result = false;
         if (getMaximumStackSize() < jsonSize) {
             char * json = new char[jsonSize]();
