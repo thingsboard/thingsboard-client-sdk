@@ -627,12 +627,12 @@ class ThingsBoardSized {
             return;
         }
 
-        const size = Helper::getOccurences(payload, ':', length);
+        size_t const size = Helper::getOccurences(payload, ':', length);
 #if THINGSBOARD_ENABLE_DYNAMIC
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        const size_t document_size = JSON_OBJECT_SIZE(size);
+        size_t const document_size = JSON_OBJECT_SIZE(size);
         TBJsonDocument jsonBuffer(document_size);
         if (jsonBuffer.capacity() != document_size) {
             Logger::printfln(HEAP_ALLOCATION_FAILED, document_size, jsonBuffer.capacity());
@@ -643,7 +643,7 @@ class ThingsBoardSized {
             Logger::printfln(TOO_MANY_JSON_FIELDS, size, "MaxResponse", MaxResponse);
             return;
         }
-        const size_t document_size = JSON_OBJECT_SIZE(MaxResponse);
+        size_t const document_size = JSON_OBJECT_SIZE(MaxResponse);
         StaticJsonDocument<document_size> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
