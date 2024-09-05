@@ -156,8 +156,8 @@ class Client_Side_RPC : public IAPI_Implementation {
 
     void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) override {
         m_send_json_callback.Set_Callback(send_json_callback);
-        m_subscribe_topic_callback.Set_Callback(subscribe_callback);
-        m_unsubscribe_topic_callback.Set_Callback(unsubscribe_callback);
+        m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
+        m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
     }
 
   private:
