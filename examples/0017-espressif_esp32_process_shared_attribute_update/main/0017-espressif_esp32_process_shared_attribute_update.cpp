@@ -92,11 +92,11 @@ char constexpr FW_SIZE_KEY[] = "fw_size";
 Espressif_MQTT_Client mqttClient;
 // Initialize used apis
 Shared_Attribute_Update<1U, MAX_ATTRIBUTES> shared_update;
-const std::array<API_Implementation*, 1U> apis = {
+const std::array<IAPI_Implementation*, 1U> apis = {
     &shared_update
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis.cbegin(), apis.cend());
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

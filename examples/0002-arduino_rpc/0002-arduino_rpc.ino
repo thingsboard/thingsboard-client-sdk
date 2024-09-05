@@ -53,11 +53,11 @@ WiFiEspClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
-const API_Implementation* apis[1U] = {
+const IAPI_Implementation* apis[1U] = {
   &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis + 0U, apis + 1U, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis + 0U, apis + 1U);
 
 // Statuses for subscribing to rpc
 bool subscribed = false;

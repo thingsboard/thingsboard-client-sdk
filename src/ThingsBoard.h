@@ -3,7 +3,7 @@
 
 // Local includes.
 #include "Constants.h"
-#include "API_Implementation.h"
+#include "IAPI_Implementation.h"
 #include "IMQTT_Client.h"
 #include "DefaultLogger.h"
 #include "Telemetry.h"
@@ -61,15 +61,14 @@ template<size_t MaxFieldsAmount = Default_Fields_Amount, size_t MaxEndpointsAmou
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class ThingsBoardSized {
   public:
-    /// @brief Constructs a ThingsBoardSized instance with the given network client that should be used to establish the connection to ThingsBoard
-    /// @tparam InputIterator Class that points to the begin and end iterator
-    /// of the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @brief Constructs a ThingsBoardSized instance with the given network client that should be used to establish the connection to ThingsBoard.
+    /// Directly forwards the last given arguments to the overloaded Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor,
+    /// meaning all combinatons of arguments that would initalize the Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) can be used to call this constructor.
+    /// The possibilites mainly consist out of the default constructor which creates an empty internal buffer with no data
+    /// or out of the range constructor where we can pass an interator the start of another data container
+    /// and to the end of the data container (last element + 1) and then every element between those iteratos will be copied, in the same order as in the original data container
+    /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor and therefore allow to use every overloaded vector constructor without having to implement them
     /// @param client MQTT Client implementation that should be used to establish the connection to ThingsBoard
-    /// @param first Iterator pointing to the first API implementation that we want to be handled by this class.
-    /// The API implementation by itself does nothing, it needs to be connected to actively send and receive information.
-    /// Additionally to save memory we only save non-owning pointers to the actual implementations, therefore the implementations from the user must be kept alive, for as long as the connected instance
-    /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
     /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
@@ -83,19 +82,20 @@ class ThingsBoardSized {
     /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger.
     /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it, default = Default_Payload (64)
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size (1024)
-    template<typename InputIterator>
+    /// @param ...args Arguments that will be forwarded into the overloaded Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor
+    template<typename... Args>
 #if !THINGSBOARD_ENABLE_STREAM_UTILS
-    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, Args const &... args)
 #else
     /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
-    ThingsBoardSized(IMQTT_Client& client, InputIterator const & first, InputIterator const & last, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size, Args const &... args)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
       : m_client(client)
       , m_max_stack(maxStackSize)
 #if THINGSBOARD_ENABLE_STREAM_UTILS
       , m_buffering_size(bufferingSize)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-      , m_api_implementations(first, last)
+      , m_api_implementations(args...)
     {
         for (auto & api : m_api_implementations) {
             if (api == nullptr) {
@@ -269,7 +269,7 @@ class ThingsBoardSized {
         // if it would allocate the memory on the heap instead to ensure no stack overflow occurs
         else
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-        if (getMaximumStackSize() < jsonSize) {
+        if (jsonSize > getMaximumStackSize()) {
             char* json = new char[jsonSize]();
             if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
@@ -320,7 +320,7 @@ class ThingsBoardSized {
     /// @brief Copies a non-owning pointer to the given API implementation, into the local data container.
     /// Ensure the actual variable is kept alive for as long as the instance of this class
     /// @param api Additional API that we want to be handled
-    void Subscribe_API_Implementation(API_Implementation & api) {
+    void Subscribe_API_Implementation(IAPI_Implementation & api) {
 #if THINGSBOARD_ENABLE_STL
         api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
 #else
@@ -582,6 +582,12 @@ class ThingsBoardSized {
     }
 
     /// @brief MQTT callback that will be called if a publish message is received from the server
+    /// Payload contains data from the internal buffer of the MQTT client,
+    /// therefore the buffer and the specific memory region the payload points too and the following length bytes need to live on for as long as this method has not finished.
+    /// This could be a problem if the system uses FreeRTOS or another tasking system and the processing of the data is interrupted.
+    /// Because if this happens and we then send data it is possible for the system to overwrite the memory region that contained the previous response.
+    /// Therefore we simply assume that either the used MQTT client, has seperate input and output buffers
+    /// or that the receiving of data is not executed on a seperate FreeRTOS tasks to other sends
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
@@ -590,33 +596,6 @@ class ThingsBoardSized {
         Logger::printfln(RECEIVE_MESSAGE, length, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-        // Copy the data locally, to ensure that if another thread overtakes and sends data it will not overwritte the data,
-        // this has to be done, because the MQTT input and output buffer are on and the same.
-        // Additionally we have to check if the remaining stack size of the current task would overflow the stack,
-        // if it would we allocate the memory on the heap instead to ensure no stack overflow occurs.
-        if (getMaximumStackSize() < length) {
-            uint8_t* binary = new uint8_t[length]();
-            (void)memcpy(binary, payload, length);
-            Process_Response(topic, binary, length);
-            // Ensure to actually delete the memory placed onto the heap, to make sure we do not create a memory leak
-            // and set the pointer to null so we do not have a dangling reference.
-            delete[] binary;
-            binary = nullptr;
-        }
-        else {
-            uint8_t binary[length] = {};
-            (void)memcpy(binary, payload, length);
-            Process_Response(topic, binary, length);
-        }
-    }
-
-    /// @brief Processes any received responses from the server, with the copied original payload,
-    /// this is done to ensure that the payload stays valid even if another thread overtakes this one and sends data over MQTT,
-    /// because that would overwrite the internal MQTT buffer because it handles both input and output 
-    /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Copied payload that was sent over the cloud and received over the given topic
-    /// @param length Total length of the received payload
-    void Process_Response(char * topic, uint8_t * payload, unsigned int length) {
         for (auto & api : m_api_implementations) {
             if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
                 continue;
@@ -679,7 +658,7 @@ class ThingsBoardSized {
         m_subscribedInstance->Resubscribe_Topics();
     }
 
-    static void staticSubscribeImplementation(API_Implementation & api) {
+    static void staticSubscribeImplementation(IAPI_Implementation & api) {
         if (m_subscribedInstance == nullptr) {
             return;
         }
@@ -740,9 +719,9 @@ class ThingsBoardSized {
     size_t                                        m_buffering_size;      // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #if !THINGSBOARD_ENABLE_DYNAMIC
-    Array<API_Implementation*, MaxEndpointsAmount> m_api_implementations; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
+    Array<IAPI_Implementation*, MaxEndpointsAmount> m_api_implementations; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #else
-    Vector<API_Implementation*>                    m_api_implementations; // Can hold a pointer to all  possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
+    Vector<IAPI_Implementation*>                    m_api_implementations; // Can hold a pointer to all  possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #endif // !THINGSBOARD_ENABLE_DYNAMIC                
 };
 

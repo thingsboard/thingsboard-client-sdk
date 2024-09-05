@@ -3,7 +3,7 @@
 
 // Local includes.
 #include "RPC_Callback.h"
-#include "API_Implementation.h"
+#include "IAPI_Implementation.h"
 
 
 // Server side RPC topics.
@@ -29,14 +29,14 @@ char constexpr CALLING_RPC_CB[] = "Calling subscribed callback for rpc with meth
 #if THINGSBOARD_ENABLE_DYNAMIC
 template <typename Logger = DefaultLogger>
 #else
-/// @tparam MaxSubscribtions Maximum amount of simultaneous server side rpc subscriptions.
-/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (2)
+/// @tparam MaxSubscriptions Maximum amount of simultaneous server side rpc subscriptions.
+/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (1)
 /// @tparam MaxRPC Maximum amount of key-value pairs that will ever be sent in the subscribed callback method of an RPC_Callback, allows to use a StaticJsonDocument on the stack in the background.
 /// If we simply use .to<JsonVariant>(); on the received document and use .set() to change the internal value then the size requirements are 0.
 /// However if we attempt to send multiple key-value pairs, we have to adjust the size accordingly. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 to receive the required MaxRPC value, default = Default_RPC_Amount (0)
-template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxRPC = Default_RPC_Amount, typename Logger = DefaultLogger>
+template<size_t MaxSubscriptions = Default_Subscriptions_Amount, size_t MaxRPC = Default_RPC_Amount, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-class Server_Side_RPC : public API_Implementation {
+class Server_Side_RPC : public IAPI_Implementation {
   public:
     /// @brief Constructor
     Server_Side_RPC() = default;
@@ -59,7 +59,7 @@ class Server_Side_RPC : public API_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
+        if (!m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
             return false;
         }
@@ -81,7 +81,7 @@ class Server_Side_RPC : public API_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
+        if (!m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
             return false;
         }
@@ -97,22 +97,15 @@ class Server_Side_RPC : public API_Implementation {
     /// and from the rpc topic, was successful or not
     bool RPC_Unsubscribe() {
         m_rpc_callbacks.clear();
-        return m_unsubscribe_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC);
+        return m_unsubscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC);
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return RPC_REQUEST_TOPIC;
+    API_Process_Type Get_Process_Type() const override {
+        return API_Process_Type::JSON;
     }
 
-    bool Unsubscribe() override {
-        return RPC_Unsubscribe();
-    }
-
-    bool Resubscribe_Topic() override {
-        if (!m_rpc_callbacks.empty() && !m_subscribe_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
-        }
-        return true;
+    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+        // Nothing to do
     }
 
     void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
@@ -173,12 +166,48 @@ class Server_Side_RPC : public API_Implementation {
             size_t const request_id = Helper::parseRequestId(RPC_REQUEST_TOPIC, topic);
             char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
             (void)snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
-            (void)m_send_callback.Call_Callback(responseTopic, jsonBuffer, Helper::Measure_Json(jsonBuffer));
+            (void)m_send_json_callback.Call_Callback(responseTopic, jsonBuffer, Helper::Measure_Json(jsonBuffer));
             break;
         }
     }
 
+    char const * Get_Response_Topic_String() const override {
+        return RPC_REQUEST_TOPIC;
+    }
+
+    bool Unsubscribe() override {
+        return RPC_Unsubscribe();
+    }
+
+    bool Resubscribe_Topic() override {
+        if (!m_rpc_callbacks.empty() && !m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
+            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
+            return false;
+        }
+        return true;
+    }
+
+#if !THINGSBOARD_USE_ESP_TIMER
+    void loop() override {
+        // Nothing to do
+    }
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
+    void Initialize() override {
+        // Nothing to do
+    }
+
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) override {
+        m_send_json_callback.Set_Callback(send_json_callback);
+        m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
+        m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
+    }
+
   private:
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback;
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback;
+
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
     // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
@@ -188,9 +217,9 @@ class Server_Side_RPC : public API_Implementation {
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<RPC_Callback>                  m_rpc_callbacks; // Server side RPC callbacks vector
+    Vector<RPC_Callback>                                                     m_rpc_callbacks;
 #else
-    Array<RPC_Callback, MaxSubscribtions> m_rpc_callbacks; // Server side RPC callbacks array
+    Array<RPC_Callback, MaxSubscriptions>                                    m_rpc_callbacks;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

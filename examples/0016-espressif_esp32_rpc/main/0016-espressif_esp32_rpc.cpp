@@ -90,11 +90,11 @@ constexpr uint8_t MAX_RPC_RESPONSE = 5U;
 Espressif_MQTT_Client mqttClient;
 // Initialize used apis
 Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
-const std::array<API_Implementation*, 1U> apis = {
+const std::array<IAPI_Implementation*, 1U> apis = {
     &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis.cbegin(), apis.cend());
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

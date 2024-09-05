@@ -125,11 +125,12 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 OTA_Firmware_Update<> ota;
-const std::array<API_Implementation*, 1U> apis = {
+const std::array<IAPI_Implementation*, 1U> apis = {
     &ota
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
+// Remove Default_Buffering_Size parameter if ArduinoStreamUtils is not installed (https://github.com/bblanchon/ArduinoStreamUtils)
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, Default_Buffering_Size, apis.cbegin(), apis.cend());
 // Initalize the Updater client instance used to flash binary to flash memory
 #ifdef ESP8266
 Arduino_ESP8266_Updater updater;

@@ -106,11 +106,12 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 Shared_Attribute_Update<1U, MAX_ATTRIBUTES> shared_update;
-const std::array<API_Implementation*, 1U> apis = {
+const std::array<IAPI_Implementation*, 1U> apis = {
     &shared_update
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
+// Remove Default_Buffering_Size parameter if ArduinoStreamUtils is not installed (https://github.com/bblanchon/ArduinoStreamUtils)
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, Default_Buffering_Size, apis.cbegin(), apis.cend());
 
 // Statuses for subscribing to shared attributes
 bool subscribed = false;

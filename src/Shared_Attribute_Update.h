@@ -3,7 +3,7 @@
 
 // Local includes.
 #include "Shared_Attribute_Callback.h"
-#include "API_Implementation.h"
+#include "IAPI_Implementation.h"
 
 
 // Log messages.
@@ -25,12 +25,12 @@ char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] = "shared attribute updat
 #if THINGSBOARD_ENABLE_DYNAMIC
 template <typename Logger = DefaultLogger>
 #else
-/// @tparam MaxSubscribtions Maximum amount of simultaneous server side rpc subscriptions.
-/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (2)
+/// @tparam MaxSubscriptions Maximum amount of simultaneous server side rpc subscriptions.
+/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (1)
 /// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Shared_Attribute_Callback, allows to use an array on the stack in the background, default = Default_Attributes_Amount (5)
-template<size_t MaxSubscribtions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount, typename Logger = DefaultLogger>
+template<size_t MaxSubscriptions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-class Shared_Attribute_Update : public API_Implementation {
+class Shared_Attribute_Update : public IAPI_Implementation {
   public:
     /// @brief Constructor
     Shared_Attribute_Update() = default;
@@ -53,7 +53,7 @@ class Shared_Attribute_Update : public API_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
+        if (!m_subscribe_topic_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
             return false;
         }
@@ -79,7 +79,7 @@ class Shared_Attribute_Update : public API_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        if (!m_subscribe_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
+        if (!m_subscribe_topic_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
             return false;
         }
@@ -95,22 +95,15 @@ class Shared_Attribute_Update : public API_Implementation {
     /// and from the attribute topic, was successful or not
     bool Shared_Attributes_Unsubscribe() {
         m_shared_attribute_update_callbacks.clear();
-        return m_unsubscribe_callback.Call_Callback(ATTRIBUTE_TOPIC);
+        return m_unsubscribe_topic_callback.Call_Callback(ATTRIBUTE_TOPIC);
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return ATTRIBUTE_TOPIC;
+    API_Process_Type Get_Process_Type() const override {
+        return API_Process_Type::JSON;
     }
 
-    bool Unsubscribe() override {
-        return Shared_Attributes_Unsubscribe();
-    }
-
-    bool Resubscribe_Topic() override {
-        if (!m_shared_attribute_update_callbacks.empty() && !m_subscribe_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
-        }
-        return true;
+    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+        // Nothing to do
     }
 
     void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
@@ -168,7 +161,41 @@ class Shared_Attribute_Update : public API_Implementation {
         }
     }
 
+    char const * Get_Response_Topic_String() const override {
+        return ATTRIBUTE_TOPIC;
+    }
+
+    bool Unsubscribe() override {
+        return Shared_Attributes_Unsubscribe();
+    }
+
+    bool Resubscribe_Topic() override {
+        if (!m_shared_attribute_update_callbacks.empty() && !m_subscribe_topic_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
+            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
+            return false;
+        }
+        return true;
+    }
+
+#if !THINGSBOARD_USE_ESP_TIMER
+    void loop() override {
+        // Nothing to do
+    }
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
+    void Initialize() override {
+        // Nothing to do
+    }
+
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) override {
+        m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
+        m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
+    }
+
   private:
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback;
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback;
+
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
     // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
@@ -178,9 +205,9 @@ class Shared_Attribute_Update : public API_Implementation {
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<Shared_Attribute_Callback>                                 m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector
+    Vector<Shared_Attribute_Callback>                                        m_shared_attribute_update_callbacks;
 #else
-    Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscribtions> m_shared_attribute_update_callbacks; // Shared attribute update callbacks array
+    Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions>        m_shared_attribute_update_callbacks;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

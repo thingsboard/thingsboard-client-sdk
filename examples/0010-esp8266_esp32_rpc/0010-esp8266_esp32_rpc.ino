@@ -102,11 +102,12 @@ WiFiClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
-const std::array<API_Implementation*, 1U> apis = {
+const std::array<IAPI_Implementation*, 1U> apis = {
     &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, apis.cbegin(), apis.cend(), MAX_MESSAGE_SIZE);
+// Remove Default_Buffering_Size parameter if ArduinoStreamUtils is not installed (https://github.com/bblanchon/ArduinoStreamUtils)
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, Default_Buffering_Size, apis.cbegin(), apis.cend());
 
 // Statuses for subscribing to rpc
 bool subscribed = false;
