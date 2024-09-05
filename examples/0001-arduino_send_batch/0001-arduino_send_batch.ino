@@ -123,15 +123,15 @@ void loop() {
 
   Serial.println("Sending telemetry data...");
 
-  const uint8_t data_items = 2U;
-  Telemetry data[data_items] = {
+  constexpr size_t TELEMETRY_SIZE = 2U;
+  Telemetry data[TELEMETRY_SIZE] = {
     { TEMPERATURE_KEY, 42.2 },
     { HUMIDITY_KEY,    80 },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
-  Telemetry data[data_items] = {
+  Telemetry data[TELEMETRY_SIZE] = {
     Telemetry( TEMPERATURE_KEY, 42.2 ),
     Telemetry( HUMIDITY_KEY,    80 ),
   };
@@ -142,20 +142,20 @@ void loop() {
   // See https://thingsboard.io/docs/reference/mqtt-api/#telemetry-upload-api 
   // for more details
   Telemetry* begin = data;
-  Telemetry* end = data + data_items;
-  tb.sendTelemetry(begin, end);
+  Telemetry* end = data + TELEMETRY_SIZE;
+  tb.sendTelemetry<TELEMETRY_SIZE>(begin, end);
 
   Serial.println("Sending attributes data...");
 
-  const int attribute_items = 2;
-  Attribute attributes[attribute_items] = {
+  constexpr size_t ATTRIBUTES_SIZE = 2U;
+  Attribute attributes[ATTRIBUTES_SIZE] = {
     { DEVICE_TYPE_KEY,  SENSOR_VALUE },
     { ACTIVE_KEY,       true     },
   };
 
   /* For C++98 compiler, shipped with Arduino IDE version 1.6.6 or less:
 
-  Attribute attributes[data_items] = {
+  Attribute attributes[ATTRIBUTES_SIZE] = {
     Attribute( DEVICE_TYPE_KEY,  SENSOR_VALUE ),
     Attribute( ACTIVE_KEY,       true     ),
   };
@@ -166,8 +166,8 @@ void loop() {
   // See https://thingsboard.io/docs/reference/mqtt-api/#publish-attribute-update-to-the-server 
   // for more details
   begin = attributes;
-  end = attributes + attribute_items;
-  tb.sendAttributes(begin, end);
+  end = attributes + ATTRIBUTES_SIZE;
+  tb.sendAttributes<ATTRIBUTES_SIZE>(begin, end);
 
   tb.loop();
 }

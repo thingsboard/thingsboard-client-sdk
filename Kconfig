@@ -4,7 +4,7 @@ menu "ThingsBoard Client SDK Configurations"
         bool "Replace static with dynami library usage"
         default n
         help
-            If this is enabled the library will use DynamicJsonDocument to receive messages from the MQTT broker and use Vector to hold Subscription data instead of Arrays. Removing the need to declare MaxFieldsAmount, MaxSubscriptions, MaxAttributes, MaxRPC and MaxRequestRPC template arguments. But instead increasing heap allocation and usage drastically.
+            If this is enabled the library will use DynamicJsonDocument to receive messages from the MQTT broker and use Vector to hold Subscription data instead of Arrays. Removing the need to declare MaxResponse, MaxSubscriptions, MaxAttributes, MaxRPC and MaxRequestRPC template arguments. But instead increasing heap allocation and usage drastically.
 
     config THINGSBOARD_ENABLE_DEBUG
         bool "Enable additional debug log messages"

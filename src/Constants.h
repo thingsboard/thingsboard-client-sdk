@@ -10,7 +10,7 @@
 #endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 
 #define Default_Endpoints_Amount 7
-#define Default_Fields_Amount 8
+#define Default_Response_Amount 8
 #define Default_Subscriptions_Amount 1
 #define Default_Attributes_Amount 1
 #define Default_RPC_Amount 0
@@ -23,6 +23,9 @@
 
 
 // Log messages.
+#if !THINGSBOARD_ENABLE_DYNAMIC
+char constexpr TOO_MANY_JSON_FIELDS[] = "Attempt too enter to many JSON fields into StaticJsonDocument (%u), increase (%s) (%u) accordingly";
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr UNABLE_TO_SERIALIZE[] = "Unable to serialize key-value json";
 char constexpr CONNECT_FAILED[] = "Connecting to server failed";
 char constexpr UNABLE_TO_SERIALIZE_JSON[] = "Unable to serialize json data";

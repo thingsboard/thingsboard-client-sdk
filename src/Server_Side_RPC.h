@@ -64,7 +64,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        (void)m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)
+        (void)m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC);
         // Push back complete vector into our local m_rpc_callbacks vector.
         m_rpc_callbacks.insert(m_rpc_callbacks.end(), first, last);
         return true;
@@ -87,7 +87,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-        (void)m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)
+        (void)m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC);
         // Push back given callback into our local vector
         m_rpc_callbacks.push_back(callback);
         return true;
