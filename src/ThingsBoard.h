@@ -20,6 +20,7 @@ char constexpr PROV_ACCESS_TOKEN[] = "provision";
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
 char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
 char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
+char constexpr MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME[] = "MaxEndpointsAmount";
 #if THINGSBOARD_ENABLE_DYNAMIC
 char constexpr HEAP_ALLOCATION_FAILED[] = "Could not allocate required size (%u) for JsonDocument, allocated only (%u). Ensure there is enough heap memory left";
 #endif // THINGSBOARD_ENABLE_DYNAMIC
@@ -314,6 +315,12 @@ class ThingsBoardSized {
     /// Ensure the actual variable is kept alive for as long as the instance of this class
     /// @param api Additional API that we want to be handled
     void Subscribe_API_Implementation(IAPI_Implementation & api) {
+#if !THINGSBOARD_ENABLE_DYNAMIC
+        if (m_api_implementations.size() + 1 > m_api_implementations.capacity()) {
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME, MaxEndpointsAmount);
+            return;
+        }
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
         api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
 #else
@@ -333,6 +340,13 @@ class ThingsBoardSized {
     /// @param last Iterator pointing to the end of the data container (last element + 1)
     template <typename InputIterator>
     void Subscribe_API_Implementations(InputIterator const & first, InputIterator const & last) {
+#if !THINGSBOARD_ENABLE_DYNAMIC
+        size_t const size = Helper::distance(first, last);
+        if (m_api_implementations.size() + size > m_api_implementations.capacity()) {
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME, MaxEndpointsAmount);
+            return;
+        }
+#endif // !THINGSBOARD_ENABLE_DYNAMIC
         for (auto it = first; it != last; ++it) {
             auto & api = *it;
             if (api == nullptr) {
@@ -783,7 +797,7 @@ class ThingsBoardSized {
 
     IMQTT_Client&                                 m_client;                // MQTT client instance.
     size_t                                        m_max_stack;             // Maximum stack size we allocate at once.
-    SIZE_WIDTH                                    m_request_id:            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
+    size_t                                        m_request_id:            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
 #if THINGSBOARD_ENABLE_STREAM_UTILS
     size_t                                        m_buffering_size;        // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS

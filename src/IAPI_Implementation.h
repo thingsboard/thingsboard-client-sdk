@@ -10,8 +10,9 @@
 
 // Log messages.
 #if !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] = "Too many (%s) subscriptions, increase MaxSubscriptions or unsubscribe";
+char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] = "Too many (%s) subscriptions, increase (%s) or unsubscribe";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
+char constexpr MAX_SUBSCRIPTIONS_TEMPLATE_NAME[] = "MaxSubscriptions";
 char constexpr SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic (%s) failed";
 char constexpr REQUEST_ID_NULL[] = "Internal request id is NULL";
 // RPC data keys.

@@ -260,7 +260,7 @@ class Attribute_Request : public IAPI_Implementation {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS);
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
