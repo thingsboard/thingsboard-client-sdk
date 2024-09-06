@@ -102,9 +102,9 @@ class ThingsBoardSized {
                 continue;
             }
 #if THINGSBOARD_ENABLE_STL
-            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
 #else
-            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
 #endif // THINGSBOARD_ENABLE_STL
             api->Initialize();
         }
@@ -315,12 +315,37 @@ class ThingsBoardSized {
     /// @param api Additional API that we want to be handled
     void Subscribe_API_Implementation(IAPI_Implementation & api) {
 #if THINGSBOARD_ENABLE_STL
-        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1));
+        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
 #else
-        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize);
+        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
 #endif // THINGSBOARD_ENABLE_STL
         api.Initialize();
         m_api_implementations.push_back(&api);
+    }
+
+    /// @brief Copies the non-owning pointers to the given API implementations, into the local data container.
+    /// Expects iterators to a container containing API implementations instances.
+    /// Ensure the actual memory of the API implementations inside the data container are kept alive for as long as the instance of this class
+    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// of the given data container, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param first Iterator pointing to the first element in the data container
+    /// @param last Iterator pointing to the end of the data container (last element + 1)
+    template <typename InputIterator>
+    void Subscribe_API_Implementations(InputIterator const & first, InputIterator const & last) {
+        for (auto it = first; it != last; ++it) {
+            auto & api = *it;
+            if (api == nullptr) {
+                continue;
+            }
+#if THINGSBOARD_ENABLE_STL
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
+#else
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
+#endif // THINGSBOARD_ENABLE_STL
+            api->Initialize();
+        }
+        m_api_implementations.insert(m_api_implementations.end(), first, last);
     }
 
     //----------------------------------------------------------------------------
@@ -503,6 +528,14 @@ class ThingsBoardSized {
     /// @return Whether unsubscribing was successfull or not
     bool clientUnsubscribe(char const * const topic) {
         return m_client.unsubscribe(topic);
+    }
+
+    /// @brief Gets a mutable pointer to the request id, the current value is the id of the last sent request.
+    /// Is used because each request to the cloud of the same type (attribute request, rpc request, over the air firmware update), has to use a different id to differentiate request and response.
+    /// To ensure that we therefore simply provide a global request id that can be used and incremented by all request types
+    /// @return Mutable reference to the request id
+    size_t * getRequestID() {
+        return m_request_id;
     }
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -721,6 +754,13 @@ class ThingsBoardSized {
         return m_subscribedInstance->clientUnsubscribe(topic);
     }
 
+    static size_t * staticGetRequestID() {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
+        return m_subscribedInstance->getRequestID();
+    }
+
     static uint16_t staticGetClientBufferSize() {
         if (m_subscribedInstance == nullptr) {
             return 0U;
@@ -741,10 +781,11 @@ class ThingsBoardSized {
     static ThingsBoardSized *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 
-    IMQTT_Client&                                 m_client;              // MQTT client instance.
-    size_t                                        m_max_stack;           // Maximum stack size we allocate at once.
+    IMQTT_Client&                                 m_client;                // MQTT client instance.
+    size_t                                        m_max_stack;             // Maximum stack size we allocate at once.
+    SIZE_WIDTH                                    m_request_id:            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-    size_t                                        m_buffering_size;      // Buffering size used to serialize directly into client.
+    size_t                                        m_buffering_size;        // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #if !THINGSBOARD_ENABLE_DYNAMIC
     Array<IAPI_Implementation*, MaxEndpointsAmount> m_api_implementations; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   

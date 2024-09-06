@@ -88,12 +88,18 @@ class Client_Side_RPC : public IAPI_Implementation {
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
-        m_request_id++;
-        registeredCallback->Set_Request_ID(m_request_id);
+        auto & p_request_id = m_get_request_id_callback.Call_Callback();
+        if (p_request_id == nullptr) {
+            Logger::println(REQUEST_ID_NULL);
+            return false;
+        }
+        auto & request_id = *p_request_id;
+
+        registeredCallback->Set_Request_ID(++request_id);
         registeredCallback->Start_Timeout_Timer();
 
-        char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, m_request_id)] = {};
-        (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, m_request_id);
+        char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, request_id)] = {};
+        (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, request_id);
         return m_send_json_callback.Call_Callback(topic, requestBuffer, Helper::Measure_Json(requestBuffer));
     }
 
@@ -154,10 +160,11 @@ class Client_Side_RPC : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_send_json_callback.Set_Callback(send_json_callback);
         m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
         m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
+        m_get_request_id_callback.Set_Callback(get_request_id_callback);
     }
 
   private:
@@ -178,8 +185,6 @@ class Client_Side_RPC : public IAPI_Implementation {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_RESPONSE_SUBSCRIBE_TOPIC);
             return false;
         }
-
-        // Push back given callback into our local vector
         m_rpc_request_callbacks.push_back(callback);
         registeredCallback = &m_rpc_request_callbacks.back();
         return true;
@@ -193,9 +198,10 @@ class Client_Side_RPC : public IAPI_Implementation {
         return m_unsubscribe_topic_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback;
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback;
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;          // Send json document callback
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback;    // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback;  // Unubscribe mqtt topic client callback
+    Callback<size_t *>                                                       m_get_request_id_callback;     // Get internal request id callback
 
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
@@ -206,19 +212,10 @@ class Client_Side_RPC : public IAPI_Implementation {
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<RPC_Request_Callback>                                             m_rpc_request_callbacks;
+    Vector<RPC_Request_Callback>                                             m_rpc_request_callbacks;       // Server side RPC callbacks vector
 #else
-    Array<RPC_Request_Callback, MaxSubscriptions>                            m_rpc_request_callbacks;
+    Array<RPC_Request_Callback, MaxSubscriptions>                            m_rpc_request_callbacks;       // Server side RPC callbacks array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    static size_t                                                            m_request_id;
 };
-
-#if THINGSBOARD_ENABLE_DYNAMIC
-template <typename Logger>
-size_t Client_Side_RPC<Logger>::m_request_id = 0U;
-#else
-template<size_t MaxSubscriptions, size_t MaxRequestRPC, typename Logger>
-size_t Client_Side_RPC<MaxSubscriptions, MaxRequestRPC, Logger>::m_request_id = 0U;
-#endif // THINGSBOARD_ENABLE_DYNAMIC
 
 #endif // Client_Side_RPC_h

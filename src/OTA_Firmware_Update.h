@@ -9,8 +9,7 @@
 
 
 uint8_t constexpr OTA_ATTRIBUTE_KEYS_AMOUNT = 5U;
-uint64_t constexpr OTA_REQUEST_TIMEOUT = 5000U * 1000U;
-char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys in (%llu) us. Aborting firmware update, restart with the same call again after ensuring the keys actually exist on the device and that the device is connected to the MQTT broker";
+char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys. Ensure keys exist and device is connected";
 // Firmware topics.
 char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/0/chunk/";
 char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/+";
@@ -31,7 +30,7 @@ char constexpr CHECKSUM_AGORITM_SHA384[] = "SHA384";
 char constexpr CHECKSUM_AGORITM_SHA512[] = "SHA512";
 // Log messages.
 char constexpr NUMBER_PRINTF[] = "%u";
-char constexpr NO_FW[] = "No new firmware assigned on the given device";
+char constexpr NO_FW[] = "Missing shared attribute firmware keys. Ensure you assigned an OTA update with binary";
 char constexpr EMPTY_FW[] = "Given firmware was NULL";
 char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
 char constexpr FW_NOT_FOR_US[] = "Firmware title (%s) not same as received title (%s)";
@@ -94,15 +93,15 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         constexpr char const * const array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
+        const Attribute_Request_Callback fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), callback.Get_Timeout(), std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        const Attribute_Request_Callback fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
+        const Attribute_Request_Callback fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, callback.Get_Timeout(), OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
 #else
 #if THINGSBOARD_ENABLE_STL
-        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), OTA_REQUEST_TIMEOUT, std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
+        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), callback.Get_Timeout(), std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, OTA_REQUEST_TIMEOUT, OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
+        const Attribute_Request_Callback<OTA_ATTRIBUTE_KEYS_AMOUNT> fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, callback.Get_Timeout(), OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
 #endif //THINGSBOARD_ENABLE_DYNAMIC
         return m_fw_attribute_request.Shared_Attributes_Request(fw_request_callback);
@@ -162,8 +161,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param currFwState Current firmware download state
     /// @param fwError Firmware error message that describes the current firmware state,
-    /// pass nullptr or an empty string if the current state is not a failure state
-    /// and therefore does not require any firmware error messsages, default = nullptr
+    /// simply do not enter a value and the default value will be used which overwrites the firmware error messages, default = ""
     /// @return Whether sending the current firmware download state was successful or not
     bool Firmware_Send_State(char const * const currFwState, char const * const fwError = "") {
         StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareState;
@@ -209,7 +207,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_subscribe_api_callback.Call_Callback(m_fw_attribute_request);
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_subscribe_api_callback.Set_Callback(subscribe_api_callback);
         m_send_json_callback.Set_Callback(send_json_callback);
         m_send_json_string_callback.Set_Callback(send_json_string_callback);
@@ -290,7 +288,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @brief Handler if the firmware shared attribute request times out without getting a response.
     /// Is used to signal that the update could not be started, because the current firmware information could not be fetched
     void Request_Timeout() {
-        Logger::printfln(NO_FW_REQUEST_RESPONSE, OTA_REQUEST_TIMEOUT);
+        Logger::println(NO_FW_REQUEST_RESPONSE);
+        Firmware_Send_State(FW_STATE_FAILED, NO_FW_REQUEST_RESPONSE);
     }
 
     /// @brief Callback that will be called upon firmware shared attribute arrival
@@ -430,24 +429,24 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     static OTA_Firmware_Update                                               *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 
-    Callback<void, IAPI_Implementation &>                                    m_subscribe_api_callback;
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;
-    Callback<bool, char const * const, char const * const>                   m_send_json_string_callback;
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback;
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback;
-    Callback<uint16_t>                                                       m_get_size_callback;
-    Callback<bool, uint16_t>                                                 m_set_buffer_size;
+    Callback<void, IAPI_Implementation &>                                    m_subscribe_api_callback;     // Subscribe additional api callback
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;         // Send json document callback
+    Callback<bool, char const * const, char const * const>                   m_send_json_string_callback;  // Send json string callback
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback;   // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback; // Unubscribe mqtt topic client callback
+    Callback<uint16_t>                                                       m_get_size_callback;          // Get client buffer size callback
+    Callback<bool, uint16_t>                                                 m_set_buffer_size;            // Set client buffer size callback
 
-    OTA_Update_Callback                                                      m_fw_callback;
-    uint16_t                                                                 m_previous_buffer_size;
-    bool                                                                     m_changed_buffer_size;
-    OTA_Handler<Logger>                                                      m_ota;
+    OTA_Update_Callback                                                      m_fw_callback;                // OTA update response callback
+    uint16_t                                                                 m_previous_buffer_size;       // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
+    bool                                                                     m_changed_buffer_size;        // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
+    OTA_Handler<Logger>                                                      m_ota;                        // Class instance that handles the flashing and creating a hash from the given received binary firmware data
 #if !THINGSBOARD_ENABLE_DYNAMIC
-    Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>                   m_fw_attribute_update;
-    Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT>                         m_fw_attribute_request;
+    Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>           m_fw_attribute_update;        // API implementation to be informed if needed fw attributes have been updated
+    Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>                 m_fw_attribute_request;       // API implementation to request the needed fw attributes to start updating
 #else
-    Shared_Attribute_Update                                                  m_fw_attribute_update;
-    Attribute_Request                                                        m_fw_attribute_request;
+    Shared_Attribute_Update<Logger>                                          m_fw_attribute_update;        // API implementation to be informed if needed fw attributes have been updated
+    Attribute_Request<Logger>                                                m_fw_attribute_request;       // API implementation to request the needed fw attributes to start updating
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 };
 

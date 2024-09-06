@@ -13,6 +13,7 @@
 char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] = "Too many (%s) subscriptions, increase MaxSubscriptions or unsubscribe";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr SUBSCRIBE_TOPIC_FAILED[] = "Subscribing the given topic (%s) failed";
+char constexpr REQUEST_ID_NULL[] = "Internal request id is NULL";
 // RPC data keys.
 char constexpr RPC_METHOD_KEY[] = "method";
 char constexpr RPC_PARAMS_KEY[] = "params";
@@ -84,7 +85,8 @@ class IAPI_Implementation {
     /// @param unsubscribe_topic_callback Method which allows to unsubscribe from arbitrary topics, points to m_client.unsubscribe per default
     /// @param get_size_callback Method which allows to get the current underlying size of the buffer, points to m_client.get_buffer_size per default
     /// @param set_buffer_size_callback Method which allows to set the current underlying size of the buffer, points to m_client.set_buffer_size per default
-    virtual void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback) = 0;
+    /// @param get_request_id_callback Method which allows to get the current request id as a mutable reference, points to getRequestID per default
+    virtual void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) = 0;
 };
 
 #endif // IAPI_Implementation_h
