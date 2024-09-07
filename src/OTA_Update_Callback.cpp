@@ -39,6 +39,14 @@ void OTA_Update_Callback::Set_Updater(IUpdater* updater) {
     m_updater = updater;
 }
 
+size_t const & OTA_Update_Callback::Get_Request_ID() const {
+    return m_request_id;
+}
+
+void OTA_Update_Callback::Set_Request_ID(size_t const & request_id) {
+    m_request_id = request_id;
+}
+
 void OTA_Update_Callback::Call_Progress_Callback(size_t const & current, size_t const & total) const {
     return m_progress_callback.Call_Callback(current, total);
 }

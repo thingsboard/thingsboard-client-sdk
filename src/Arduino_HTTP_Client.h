@@ -43,7 +43,7 @@ class Arduino_HTTP_Client : public IHTTP_Client {
 #endif // THINGSBOARD_ENABLE_STL
 
   private:
-    HttpClient m_http_client; // Underlying HTTP client instance used to send data
+    HttpClient m_http_client = {}; // Underlying HTTP client instance used to send data
 };
 
 #endif // ARDUINO

@@ -795,16 +795,16 @@ class ThingsBoardSized {
     static ThingsBoardSized *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 
-    IMQTT_Client&                                 m_client;                // MQTT client instance.
-    size_t                                        m_max_stack;             // Maximum stack size we allocate at once.
-    size_t                                        m_request_id;            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
+    IMQTT_Client&                                 m_client = {};                // MQTT client instance.
+    size_t                                        m_max_stack = {};             // Maximum stack size we allocate at once.
+    size_t                                        m_request_id = {};            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-    size_t                                        m_buffering_size;        // Buffering size used to serialize directly into client.
+    size_t                                        m_buffering_size = {};        // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #if !THINGSBOARD_ENABLE_DYNAMIC
-    Array<IAPI_Implementation*, MaxEndpointsAmount> m_api_implementations; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
+    Array<IAPI_Implementation*, MaxEndpointsAmount> m_api_implementations = {}; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #else
-    Vector<IAPI_Implementation*>                    m_api_implementations; // Can hold a pointer to all  possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
+    Vector<IAPI_Implementation*>                    m_api_implementations = {}; // Can hold a pointer to all  possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #endif // !THINGSBOARD_ENABLE_DYNAMIC                
 };
 

@@ -130,9 +130,9 @@ class Telemetry {
         TYPE_STR // Telemetry isntance is a key value-pair with a string value
     };
 
-    DataType     m_type;  // Data type flag, showing which value is saved in the class instance
-    const char   *m_key;  // Data key of the key-value pair
-    Data         m_value; // Data value of the key-value pair
+    DataType     m_type = {};  // Data type flag, showing which value is saved in the class instance
+    const char   *m_key = {};  // Data key of the key-value pair
+    Data         m_value = {}; // Data value of the key-value pair
 };
 
 /// @brief Telemetry and attributes are only different on the database side (one has a history the other one does not), but both are simply key-value pairs

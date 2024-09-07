@@ -132,12 +132,12 @@ private:
 
     static void static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
-    Callback<void, char *, uint8_t *, unsigned int> m_received_data_callback; // Callback that will be called as soon as the mqtt client receives any data
-    Callback<void>                                  m_connected_callback;     // Callback that will be called as soon as the mqtt client has connected
-    bool                                            m_connected;              // Whether the client has received the connected or disconnected event
-    bool                                            m_enqueue_messages;       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
-    esp_mqtt_client_config_t                        m_mqtt_configuration;     // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
-    esp_mqtt_client_handle_t                        m_mqtt_client;            // Handle to the underlying mqtt client, used to establish the communication
+    Callback<void, char *, uint8_t *, unsigned int> m_received_data_callback = {}; // Callback that will be called as soon as the mqtt client receives any data
+    Callback<void>                                  m_connected_callback = {};     // Callback that will be called as soon as the mqtt client has connected
+    bool                                            m_connected = {};              // Whether the client has received the connected or disconnected event
+    bool                                            m_enqueue_messages = {};       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
+    esp_mqtt_client_config_t                        m_mqtt_configuration = {};     // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
+    esp_mqtt_client_handle_t                        m_mqtt_client = {};            // Handle to the underlying mqtt client, used to establish the communication
 };
 
 #endif // THINGSBOARD_USE_ESP_MQTT

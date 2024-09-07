@@ -8,12 +8,13 @@
 #include "IAPI_Implementation.h"
 
 
+uint8_t constexpr MAX_FW_TOPIC_SIZE = 33U;
 uint8_t constexpr OTA_ATTRIBUTE_KEYS_AMOUNT = 5U;
 char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys. Ensure keys exist and device is connected";
 // Firmware topics.
-char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/0/chunk/";
+char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/%u/chunk/";
 char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/+";
-char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/0/chunk/%u";
+char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/%u/chunk/%u";
 // Firmware data keys.
 char constexpr CURR_FW_TITLE_KEY[] = "current_fw_title";
 char constexpr CURR_FW_VER_KEY[] = "current_fw_version";
@@ -58,7 +59,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
       , m_subscribe_topic_callback()
       , m_unsubscribe_topic_callback()
       , m_get_size_callback()
-      , m_set_buffer_size()
+      , m_set_buffer_size_callback()
+      , m_get_request_id_callback()
       , m_fw_callback()
       , m_previous_buffer_size(0U)
       , m_changed_buffer_size(false)
@@ -67,6 +69,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 #else
       , m_ota(OTA_Firmware_Update::staticPublishChunk, OTA_Firmware_Update::staticFirmwareSend, OTA_Firmware_Update::staticUnsubscribe)
 #endif // THINGSBOARD_ENABLE_STL
+      , m_response_topic()
       , m_fw_attribute_update()
       , m_fw_attribute_request()
     {
@@ -146,27 +149,27 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 
     /// @brief Sends the given firmware title and firmware version to the cloud.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param currFwTitle Current device firmware title
-    /// @param currFwVersion Current device firmware version
+    /// @param current_fw_title Current device firmware title
+    /// @param current_fw_version Current device firmware version
     /// @return Whether sending the current device firmware information was successful or not
-    bool Firmware_Send_Info(char const * const currFwTitle, char const * const currFwVersion) {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareInfo;
-        currentFirmwareInfo[CURR_FW_TITLE_KEY] = currFwTitle;
-        currentFirmwareInfo[CURR_FW_VER_KEY] = currFwVersion;
-        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, currentFirmwareInfo, Helper::Measure_Json(currentFirmwareInfo));
+    bool Firmware_Send_Info(char const * const current_fw_title, char const * const current_fw_version) {
+        StaticJsonDocument<JSON_OBJECT_SIZE(2)> current_firmware_info;
+        current_firmware_info[CURR_FW_TITLE_KEY] = current_fw_title;
+        current_firmware_info[CURR_FW_VER_KEY] = current_fw_version;
+        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, current_firmware_info, Helper::Measure_Json(current_firmware_info));
     }
 
     /// @brief Sends the given firmware state to the cloud.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param currFwState Current firmware download state
-    /// @param fwError Firmware error message that describes the current firmware state,
+    /// @param current_fw_state Current firmware download state
+    /// @param fw_error Firmware error message that describes the current firmware state,
     /// simply do not enter a value and the default value will be used which overwrites the firmware error messages, default = ""
     /// @return Whether sending the current firmware download state was successful or not
-    bool Firmware_Send_State(char const * const currFwState, char const * const fwError = "") {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> currentFirmwareState;
-        currentFirmwareState[FW_ERROR_KEY] = fwError;
-        currentFirmwareState[FW_STATE_KEY] = currFwState;
-        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, currentFirmwareState, Helper::Measure_Json(currentFirmwareState));
+    bool Firmware_Send_State(char const * const current_fw_state, char const * const fw_error = "") {
+        StaticJsonDocument<JSON_OBJECT_SIZE(2)> current_firmware_state;
+        current_firmware_state[FW_ERROR_KEY] = fw_error;
+        current_firmware_state[FW_STATE_KEY] = current_fw_state;
+        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, current_firmware_state, Helper::Measure_Json(current_firmware_state));
     }
 
     API_Process_Type Get_Process_Type() const override {
@@ -174,8 +177,11 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     }
 
     void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
-        size_t const request_id = Helper::parseRequestId(FIRMWARE_RESPONSE_TOPIC, topic);
-        m_ota.Process_Firmware_Packet(request_id, payload, length);
+        size_t const & request_id = m_fw_callback.Get_Request_ID();
+        char response_topic[Helper::detectSize(FIRMWARE_RESPONSE_TOPIC, request_id)] = {};
+        (void)snprintf(response_topic, sizeof(response_topic), FIRMWARE_RESPONSE_TOPIC, request_id);
+        size_t const chunk = Helper::parseRequestId(response_topic, topic);
+        m_ota.Process_Firmware_Packet(chunk, payload, length);
     }
 
     void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
@@ -183,7 +189,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     }
 
     char const * Get_Response_Topic_String() const override {
-        return FIRMWARE_RESPONSE_TOPIC;
+        return m_response_topic;
     }
 
     bool Unsubscribe() override {
@@ -213,7 +219,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
         m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
         m_get_size_callback.Set_Callback(get_size_callback);
-        m_set_buffer_size.Set_Callback(set_buffer_size_callback);
+        m_set_buffer_size_callback.Set_Callback(set_buffer_size_callback);
+        m_get_request_id_callback.Set_Callback(get_request_id_callback);
     }
 
   private:
@@ -222,17 +229,26 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @param callback Callback method that will be called
     /// @return Whether checking and sending the current device firmware information was successful or not
     bool Prepare_Firmware_Settings(OTA_Update_Callback const & callback) {
-        char const * const currFwTitle = callback.Get_Firmware_Title();
-        char const * const currFwVersion = callback.Get_Firmware_Version();
+        char const * const current_fw_title = callback.Get_Firmware_Title();
+        char const * const current_fw_version = callback.Get_Firmware_Version();
 
-        if (Helper::stringIsNullorEmpty(currFwTitle) || Helper::stringIsNullorEmpty(currFwVersion)) {
+        if (Helper::stringIsNullorEmpty(current_fw_title) || Helper::stringIsNullorEmpty(current_fw_version)) {
             return false;
         }
-        else if (!Firmware_Send_Info(currFwTitle, currFwVersion)) {
+        else if (!Firmware_Send_Info(current_fw_title, current_fw_version)) {
             return false;
         }
+
+        size_t * p_request_id = m_get_request_id_callback.Call_Callback();
+        if (p_request_id == nullptr) {
+            Logger::println(REQUEST_ID_NULL);
+            return false;
+        }
+        auto & request_id = *p_request_id;
 
         m_fw_callback = callback;
+        m_fw_callback.Set_Request_ID(++request_id);
+        (void)snprintf(m_response_topic, sizeof(m_response_topic), FIRMWARE_RESPONSE_TOPIC, request_id);
         return true;
     }
 
@@ -257,7 +273,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         // to allow to receive ota chunck packets that might be much bigger than the normal
         // buffer size would allow, therefore we return to the previous value to decrease overall memory usage
         if (m_changed_buffer_size) {
-            (void)m_set_buffer_size.Call_Callback(m_previous_buffer_size);
+            (void)m_set_buffer_size_callback.Call_Callback(m_previous_buffer_size);
         }
         // Reset now not needed private member variables
         m_fw_callback = OTA_Update_Callback();
@@ -265,10 +281,11 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return m_unsubscribe_topic_callback.Call_Callback(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    /// @brief Publishes a request via MQTT to request the given firmware chunk
+    /// @brief Publishes a request for the given firmware chunk
+    /// @param request_id Request ID corresponding to the extact OTA update package we want to request chunks from
     /// @param request_chunck Chunk index that should be requested from the server
     /// @return Whether publishing the message was successful or not
-    bool Publish_Chunk_Request(size_t const & request_chunck) {
+    bool Publish_Chunk_Request(size_t const & request_id, size_t const & request_chunck) {
         // Calculate the number of chuncks we need to request,
         // in order to download the complete firmware binary
         uint16_t const & chunk_size = m_fw_callback.Get_Chunk_Size();
@@ -277,10 +294,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)] = {};
         (void)snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
 
-        // Size adjuts dynamically to the current length of the currChunk number to ensure we don't cut it out of the topic string.
-        char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_chunck)] = {};
-        (void)snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_chunck);
-
+        char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_id, request_chunck)] = {};
+        (void)snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_id, request_chunck);
         return m_send_json_string_callback.Call_Callback(topic, size);
     }
 
@@ -379,7 +394,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_changed_buffer_size = m_previous_buffer_size < (chunk_size + 50U);
 
         // Increase size of receive buffer
-        if (m_changed_buffer_size && !m_set_buffer_size.Call_Callback(chunk_size + 50U)) {
+        if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(chunk_size + 50U)) {
             Logger::println(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
             m_fw_callback.Call_Callback(false);
@@ -404,18 +419,18 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_subscribedInstance->Request_Timeout();
     }
 
-    static bool staticPublishChunk(size_t const & request_chunck) {
+    static bool staticPublishChunk(size_t const & request_id, size_t const & request_chunck) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->Publish_Chunk_Request(request_chunck);
+        return m_subscribedInstance->Publish_Chunk_Request(request_id, request_chunck);
     }
 
-    static bool staticFirmwareSend(char const * const currFwState, char const * const fwError = nullptr) {
+    static bool staticFirmwareSend(char const * const current_fw_state, char const * const fw_error = nullptr) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->Firmware_Send_State(currFwState, fwError);
+        return m_subscribedInstance->Firmware_Send_State(current_fw_state, fw_error);
     }
 
     static bool staticUnsubscribe() {
@@ -431,24 +446,26 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     static OTA_Firmware_Update                                               *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 
-    Callback<void, IAPI_Implementation &>                                    m_subscribe_api_callback;     // Subscribe additional api callback
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;         // Send json document callback
-    Callback<bool, char const * const, char const * const>                   m_send_json_string_callback;  // Send json string callback
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback;   // Subscribe mqtt topic client callback
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback; // Unubscribe mqtt topic client callback
-    Callback<uint16_t>                                                       m_get_size_callback;          // Get client buffer size callback
-    Callback<bool, uint16_t>                                                 m_set_buffer_size;            // Set client buffer size callback
+    Callback<void, IAPI_Implementation &>                                    m_subscribe_api_callback = {};            // Subscribe additional api callback
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};                // Send json document callback
+    Callback<bool, char const * const, char const * const>                   m_send_json_string_callback = {};         // Send json string callback
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};          // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};        // Unubscribe mqtt topic client callback
+    Callback<uint16_t>                                                       m_get_size_callback = {};                 // Get client buffer size callback
+    Callback<bool, uint16_t>                                                 m_set_buffer_size_callback = {};          // Set client buffer size callback
+    Callback<size_t *>                                                       m_get_request_id_callback = {};           // Get internal request id callback
 
-    OTA_Update_Callback                                                      m_fw_callback;                // OTA update response callback
-    uint16_t                                                                 m_previous_buffer_size;       // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
-    bool                                                                     m_changed_buffer_size;        // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
-    OTA_Handler<Logger>                                                      m_ota;                        // Class instance that handles the flashing and creating a hash from the given received binary firmware data
+    OTA_Update_Callback                                                      m_fw_callback = {};                       // OTA update response callback
+    uint16_t                                                                 m_previous_buffer_size = {};              // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
+    bool                                                                     m_changed_buffer_size = {};               // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
+    OTA_Handler<Logger>                                                      m_ota = {};                               // Class instance that handles the flashing and creating a hash from the given received binary firmware data
+    char const                                                               m_response_topic[MAX_FW_TOPIC_SIZE] = {}; // Firmware response topic that contains the specific request ID of the firmware we actually want to download
 #if !THINGSBOARD_ENABLE_DYNAMIC
-    Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>           m_fw_attribute_update;        // API implementation to be informed if needed fw attributes have been updated
-    Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>                 m_fw_attribute_request;       // API implementation to request the needed fw attributes to start updating
+    Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>           m_fw_attribute_update = {};               // API implementation to be informed if needed fw attributes have been updated
+    Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>                 m_fw_attribute_request = {};              // API implementation to request the needed fw attributes to start updating
 #else
-    Shared_Attribute_Update<Logger>                                          m_fw_attribute_update;        // API implementation to be informed if needed fw attributes have been updated
-    Attribute_Request<Logger>                                                m_fw_attribute_request;       // API implementation to request the needed fw attributes to start updating
+    Shared_Attribute_Update<Logger>                                          m_fw_attribute_update = {};               // API implementation to be informed if needed fw attributes have been updated
+    Attribute_Request<Logger>                                                m_fw_attribute_request = {};              // API implementation to request the needed fw attributes to start updating
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 };
 

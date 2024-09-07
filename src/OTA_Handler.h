@@ -51,7 +51,7 @@ class OTA_Handler {
     /// @param publish_callback Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
     /// @param send_fw_state_callback Callback that is used to send information about the current state of the over the air update
     /// @param finish_callback Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
-    OTA_Handler(Callback<bool, size_t const &>::function publish_callback, Callback<bool, char const * const, char const * const>::function send_fw_state_callback, Callback<bool>::function finish_callback)
+    OTA_Handler(Callback<bool, size_t const &, size_t const &>::function publish_callback, Callback<bool, char const * const, char const * const>::function send_fw_state_callback, Callback<bool>::function finish_callback)
       : m_fw_callback(nullptr)
       , m_publish_callback(publish_callback)
       , m_send_fw_state_callback(send_fw_state_callback)
@@ -198,7 +198,7 @@ class OTA_Handler {
             return;
         }
 
-        if (!m_publish_callback.Call_Callback(m_requested_chunks)) {
+        if (!m_publish_callback.Call_Callback(m_fw_callback->Get_Request_ID(), m_requested_chunks)) {
             Logger::println(UNABLE_TO_REQUEST_CHUNCKS);
         }
 
@@ -289,19 +289,19 @@ class OTA_Handler {
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
 
-    const OTA_Update_Callback                              *m_fw_callback;                     // Callback method that contains configuration information, about the over the air update
-    Callback<bool, size_t const &>                         m_publish_callback;                 // Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
-    Callback<bool, char const * const, char const * const> m_send_fw_state_callback;           // Callback that is used to send information about the current state of the over the air update
-    Callback<bool>                                         m_finish_callback;                  // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
-    size_t                                                 m_fw_size;                          // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
-    char                                                   m_fw_checksum[MBEDTLS_MD_MAX_SIZE]; // Checksum of the complete firmware binary, should be the same as the actually written data in the end
-    mbedtls_md_type_t                                      m_fw_checksum_algorithm;            // Algorithm type used to hash the firmware binary
-    IUpdater                                               *m_fw_updater;                      // Interface implementation that writes received firmware binary data onto the given device
-    HashGenerator                                          m_hash;                             // Class instance that allows to generate a hash from received firmware binary data
-    size_t                                                 m_total_chunks;                     // Total amount of chunks that need to be received to get the complete firmware binary
-    size_t                                                 m_requested_chunks;                 // Amount of successfully requested and received firmware binary chunks
-    uint8_t                                                m_retries;                          // Amount of request retries we attempt for each chunk, increasing makes the connection more stable
-    Callback_Watchdog                                      m_watchdog;                         // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
+    const OTA_Update_Callback                              *m_fw_callback = {};                     // Callback method that contains configuration information, about the over the air update
+    Callback<bool, size_t const &, size_t const &>         m_publish_callback = {};                 // Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
+    Callback<bool, char const * const, char const * const> m_send_fw_state_callback = {};           // Callback that is used to send information about the current state of the over the air update
+    Callback<bool>                                         m_finish_callback = {};                  // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
+    size_t                                                 m_fw_size = {};                          // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
+    char                                                   m_fw_checksum[MBEDTLS_MD_MAX_SIZE] = {}; // Checksum of the complete firmware binary, should be the same as the actually written data in the end
+    mbedtls_md_type_t                                      m_fw_checksum_algorithm = {};            // Algorithm type used to hash the firmware binary
+    IUpdater                                               *m_fw_updater = {};                      // Interface implementation that writes received firmware binary data onto the given device
+    HashGenerator                                          m_hash = {};                             // Class instance that allows to generate a hash from received firmware binary data
+    size_t                                                 m_total_chunks = {};                     // Total amount of chunks that need to be received to get the complete firmware binary
+    size_t                                                 m_requested_chunks = {};                 // Amount of successfully requested and received firmware binary chunks
+    uint8_t                                                m_retries = {};                          // Amount of request retries we attempt for each chunk, increasing makes the connection more stable
+    Callback_Watchdog                                      m_watchdog = {};                         // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
 };
 
 #endif // OTA_Handler_h

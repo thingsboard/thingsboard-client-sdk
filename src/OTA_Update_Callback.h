@@ -77,6 +77,18 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     /// @param updater Updater implementation that writes the given firmware data
     void Set_Updater(IUpdater *updater);
 
+    /// @brief Gets the unique request identifier that is connected to the original request,
+    /// and will be later used to verifiy which OTA_Update_Callback
+    /// is connected to which received OTA firmware chunk update
+    /// @return Unique identifier connected to the request for OTA firmware update
+    size_t const & Get_Request_ID() const;
+
+    /// @brief Sets the unique request identifier that is connected to the original request,
+    /// and will be later used to verifiy which OTA_Update_Callback
+    /// is connected to which received OTA firmware chunk update
+    /// @param request_id Unique identifier connected to the request for OTA firmware update
+    void Set_Request_ID(size_t const & request_id);
+
     /// @brief Calls the progress callback that was subscribed, when this class instance was initally created
     /// @param current Already received and processs amount of chunks
     /// @param total Total amount of chunks we need to receive and process until the update has completed
@@ -132,14 +144,15 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     void Set_Timeout(uint64_t const & timeout_microseconds);
 
   private:
-    char const                                     *m_current_fw_title;        // Current firmware title of device
-    char const                                     *m_current_fw_version;      // Current firmware version of device
-    IUpdater                                       *m_updater;                 // Updater implementation used to write firmware data
-    Callback<void, size_t const &, size_t const &> m_progress_callback;        // Callback called when amount of downloaded chunks increased
-    Callback<void>                                 m_update_starting_callback; // Callback called when update is about to start (moment before topic subscription)
-    uint8_t                                        m_chunk_retries;            // Maximum amount of retries for a single chunk to be downloaded and flashed successfully
-    uint16_t                                       m_chunk_size;               // Size of chunks the firmware data will be split into
-    uint64_t                                       m_timeout_microseconds;     // How long we wait for each chunck to arrive before declaring it as failed
+    char const                                     *m_current_fw_title = {};        // Current firmware title of device
+    char const                                     *m_current_fw_version = {};      // Current firmware version of device
+    IUpdater                                       *m_updater = {};                 // Updater implementation used to write firmware data
+    size_t                                         m_request_id = {};               // Id the request was called with
+    Callback<void, size_t const &, size_t const &> m_progress_callback = {};        // Callback called when amount of downloaded chunks increased
+    Callback<void>                                 m_update_starting_callback = {}; // Callback called when update is about to start (moment before topic subscription)
+    uint8_t                                        m_chunk_retries = {};            // Maximum amount of retries for a single chunk to be downloaded and flashed successfully
+    uint16_t                                       m_chunk_size = {};               // Size of chunks the firmware data will be split into
+    uint64_t                                       m_timeout_microseconds = {};     // How long we wait for each chunck to arrive before declaring it as failed
 };
 
 #endif // OTA_Update_Callback_h

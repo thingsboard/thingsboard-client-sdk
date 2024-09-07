@@ -252,10 +252,6 @@ class ThingsBoardHttpSized {
     }
 
   private:
-    IHTTP_Client& m_client;     // HttpClient instance
-    size_t        m_max_stack;  // Maximum stack size we allocate at once on the stack.
-    char const    *m_token;     // Access token used to connect with
-
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
     size_t const & getMaximumStackSize() const {
@@ -371,6 +367,10 @@ class ThingsBoardHttpSized {
         }
         return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
     }
+
+    IHTTP_Client& m_client = {};     // HttpClient instance
+    size_t        m_max_stack = {};  // Maximum stack size we allocate at once on the stack.
+    char const    *m_token = {};     // Access token used to connect with
 };
 
 using ThingsBoardHttp = ThingsBoardHttpSized<>;
