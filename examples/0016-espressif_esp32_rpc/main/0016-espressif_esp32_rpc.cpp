@@ -94,7 +94,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis.cbegin(), apis.cend());
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

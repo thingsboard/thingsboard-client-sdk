@@ -111,7 +111,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &attr_request
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis.cbegin(), apis.cend());
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
 
 // Statuses for requesting of attributes
 bool requestedClient = false;
@@ -214,7 +214,7 @@ void loop() {
     Serial.println("Requesting shared attributes...");
     // Shared attributes we want to request from the server
     constexpr std::array<const char*, MAX_ATTRIBUTES> REQUESTED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
-    const Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_SHARED_ATTRIBUTES.cbegin(), REQUESTED_SHARED_ATTRIBUTES.cend());
+    const Attribute_Request_Callback<MAX_ATTRIBUTES> sharedCallback(&processSharedAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_SHARED_ATTRIBUTES);
     requestedShared = attr_request.Shared_Attributes_Request(sharedCallback);
     if (!requestedShared) {
       Serial.println("Failed to request shared attributes");
@@ -225,7 +225,7 @@ void loop() {
     Serial.println("Requesting client-side attributes...");
     // Client-side attributes we want to request from the server
     const std::vector<const char*> REQUESTED_CLIENT_ATTRIBUTES = {TEST_KEY};
-    const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_CLIENT_ATTRIBUTES.cbegin(), REQUESTED_CLIENT_ATTRIBUTES.cend());
+    const Attribute_Request_Callback<MAX_ATTRIBUTES> clientCallback(&processClientAttributeRequest, REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut, REQUESTED_CLIENT_ATTRIBUTES);
     requestedClient = attr_request.Client_Attributes_Request(clientCallback);
     if (!requestedClient) {
       Serial.println("Failed to request client-side attributes");

@@ -124,7 +124,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &ota
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis.cbegin(), apis.cend());
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
 // Initalize the Updater client instance used to flash binary to flash memory
 #ifdef ESP8266
 Arduino_ESP8266_Updater updater;

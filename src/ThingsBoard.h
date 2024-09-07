@@ -797,7 +797,7 @@ class ThingsBoardSized {
 
     IMQTT_Client&                                 m_client;                // MQTT client instance.
     size_t                                        m_max_stack;             // Maximum stack size we allocate at once.
-    size_t                                        m_request_id:            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
+    size_t                                        m_request_id;            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
 #if THINGSBOARD_ENABLE_STREAM_UTILS
     size_t                                        m_buffering_size;        // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS

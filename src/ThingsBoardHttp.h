@@ -45,7 +45,7 @@ class ThingsBoardHttpSized {
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
     /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t const & port = 80U, bool keepAlive = true, size_t const & maxStackSize = Default_Max_Stack_Size)
+    ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t port = 80U, bool keepAlive = true, size_t const & maxStackSize = Default_Max_Stack_Size)
       : m_client(client)
       , m_max_stack(maxStackSize)
       , m_token(access_token)

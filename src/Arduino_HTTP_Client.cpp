@@ -3,19 +3,19 @@
 
 #ifdef ARDUINO
 
-Arduino_HTTP_Client::Arduino_HTTP_Client(Client& transport_client, char const * const host, uint16_t const & port) :
+Arduino_HTTP_Client::Arduino_HTTP_Client(Client& transport_client, char const * const host, uint16_t port) :
     m_http_client(transport_client, host, port)
 {
     // Nothing to do
 }
 
-void Arduino_HTTP_Client::set_keep_alive(bool const & keep_alive) {
+void Arduino_HTTP_Client::set_keep_alive(bool keep_alive) {
     if (keep_alive) {
         m_http_client.connectionKeepAlive();
     }
 }
 
-int Arduino_HTTP_Client::connect(char const * const host, uint16_t const & port) {
+int Arduino_HTTP_Client::connect(char const * const host, uint16_t port) {
     return m_http_client.connect(host, port);
 }
 

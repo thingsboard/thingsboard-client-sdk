@@ -24,7 +24,7 @@ class IHTTP_Client {
     /// @brief Sets whether to close the HTTP connection for every single request and reconnect once a new request is sent
     /// @param keep_alive Enable or disable to keep the connection alive after a message has been sent.
     /// Is recommended to be always enabled to improve performance and speed, because opening a new connection takes a while especially when using HTTPS
-    virtual void set_keep_alive(bool const & keep_alive) = 0;
+    virtual void set_keep_alive(bool keep_alive) = 0;
 
     /// @brief Connects to the given server instance that should be connected to over the defined port
     /// @param host Server instance name the client should connect too
@@ -33,7 +33,7 @@ class IHTTP_Client {
     /// The latter is recommended if relevant data is sent or if the client receives and handles requests from the server,
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways.
     /// @return Whether the client could establish the connection successfully with return code 0 or failed with error code otherwise
-    virtual int connect(char const * const host, uint16_t const & port) = 0;
+    virtual int connect(char const * const host, uint16_t port) = 0;
 
     /// @brief Disconnects the given device from the current host and clears about any remaining bytes still in the reponse body
     virtual void stop() = 0;

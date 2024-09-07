@@ -17,7 +17,7 @@ class Array {
     /// @brief Constructor
     Array(void) = default;
 
-    /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method
+    /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method and copies all data between the first and last iterator
     /// @tparam InputIterator Class that points to the begin and end iterator
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
@@ -31,7 +31,21 @@ class Array {
         insert(nullptr, first, last);
     }
 
-    /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method
+    /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method and copies all data from the given container
+    /// @tparam Container Class that contains the actual data we want to copy into our internal data container,
+    /// requires access to a begin() and end() method, that point to the first element and one past the last element we want to copy respectively.
+    /// Both methods need to return an InputIterator, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param container Data container with begin() and end() method that we want to copy fully into our underlying data container
+    template<typename Container>
+    Array(Container const & container)
+      : m_elements()
+      , m_size(0U)
+    {
+        insert(nullptr, container.begin(), container.end());
+    }
+
+    /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method and copies all data between the first and last iterator
     /// @tparam InputIterator Class that points to the begin and end iterator
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
@@ -40,6 +54,17 @@ class Array {
     template<typename InputIterator>
     void assign(InputIterator const & first, InputIterator const & last) {
         insert(nullptr, first, last);
+    }
+
+    /// @brief Method that allows compatibility with std::vector, simply forwards call to internal insert method and copies all data from the given container
+    /// @tparam Container Class that contains the actual data we want to copy into our internal data container,
+    /// requires access to a begin() and end() method, that point to the first element and one past the last element we want to copy respectively.
+    /// Both methods need to return an InputIterator, allows for using / passing either std::vector or std::array.
+    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
+    /// @param container Data container with begin() and end() method that we want to copy fully into our underlying data container
+    template<typename Container>
+    void assign(Container const & container) {
+        insert(nullptr, container.begin(), container.end());
     }
 
     /// @brief Returns whether there are still any element in the underlying data container

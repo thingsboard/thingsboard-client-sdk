@@ -24,8 +24,9 @@ using Vector = std::vector<T>;
 #endif // THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
 
-/// @brief General purpose callback wrapper. Expects either c-style or c++ style function pointer,
-/// depending on if the C++ STL has been implemented on the given device or not
+/// @brief General purpose safe callback wrapper. Expects either c-style or c++ style function pointer,
+/// depending on if the C++ STL has been implemented on the given device or not.
+/// Simply wraps that function pointer and before calling it ensures it actually exists
 /// @tparam returnType Type the given callback method should return
 /// @tparam argumentTypes Types the given callback method should receive
 template<typename returnType, typename... argumentTypes>
@@ -41,20 +42,21 @@ class Callback {
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     Callback() = default;
 
-    /// @brief Constructs base callback, will be called upon specific arrival of json message
-    /// where the requested data was sent by the cloud and received by the client
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types
-    /// @param message Message that is logged if the callback given initally is a nullptr and can therefore not be called,
-    /// used to ensure users are informed that the initalization of the child class is invalid
+    /// @brief Constructor
+    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types.
+    /// If nullptr is passed the callback will never be called and return with a defaulted instance of the requested return variable
     explicit Callback(function callback)
       : m_callback(callback)
     {
         // Nothing to do
     }
 
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created
-    /// @param ...arguments Received client-side or shared attribute request data that include
-    /// the client-side or shared attributes that were requested and their current values
+    /// @brief Calls the callback that was subscribed, when this class instance was initally created.
+    /// If the default constructor was used or a nullptr was passed instead of a valid function pointer,
+    /// this method will check beforehand and simply return with a defaulted instance of the requested return variable
+    /// @param ...arguments Optional additional arguments that are simply formwarded to the subscribed callback if it exists
+    /// @return Argument returned by the previously subscribed callback or if none or nullptr is subscribed
+    /// we instead return a defaulted instance of the requested return variable
     returnType Call_Callback(argumentTypes const &... arguments) const {
         if (!m_callback) {
           return returnType();
