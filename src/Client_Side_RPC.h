@@ -88,7 +88,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
-        auto & p_request_id = m_get_request_id_callback.Call_Callback();
+        size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
             Logger::println(REQUEST_ID_NULL);
             return false;

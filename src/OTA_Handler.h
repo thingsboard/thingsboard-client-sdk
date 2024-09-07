@@ -51,7 +51,7 @@ class OTA_Handler {
     /// @param publish_callback Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
     /// @param send_fw_state_callback Callback that is used to send information about the current state of the over the air update
     /// @param finish_callback Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
-    OTA_Handler(Callback<bool, size_t const &>::function publish_callback, Callback<bool, char const * const, char const * const>::function send_fw_state_callback, Callback<bool> finish_callback)
+    OTA_Handler(Callback<bool, size_t const &>::function publish_callback, Callback<bool, char const * const, char const * const>::function send_fw_state_callback, Callback<bool>::function finish_callback)
       : m_fw_callback(nullptr)
       , m_publish_callback(publish_callback)
       , m_send_fw_state_callback(send_fw_state_callback)

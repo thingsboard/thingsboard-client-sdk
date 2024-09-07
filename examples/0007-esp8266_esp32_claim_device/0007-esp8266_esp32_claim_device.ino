@@ -198,7 +198,7 @@ void loop() {
       // if the string is empty or null, automatically checked by the sendClaimingRequest method
       claimingRequestSecretKey;
 #endif
-    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%u)ms\n", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
+    Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%lu)ms\n", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
     claimingRequestSent = tb.Claim_Request(secretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
   }
 

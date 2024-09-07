@@ -233,7 +233,7 @@ class Attribute_Request : public IAPI_Implementation {
         // and because there is not enough space the value would simply be "undefined" instead. Which would cause the request to not be sent correctly
         requestBuffer[attributeRequestKey] = static_cast<const char*>(request);
 
-        auto & p_request_id = m_get_request_id_callback.Call_Callback();
+        size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
             Logger::println(REQUEST_ID_NULL);
             return false;

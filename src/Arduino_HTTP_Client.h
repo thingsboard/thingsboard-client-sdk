@@ -24,7 +24,7 @@ class Arduino_HTTP_Client : public IHTTP_Client {
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways
     Arduino_HTTP_Client(Client& transport_client, char const * const host, uint16_t port);
 
-    void set_keep_alive(boolkeep_alive) override;
+    void set_keep_alive(bool keep_alive) override;
 
     int connect(char const * const host, uint16_t port) override;
 
