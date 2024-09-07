@@ -97,7 +97,6 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
-constexpr char FW_STATE_UPDATED[] = "UPDATED";
 constexpr char UPDAT_FILE_PATH[] = "/sd/update.bin";
 
 
@@ -179,9 +178,19 @@ void otaSDToFlashTask(void* pvParameter) {
     }
 }
 
-/// @brief Updated callback that will be called as soon as the firmware update finishes
+/// @brief Update starting callback method that will be called as soon as the shared attribute firmware keys have been received and processed
+/// and the moment before we subscribe the necessary topics for the OTA firmware update.
+/// Is meant to give a moment were any additional processes or communication with the cloud can be stopped to ensure the update process runs as smooth as possible.
+/// To ensure that calling the ThingsBoardSized::Cleanup_Subscriptions() method can be used which stops any receiving of data over MQTT besides the one for the OTA firmware update,
+/// if this method is used ensure to call all subscribe methods again so they can be resubscribed, in the method passed to the finished_callback if the update failed and we do not restart the device
+void update_starting_callback() {
+  // Nothing to do
+}
+
+/// @brief End callback method that will be called as soon as the OTA firmware update, either finished successfully or failed.
+/// Is meant to allow to either restart the device if the udpate was successfull or to restart any stopped services before the update started in the subscribed update_starting_callback
 /// @param success Either true (update successful) or false (update failed)
-void updatedCallback(const bool& success) {
+void finished_callback(const bool & success) {
   if (success) {
     ESP_LOGI("MAIN", "Done updated to sd card. Write from SD card to flash");
     xTaskCreate(otaSDToFlashTask, "OTA_SD_TO_FLASH", FIRMWARE_PACKET_SIZE + 1024 * 1, NULL, 16, NULL);
@@ -190,11 +199,13 @@ void updatedCallback(const bool& success) {
   ESP_LOGI("MAIN", "Downloading firmware failed");
 }
 
-/// @brief Progress callback that will be called every time we downloaded a new chunk successfully
-/// @param currentChunk 
-/// @param totalChuncks 
-void progressCallback(const size_t& currentChunk, const size_t& totalChuncks) {
-  ESP_LOGI("MAIN", "Downwloading firmware progress %.2f%%", static_cast<float>(currentChunk * 100U) / totalChuncks);
+/// @brief Progress callback method that will be called every time our current progress of downloading the complete firmware data changed,
+/// meaning it will be called if the amount of already downloaded chunks increased.
+/// Is meant to allow to display a progress bar or print the current progress of the update into the console with the currently already downloaded amount of chunks and the total amount of chunks
+/// @param current Already received and processs amount of chunks
+/// @param total Total amount of chunks we need to receive and process until the update has completed
+void progress_callback(const size_t & current, const size_t & total) {
+  ESP_LOGI("MAIN", "Downwloading firmware progress %.2f%%", static_cast<float>(current * 100U) / total);
 }
 
 /// @brief Callback method that is called if we got an ip address from the connected WiFi meaning we successfully established a connection
@@ -262,17 +273,15 @@ extern "C" void app_main() {
         }
 
         if (!currentFWSent) {
-            // Firmware state send at the start of the firmware, to inform the cloud about the current firmware and that it was installed correctly,
-            // especially important when using OTA update, because the OTA update sends the last firmware state as UPDATING, meaning the device is restarting
-            // if the device restarted correctly and has the new given firmware title and version it should then send thoose to the cloud with the state UPDATED,
-            // to inform any end user that the device has successfully restarted and does actually contain the version it was flashed too
-            currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION) && ota.Firmware_Send_State(FW_STATE_UPDATED);
+            currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
         }
 
         if (!updateRequestSent) {
-            const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+            const OTA_Update_Callback callback(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, &finished_callback, &progress_callback, &update_starting_callback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
             // See https://thingsboard.io/docs/user-guide/ota-updates/
             // to understand how to create a new OTA pacakge and assign it to a device so it can download it.
+            // Sending the request again after a successfull update will automatically send the UPDATED firmware state,
+            // because the assigned firmware title and version on the cloud and the firmware version and title we booted into are the same.
             updateRequestSent = ota.Start_Firmware_Update(callback);
         }
 

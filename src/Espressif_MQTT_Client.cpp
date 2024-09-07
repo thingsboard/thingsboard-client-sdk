@@ -10,8 +10,8 @@
 constexpr int MQTT_FAILURE_MESSAGE_ID = -1;
 
 Espressif_MQTT_Client::Espressif_MQTT_Client() :
-    m_received_data_callback(nullptr),
-    m_connected_callback(nullptr),
+    m_received_data_callback(),
+    m_connected_callback(),
     m_connected(false),
     m_enqueue_messages(false),
     m_mqtt_configuration(),
@@ -112,12 +112,12 @@ void Espressif_MQTT_Client::set_enqueue_messages(const bool& enqueue_messages) {
     m_enqueue_messages = enqueue_messages;
 }
 
-void Espressif_MQTT_Client::set_data_callback(data_function callback) {
-    m_received_data_callback = callback;
+void Espressif_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) {
+    m_received_data_callback.Set_Callback(callback);
 }
 
-void Espressif_MQTT_Client::set_connect_callback(connect_function callback) {
-    m_connected_callback = callback;
+void Espressif_MQTT_Client::::set_connect_callback(Callback<void>::function callback) {
+    m_connected_callback.Set_Callback(callback);
 }
 
 bool Espressif_MQTT_Client::set_buffer_size(uint16_t buffer_size) {
@@ -276,7 +276,7 @@ void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, const esp_
     switch (event_id) {
         case esp_mqtt_event_id_t::MQTT_EVENT_CONNECTED:
             m_connected = true;
-            m_connected_callback();
+            m_connected_callback.Call_Callback();
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_DISCONNECTED:
             m_connected = false;
@@ -296,10 +296,7 @@ void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, const esp_
             if (event->data_len != event->total_data_len) {
                 break;
             }
-
-            if (m_received_data_callback != nullptr) {
-                m_received_data_callback(event->topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
-            }
+            m_received_data_callback.Call_Callback(event->topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_ERROR:
             // Nothing to do

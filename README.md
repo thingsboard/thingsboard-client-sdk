@@ -476,7 +476,7 @@ Once that has been done it can simply be passed instead of the `Espressif_Update
 // Initalize the Updater client instance used to flash binary to flash memory
 Custom_Updater updater;
 
-const OTA_Update_Callback callback(&progressCallback, &updatedCallback, CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
+const OTA_Update_Callback callback(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, &finished_callback, &progress_callback, &update_starting_callback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE);
 ```
 
 ### Custom HTTP Instance
@@ -565,11 +565,11 @@ For that a `class` needs to inherit the `IMQTT_Client` interface and `override` 
 
 class Custom_MQTT_Client : public IMQTT_Client {
   public:
-    void set_data_callback(data_function cb) override {
+    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override {
         // Nothing to do
     }
 
-    void set_connect_callback(connect_function cb) override {
+    void set_connect_callback(Callback<void>::function callback) override {
         // Nothing to do
     }
 

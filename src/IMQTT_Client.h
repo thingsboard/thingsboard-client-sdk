@@ -2,17 +2,12 @@
 #define IMQTT_Client_h
 
 // Local include.
-#include "Configuration.h"
+#include "Callback.h"
 
 // Library include.
-#if THINGSBOARD_ENABLE_STL
-#include <functional>
-#endif // THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #include <Print.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-#include <stdint.h>
-#include <stddef.h>
 
 
 /// @brief MQTT Client interface that contains the method that a class that can be used to send and receive data over an MQTT connection should implement.
@@ -34,25 +29,16 @@ class IMQTT_Client : public Print {
 class IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
   public:
-      /// @brief Callback signature
-#if THINGSBOARD_ENABLE_STL
-    using data_function = std::function<void(char * topic, uint8_t * payload, unsigned int length)>;
-    using connect_function = std::function<void()>;
-#else
-    using data_function = void (*)(char * topic, uint8_t * payload, unsigned int length);
-    using connect_function = void (*)();
-#endif // THINGSBOARD_ENABLE_STL
-
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
     /// as well as the payload data and the size of that payload data. Directly set by the used ThingsBoard client to its internal methods,
     /// therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on received MQTT response
-    virtual void set_data_callback(data_function callback) = 0;
+    virtual void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) = 0;
 
     /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker.
     /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on established MQTT connection
-    virtual void set_connect_callback(connect_function callback) = 0;
+    virtual void set_connect_callback(Callback<void>::function callback) = 0;
 
     /// @brief Changes the size of the buffer for sent and received MQTT messages,
     /// using a bigger value than uint16_t for passing the buffer size does not make any sense because the maximum message size received

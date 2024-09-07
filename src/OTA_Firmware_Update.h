@@ -31,10 +31,9 @@ char constexpr CHECKSUM_AGORITM_SHA512[] = "SHA512";
 // Log messages.
 char constexpr NUMBER_PRINTF[] = "%u";
 char constexpr NO_FW[] = "Missing shared attribute firmware keys. Ensure you assigned an OTA update with binary";
-char constexpr EMPTY_FW[] = "Given firmware was NULL";
-char constexpr FW_UP_TO_DATE[] = "Firmware version (%s) already up to date";
-char constexpr FW_NOT_FOR_US[] = "Firmware title (%s) not same as received title (%s)";
-char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] = "Checksum algorithm (%s) is not supported";
+char constexpr EMPTY_FW[] = "Received shared attribute firmware keys were NULL";
+char constexpr FW_NOT_FOR_US[] = "Received firmware title (%s) is different and not meant for this device (%s)";
+char constexpr FW_CHKS_ALGO_NOT_SUPPORTED[] = "Received checksum algorithm (%s) is not supported";
 char constexpr NOT_ENOUGH_RAM[] = "Temporary allocating more internal client buffer failed, decrease OTA chunk size or decrease overall heap usage";
 char constexpr RESETTING_FAILED[] = "Preparing for OTA firmware updates failed, attributes might be NULL";
 #if THINGSBOARD_ENABLE_DEBUG
@@ -317,18 +316,17 @@ class OTA_Firmware_Update : public IAPI_Implementation {
             Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
             return;
         }
-        // If firmware version and title is the same, we do not initiate an update, because we expect the type of binary to be the same one we are currently using and therefore updating would be useless
+        // If firmware version and title is the same, we do not initiate an update, because we expect the type of binary to be the same one we are currently using
+        // and therefore updating would be useless as we have already updated previously
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
-            char message[JSON_STRING_SIZE(strlen(FW_UP_TO_DATE)) + JSON_STRING_SIZE(strlen(curr_fw_version))] = {};
-            (void)snprintf(message, sizeof(message), FW_UP_TO_DATE, curr_fw_version);
-            Logger::println(message);
-            Firmware_Send_State(FW_STATE_FAILED, message);
+            Firmware_Send_State(FW_STATE_UPDATED);
             return;
         }
-        // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device and downloading it on this device could possibly cause hardware issues
+        // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device
+        // and downloading it on this device could possibly cause hardware issues or even destroy the device
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
-            char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(curr_fw_title)) + JSON_STRING_SIZE(strlen(fw_title))] = {};
-            (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, curr_fw_title, fw_title);
+            char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(fw_title)) + JSON_STRING_SIZE(strlen(curr_fw_title))] = {};
+            (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, fw_title, curr_fw_title);
             Logger::println(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return;
@@ -356,7 +354,10 @@ class OTA_Firmware_Update : public IAPI_Implementation {
             return;
         }
 
-        if (!Firmware_OTA_Subscribe()) {
+        m_fw_callback.Call_Update_Starting_Callback();
+        bool const result = Firmware_OTA_Subscribe();
+        if (!result) {
+            m_fw_callback.Call_Callback(result);
             return;
         }
 
@@ -381,6 +382,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         if (m_changed_buffer_size && !m_set_buffer_size.Call_Callback(chunk_size + 50U)) {
             Logger::println(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
+            m_fw_callback.Call_Callback(false);
             return;
         }
 
