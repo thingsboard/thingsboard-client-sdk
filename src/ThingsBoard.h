@@ -549,7 +549,7 @@ class ThingsBoardSized {
     /// To ensure that we therefore simply provide a global request id that can be used and incremented by all request types
     /// @return Mutable reference to the request id
     size_t * getRequestID() {
-        return m_request_id;
+        return &m_request_id;
     }
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS

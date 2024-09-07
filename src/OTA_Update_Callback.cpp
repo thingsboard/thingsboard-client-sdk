@@ -1,7 +1,7 @@
 // Header include.
 #include "OTA_Update_Callback.h"
 
-OTA_Update_Callback::OTA_Update_Callback(char const * const current_fw_title, char const * const current_fw_version, IUpdater * const updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback = nullptr, Callback<void>::function update_starting_callback = nullptr, uint8_t chunk_retries = CHUNK_RETRIES, uint16_t chunk_size = CHUNK_SIZE, uint64_t const & timeout_microseconds = REQUEST_TIMEOUT)
+OTA_Update_Callback::OTA_Update_Callback(char const * const current_fw_title, char const * const current_fw_version, IUpdater * const updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback, Callback<void>::function update_starting_callback, uint8_t chunk_retries, uint16_t chunk_size, uint64_t const & timeout_microseconds)
   : Callback(finished_callback)
   , m_current_fw_title(current_fw_title)
   , m_current_fw_version(current_fw_version)
@@ -48,7 +48,7 @@ void OTA_Update_Callback::Set_Progress_Callback(Callback<void, size_t const &, s
 }
 
 void OTA_Update_Callback::Call_Update_Starting_Callback() const {
-    return m_progress_callback.Call_Callback();
+    return m_update_starting_callback.Call_Callback();
 }
 
 void OTA_Update_Callback::Set_Update_Starting_Callback(Callback<void>::function update_starting_callback) {

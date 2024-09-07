@@ -116,7 +116,7 @@ void Espressif_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, 
     m_received_data_callback.Set_Callback(callback);
 }
 
-void Espressif_MQTT_Client::::set_connect_callback(Callback<void>::function callback) {
+void Espressif_MQTT_Client::set_connect_callback(Callback<void>::function callback) {
     m_connected_callback.Set_Callback(callback);
 }
 

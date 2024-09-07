@@ -59,10 +59,9 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @return Unique identifier connected to the requested client-side or shared attributes
-    const size_t& Get_Request_ID() const {
+    size_t const & Get_Request_ID() const {
         return m_request_id;
     }
-
 
     /// @brief Sets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback

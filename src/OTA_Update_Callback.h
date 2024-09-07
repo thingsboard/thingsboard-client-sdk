@@ -32,19 +32,19 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     /// Is meant to allow to either restart the device if the udpate was successfull or to restart any stopped services before the update started in the subscribed update_starting_callback
     /// @param progress_callback Progress callback method that will be called every time our current progress of downloading the complete firmware data changed,
     /// meaning it will be called if the amount of already downloaded chunks increased.
-    /// Is meant to allow to display a progress bar or print the current progress of the update into the console with the currently already downloaded amount of chunks and the total amount of chunks
+    /// Is meant to allow to display a progress bar or print the current progress of the update into the console with the currently already downloaded amount of chunks and the total amount of chunks, default = nullptr
     /// @param update_starting_callback Update starting callback method that will be called as soon as the shared attribute firmware keys have been received and processed
     /// and the moment before we subscribe the necessary topics for the OTA firmware update.
     /// Is meant to give a moment were any additional processes or communication with the cloud can be stopped to ensure the update process runs as smooth as possible.
     /// To ensure that calling the ThingsBoardSized::Cleanup_Subscriptions() method can be used which stops any receiving of data over MQTT besides the one for the OTA firmware update,
-    /// if this method is used ensure to call all subscribe methods again so they can be resubscribed, in the method passed to the finished_callback if the update failed and we do not restart the device
+    /// if this method is used ensure to call all subscribe methods again so they can be resubscribed, in the method passed to the finished_callback if the update failed and we do not restart the device, default = nullptr
     /// @param chunk_retries Amount of retries the OTA firmware update has to download each seperate chunk with a given size,
-    /// before the complete download is stopped and registered as failed
+    /// before the complete download is stopped and registered as failed, default = CHUNK_RETRIES
     /// @param chunk_size Size of the chunks that the firmware binary data will be split into,
     /// increased chunk size might speed up the process by a little bit, but requires more heap memory,
-    // because the whole chunk is saved into the heap before it can be processed and is then erased again after it has been used
+    // because the whole chunk is saved into the heap before it can be processed and is then erased again after it has been used, default = CHUNK_SIZE
     /// @param timeout Maximum amount of time in microseconds for the OTA firmware update for each seperate chunk,
-    /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried
+    /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried, default = REQUEST_TIMEOUT
     OTA_Update_Callback(char const * const current_fw_title, char const * const current_fw_version, IUpdater * const updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback = nullptr, Callback<void>::function update_starting_callback = nullptr, uint8_t chunk_retries = CHUNK_RETRIES, uint16_t chunk_size = CHUNK_SIZE, uint64_t const & timeout_microseconds = REQUEST_TIMEOUT);
 
     /// @brief Gets the current firmware title, used to decide if an OTA firmware update is already installed and therefore should not be downladed,
