@@ -87,12 +87,6 @@ class Callback_Watchdog : public Callback<void> {
 
   private:
 #if THINGSBOARD_USE_ESP_TIMER
-    esp_timer_handle_t m_oneshot_timer; // ESP Timer handle that is used to start and stop the oneshot timer
-#else
-    Timer<1, micros> m_oneshot_timer;   // Ticker instance that handles the timer under the hood, if possible we directly use esp timer instead because it is more efficient
-#endif // THINGSBOARD_USE_ESP_TIMER
-
-#if THINGSBOARD_USE_ESP_TIMER
     /// @brief Creates and initally configures the timer, has to be done once before either esp_timer_start_once or esp_timer_stop is called
     /// It can not be created in the constructor, because that would possibly be called before we have executed the main app code, meaning the esp timer base is not initalized yet.
     /// This would result in an invalid configuration which would cause crashes when used in combination with once() or detach()
@@ -139,6 +133,12 @@ class Callback_Watchdog : public Callback<void> {
         return false;
 #endif // !THINGSBOARD_USE_ESP_TIMER
     }
+
+#if THINGSBOARD_USE_ESP_TIMER
+    esp_timer_handle_t m_oneshot_timer = {}; // ESP Timer handle that is used to start and stop the oneshot timer
+#else
+    Timer<1, micros> m_oneshot_timer = {};   // Ticker instance that handles the timer under the hood, if possible we directly use esp timer instead because it is more efficient
+#endif // THINGSBOARD_USE_ESP_TIMER
 };
 
 #endif // Argument_Cache_h

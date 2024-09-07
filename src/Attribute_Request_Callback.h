@@ -164,14 +164,14 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
 
   private:
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *>               m_attributes;           // Attribute we want to request
+    Vector<char const *>               m_attributes = {};           // Attribute we want to request
 #else
-    Array<char const *, MaxAttributes> m_attributes;           // Attribute we want to request
+    Array<char const *, MaxAttributes> m_attributes = {};           // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    size_t                             m_request_id;           // Id the request was called with
-    char const                         *m_attribute_key;       // Attribute key that we wil receive the response on ("client" or "shared")
-    uint64_t                           m_timeout_microseconds; // Timeout time until we expect response to request
-    Callback_Watchdog                  m_timeout_callback;     // Handles callback that will be called if request times out
+    size_t                             m_request_id = {};           // Id the request was called with
+    char const                         *m_attribute_key = {};       // Attribute key that we wil receive the response on ("client" or "shared")
+    uint64_t                           m_timeout_microseconds = {}; // Timeout time until we expect response to request
+    Callback_Watchdog                  m_timeout_callback = {};     // Handles callback that will be called if request times out
 };
 
 #endif // Attribute_Request_Callback_h

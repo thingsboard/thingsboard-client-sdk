@@ -72,7 +72,7 @@ class Callback {
     }
 
   private:
-    function   m_callback; // Callback to call
+    function   m_callback = {}; // Callback to call
 };
 
 #endif // Callback_h

@@ -194,8 +194,8 @@ class Shared_Attribute_Update : public IAPI_Implementation {
     }
 
   private:
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback;          // Subscribe mqtt topic client callback
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback;        // Unubscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};          // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};        // Unubscribe mqtt topic client callback
 
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
@@ -206,9 +206,9 @@ class Shared_Attribute_Update : public IAPI_Implementation {
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<Shared_Attribute_Callback>                                        m_shared_attribute_update_callbacks; // Shared attribute update callbacks vector
+    Vector<Shared_Attribute_Callback>                                        m_shared_attribute_update_callbacks = {}; // Shared attribute update callbacks vector
 #else
-    Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions>        m_shared_attribute_update_callbacks; // Shared attribute update callbacks array
+    Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions>        m_shared_attribute_update_callbacks = {}; // Shared attribute update callbacks array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

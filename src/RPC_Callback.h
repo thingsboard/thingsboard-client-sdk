@@ -63,9 +63,9 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
   private:
-    char const *m_methodName;  // Method name
+    char const *m_methodName = {};  // Method name
 #if THINGSBOARD_ENABLE_DYNAMIC
-    size_t     m_responseSize; // Required size to contain the response
+    size_t     m_responseSize = {}; // Required size to contain the response
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

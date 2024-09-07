@@ -25,8 +25,8 @@ class Espressif_Updater : public IUpdater {
     bool end() override;
 
   private:
-    uint32_t m_ota_handle;           // ESP OTA hanle that is used to to access the underlying updater
-    void const * m_update_partition; // Non active OTA partition that we write our data into
+    uint32_t m_ota_handle = {};           // ESP OTA hanle that is used to to access the underlying updater
+    void const * m_update_partition = {}; // Non active OTA partition that we write our data into
 };
 
 #endif // THINGSBOARD_USE_ESP_PARTITION

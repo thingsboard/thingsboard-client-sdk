@@ -205,9 +205,9 @@ class Server_Side_RPC : public IAPI_Implementation {
     }
 
   private:
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;         // Send json document callback
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback;   // Subscribe mqtt topic client callback
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback; // Unubscribe mqtt topic client callback
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};         // Send json document callback
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};   // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {}; // Unubscribe mqtt topic client callback
 
     // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
     // even if the user only temporarily created the object before the method was called.
@@ -218,9 +218,9 @@ class Server_Side_RPC : public IAPI_Implementation {
     // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
     // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<RPC_Callback>                                                     m_rpc_callbacks;              // Server side RPC callbacks vector
+    Vector<RPC_Callback>                                                     m_rpc_callbacks = {};              // Server side RPC callbacks vector
 #else
-    Array<RPC_Callback, MaxSubscriptions>                                    m_rpc_callbacks;              // Server side RPC callbacks array
+    Array<RPC_Callback, MaxSubscriptions>                                    m_rpc_callbacks = {};              // Server side RPC callbacks array
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

@@ -39,7 +39,8 @@ class Vector {
     /// @param container Data container with begin() and end() method that we want to copy fully into our underlying data container
     template<typename Container>
     Vector(Container const & container)
-      : m_elements()
+      : m_elements(nullptr)
+      , m_capacity(0U)
       , m_size(0U)
     {
         insert(nullptr, container.begin(), container.end());
@@ -142,12 +143,12 @@ class Vector {
     void push_back(T const & element) {
         if (m_size == m_capacity) {
             m_capacity = (m_capacity == 0) ? 1 : 2 * m_capacity;
-            T* newElements = new T[m_capacity]();
+            T* new_elements = new T[m_capacity]();
             if (m_elements != nullptr) {
-                memcpy(newElements, m_elements, m_size * sizeof(T));
+                memcpy(new_elements, m_elements, m_size * sizeof(T));
                 delete[] m_elements;
             }
-            m_elements = newElements;
+            m_elements = new_elements;
         }
         m_elements[m_size] = element;
         m_size++;
@@ -217,9 +218,9 @@ class Vector {
     }
 
   private:
-    T      *m_elements; // Pointer to the start of our elements
-    size_t m_capacity;  // Allocated capacity that shows how many elements we could hold
-    size_t m_size;      // Used size that shows how many elements we entered
+    T      *m_elements = {}; // Pointer to the start of our elements
+    size_t m_capacity = {};  // Allocated capacity that shows how many elements we could hold
+    size_t m_size = {};      // Used size that shows how many elements we entered
 };
 
 #endif // Vector_h

@@ -75,9 +75,9 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
 
   private:
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *>                 m_attributes; // Shared attribute we want to subscribe to receive a message if they change
+    Vector<char const *>                 m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
 #else
-    Array<char const *, MaxAttributes>   m_attributes; // Shared attribute we want to subscribe to receive a message if they change
+    Array<char const *, MaxAttributes>   m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

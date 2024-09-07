@@ -68,8 +68,8 @@ class Arduino_MQTT_Client : public IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
   private:
-    Callback<void> m_connected_callback; // Callback that will be called as soon as the mqtt client has connected
-    PubSubClient   m_mqtt_client;        // Underlying MQTT client instance used to send data
+    Callback<void> m_connected_callback = {}; // Callback that will be called as soon as the mqtt client has connected
+    PubSubClient   m_mqtt_client = {};        // Underlying MQTT client instance used to send data
 };
 
 #endif // ARDUINO

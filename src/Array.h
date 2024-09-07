@@ -129,14 +129,13 @@ class Array {
     }
 
     /// @brief Inserts the given element at the end of the underlying data container,
-    /// If the interal data structure is full already then this method will assert and stop the application.
+    /// if the interal data structure is full already then this method will assert and stop the application.
     /// Because if we do not we could cause an out of bounds write, which could possibly overwrite other memory.
     /// Causing hard to debug issues, therefore this behaviour is not allowed in the first place
     /// @param element Element that should be inserted at the end
     void push_back(T const & element) {
         assert(m_size < Capacity);
-        m_elements[m_size] = element;
-        m_size++;
+        m_elements[m_size++] = element;
     }
 
     /// @brief Inserts all element from the given start to the given end iterator into the underlying data container.
@@ -203,8 +202,8 @@ class Array {
     }
 
   private:
-    T m_elements[Capacity]; // Underlying c-array holding our data
-    size_t m_size;          // Used size that shows how many elements we entered
+    T      m_elements[Capacity] = {}; // Underlying c-array holding our data
+    size_t m_size = {};               // Used size that shows how many elements we entered
 };
 
 #endif // Array_h

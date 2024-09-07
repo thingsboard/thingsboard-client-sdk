@@ -78,11 +78,11 @@ class RPC_Request_Callback : public Callback<void, JsonVariantConst const &> {
     void Set_Timeout_Callback(Callback_Watchdog::function timeout_callback);
 
   private:
-    char const                    *m_methodName;          // Method name
-    JsonArray const               *m_parameters;          // Parameter json
-    size_t                        m_request_id;           // Id the request was called with
-    uint64_t                      m_timeout_microseconds; // Timeout time until we expect response to request
-    Callback_Watchdog             m_timeout_callback;     // Handles callback that will be called if request times out
+    char const                    *m_methodName = {};          // Method name
+    JsonArray const               *m_parameters = {};          // Parameter json
+    size_t                        m_request_id = {};           // Id the request was called with
+    uint64_t                      m_timeout_microseconds = {}; // Timeout time until we expect response to request
+    Callback_Watchdog             m_timeout_callback = {};     // Handles callback that will be called if request times out
 };
 
 #endif // RPC_Request_Callback_h

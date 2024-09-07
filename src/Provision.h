@@ -155,11 +155,11 @@ private:
         return m_unsubscribe_topic_callback.Call_Callback(PROV_RESPONSE_TOPIC);
     }
 
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback;         // Send json document callback
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback;   // Subscribe mqtt topic client callback
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback; // Unubscribe mqtt topic client callback
+    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};         // Send json document callback
+    Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};   // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {}; // Unubscribe mqtt topic client callback
 
-    Provision_Callback                                                       m_provision_callback;         // Provision response callback
+    Provision_Callback                                                       m_provision_callback = {};         // Provision response callback
 };
 
 #endif // Provision_h
