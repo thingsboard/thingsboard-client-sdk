@@ -65,7 +65,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
       , m_previous_buffer_size(0U)
       , m_changed_buffer_size(false)
 #if THINGSBOARD_ENABLE_STL
-      , m_ota(std::bind(&OTA_Firmware_Update::Publish_Chunk_Request, this, std::placeholders::_1), std::bind(&OTA_Firmware_Update::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&OTA_Firmware_Update::Firmware_OTA_Unsubscribe, this))
+      , m_ota(std::bind(&OTA_Firmware_Update::Publish_Chunk_Request, this, std::placeholders::_1, std::placeholders::_2), std::bind(&OTA_Firmware_Update::Firmware_Send_State, this, std::placeholders::_1, std::placeholders::_2), std::bind(&OTA_Firmware_Update::Firmware_OTA_Unsubscribe, this))
 #else
       , m_ota(OTA_Firmware_Update::staticPublishChunk, OTA_Firmware_Update::staticFirmwareSend, OTA_Firmware_Update::staticUnsubscribe)
 #endif // THINGSBOARD_ENABLE_STL
@@ -459,7 +459,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     uint16_t                                                                 m_previous_buffer_size = {};              // Previous buffer size of the underlying client, used to revert to the previously configured buffer size if it was temporarily increased by the OTA update
     bool                                                                     m_changed_buffer_size = {};               // Whether the buffer size had to be changed, because the previous internal buffer size was to small to hold the firmware chunks
     OTA_Handler<Logger>                                                      m_ota = {};                               // Class instance that handles the flashing and creating a hash from the given received binary firmware data
-    char const                                                               m_response_topic[MAX_FW_TOPIC_SIZE] = {}; // Firmware response topic that contains the specific request ID of the firmware we actually want to download
+    char                                                                     m_response_topic[MAX_FW_TOPIC_SIZE] = {}; // Firmware response topic that contains the specific request ID of the firmware we actually want to download
 #if !THINGSBOARD_ENABLE_DYNAMIC
     Shared_Attribute_Update<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>           m_fw_attribute_update = {};               // API implementation to be informed if needed fw attributes have been updated
     Attribute_Request<1U, OTA_ATTRIBUTE_KEYS_AMOUNT, Logger>                 m_fw_attribute_request = {};              // API implementation to request the needed fw attributes to start updating
