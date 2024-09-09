@@ -674,15 +674,18 @@ class ThingsBoardSized {
             return;
         }
 
-        // Calculate size with the total amount of commas, always denotes the end of a key-value pair besides being optional for the last element in an array or in an object.
-        // Additionaly an object or array also counts as an element, therefore we simply add the amount of commas to twice the amount of open curly (object) and open square (array) brackets
-        size_t const size = Helper::getOccurences(payload, ',', length) + (2 * Helper::getOccurences(payload, '{', length)) + (2 * Helper::getOccurences(payload, '[', length));
+        // Calculate size with the total amount of commas, always denotes the end of a key-value pair besides for the last element in an array or in an object where the comma is not permitted.
+        // Additionaly an object or array also counts as an element, therefore we simply add the amount of commas to twice the amount of open curly (object) and open square (array) brackets.
+        // But because the overlying json always has to start with an open curly (object) bracket as well, we can substract 1 from the curly (object) bracket count
+        size_t const size = Helper::getOccurences(payload, ',', length) + (2U * (Helper::getOccurences(payload, '{', length) - 1U)) + (2U * Helper::getOccurences(payload, '[', length));
 #if THINGSBOARD_ENABLE_DYNAMIC
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         size_t const document_size = JSON_OBJECT_SIZE(size);
         TBJsonDocument jsonBuffer(document_size);
+        // Because we calcualte the allocation dynamically fromt he payload, which is user input, it could theoretically be malicious ({ "malicious" : "{{{{{{{{{..."}) and contain a lot of the symbols used to calculate the size.
+        // But if that is the case adn the allocation still succeeds we delete the allocated memory relatively fast again so it shouldn't be a problem and if the allocation fails we simply return at this point with an appropriate error message
         if (jsonBuffer.capacity() != document_size) {
             Logger::printfln(HEAP_ALLOCATION_FAILED, document_size, jsonBuffer.capacity());
             return;
@@ -797,11 +800,11 @@ class ThingsBoardSized {
     static ThingsBoardSized *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 
-    IMQTT_Client&                                 m_client = {};                // MQTT client instance.
-    size_t                                        m_max_stack = {};             // Maximum stack size we allocate at once.
-    size_t                                        m_request_id = {};            // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
+    IMQTT_Client&                                   m_client = {};              // MQTT client instance.
+    size_t                                          m_max_stack = {};           // Maximum stack size we allocate at once.
+    size_t                                          m_request_id = {};          // Internal id used to differentiate which request should receive which response for certain API calls. Can send 4'294'967'296 requests before wrapping back to 0
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-    size_t                                        m_buffering_size = {};        // Buffering size used to serialize directly into client.
+    size_t                                          m_buffering_size = {};      // Buffering size used to serialize directly into client.
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #if !THINGSBOARD_ENABLE_DYNAMIC
     Array<IAPI_Implementation*, MaxEndpointsAmount> m_api_implementations = {}; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
