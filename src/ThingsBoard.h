@@ -674,10 +674,9 @@ class ThingsBoardSized {
             return;
         }
 
-        // Calculate size with the total amount of commas, always denotes the end of a key-value pair besides for the last element in an array or in an object where the comma is not permitted.
-        // Additionaly an object or array also counts as an element, therefore we simply add the amount of commas to twice the amount of open curly (object) and open square (array) brackets.
-        // But because the overlying json always has to start with an open curly (object) bracket as well, we can substract 1 from the curly (object) bracket count
-        size_t const size = Helper::getOccurences(payload, ',', length) + (2U * (Helper::getOccurences(payload, '{', length) - 1U)) + (2U * Helper::getOccurences(payload, '[', length));
+        // Calculate size with the total amount of commas, always denotes the end of a key-value pair besides for the last element in an array or in an object where the comma is not permitted,
+        // therfore we have to add the space for another key-value pair for all the occurences of thoose symbols as well
+        size_t const size = Helper::getOccurences(payload, ',', length) + Helper::getOccurences(payload, '{', length) + Helper::getOccurences(payload, '[', length);
 #if THINGSBOARD_ENABLE_DYNAMIC
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
