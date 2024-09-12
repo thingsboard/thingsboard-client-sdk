@@ -90,8 +90,8 @@ class Attribute_Request : public IAPI_Implementation {
             if (attribute_request.Get_Request_ID() != request_id) {
                 continue;
             }
-            char const * const attributeResponseKey = attribute_request.Get_Attribute_Key();
-            if (attributeResponseKey == nullptr) {
+            char const * const attribute_response_key = attribute_request.Get_Attribute_Key();
+            if (attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
                 Logger::println(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -104,8 +104,8 @@ class Attribute_Request : public IAPI_Implementation {
                 goto delete_callback;
             }
 
-            if (data.containsKey(attributeResponseKey)) {
-                data = data[attributeResponseKey];
+            if (data.containsKey(attribute_response_key)) {
+                data = data[attribute_response_key];
             }
             attribute_request.Stop_Timeout_Timer();
             attribute_request.Call_Callback(data);
@@ -159,13 +159,13 @@ class Attribute_Request : public IAPI_Implementation {
     /// @brief Requests one client-side or shared attribute calllback,
     /// that will be called if the key-value pair from the server for the given client-side or shared attributes is received
     /// @param callback Callback method that will be called
-    /// @param attributeRequestKey Key of the key-value pair that will contain the attributes we want to request
-    /// @param attributeResponseKey Key of the key-value pair that will contain the attributes we got as a response
+    /// @param attribute_request_key Key of the key-value pair that will contain the attributes we want to request
+    /// @param attribute_response_key Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
 #if THINGSBOARD_ENABLE_DYNAMIC
-    bool Attributes_Request(Attribute_Request_Callback const & callback, char const * const attributeRequestKey, char const * const attributeResponseKey) {
+    bool Attributes_Request(Attribute_Request_Callback const & callback, char const * const attribute_request_key, char const * const attribute_response_key) {
 #else
-    bool Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback, char const * const attributeRequestKey, char const * const attributeResponseKey) {
+    bool Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback, char const * const attribute_request_key, char const * const attribute_response_key) {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
         auto const & attributes = callback.Get_Attributes();
 
@@ -176,7 +176,7 @@ class Attribute_Request : public IAPI_Implementation {
 #endif // THINGSBOARD_ENABLE_DEBUG
             return false;
         }
-        else if (attributeRequestKey == nullptr || attributeResponseKey == nullptr) {
+        else if (attribute_request_key == nullptr || attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::println(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -184,21 +184,21 @@ class Attribute_Request : public IAPI_Implementation {
         }
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-        Attribute_Request_Callback * registeredCallback = nullptr;
+        Attribute_Request_Callback * registered_callback = nullptr;
 #else
-        Attribute_Request_Callback<MaxAttributes> * registeredCallback = nullptr;
+        Attribute_Request_Callback<MaxAttributes> * registered_callback = nullptr;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-        if (!Attributes_Request_Subscribe(callback, registeredCallback)) {
+        if (!Attributes_Request_Subscribe(callback, registered_callback)) {
             return false;
         }
-        else if (registeredCallback == nullptr) {
+        else if (registered_callback == nullptr) {
             return false;
         }
 
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed + the default clientKeys or sharedKeys
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        StaticJsonDocument<JSON_OBJECT_SIZE(1)> requestBuffer;
+        StaticJsonDocument<JSON_OBJECT_SIZE(1)> request_buffer;
 
         // Calculate the size required for the char buffer containing all the attributes seperated by a comma,
         // before initalizing it so it is possible to allocate it on the stack
@@ -231,7 +231,7 @@ class Attribute_Request : public IAPI_Implementation {
         // Ensure to cast to const, this is done so that ArduinoJson does not copy the value but instead simply store the pointer, which does not require any more memory,
         // besides the base size needed to allocate one key-value pair. Because if we don't the char array would be copied
         // and because there is not enough space the value would simply be "undefined" instead. Which would cause the request to not be sent correctly
-        requestBuffer[attributeRequestKey] = static_cast<const char*>(request);
+        request_buffer[attribute_request_key] = static_cast<const char*>(request);
 
         size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
@@ -240,23 +240,23 @@ class Attribute_Request : public IAPI_Implementation {
         }
         auto & request_id = *p_request_id;
 
-        registeredCallback->Set_Request_ID(++request_id);
-        registeredCallback->Set_Attribute_Key(attributeResponseKey);
-        registeredCallback->Start_Timeout_Timer();
+        registered_callback->Set_Request_ID(++request_id);
+        registered_callback->Set_Attribute_Key(attribute_response_key);
+        registered_callback->Start_Timeout_Timer();
 
         char topic[Helper::detectSize(ATTRIBUTE_REQUEST_TOPIC, request_id)] = {};
         (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, request_id);
-        return m_send_json_callback.Call_Callback(topic, requestBuffer, Helper::Measure_Json(requestBuffer));
+        return m_send_json_callback.Call_Callback(topic, request_buffer, Helper::Measure_Json(request_buffer));
     }
 
     /// @brief Subscribes to attribute response topic
     /// @param callback Callback method that will be called
-    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
+    /// @param registered_callback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
 #if THINGSBOARD_ENABLE_DYNAMIC
-    bool Attributes_Request_Subscribe(Attribute_Request_Callback const & callback, Attribute_Request_Callback * & registeredCallback) {
+    bool Attributes_Request_Subscribe(Attribute_Request_Callback const & callback, Attribute_Request_Callback * & registered_callback) {
 #else
-    bool Attributes_Request_Subscribe(Attribute_Request_Callback<MaxAttributes> const & callback, Attribute_Request_Callback<MaxAttributes> * & registeredCallback) {
+    bool Attributes_Request_Subscribe(Attribute_Request_Callback<MaxAttributes> const & callback, Attribute_Request_Callback<MaxAttributes> * & registered_callback) {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
@@ -269,7 +269,7 @@ class Attribute_Request : public IAPI_Implementation {
           return false;
         }
         m_attribute_request_callbacks.push_back(callback);
-        registeredCallback = &m_attribute_request_callbacks.back();
+        registered_callback = &m_attribute_request_callbacks.back();
         return true;
     }
 

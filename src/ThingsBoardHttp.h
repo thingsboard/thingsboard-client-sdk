@@ -43,32 +43,32 @@ class ThingsBoardHttpSized {
     /// @param access_token Token used to verify the devices identity with the ThingsBoard server
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
-    /// @param keepAlive Attempts to keep the establishes TCP connection alive to make sending data faster
-    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t port = 80U, bool keepAlive = true, size_t const & maxStackSize = Default_Max_Stack_Size)
+    /// @param keep_alive Attempts to keep the establishes TCP connection alive to make sending data faster
+    /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
+    ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t port = 80U, bool keep_alive = true, size_t const & max_stack_size = Default_Max_Stack_Size)
       : m_client(client)
-      , m_max_stack(maxStackSize)
+      , m_max_stack(max_stack_size)
       , m_token(access_token)
     {
-        m_client.set_keep_alive(keepAlive);
+        m_client.set_keep_alive(keep_alive);
         if (m_client.connect(host, port) != 0) {
             Logger::println(CONNECT_FAILED);
         }
     }
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
-    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
-    void setMaximumStackSize(size_t const & maxStackSize) {
-        m_max_stack = maxStackSize;
+    /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack
+    void setMaximumStackSize(size_t const & max_stack_size) {
+        m_max_stack = max_stack_size;
     }
 
     /// @brief Attempts to send key value pairs from custom source over the given topic to the server
     /// @param topic Topic we want to send the data over
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
+    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & json_size) {
         // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
@@ -82,9 +82,9 @@ class ThingsBoardHttpSized {
             return false;
         }
         bool result = false;
-        if (getMaximumStackSize() < jsonSize) {
-            char * json = new char[jsonSize]();
-            if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
+        if (getMaximumStackSize() < json_size) {
+            char * json = new char[json_size]();
+            if (serializeJson(source, json, json_size) < json_size - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
             }
             else {
@@ -96,8 +96,8 @@ class ThingsBoardHttpSized {
             json = nullptr;
         }
         else {
-            char json[jsonSize] = {};
-            if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
+            char json[json_size] = {};
+            if (serializeJson(source, json, json_size) < json_size - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
                 return result;
             }
@@ -169,10 +169,10 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool sendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
-        return Send_Json(HTTP_TELEMETRY_TOPIC, source, jsonSize);
+    bool sendTelemetryJson(JsonDocument const & source, size_t const & json_size) {
+        return Send_Json(HTTP_TELEMETRY_TOPIC, source, json_size);
     }
 
     /// @brief Attempts to send a GET request over HTTP or HTTPS
@@ -245,10 +245,10 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool sendAttributeJson(JsonDocument const & source, size_t const & jsonSize) {
-        return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, jsonSize);
+    bool sendAttributeJson(JsonDocument const & source, size_t const & json_size) {
+        return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, json_size);
     }
 
   private:
@@ -327,23 +327,23 @@ class ThingsBoardHttpSized {
         // String are char const * and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(size));
+        TBJsonDocument json_buffer(JSON_OBJECT_SIZE(size));
 #else
         if (size > MaxKeyValuePairAmount) {
             Logger::printfln(TOO_MANY_JSON_FIELDS, size, "MaxKeyValuePairAmount", MaxKeyValuePairAmount);
             return false;
         }
-        StaticJsonDocument<JSON_OBJECT_SIZE(MaxKeyValuePairAmount)> jsonBuffer;
+        StaticJsonDocument<JSON_OBJECT_SIZE(MaxKeyValuePairAmount)> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
         for (auto it = first; it != last; ++it) {
             auto const & data = *it;
-            if (!data.SerializeKeyValue(jsonBuffer)) {
+            if (!data.SerializeKeyValue(json_buffer)) {
                 Logger::println(UNABLE_TO_SERIALIZE);
                 return false;
             }
         }
-        return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
+        return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
@@ -360,12 +360,12 @@ class ThingsBoardHttpSized {
             return false;
         }
 
-        StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
-        if (!t.SerializeKeyValue(jsonBuffer)) {
+        StaticJsonDocument<JSON_OBJECT_SIZE(1)> json_buffer;
+        if (!t.SerializeKeyValue(json_buffer)) {
             Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
-        return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
+        return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
     IHTTP_Client& m_client = {};     // HttpClient instance

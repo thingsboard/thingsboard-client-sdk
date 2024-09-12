@@ -11,7 +11,7 @@ char constexpr RPC_RESPONSE_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/response/+";
 char constexpr RPC_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/";
 char constexpr RPC_SEND_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/%u";
 // Log messages.
-char constexpr CLIENT_RPC_METHOD_NULL[] = "Client-side RPC methodName is NULL";
+char constexpr CLIENT_RPC_METHOD_NULL[] = "Client-side RPC method name is NULL";
 #if !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr RPC_REQUEST_OVERFLOWED[] = "Client-side RPC request overflowed, increase MaxRequestRPC (%u)";
 char constexpr CLIENT_SIDE_RPC_SUBSCRIPTIONS[] = "client-side RPC";
@@ -29,7 +29,7 @@ template <typename Logger = DefaultLogger>
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (1)
 /// @tparam MaxRequestRPC Maximum amount of key-value pairs that will ever be sent as parameters to the requests client side rpc method, allows to use a StaticJsonDocument on the stack in the background.
 /// Is expected to only request client side rpc requests, that do not additionally send any parameters. If we attempt to send parameters, we have to adjust the size accordingly.
-/// Default value is big enough to hold no parameters, but simply the default methodName and params key needed for the request, if additional parameters are sent with the request the size has to be increased by one for each key-value pair.
+/// Default value is big enough to hold no parameters, but simply the default method name and params key needed for the request, if additional parameters are sent with the request the size has to be increased by one for each key-value pair.
 /// See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 and add 2 to receive the required MaxRequestRPC value, default = Default_Request_RPC_Amount (2)
 template<size_t MaxSubscriptions = Default_Subscriptions_Amount, size_t MaxRequestRPC = Default_Request_RPC_Amount, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
@@ -46,17 +46,17 @@ class Client_Side_RPC : public IAPI_Implementation {
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
     bool RPC_Request(RPC_Request_Callback const & callback) {
-        char const * methodName = callback.Get_Name();
+        char const * method_name = callback.Get_Name();
 
-        if (Helper::stringIsNullorEmpty(methodName)) {
+        if (Helper::stringIsNullorEmpty(method_name)) {
             Logger::println(CLIENT_RPC_METHOD_NULL);
             return false;
         }
-        RPC_Request_Callback * registeredCallback = nullptr;
-        if (!RPC_Request_Subscribe(callback, registeredCallback)) {
+        RPC_Request_Callback * registered_callback = nullptr;
+        if (!RPC_Request_Subscribe(callback, registered_callback)) {
             return false;
         }
-        else if (registeredCallback == nullptr) {
+        else if (registered_callback == nullptr) {
             return false;
         }
 
@@ -64,25 +64,25 @@ class Client_Side_RPC : public IAPI_Implementation {
 
 #if THINGSBOARD_ENABLE_DYNAMIC
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
-        // Data structure size depends on the amount of key value pairs passed + the default methodName and params key needed for the request.
+        // Data structure size depends on the amount of key value pairs passed + the default method name and params key needed for the request.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        TBJsonDocument requestBuffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U));
+        TBJsonDocument request_buffer(JSON_OBJECT_SIZE(parameters != nullptr ? parameters->size() + 2U : 2U));
 #else
         // Ensure to have enough size for the infinite amount of possible parameters that could be sent to the cloud
-        StaticJsonDocument<JSON_OBJECT_SIZE(MaxRequestRPC)> requestBuffer;
+        StaticJsonDocument<JSON_OBJECT_SIZE(MaxRequestRPC)> request_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
-        requestBuffer[RPC_METHOD_KEY] = methodName;
+        request_buffer[RPC_METHOD_KEY] = method_name;
 
         if (parameters != nullptr && !parameters->isNull()) {
-            requestBuffer[RPC_PARAMS_KEY] = *parameters;
+            request_buffer[RPC_PARAMS_KEY] = *parameters;
         }
         else {
-            requestBuffer[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
+            request_buffer[RPC_PARAMS_KEY] = RPC_EMPTY_PARAMS_VALUE;
         }
 
 #if !THINGSBOARD_ENABLE_DYNAMIC
-        if (requestBuffer.overflowed()) {
+        if (request_buffer.overflowed()) {
             Logger::printfln(RPC_REQUEST_OVERFLOWED, MaxRequestRPC);
             return false;
         }
@@ -95,12 +95,12 @@ class Client_Side_RPC : public IAPI_Implementation {
         }
         auto & request_id = *p_request_id;
 
-        registeredCallback->Set_Request_ID(++request_id);
-        registeredCallback->Start_Timeout_Timer();
+        registered_callback->Set_Request_ID(++request_id);
+        registered_callback->Start_Timeout_Timer();
 
         char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, request_id)] = {};
         (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, request_id);
-        return m_send_json_callback.Call_Callback(topic, requestBuffer, Helper::Measure_Json(requestBuffer));
+        return m_send_json_callback.Call_Callback(topic, request_buffer, Helper::Measure_Json(request_buffer));
     }
 
     API_Process_Type Get_Process_Type() const override {
@@ -172,9 +172,9 @@ class Client_Side_RPC : public IAPI_Implementation {
     /// that will be called if a reponse from the server for the method with the given name is received.
     /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
     /// @param callback Callback method that will be called
-    /// @param registeredCallback Editable pointer to a reference of the local version that was copied from the passed callback
+    /// @param registered_callback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
-    bool RPC_Request_Subscribe(RPC_Request_Callback const & callback, RPC_Request_Callback * & registeredCallback) {
+    bool RPC_Request_Subscribe(RPC_Request_Callback const & callback, RPC_Request_Callback * & registered_callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
             Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, CLIENT_SIDE_RPC_SUBSCRIPTIONS);
@@ -186,7 +186,7 @@ class Client_Side_RPC : public IAPI_Implementation {
             return false;
         }
         m_rpc_request_callbacks.push_back(callback);
-        registeredCallback = &m_rpc_request_callbacks.back();
+        registered_callback = &m_rpc_request_callbacks.back();
         return true;
     }
 

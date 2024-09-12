@@ -15,16 +15,19 @@
 #define Default_Attributes_Amount 1
 #define Default_RPC_Amount 0
 #define Default_Request_RPC_Amount 2
-#define Default_Payload 64
+#define Default_Payload_Size 64
 #define Default_Max_Stack_Size 1024
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #define Default_Buffering_Size 64
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
+#if THINGSBOARD_ENABLE_DYNAMIC
+#define Default_Max_Response_Size 0
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 
 
 // Log messages.
 #if !THINGSBOARD_ENABLE_DYNAMIC
-char constexpr TOO_MANY_JSON_FIELDS[] = "Attempt too enter to many JSON fields into StaticJsonDocument (%u), increase (%s) (%u) accordingly";
+char constexpr TOO_MANY_JSON_FIELDS[] = "Attempt to enter to many JSON fields into StaticJsonDocument (%u), increase (%s) (%u) accordingly";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr UNABLE_TO_SERIALIZE[] = "Unable to serialize key-value json";
 char constexpr CONNECT_FAILED[] = "Connecting to server failed";

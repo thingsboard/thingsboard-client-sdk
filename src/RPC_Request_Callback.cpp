@@ -1,9 +1,9 @@
 // Header include.
 #include "RPC_Request_Callback.h"
 
-RPC_Request_Callback::RPC_Request_Callback(char const * const methodName, function received_callback, JsonArray const * const parameters, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback) :
+RPC_Request_Callback::RPC_Request_Callback(char const * const method_name, function received_callback, JsonArray const * const parameters, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback) :
     Callback(received_callback),
-    m_methodName(methodName),
+    m_method_name(method_name),
     m_parameters(parameters),
     m_request_id(0U),
     m_timeout_microseconds(timeout_microseconds),
@@ -21,11 +21,11 @@ void RPC_Request_Callback::Set_Request_ID(size_t const & request_id) {
 }
 
 char const * RPC_Request_Callback::Get_Name() const {
-    return m_methodName;
+    return m_method_name;
 }
 
-void RPC_Request_Callback::Set_Name(char const * methodName) {
-    m_methodName = methodName;
+void RPC_Request_Callback::Set_Name(char const * method_name) {
+    m_method_name = method_name;
 }
 
 JsonArray const * RPC_Request_Callback::Get_Parameters() const {

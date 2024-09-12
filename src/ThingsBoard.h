@@ -22,7 +22,8 @@ char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given 
 char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
 char constexpr MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME[] = "MaxEndpointsAmount";
 #if THINGSBOARD_ENABLE_DYNAMIC
-char constexpr HEAP_ALLOCATION_FAILED[] = "Could not allocate required size (%u) for JsonDocument, allocated only (%u). Ensure there is enough heap memory left";
+char constexpr MAXIMUM_RESPONSE_EXCEEDED[] = "Prevented allocation on the heap (%u) for JsonDocument. Discarding message that is bigger than maximum response size (%u)";
+char constexpr HEAP_ALLOCATION_FAILED[] = "Failed allocating required size (%u) for JsonDocument. Ensure there is enough heap memory left";
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr RECEIVE_MESSAGE[] = "Received (%u) bytes of data from server over topic (%s)";
@@ -70,7 +71,7 @@ class ThingsBoardSized {
     /// and to the end of the data container (last element + 1) and then every element between those iteratos will be copied, in the same order as in the original data container
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor and therefore allow to use every overloaded vector constructor without having to implement them
     /// @param client MQTT Client implementation that should be used to establish the connection to ThingsBoard
-    /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
+    /// @param buffer_size Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
     /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
     /// can be theoretically set to only be as big as the biggest message we should every receive from ThingsBoard,
@@ -81,21 +82,46 @@ class ThingsBoardSized {
     /// that size can vary but if all ThingsBoard features are used a buffer size of 256 bytes should suffice for receiving most responses.
     /// If the aforementioned feature is not enabled the buffer size might need to be much bigger though,
     /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger.
-    /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it, default = Default_Payload (64)
-    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size (1024)
+    /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it, default = Default_Payload_Size (64)
+    /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size (1024)
     /// @param ...args Arguments that will be forwarded into the overloaded Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor
     template<typename... Args>
-#if !THINGSBOARD_ENABLE_STREAM_UTILS
-    ThingsBoardSized(IMQTT_Client & client, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, Args const &... args)
-#else
-    /// @param bufferingSize Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
-    ThingsBoardSized(IMQTT_Client & client, uint16_t bufferSize = Default_Payload, size_t const & maxStackSize = Default_Max_Stack_Size, size_t const & bufferingSize = Default_Buffering_Size, Args const &... args)
-#endif // THINGSBOARD_ENABLE_STREAM_UTILS
-      : m_client(client)
-      , m_max_stack(maxStackSize)
+#if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-      , m_buffering_size(bufferingSize)
+    /// @param buffering_size Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
+    /// @param max_response_size Maximum amount of bytes allocated for the interal JsonDocument structure that holds the received payload.
+    /// Size is calculated automatically from certain characters in the received payload (',', '{', '[') but if we receive a malicious payload that contains these symbols in a string {"example":",,,,,,..."}.
+    /// It is possible to cause huge allocations, nut because the memory only lives for as long as the subscribed callback methods it should not be a problem,
+    /// especially because attempting to allocate too much memory, will cause the allocation to fail, which is checked. But if the failure of that heap allocation is subscribed for example with the heap_caps_register_failed_alloc_callback method on the ESP32,
+    /// then that subscribed callback will be called and could theoretically restart the device. To circumvent that we can simply set the size of this variable to a value that should never be exceeded by a non malicious json payload, received by attribute requests, shared attribute updates, server-side or client-side rpc.
+    /// If this safety feature is not required, because the heap allocation failure callback is not subscribed, then the value of the variable can simply be kept as 0, which means we will not check the received payload for its size before the allocation happens, default = Default_Max_Response_Size (0)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
+#else
+    /// @param max_response_size Amount of bytes allocated to speed up serialization, default = Default_Max_Response_Size (0)
+    /// @param max_response_size Maximum amount of bytes allocated for the interal JsonDocument structure that holds the received payload.
+    /// Size is calculated automatically from certain characters in the received payload (',', '{', '[') but if we receive a malicious payload that contains these symbols in a string {"example":",,,,,,..."}.
+    /// It is possible to cause huge allocations, nut because the memory only lives for as long as the subscribed callback methods it should not be a problem,
+    /// especially because attempting to allocate too much memory, will cause the allocation to fail, which is checked. But if the failure of that heap allocation is subscribed for example with the heap_caps_register_failed_alloc_callback method on the ESP32,
+    /// then that subscribed callback will be called and could theoretically restart the device. To circumvent that we can simply set the size of this variable to a value that should never be exceeded by a non malicious json payload, received by attribute requests, shared attribute updates, server-side or client-side rpc.
+    /// If this safety feature is not required, because the heap allocation failure callback is not subscribed, then the value of the variable can simply be kept as 0, which means we will not check the received payload for its size before the allocation happens, default = Default_Max_Response_Size (0)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
+#else
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+    /// @param buffering_size Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, Args const &... args)
+#else
+    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, Args const &... args)
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+      : m_client(client)
+      , m_max_stack(max_stack_size)
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+      , m_buffering_size(buffering_size)
+#endif // THINGSBOARD_ENABLE_STREAM_UTILS
+#if THINGSBOARD_ENABLE_DYNAMIC
+       , m_max_response_size(max_response_size)
+#endif // THINGSBOARD_ENABLE_DYNAMIC
       , m_api_implementations(args...)
     {
         for (auto & api : m_api_implementations) {
@@ -109,7 +135,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_STL
             api->Initialize();
         }
-        (void)setBufferSize(bufferSize);
+        (void)setBufferSize(buffer_size);
         // Initialize callback.
 #if THINGSBOARD_ENABLE_STL
         m_client.set_data_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -131,22 +157,35 @@ class ThingsBoardSized {
     }
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
-    /// @param maxStackSize Maximum amount of bytes we want to allocate on the stack
-    void setMaximumStackSize(size_t const & maxStackSize) {
-        m_max_stack = maxStackSize;
+    /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack
+    void setMaximumStackSize(size_t const & max_stack_size) {
+        m_max_stack = max_stack_size;
     }
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
     /// @brief Sets the amount of bytes that can be allocated to speed up fall back serialization with the StreamUtils class
     /// See https://github.com/bblanchon/ArduinoStreamUtils for more information on the underlying class used
-    /// @param bufferingSize Amount of bytes allocated to speed up serialization
-    void setBufferingSize(size_t const & bufferingSize) {
-        m_buffering_size = bufferingSize;
+    /// @param buffering_size Amount of bytes allocated to speed up serialization
+    void setBufferingSize(size_t const & buffering_size) {
+        m_buffering_size = buffering_size;
     }
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
+#if THINGSBOARD_ENABLE_DYNAMIC
+    /// @brief Sets the maximum amount of bytes allocated for internal JsonDocument holding received payload from server responses by attribute requests, shared attribute updates, server-side or client-side rpc
+    /// @param max_response_size Maximum amount of bytes allocated for the interal JsonDocument structure that holds the received payload.
+    /// Size is calculated automatically from certain characters in the received payload (',', '{', '[') but if we receive a malicious payload that contains these symbols in a string {"example":",,,,,,..."}.
+    /// It is possible to cause huge allocations, nut because the memory only lives for as long as the subscribed callback methods it should not be a problem,
+    /// especially because attempting to allocate too much memory, will cause the allocation to fail, which is checked. But if the failure of that heap allocation is subscribed for example with the heap_caps_register_failed_alloc_callback method on the ESP32,
+    /// then that subscribed callback will be called and could theoretically restart the device. To circumvent that we can simply set the size of this variable to a value that should never be exceeded by a non malicious json payload, received by attribute requests, shared attribute updates, server-side or client-side rpc.
+    /// If this safety feature is not required, because the heap allocation failure callback is not subscribed, then the value of the variable can simply be kept as 0, which means we will not check the received payload for its size before the allocation happens, default = Default_Max_Response_Size (0)
+    void setMaxResponseSize(size_t const & max_response_size) {
+        m_max_response_size = max_response_size;
+    }
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
     /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
-    /// @param bufferSize Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
+    /// @param buffer_size Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
     /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
     /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
     /// can be theoretically set to only be as big as the biggest message we should every receive from ThingsBoard,
@@ -158,9 +197,9 @@ class ThingsBoardSized {
     /// If the aforementioned feature is not enabled the buffer size might need to be much bigger though,
     /// but in that case if a message was too big to be sent the user will be informed with a message to the logger implementation.
     /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it
-    /// @return Whether allocating the needed memory for the given bufferSize was successful or not
-    bool setBufferSize(uint16_t bufferSize) {
-        bool const result = m_client.set_buffer_size(bufferSize);
+    /// @return Whether allocating the needed memory for the given buffer size was successful or not
+    bool setBufferSize(uint16_t buffer_size) {
+        bool const result = m_client.set_buffer_size(buffer_size);
         if (!result) {
             Logger::println(UNABLE_TO_ALLOCATE_BUFFER);
         }
@@ -233,9 +272,9 @@ class ThingsBoardSized {
     /// @param topic Topic we want to send the data over
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
+    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & json_size) {
         // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
@@ -253,19 +292,19 @@ class ThingsBoardSized {
 #if THINGSBOARD_ENABLE_STREAM_UTILS
         // Check if the size of the given message would be too big for the actual client,
         // if it is utilize the serialize json work around, so that the internal client buffer can be circumvented
-        if (m_client.get_buffer_size() < jsonSize)  {
+        if (m_client.get_buffer_size() < json_size)  {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::printfln(SEND_MESSAGE, topic, SEND_SERIALIZED);
 #endif // THINGSBOARD_ENABLE_DEBUG
-            result = Serialize_Json(topic, source, jsonSize - 1);
+            result = Serialize_Json(topic, source, json_size - 1);
         }
         // Check if the remaining stack size of the current task would overflow the stack,
         // if it would allocate the memory on the heap instead to ensure no stack overflow occurs
         else
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-        if (jsonSize > getMaximumStackSize()) {
-            char* json = new char[jsonSize]();
-            if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
+        if (json_size > getMaximumStackSize()) {
+            char* json = new char[json_size]();
+            if (serializeJson(source, json, json_size) < json_size - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
             }
             else {
@@ -277,8 +316,8 @@ class ThingsBoardSized {
             json = nullptr;
         }
         else {
-            char json[jsonSize] = {};
-            if (serializeJson(source, json, jsonSize) < jsonSize - 1) {
+            char json[json_size] = {};
+            if (serializeJson(source, json, json_size) < json_size - 1) {
                 Logger::println(UNABLE_TO_SERIALIZE_JSON);
                 return result;
             }
@@ -298,17 +337,17 @@ class ThingsBoardSized {
         }
 
         uint16_t currentBufferSize = m_client.get_buffer_size();
-        size_t const jsonSize = strlen(json);
+        size_t const json_size = strlen(json);
 
-        if (currentBufferSize < jsonSize) {
-            Logger::printfln(INVALID_BUFFER_SIZE, currentBufferSize, jsonSize);
+        if (currentBufferSize < json_size) {
+            Logger::printfln(INVALID_BUFFER_SIZE, currentBufferSize, json_size);
             return false;
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(SEND_MESSAGE, topic, json);
 #endif // THINGSBOARD_ENABLE_DEBUG
-        return m_client.publish(topic, reinterpret_cast<uint8_t const *>(json), jsonSize);
+        return m_client.publish(topic, reinterpret_cast<uint8_t const *>(json), json_size);
     }
 
     /// @brief Copies a non-owning pointer to the given API implementation, into the local data container.
@@ -369,18 +408,18 @@ class ThingsBoardSized {
     /// as long as they enter the given device name and secret key in the given amount of time.
     /// Optionally a secret key can be passed or be left empty (cloud will allow any user to claim the device for the given amount of time).
     /// See https://thingsboard.io/docs/user-guide/claiming-devices/ for more information
-    /// @param secretKey Password the user additionaly to the device name needs to enter to claim it as their own,
+    /// @param secret_key Password the user additionaly to the device name needs to enter to claim it as their own,
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
-    /// @param durationMs Total time in milliseconds the user has to claim their device as their own
+    /// @param duration_ms Total time in milliseconds the user has to claim their device as their own
     /// @return Whether sending the claiming request was successful or not
-    bool Claim_Request(char const * const secretKey, size_t const & durationMs) {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> requestBuffer;
+    bool Claim_Request(char const * const secret_key, size_t const & duration_ms) {
+        StaticJsonDocument<JSON_OBJECT_SIZE(2)> request_buffer;
 
-        if (!Helper::stringIsNullorEmpty(secretKey)) {
-            requestBuffer[SECRET_KEY] = secretKey;
+        if (!Helper::stringIsNullorEmpty(secret_key)) {
+            request_buffer[SECRET_KEY] = secret_key;
         }
-        requestBuffer[DURATION_KEY] = durationMs;
-        return Send_Json(CLAIM_TOPIC, requestBuffer, Helper::Measure_Json(requestBuffer));
+        request_buffer[DURATION_KEY] = duration_ms;
+        return Send_Json(CLAIM_TOPIC, request_buffer, Helper::Measure_Json(request_buffer));
     }
 
     //----------------------------------------------------------------------------
@@ -432,10 +471,10 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool sendTelemetryJson(JsonDocument const & source, size_t const & jsonSize) {
-        return Send_Json(TELEMETRY_TOPIC, source, jsonSize);
+    bool sendTelemetryJson(JsonDocument const & source, size_t const & json_size) {
+        return Send_Json(TELEMETRY_TOPIC, source, json_size);
     }
 
     //----------------------------------------------------------------------------
@@ -487,10 +526,10 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool sendAttributeJson(JsonDocument const & source, size_t const & jsonSize) {
-        return Send_Json(ATTRIBUTE_TOPIC, source, jsonSize);
+    bool sendAttributeJson(JsonDocument const & source, size_t const & json_size) {
+        return Send_Json(ATTRIBUTE_TOPIC, source, json_size);
     }
 
   private:
@@ -500,16 +539,16 @@ class ThingsBoardSized {
     /// @param topic Topic we want to send the data over
     /// @param source JsonDocument containing our json key value pairs we want to send,
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
-    /// @param jsonSize Size of the data inside the source
+    /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool Serialize_Json(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
-        if (!m_client.begin_publish(topic, jsonSize)) {
+    bool Serialize_Json(char const * const topic, JsonDocument const & source, size_t const & json_size) {
+        if (!m_client.begin_publish(topic, json_size)) {
             Logger::println(UNABLE_TO_SERIALIZE_JSON);
             return false;
         }
         BufferingPrint buffered_print(m_client, getBufferingSize());
         size_t const bytes_serialized = serializeJson(source, buffered_print);
-        if (bytes_serialized < jsonSize) {
+        if (bytes_serialized < json_size) {
             Logger::println(UNABLE_TO_SERIALIZE_JSON);
             return false;
         }
@@ -603,12 +642,12 @@ class ThingsBoardSized {
             return false;
         }
 
-        StaticJsonDocument<JSON_OBJECT_SIZE(1)> jsonBuffer;
-        if (!t.SerializeKeyValue(jsonBuffer)) {
+        StaticJsonDocument<JSON_OBJECT_SIZE(1)> json_buffer;
+        if (!t.SerializeKeyValue(json_buffer)) {
             Logger::println(UNABLE_TO_SERIALIZE);
             return false;
         }
-        return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
+        return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
     /// @brief Attempts to send aggregated attribute or telemetry data
@@ -632,23 +671,23 @@ class ThingsBoardSized {
         // String are char const * and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
         // Data structure size depends on the amount of key value pairs passed.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(size));
+        TBJsonDocument json_buffer(JSON_OBJECT_SIZE(size));
 #else
         if (size > MaxKeyValuePairAmount) {
             Logger::printfln(TOO_MANY_JSON_FIELDS, size, "MaxKeyValuePairAmount", MaxKeyValuePairAmount);
             return false;
         }
-        StaticJsonDocument<JSON_OBJECT_SIZE(MaxKeyValuePairAmount)> jsonBuffer;
+        StaticJsonDocument<JSON_OBJECT_SIZE(MaxKeyValuePairAmount)> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
         for (auto it = first; it != last; ++it) {
             auto const & data = *it;
-            if (!data.SerializeKeyValue(jsonBuffer)) {
+            if (!data.SerializeKeyValue(json_buffer)) {
                 Logger::println(UNABLE_TO_SERIALIZE);
                 return false;
             }
         }
-        return telemetry ? sendTelemetryJson(jsonBuffer, Helper::Measure_Json(jsonBuffer)) : sendAttributeJson(jsonBuffer, Helper::Measure_Json(jsonBuffer));
+        return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
     /// @brief MQTT callback that will be called if a publish message is received from the server
@@ -678,15 +717,19 @@ class ThingsBoardSized {
         // therfore we have to add the space for another key-value pair for all the occurences of thoose symbols as well
         size_t const size = Helper::getOccurences(payload, ',', length) + Helper::getOccurences(payload, '{', length) + Helper::getOccurences(payload, '[', length);
 #if THINGSBOARD_ENABLE_DYNAMIC
-        // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
+        // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,1
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         size_t const document_size = JSON_OBJECT_SIZE(size);
-        TBJsonDocument jsonBuffer(document_size);
+        if (m_max_response_size != 0U && document_size > m_max_response_size) {
+            Logger::printfln(MAXIMUM_RESPONSE_EXCEEDED, document_size, m_max_response_size);
+            return;
+        }
+        TBJsonDocument json_buffer(document_size);
         // Because we calcualte the allocation dynamically fromt he payload, which is user input, it could theoretically be malicious ({ "malicious" : "{{{{{{{{{..."}) and contain a lot of the symbols used to calculate the size.
         // But if that is the case adn the allocation still succeeds we delete the allocated memory relatively fast again so it shouldn't be a problem and if the allocation fails we simply return at this point with an appropriate error message
-        if (jsonBuffer.capacity() != document_size) {
-            Logger::printfln(HEAP_ALLOCATION_FAILED, document_size, jsonBuffer.capacity());
+        if (json_buffer.capacity() != document_size) {
+            Logger::printfln(HEAP_ALLOCATION_FAILED, document_size);
             return;
         }
 #else
@@ -695,7 +738,7 @@ class ThingsBoardSized {
             return;
         }
         size_t const document_size = JSON_OBJECT_SIZE(MaxResponse);
-        StaticJsonDocument<document_size> jsonBuffer;
+        StaticJsonDocument<document_size> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(ALLOCATING_JSON, document_size);
@@ -704,7 +747,7 @@ class ThingsBoardSized {
         // The deserializeJson method we use, can use the zero copy mode because a writeable input was passed,
         // if that were not the case the needed allocated memory would drastically increase, because the keys would need to be copied as well.
         // See https://arduinojson.org/v6/doc/deserialization/ for more info on ArduinoJson deserialization
-        DeserializationError const error = deserializeJson(jsonBuffer, payload, length);
+        DeserializationError const error = deserializeJson(json_buffer, payload, length);
         if (error) {
             Logger::printfln(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
             return;
@@ -712,7 +755,7 @@ class ThingsBoardSized {
         // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
         // but it does not change the actual content of the JsonDocument, we don't want that because it contains content
         // and .to() would result in the data being cleared ()"null"), instead .as() which allows accessing the data over a JsonObjectConst instead
-        JsonObjectConst data = jsonBuffer.template as<JsonObjectConst>();
+        JsonObjectConst data = json_buffer.template as<JsonObjectConst>();
 
         for (auto & api : m_api_implementations) {
             if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
@@ -744,11 +787,11 @@ class ThingsBoardSized {
         m_subscribedInstance->Subscribe_API_Implementation(api);
     }
 
-    static bool staticSendJson(char const * const topic, JsonDocument const & source, size_t const & jsonSize) {
+    static bool staticSendJson(char const * const topic, JsonDocument const & source, size_t const & json_size) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->Send_Json(topic, source, jsonSize);
+        return m_subscribedInstance->Send_Json(topic, source, json_size);
     }
 
     static bool staticSendJsonString(char const * const topic, char const * const json) {
@@ -786,11 +829,11 @@ class ThingsBoardSized {
         return m_subscribedInstance->getClientBufferSize();
     }
 
-    static bool staticSetBufferSize(uint16_t bufferSize) {
+    static bool staticSetBufferSize(uint16_t buffer_size) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->setBufferSize(bufferSize);
+        return m_subscribedInstance->setBufferSize(buffer_size);
     }
 
     // PubSub client cannot call a instanced method when message arrives on subscribed topic.
@@ -808,6 +851,7 @@ class ThingsBoardSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
     Array<IAPI_Implementation*, MaxEndpointsAmount> m_api_implementations = {}; // Can hold a pointer to all possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #else
+    size_t                                          m_max_response_size = {};   // Maximum size allocated on the heap to hold the Json data structure for received cloud response payload, prevents possible malicious payload allocaitng a lot of memory
     Vector<IAPI_Implementation*>                    m_api_implementations = {}; // Can hold a pointer to all  possible API implementations (Server side RPC, Client side RPC, Shared attribute update, Client-side or shared attribute request, Provision)   
 #endif // !THINGSBOARD_ENABLE_DYNAMIC                
 };

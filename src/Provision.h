@@ -42,52 +42,52 @@ class Provision : public IAPI_Implementation {
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @return Whether sending the provisioning request was successful or not
     bool Provision_Request(Provision_Callback const & callback) {
-        char const * provisionDeviceKey = callback.Get_Device_Key();
-        char const * provisionDeviceSecret = callback.Get_Device_Secret();
+        char const * provision_device_key = callback.Get_Device_Key();
+        char const * provision_device_secret = callback.Get_Device_Secret();
 
-        if (Helper::stringIsNullorEmpty(provisionDeviceKey) || Helper::stringIsNullorEmpty(provisionDeviceSecret)) {
+        if (Helper::stringIsNullorEmpty(provision_device_key) || Helper::stringIsNullorEmpty(provision_device_secret)) {
             return false;
         }
         else if (!Provision_Subscribe(callback)) {
             return false;
         }
 
-        StaticJsonDocument<JSON_OBJECT_SIZE(9)> requestBuffer;
-        char const * deviceName = callback.Get_Device_Name();
-        char const * accessToken = callback.Get_Device_Access_Token();
-        char const * credUsername = callback.Get_Credentials_Username();
-        char const * credPassword = callback.Get_Credentials_Password();
-        char const * credClientID = callback.Get_Credentials_Client_ID();
+        StaticJsonDocument<JSON_OBJECT_SIZE(9)> request_buffer;
+        char const * device_name = callback.Get_Device_Name();
+        char const * access_token = callback.Get_Device_Access_Token();
+        char const * cred_username = callback.Get_Credentials_Username();
+        char const * cred_password = callback.Get_Credentials_Password();
+        char const * cred_client_id = callback.Get_Credentials_Client_ID();
         char const * hash = callback.Get_Certificate_Hash();
-        char const * credentialsType = callback.Get_Credentials_Type();
+        char const * credentials_type = callback.Get_Credentials_Type();
 
         // Deciding which underlying provisioning method is restricted, by the Provision_Callback class.
         // Meaning only the key-value pairs that are needed for the given provisioning method are set,
         // resulting in the rest not being sent and therefore the provisioning request having the correct formatting
-        if (!Helper::stringIsNullorEmpty(deviceName)) {
-            requestBuffer[DEVICE_NAME_KEY] = deviceName;
+        if (!Helper::stringIsNullorEmpty(device_name)) {
+            request_buffer[DEVICE_NAME_KEY] = device_name;
         }
-        if (!Helper::stringIsNullorEmpty(accessToken)) {
-            requestBuffer[PROV_TOKEN] = accessToken;
+        if (!Helper::stringIsNullorEmpty(access_token)) {
+            request_buffer[PROV_TOKEN] = access_token;
         }
-        if (!Helper::stringIsNullorEmpty(credUsername)) {
-            requestBuffer[PROV_CRED_USERNAME] = credUsername;
+        if (!Helper::stringIsNullorEmpty(cred_username)) {
+            request_buffer[PROV_CRED_USERNAME] = cred_username;
         }
-        if (!Helper::stringIsNullorEmpty(credPassword)) {
-            requestBuffer[PROV_CRED_PASSWORD] = credPassword;
+        if (!Helper::stringIsNullorEmpty(cred_password)) {
+            request_buffer[PROV_CRED_PASSWORD] = cred_password;
         }
-        if (!Helper::stringIsNullorEmpty(credClientID)) {
-            requestBuffer[PROV_CRED_CLIENT_ID] = credClientID;
+        if (!Helper::stringIsNullorEmpty(cred_client_id)) {
+            request_buffer[PROV_CRED_CLIENT_ID] = cred_client_id;
         }
         if (!Helper::stringIsNullorEmpty(hash)) {
-            requestBuffer[PROV_CRED_HASH] = hash;
+            request_buffer[PROV_CRED_HASH] = hash;
         }
-        if (!Helper::stringIsNullorEmpty(credentialsType)) {
-            requestBuffer[PROV_CRED_TYPE_KEY] = credentialsType;
+        if (!Helper::stringIsNullorEmpty(credentials_type)) {
+            request_buffer[PROV_CRED_TYPE_KEY] = credentials_type;
         }
-        requestBuffer[PROV_DEVICE_KEY] = provisionDeviceKey;
-        requestBuffer[PROV_DEVICE_SECRET_KEY] = provisionDeviceSecret;
-        return m_send_json_callback.Call_Callback(PROV_REQUEST_TOPIC, requestBuffer, Helper::Measure_Json(requestBuffer));
+        request_buffer[PROV_DEVICE_KEY] = provision_device_key;
+        request_buffer[PROV_DEVICE_SECRET_KEY] = provision_device_secret;
+        return m_send_json_callback.Call_Callback(PROV_REQUEST_TOPIC, request_buffer, Helper::Measure_Json(request_buffer));
     }
 
     API_Process_Type Get_Process_Type() const override {

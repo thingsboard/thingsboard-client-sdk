@@ -34,9 +34,9 @@ class Callback_Watchdog : public Callback<void> {
     Callback_Watchdog() = default;
 
     /// @brief Constructs callback, will be called if the timeout time passes without detach() being called
-    /// @param cb Callback method that will be called as soon as the internal software timers have processed that the given timeout time passed
-    explicit Callback_Watchdog(function cb)
-      : Callback(cb)
+    /// @param callback Callback method that will be called as soon as the internal software timers have processed that the given timeout time passed
+    explicit Callback_Watchdog(function callback)
+      : Callback(callback)
 #if THINGSBOARD_USE_ESP_TIMER
       , m_oneshot_timer(nullptr)
 #else
@@ -137,7 +137,7 @@ class Callback_Watchdog : public Callback<void> {
 #if THINGSBOARD_USE_ESP_TIMER
     esp_timer_handle_t m_oneshot_timer = {}; // ESP Timer handle that is used to start and stop the oneshot timer
 #else
-    Timer<1, micros> m_oneshot_timer = {};   // Ticker instance that handles the timer under the hood, if possible we directly use esp timer instead because it is more efficient
+    Timer<1, micros>   m_oneshot_timer = {}; // Ticker instance that handles the timer under the hood, if possible we directly use esp timer instead because it is more efficient
 #endif // THINGSBOARD_USE_ESP_TIMER
 };
 

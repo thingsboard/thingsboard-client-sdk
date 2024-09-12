@@ -11,7 +11,7 @@ char constexpr RPC_SUBSCRIBE_TOPIC[] = "v1/devices/me/rpc/request/+";
 char constexpr RPC_REQUEST_TOPIC[] = "v1/devices/me/rpc/request/";
 char constexpr RPC_SEND_RESPONSE_TOPIC[] = "v1/devices/me/rpc/response/%u";
 // Log messages.
-char constexpr SERVER_RPC_METHOD_NULL[] = "Server-side RPC methodName is NULL";
+char constexpr SERVER_RPC_METHOD_NULL[] = "Server-side RPC method name is NULL";
 char constexpr RPC_RESPONSE_OVERFLOWED[] = "Server-side RPC response overflowed, increase MaxRPC (%u)";
 #if !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr SERVER_SIDE_RPC_SUBSCRIPTIONS[] = "server-side RPC";
@@ -110,9 +110,9 @@ class Server_Side_RPC : public IAPI_Implementation {
     }
 
     void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
-        char const * const methodName = data[RPC_METHOD_KEY];
+        char const * const method_name = data[RPC_METHOD_KEY];
 
-        if (methodName == nullptr) {
+        if (method_name == nullptr) {
             Logger::println(SERVER_RPC_METHOD_NULL);
             return;
         }
@@ -125,7 +125,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             }
             // Strncmp returns the ascii value difference of the ascii characters that are different,
             // meaning 0 is the same string and less and more than 0 is the difference in ascci values between the 2 chararacters.
-            else if (strncmp(subscribedMethodName, methodName, strlen(subscribedMethodName)) != 0) {
+            else if (strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) != 0) {
               continue;
             }
 
@@ -137,7 +137,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             }
 
 #if THINGSBOARD_ENABLE_DEBUG
-            Logger::printfln(CALLING_RPC_CB, methodName);
+            Logger::printfln(CALLING_RPC_CB, method_name);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
             JsonVariantConst const param = data[RPC_PARAMS_KEY];
@@ -146,20 +146,20 @@ class Server_Side_RPC : public IAPI_Implementation {
             // String are char const * and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
             // Data structure size depends on the amount of key value pairs passed.
             // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-            TBJsonDocument jsonBuffer(rpc_response_size);
+            TBJsonDocument json_buffer(rpc_response_size);
 #else
             size_t constexpr rpc_response_size = MaxRPC;
-            StaticJsonDocument<JSON_OBJECT_SIZE(MaxRPC)> jsonBuffer;
+            StaticJsonDocument<JSON_OBJECT_SIZE(MaxRPC)> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-            rpc.Call_Callback(param, jsonBuffer);
+            rpc.Call_Callback(param, json_buffer);
 
-            if (jsonBuffer.isNull()) {
+            if (json_buffer.isNull()) {
 #if THINGSBOARD_ENABLE_DEBUG
                 Logger::println(RPC_RESPONSE_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 break;
             }
-            else if (jsonBuffer.overflowed()) {
+            else if (json_buffer.overflowed()) {
                 Logger::printfln(RPC_RESPONSE_OVERFLOWED, rpc_response_size);
                 break;
             }
@@ -167,7 +167,7 @@ class Server_Side_RPC : public IAPI_Implementation {
             size_t const request_id = Helper::parseRequestId(RPC_REQUEST_TOPIC, topic);
             char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
             (void)snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
-            (void)m_send_json_callback.Call_Callback(responseTopic, jsonBuffer, Helper::Measure_Json(jsonBuffer));
+            (void)m_send_json_callback.Call_Callback(responseTopic, json_buffer, Helper::Measure_Json(json_buffer));
             break;
         }
     }

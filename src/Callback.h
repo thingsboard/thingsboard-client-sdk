@@ -27,16 +27,16 @@ using Vector = std::vector<T>;
 /// @brief General purpose safe callback wrapper. Expects either c-style or c++ style function pointer,
 /// depending on if the C++ STL has been implemented on the given device or not.
 /// Simply wraps that function pointer and before calling it ensures it actually exists
-/// @tparam returnType Type the given callback method should return
-/// @tparam argumentTypes Types the given callback method should receive
-template<typename returnType, typename... argumentTypes>
+/// @tparam return_typ Type the given callback method should return
+/// @tparam argument_types Types the given callback method should receive
+template<typename return_typ, typename... argument_types>
 class Callback {
   public:
     /// @brief Callback signature
 #if THINGSBOARD_ENABLE_STL
-    using function = std::function<returnType(argumentTypes... arguments)>;
+    using function = std::function<return_typ(argument_types... arguments)>;
 #else
-    using function = returnType (*)(argumentTypes... arguments);
+    using function = return_typ (*)(argument_types... arguments);
 #endif // THINGSBOARD_ENABLE_STL
 
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
@@ -57,9 +57,9 @@ class Callback {
     /// @param ...arguments Optional additional arguments that are simply formwarded to the subscribed callback if it exists
     /// @return Argument returned by the previously subscribed callback or if none or nullptr is subscribed
     /// we instead return a defaulted instance of the requested return variable
-    returnType Call_Callback(argumentTypes const &... arguments) const {
+    return_typ Call_Callback(argument_types const &... arguments) const {
         if (!m_callback) {
-          return returnType();
+          return return_typ();
         }
         return m_callback(arguments...);
     }
