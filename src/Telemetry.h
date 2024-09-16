@@ -123,11 +123,11 @@ class Telemetry {
 
     /// @brief Data type that the data container currently holds
     enum class DataType: const uint8_t {
-        TYPE_NONE, // Telemetry instance is empty and has not been assigned a value
-        TYPE_BOOL, // Telemetry instance is a key value-pair with a boolean value
-        TYPE_INT, // Telemetry instance is a key value-pair with an integral value
-        TYPE_REAL, // Telemetry instance is a key value-pair with a real (float, double) value
-        TYPE_STR // Telemetry isntance is a key value-pair with a string value
+        TYPE_NONE, ///< Telemetry instance is empty and has not been assigned a value
+        TYPE_BOOL, ///< Telemetry instance is a key value-pair with a boolean value
+        TYPE_INT, ///< Telemetry instance is a key value-pair with an integral value
+        TYPE_REAL, ///< Telemetry instance is a key value-pair with a real (float, double) value
+        TYPE_STR ///< Telemetry isntance is a key value-pair with a string value
     };
 
     DataType     m_type = {};  // Data type flag, showing which value is saved in the class instance
