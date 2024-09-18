@@ -97,7 +97,6 @@ class ThingsBoardSized {
     /// If this safety feature is not required, because the heap allocation failure callback is not subscribed, then the value of the variable can simply be kept as 0, which means we will not check the received payload for its size before the allocation happens, default = Default_Max_Response_Size (0)
     ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
 #else
-    /// @param max_response_size Amount of bytes allocated to speed up serialization, default = Default_Max_Response_Size (0)
     /// @param max_response_size Maximum amount of bytes allocated for the interal JsonDocument structure that holds the received payload.
     /// Size is calculated automatically from certain characters in the received payload (',', '{', '[') but if we receive a malicious payload that contains these symbols in a string {"example":",,,,,,..."}.
     /// It is possible to cause huge allocations, nut because the memory only lives for as long as the subscribed callback methods it should not be a problem,
