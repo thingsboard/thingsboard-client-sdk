@@ -39,6 +39,16 @@ bool Espressif_MQTT_Client::set_server_certificate(const char *server_certificat
     return update_configuration();
 }
 
+bool Espressif_MQTT_Client::set_server_crt_bundle_attach(esp_err_t (*crt_bundle_attach)(void *conf))
+{
+#if ESP_IDF_VERSION_MAJOR < 5
+    m_mqtt_configuration.crt_bundle_attach = crt_bundle_attach;
+#else
+    m_mqtt_configuration.broker.verification.crt_bundle_attach = crt_bundle_attach;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+    return update_configuration();
+}
+
 bool Espressif_MQTT_Client::set_keep_alive_timeout(const uint16_t& keep_alive_timeout_seconds) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
@@ -146,13 +156,13 @@ void Espressif_MQTT_Client::set_server(const char *domain, const uint16_t& port)
     m_mqtt_configuration.port = port;
     // Decide transport depending on if a certificate was passed, because the set_server() method is called in the connect method meaning if the certificate has not been set yet,
     // it is to late as we attempt to establish the connection in the connect() method which is called directly after this one.
-    const bool transport_over_sll = m_mqtt_configuration.cert_pem != nullptr;
+    const bool transport_over_sll = m_mqtt_configuration.cert_pem != nullptr || m_mqtt_configuration.crt_bundle_attach != nullptr;
 #else
     m_mqtt_configuration.broker.address.hostname = domain;
     m_mqtt_configuration.broker.address.port = port;
     // Decide transport depending on if a certificate was passed, because the set_server() method is called in the connect method meaning if the certificate has not been set yet,
     // it is to late as we attempt to establish the connection in the connect() method which is called directly after this one.
-    const bool transport_over_sll = m_mqtt_configuration.broker.verification.certificate != nullptr;
+    const bool transport_over_sll = m_mqtt_configuration.broker.verification.certificate != nullptr || m_mqtt_configuration.broker.verification.crt_bundle_attach != nullptr;
 #endif // ESP_IDF_VERSION_MAJOR < 5
 
     const esp_mqtt_transport_t transport = (transport_over_sll ? esp_mqtt_transport_t::MQTT_TRANSPORT_OVER_SSL : esp_mqtt_transport_t::MQTT_TRANSPORT_OVER_TCP);
