@@ -122,7 +122,8 @@ char constexpr CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS[] PROGMEM = "client or shar
 char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] PROGMEM = "Too many (%s) subscriptions, increase MaxSubscribtions or unsubscribe";
 #else
 char constexpr RPC_RESPONSE_OVERFLOWED[] PROGMEM = "Server-side RPC response overflowed, increase responseSize (%u)";
-char constexpr COLON PROGMEM = ':';
+char constexpr START_OBJECT PROGMEM = '{';
+char constexpr START_ARRAY PROGMEM = '[';
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr COMMA[] PROGMEM = ",";
 char constexpr NO_KEYS_TO_REQUEST[] PROGMEM = "No keys to request were given";
@@ -158,7 +159,8 @@ char constexpr CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS[] = "client or shared attri
 char constexpr MAX_SUBSCRIPTIONS_EXCEEDED[] = "Too many (%s) subscriptions, increase MaxSubscribtions or unsubscribe";
 #else
 char constexpr RPC_RESPONSE_OVERFLOWED[] = "Server-side RPC response overflowed, increase responseSize (%u)";
-char constexpr COLON = ':';
+char constexpr START_OBJECT = '{';
+char constexpr START_ARRAY = '[';
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr COMMA[] = ",";
 char constexpr NO_KEYS_TO_REQUEST[] = "No keys to request were given";
@@ -1825,7 +1827,10 @@ class ThingsBoardSized {
         // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,
         // Data structure size depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(Helper::getOccurences(reinterpret_cast<char *>(payload), COLON)));
+        TBJsonDocument jsonBuffer(JSON_OBJECT_SIZE(
+            (2 * Helper::getOccurences(reinterpret_cast<char *>(payload), START_OBJECT)) +
+            (2 * Helper::getOccurences(reinterpret_cast<char *>(payload), START_ARRAY)) +
+            Helper::getOccurences(reinterpret_cast<char *>(payload), COMMA[0])));
 #else
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxFieldsAmount)> jsonBuffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
