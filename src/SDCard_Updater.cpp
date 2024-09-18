@@ -1,10 +1,8 @@
 // Header include.
 #include "SDCard_Updater.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Library include.
-#include <cstdio>
+#include <stdio.h>
 
 
 SDCard_Updater::SDCard_Updater(char const * const file_path)
@@ -39,5 +37,3 @@ void SDCard_Updater::reset() {
 bool SDCard_Updater::end() {
     return remove(m_path) == 0;
 }
-
-#endif // THINGSBOARD_ENABLE_OTA

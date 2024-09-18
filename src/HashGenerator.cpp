@@ -1,8 +1,6 @@
 // Header include.
 #include "HashGenerator.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 HashGenerator::~HashGenerator(void) {
     free();
 }
@@ -38,5 +36,3 @@ void HashGenerator::free() {
         mbedtls_md_free(&m_ctx);
     }
 }
-
-#endif // THINGSBOARD_ENABLE_OTA

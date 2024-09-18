@@ -22,11 +22,11 @@ class Arduino_HTTP_Client : public IHTTP_Client {
     /// Should be either 80 for unencrypted HTTP or 443 for HTTPS with encryption.
     /// The latter is recommended if relevant data is sent or if the client receives and handles requests from the server,
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways
-    Arduino_HTTP_Client(Client& transport_client, char const * const host, uint16_t const & port);
+    Arduino_HTTP_Client(Client& transport_client, char const * const host, uint16_t port);
 
-    void set_keep_alive(bool const & keep_alive) override;
+    void set_keep_alive(bool keep_alive) override;
 
-    int connect(char const * const host, uint16_t const & port) override;
+    int connect(char const * const host, uint16_t port) override;
 
     void stop() override;
 

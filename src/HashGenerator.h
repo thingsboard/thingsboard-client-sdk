@@ -4,8 +4,6 @@
 // Local includes.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Library includes.
 #if THINGSBOARD_USE_MBED_TLS
 #include <mbedtls/md.h>
@@ -51,13 +49,11 @@ class HashGenerator {
     bool finish(unsigned char * hash);
 
   private:
-    mbedtls_md_context_t m_ctx; // Context used to access the already written bytes and update them latter
-
     /// @brief Frees all internally allocated memory to ensure no memory leak occurs, additionally check if a hash calculation was ever started,
     /// before freeing, because freeing without having started a hash calculation causes a crash.
     void free();
-};
 
-#endif // THINGSBOARD_ENABLE_OTA
+    mbedtls_md_context_t m_ctx = {}; // Context used to access the already written bytes and update them latter
+};
 
 #endif // Hash_Generator_h

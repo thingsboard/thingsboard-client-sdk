@@ -93,15 +93,15 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @param enqueue_messages Whether to enqueue published messages or not, where setting the value to true means that the messages are enqueued and therefor non blocking on the called from task
     void set_enqueue_messages(bool const & enqueue_messages);
 
-    void set_data_callback(data_function callback) override;
+    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override;
 
-    void set_connect_callback(connect_function cb) override;
+    void set_connect_callback(Callback<void>::function callback) override;
 
-    bool set_buffer_size(uint16_t const & buffer_size) override;
+    bool set_buffer_size(uint16_t buffer_size) override;
 
     uint16_t get_buffer_size() override;
 
-    void set_server(char const * const domain, uint16_t const & port) override;
+    void set_server(char const * const domain, uint16_t port) override;
 
     bool connect(char const * const client_id, char const * const user_name, char const * const password) override;
 
@@ -118,15 +118,6 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     bool connected() override;
 
 private:
-    data_function m_received_data_callback;        // Callback that will be called as soon as the mqtt client receives any data
-    connect_function m_connected_callback;         // Callback that will be called as soon as the mqtt client has connected
-    bool m_connected;                              // Whether the client has received the connected or disconnected event
-    bool m_enqueue_messages;                       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
-    esp_mqtt_client_config_t m_mqtt_configuration; // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
-    esp_mqtt_client_handle_t m_mqtt_client;        // Handle to the underlying mqtt client, used to establish the communication
-
-    static Espressif_MQTT_Client *m_instance;      // Instance to the created class, will be set once the constructor has been called and reset once the destructor has been called, used to call private member method from static callback
-
     /// @brief Is internally used to allow changes to the underlying configuration of the esp_mqtt_client_handle_t after it has connected,
     /// to for example increase the buffer size or increase the timeouts or stack size, allows to change the underlying client configuration,
     /// without the need to completly disconnect and reconnect the client
@@ -134,13 +125,19 @@ private:
     bool update_configuration();
 
     /// @brief Event handler registered to receive MQTT events. Is called by the MQTT client event loop, whenever a new event occurs
-    /// @param handler_args User data registered to the event
     /// @param base Event base for the handler
     /// @param event_id The id for the received event
     /// @param event_data The data for the event, esp_mqtt_event_handle_t
-    void mqtt_event_handler(void *handler_args, esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void *event_data);
+    void mqtt_event_handler(esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void *event_data);
 
     static void static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+
+    Callback<void, char *, uint8_t *, unsigned int> m_received_data_callback = {}; // Callback that will be called as soon as the mqtt client receives any data
+    Callback<void>                                  m_connected_callback = {};     // Callback that will be called as soon as the mqtt client has connected
+    bool                                            m_connected = {};              // Whether the client has received the connected or disconnected event
+    bool                                            m_enqueue_messages = {};       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
+    esp_mqtt_client_config_t                        m_mqtt_configuration = {};     // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
+    esp_mqtt_client_handle_t                        m_mqtt_client = {};            // Handle to the underlying mqtt client, used to establish the communication
 };
 
 #endif // THINGSBOARD_USE_ESP_MQTT

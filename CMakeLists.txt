@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.12)
 set(srcs
     src/Arduino_HTTP_Client.cpp
     src/Arduino_MQTT_Client.cpp
-    src/Callback_Watchdog.cpp
     src/Arduino_ESP32_Updater.cpp
     src/Arduino_ESP8266_Updater.cpp
     src/Espressif_Updater.cpp
@@ -41,4 +40,4 @@ if(ESP_PLATFORM)
 	return()
 endif()
 
-project(ThingsBoardClientSDK VERSION 0.13.0)
+project(ThingsBoardClientSDK VERSION 0.14.0)

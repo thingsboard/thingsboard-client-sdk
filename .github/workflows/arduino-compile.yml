@@ -30,10 +30,12 @@ jobs:
         - source-path: ./
         - name: TBPubSubClient
         - name: ArduinoHttpClient
-        - { name: ArduinoJson, version: 6.21.4 } 
+        - { name: ArduinoJson, version: 6.21.5 } 
         - name: StreamUtils
         - name: WiFiEsp
         - name: TinyGSM
+        - name: Seeed_Arduino_mbedtls
+        - name: arduino-timer
 
     strategy:
       matrix:

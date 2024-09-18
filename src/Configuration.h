@@ -42,17 +42,12 @@
 #    endif
 #  endif
 
-// Enable the usage of OTA (Over the air) updates, only possible with STL base functionality, theoretically possible without STL support,
-// but the code would have to be adjusted at compile time depending on if the C++ STL is supported or not and that has not been implemented for OTA yet.
-#  ifndef THINGSBOARD_ENABLE_OTA
-#     define THINGSBOARD_ENABLE_OTA THINGSBOARD_ENABLE_STL
-#  endif
-
 // Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
+// Only exists following major version 3 minor version 0 on ESP32 (https://github.com/espressif/esp-idf/releases/tag/v3.0-rc1)and major version 3 minor version 1 on ESP8266 (https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.1-rc1)
 #  ifndef THINGSBOARD_USE_ESP_TIMER
 #    ifdef __has_include
-#      if __has_include(<esp_timer.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<esp_timer.h>)
 #        define THINGSBOARD_USE_ESP_TIMER 1
 #      else
 #        define THINGSBOARD_USE_ESP_TIMER 0
@@ -64,9 +59,10 @@
 
 // Use the mqtt_client header internally for handling the sending and receiving of MQTT data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_MQTT_Client instead of only the Arduino_MQTT_Client.
+// Only exists following major version 3 minor version 2 on ESP32 (https://github.com/espressif/esp-idf/releases/tag/v3.2) and major version 3 minor version 4 on ESP8266 (https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.4).
 #  ifndef THINGSBOARD_USE_ESP_MQTT
 #    ifdef __has_include
-#      if __has_include(<mqtt_client.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<mqtt_client.h>)
 #        define THINGSBOARD_USE_ESP_MQTT 1
 #      else
 #        define THINGSBOARD_USE_ESP_MQTT 0
@@ -78,9 +74,10 @@
 
 // Use the mbed_tls header internally for handling the creation of hashes from binary data, as long as the header exists,
 // because if it is already included we do not need to rely on and incude external lbiraries like Seeed_mbedtls.h, which implements the same features.
+// Only exists following major version 0 minor version 9 on ESP32 (https://github.com/espressif/esp-idf/releases/v0.9) and major version 3 minor version 3 on ESP8266 (https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.3-rc1).
 #  ifndef THINGSBOARD_USE_MBED_TLS
 #    ifdef __has_include
-#      if __has_include(<mbedtls/md.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<mbedtls/md.h>)
 #        define THINGSBOARD_USE_MBED_TLS 1
 #      else
 #        define THINGSBOARD_USE_MBED_TLS 0
@@ -92,29 +89,17 @@
 
 // Use the esp_ota_ops header internally for handling the writing of ota update data, as long as the header exists,
 // to allow users that do have the needed component to use the Espressif_Updater instead of only the Arduino_ESP32_Updater.
+// Only exists following major version 1 minor version 0 on ESP32 (https://github.com/espressif/esp-idf/releases/v0.9) and major version 3 minor version 0 on ESP8266 (https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.0-rc1).
+// Additionally, for all the expected API calls to be implemented atleast, major version 2 minor version 1 on ESP32 and major version 3 minor version 0 on ESP8266 is required.
 #  ifndef THINGSBOARD_USE_ESP_PARTITION
 #    ifdef __has_include
-#      if __has_include(<esp_ota_ops.h>) && ESP_IDF_VERSION_MAJOR >= 4
+#      if __has_include(<esp_ota_ops.h>) && (!defined(ESP32) || ((ESP_IDF_VERSION_MAJOR == 2 && ESP_IDF_VERSION_MINOR >= 1) || ESP_IDF_VERSION_MAJOR > 2)) && (!defined(ESP8266) || ESP_IDF_VERSION_MAJOR >= 3)
 #        define THINGSBOARD_USE_ESP_PARTITION 1
 #      else
 #        define THINGSBOARD_USE_ESP_PARTITION 0
 #      endif
 #    else
 #      define THINGSBOARD_USE_ESP_PARTITION 0
-#    endif
-#  endif
-
-// Use the pgmspace header internally for enabling the usage of the PROGMEM header for constant variables, as long as the header exists,
-// to allow variables to be placed into flash memory instead of sram, meaning the sram can be allocated for other things.
-#  ifndef THINGSBOARD_ENABLE_PROGMEM
-#    ifdef __has_include
-#      if __has_include(<pgmspace.h>) && !defined(ESP8266)
-#        define THINGSBOARD_ENABLE_PROGMEM 1
-#      else
-#        define THINGSBOARD_ENABLE_PROGMEM 0
-#      endif
-#    else
-#      define THINGSBOARD_ENABLE_PROGMEM 0
 #    endif
 #  endif
 

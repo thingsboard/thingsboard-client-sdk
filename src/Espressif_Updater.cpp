@@ -1,7 +1,7 @@
 // Header include.
 #include "Espressif_Updater.h"
 
-#if THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
+#if THINGSBOARD_USE_ESP_PARTITION
 
 // Library include.
 #include <esp_ota_ops.h>
@@ -42,7 +42,11 @@ size_t Espressif_Updater::write(uint8_t * payload, size_t const & total_bytes) {
 }
 
 void Espressif_Updater::reset() {
+#if defined(ESP8266) || (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR < 3) || ESP_IDF_VERSION_MAJOR < 4
+    (void)end();
+#else
     (void)esp_ota_abort(m_ota_handle);
+#endif
 }
 
 bool Espressif_Updater::end() {
@@ -55,4 +59,4 @@ bool Espressif_Updater::end() {
     return error == ESP_OK;
 }
 
-#endif // THINGSBOARD_ENABLE_OTA && THINGSBOARD_USE_ESP_PARTITION
+#endif // THINGSBOARD_USE_ESP_PARTITION

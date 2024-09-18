@@ -9,21 +9,18 @@
 // to ensure other errors are indentified as well
 constexpr int MQTT_FAILURE_MESSAGE_ID = -1;
 
-Espressif_MQTT_Client *Espressif_MQTT_Client::m_instance = nullptr;
-
 Espressif_MQTT_Client::Espressif_MQTT_Client() :
-    m_received_data_callback(nullptr),
-    m_connected_callback(nullptr),
+    m_received_data_callback(),
+    m_connected_callback(),
     m_connected(false),
     m_enqueue_messages(false),
     m_mqtt_configuration(),
     m_mqtt_client(nullptr)
 {
-    m_instance = this;
+    // Nothing to do
 }
 
 Espressif_MQTT_Client::~Espressif_MQTT_Client() {
-    m_instance = nullptr;
     (void)esp_mqtt_client_destroy(m_mqtt_client);
 }
 
@@ -115,15 +112,15 @@ void Espressif_MQTT_Client::set_enqueue_messages(const bool& enqueue_messages) {
     m_enqueue_messages = enqueue_messages;
 }
 
-void Espressif_MQTT_Client::set_data_callback(data_function callback) {
-    m_received_data_callback = callback;
+void Espressif_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) {
+    m_received_data_callback.Set_Callback(callback);
 }
 
-void Espressif_MQTT_Client::set_connect_callback(connect_function callback) {
-    m_connected_callback = callback;
+void Espressif_MQTT_Client::set_connect_callback(Callback<void>::function callback) {
+    m_connected_callback.Set_Callback(callback);
 }
 
-bool Espressif_MQTT_Client::set_buffer_size(const uint16_t& buffer_size) {
+bool Espressif_MQTT_Client::set_buffer_size(uint16_t buffer_size) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.buffer_size = buffer_size;
@@ -149,7 +146,7 @@ uint16_t Espressif_MQTT_Client::get_buffer_size() {
 #endif // ESP_IDF_VERSION_MAJOR < 5
 }
 
-void Espressif_MQTT_Client::set_server(const char *domain, const uint16_t& port) {
+void Espressif_MQTT_Client::set_server(const char *domain, uint16_t port) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.host = domain;
@@ -200,10 +197,7 @@ bool Espressif_MQTT_Client::connect(const char *client_id, const char *user_name
     // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
     // additionally before we attempt to connect with the client we have to ensure it is configued by then.
     m_mqtt_client = esp_mqtt_client_init(&m_mqtt_configuration);
-
-    // The last argument may be used to pass data to the event handler, here that would be the static_mqtt_event_handler. But for our use case this is not needed,
-    // because the static_mqtt_event_handler calls a private method on this class again anyway, meaning we already have access to all private member variables that are required
-    esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, nullptr);
+    esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, this);
 
     if (error != ESP_OK) {
         return false;
@@ -276,13 +270,13 @@ bool Espressif_MQTT_Client::update_configuration() {
     return error == ESP_OK;
 }
 
-void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data) {
+void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data) {
     const esp_mqtt_event_handle_t event = static_cast<esp_mqtt_event_handle_t>(event_data);
 
     switch (event_id) {
         case esp_mqtt_event_id_t::MQTT_EVENT_CONNECTED:
             m_connected = true;
-            m_connected_callback();
+            m_connected_callback.Call_Callback();
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_DISCONNECTED:
             m_connected = false;
@@ -302,10 +296,7 @@ void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_bas
             if (event->data_len != event->total_data_len) {
                 break;
             }
-
-            if (m_received_data_callback != nullptr) {
-                m_received_data_callback(event->topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
-            }
+            m_received_data_callback.Call_Callback(event->topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
             break;
         case esp_mqtt_event_id_t::MQTT_EVENT_ERROR:
             // Nothing to do
@@ -320,11 +311,11 @@ void Espressif_MQTT_Client::mqtt_event_handler(void *handler_args, esp_event_bas
 }
 
 void Espressif_MQTT_Client::static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
-    if (m_instance == nullptr) {
+    if (handler_args == nullptr) {
         return;
     }
-
-    m_instance->mqtt_event_handler(handler_args, base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
+    auto instance = static_cast<Espressif_MQTT_Client *>(handler_args);
+    instance->mqtt_event_handler(base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
 }
 
 #endif // THINGSBOARD_USE_ESP_MQTT

@@ -1,8 +1,6 @@
 // Header include.
 #include "Arduino_ESP32_Updater.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 #if defined(ESP32) && defined(ARDUINO)
 
 // Library include.
@@ -26,4 +24,3 @@ bool Arduino_ESP32_Updater::end() {
 
 #endif // defined(ESP32) && defined(ARDUINO)
 
-#endif // THINGSBOARD_ENABLE_OTA

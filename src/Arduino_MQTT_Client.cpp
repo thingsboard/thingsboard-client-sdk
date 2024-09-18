@@ -4,7 +4,7 @@
 #ifdef ARDUINO
 
 Arduino_MQTT_Client::Arduino_MQTT_Client(Client & transport_client) :
-    m_cb(nullptr),
+    m_connected_callback(),
     m_mqtt_client(transport_client)
 {
     // Nothing to do
@@ -14,15 +14,15 @@ void Arduino_MQTT_Client::set_client(Client & transport_client) {
     m_mqtt_client.setClient(transport_client);
 }
 
-void Arduino_MQTT_Client::set_data_callback(data_function cb) {
-    m_mqtt_client.setCallback(cb);
+void Arduino_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) {
+    m_mqtt_client.setCallback(callback);
 }
 
-void Arduino_MQTT_Client::set_connect_callback(connect_function cb) {
-    m_cb = cb;
+void Arduino_MQTT_Client::set_connect_callback(Callback<void>::function callback) {
+    m_connected_callback.Set_Callback(callback);
 }
 
-bool Arduino_MQTT_Client::set_buffer_size(uint16_t const & buffer_size) {
+bool Arduino_MQTT_Client::set_buffer_size(uint16_t buffer_size) {
     return m_mqtt_client.setBufferSize(buffer_size);
 }
 
@@ -30,13 +30,13 @@ uint16_t Arduino_MQTT_Client::get_buffer_size() {
     return m_mqtt_client.getBufferSize();
 }
 
-void Arduino_MQTT_Client::set_server(char const * const domain, uint16_t const & port) {
+void Arduino_MQTT_Client::set_server(char const * const domain, uint16_t port) {
     m_mqtt_client.setServer(domain, port);
 }
 
 bool Arduino_MQTT_Client::connect(char const * const client_id, char const * const user_name, char const * const password) {
     bool const result = m_mqtt_client.connect(client_id, user_name, password);
-    m_cb();
+    m_connected_callback.Call_Callback();
     return result;
 }
 

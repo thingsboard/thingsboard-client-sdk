@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Local include.
 #include <IUpdater.h>
 
@@ -24,9 +22,7 @@ class SDCard_Updater : public IUpdater {
     bool end() override;
 
   private:
-    char const * const m_path;
+    char const * const m_path = {}; // Path to the file the binary data is written into
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // SDCard_Updater_h

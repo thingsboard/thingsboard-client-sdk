@@ -32,11 +32,13 @@ class Helper {
         return result;
     }
 
-    /// @brief Returns the amount of occurences of the given smybol in the given string
-    /// @param str String that we want to check the symbol in
-    /// @param symbol Symbols we want to search for
+    /// @brief Returns the amount of occurences of the given smybol in the given byte payload
+    /// @param bytes Byte payload that we want to check the symbol for
+    /// @param symbol Symbol we want to search for
+    /// @param length Length of the byte payload, meaning if we reach the given length and have not found any occurence of the symbol we return 0.
+    /// Ensure to never pass a length that is longer than the actualy payload, because this will cause this method to read outside of the bounds of the buffer
     /// @return Amount of occurences of the given symbol
-    static size_t getOccurences(char const * const str, char symbol);
+    static size_t getOccurences(uint8_t const * const bytes, char symbol, unsigned int length);
 
     /// @brief Returns wheter the given string is either a nullptr or is an empty string,
     /// meaning it only contains a null terminator and no other characters
@@ -45,12 +47,11 @@ class Helper {
     static bool stringIsNullorEmpty(char const * const str);
 
     /// @brief Returns the portion of the received topic after the base topic as an integer.
-    /// Should contain the request id that the original request was sent with.
-    /// Is used to know which received response is connected to which inital request.
-    /// @param base_topic Base portion of the topic that does not contain any parameters,
-    /// should not contain trailing '/' character because the implementation already adds +1 to exclude that character as well (v1/devices/me/attributes/response)
+    /// Should contain the request id that the original request was sent with
+    /// Is used to know which received response is connected to which inital request
+    /// @param base_topic Base portion of the topic that does not contain any parameters (v1/devices/me/attributes/response/)
     /// @param received_topic Received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id)
-    /// @return Converted integral request id if possible or 0 if parsing as an integer failed.
+    /// @return Converted integral request id if possible or 0 if parsing as an integer failed
     static size_t parseRequestId(char const * const base_topic, char const * const received_topic);
 
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
@@ -96,10 +97,7 @@ class Helper {
         // This allows the edge case where an end-user uses this method themselves in the code with their own implemented list data type.
         size_t size = 0U;
         auto it = first;
-        while (it != last) {
-            ++it;
-            ++size;
-        }
+        for (auto it = first; it != last; ++it, ++size) {}
         return size;
 #endif // THINGSBOARD_ENABLE_STL
     }

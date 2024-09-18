@@ -123,16 +123,16 @@ class Telemetry {
 
     /// @brief Data type that the data container currently holds
     enum class DataType: const uint8_t {
-        TYPE_NONE, // Telemetry instance is empty and has not been assigned a value
-        TYPE_BOOL, // Telemetry instance is a key value-pair with a boolean value
-        TYPE_INT, // Telemetry instance is a key value-pair with an integral value
-        TYPE_REAL, // Telemetry instance is a key value-pair with a real (float, double) value
-        TYPE_STR // Telemetry isntance is a key value-pair with a string value
+        TYPE_NONE, ///< Telemetry instance is empty and has not been assigned a value
+        TYPE_BOOL, ///< Telemetry instance is a key value-pair with a boolean value
+        TYPE_INT, ///< Telemetry instance is a key value-pair with an integral value
+        TYPE_REAL, ///< Telemetry instance is a key value-pair with a real (float, double) value
+        TYPE_STR ///< Telemetry isntance is a key value-pair with a string value
     };
 
-    DataType     m_type;  // Data type flag, showing which value is saved in the class instance
-    const char   *m_key;  // Data key of the key-value pair
-    Data         m_value; // Data value of the key-value pair
+    DataType     m_type = {};  // Data type flag, showing which value is saved in the class instance
+    const char   *m_key = {};  // Data key of the key-value pair
+    Data         m_value = {}; // Data value of the key-value pair
 };
 
 /// @brief Telemetry and attributes are only different on the database side (one has a history the other one does not), but both are simply key-value pairs
