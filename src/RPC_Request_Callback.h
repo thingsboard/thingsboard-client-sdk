@@ -8,7 +8,7 @@
 /// @brief Client-side RPC callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of client-side RPC in ThingsBoard can be found here https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc
-class RPC_Request_Callback : public Callback<void, JsonVariantConst const &> {
+class RPC_Request_Callback : public Callback<void, JsonDocument const &> {
   public:
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     RPC_Request_Callback() = default;
