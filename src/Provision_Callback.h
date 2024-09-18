@@ -15,7 +15,7 @@ struct X509_Certificate{};
 /// @brief Provisioning callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of Provisioning devices in ThingsBoard can be found here https://thingsboard.io/docs/user-guide/device-provisioning/
-class Provision_Callback : public Callback<void, JsonObjectConst const &> {
+class Provision_Callback : public Callback<void, JsonDocument const &> {
   public:
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     Provision_Callback() = default;

@@ -109,7 +109,7 @@ class Server_Side_RPC : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
         char const * const method_name = data[RPC_METHOD_KEY];
 
         if (method_name == nullptr) {

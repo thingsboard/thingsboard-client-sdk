@@ -375,7 +375,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
         // Nothing to do
     }
 

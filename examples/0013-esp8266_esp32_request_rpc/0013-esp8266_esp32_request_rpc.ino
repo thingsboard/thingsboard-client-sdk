@@ -148,7 +148,7 @@ void requestTimedOut() {
 /// @brief Processes function for RPC response of "getCurrentTime".
 /// If no response is set the callback is called with {"error": "timeout"}, after a few seconds
 /// @param data Data containing the rpc response that was sent by the cloud
-void processTime(const JsonVariantConst &data) {
+void processTime(JsonDocument const & data) {
   serializeJsonPretty(data, Serial);
 }
 

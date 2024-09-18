@@ -8,7 +8,6 @@
 
 // Log messages.
 #if THINGSBOARD_ENABLE_DEBUG
-char constexpr NOT_FOUND_ATT_UPDATE[] = "Shared attribute update key not found";
 char constexpr ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
 char constexpr ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
 char constexpr SHARED_KEY_IS_NULL[] = "Subscribed shared attribute update key is NULL";
@@ -107,16 +106,10 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
-        if (!data) {
-#if THINGSBOARD_ENABLE_DEBUG
-            Logger::println(NOT_FOUND_ATT_UPDATE);
-#endif // THINGSBOARD_ENABLE_DEBUG
-            return;
-        }
-
-        if (data.containsKey(SHARED_RESPONSE_KEY)) {
-            data = data[SHARED_RESPONSE_KEY];
+    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+        JsonObjectConst object = data.template as<JsonObjectConst>();
+        if (object.containsKey(SHARED_RESPONSE_KEY)) {
+            object = object[SHARED_RESPONSE_KEY];
         }
 
         for (auto const & shared_attribute : m_shared_attribute_update_callbacks) {
@@ -125,7 +118,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
                 Logger::println(ATT_CB_NO_KEYS);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 // No specifc keys were subscribed so we call the callback anyway, assumed to be subscribed to any update
-                shared_attribute.Call_Callback(data);
+                shared_attribute.Call_Callback(object);
                 continue;
             }
 
@@ -140,7 +133,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
                 }
                 // Check if the request contained any of our requested keys and
                 // break early if the key was requested from this callback.
-                if (data.containsKey(att)) {
+                if (object.containsKey(att)) {
                     requested_att = att;
                     break;
                 }
@@ -158,7 +151,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::printfln(CALLING_ATT_CB, requested_att);
 #endif // THINGSBOARD_ENABLE_DEBUG
-            shared_attribute.Call_Callback(data);
+            shared_attribute.Call_Callback(object);
         }
     }
 

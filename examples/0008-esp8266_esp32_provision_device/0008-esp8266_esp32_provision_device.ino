@@ -176,7 +176,7 @@ void setup() {
 
 /// @brief Process the provisioning response received from the server
 /// @param data Reference to the object containing the provisioning response
-void processProvisionResponse(const JsonObjectConst &data) {
+void processProvisionResponse(const JsonDocument &data) {
   const size_t jsonSize = Helper::Measure_Json(data);
   char buffer[jsonSize];
   serializeJson(data, buffer, jsonSize);

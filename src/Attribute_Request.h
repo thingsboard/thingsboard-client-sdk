@@ -18,7 +18,7 @@ char constexpr SHARED_REQUEST_KEY[] = "sharedKeys";
 // Log messages.
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr NO_KEYS_TO_REQUEST[] = "No keys to request were given";
-char constexpr ATT_KEY_NOT_FOUND[] = "Attribute key not found";
+char constexpr ATT_KEY_NOT_FOUND[] = "Attribute key in Attribute_Request_Callback is NULL";
 char constexpr ATT_KEY_IS_NULL[] = "Requested attribute key is NULL";
 #endif // THINGSBOARD_ENABLE_DEBUG
 #if !THINGSBOARD_ENABLE_DYNAMIC
@@ -81,8 +81,9 @@ class Attribute_Request : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
         size_t const request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
+        JsonObjectConst object = data.template as<JsonObjectConst>();
 
         for (auto it = m_attribute_request_callbacks.begin(); it != m_attribute_request_callbacks.end(); ++it) {
             auto & attribute_request = *it;
@@ -97,18 +98,13 @@ class Attribute_Request : public IAPI_Implementation {
 #endif // THINGSBOARD_ENABLE_DEBUG
                 goto delete_callback;
             }
-            else if (!data) {
-#if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_NOT_FOUND);
-#endif // THINGSBOARD_ENABLE_DEBUG
-                goto delete_callback;
+
+            if (object.containsKey(attribute_response_key)) {
+                object = object[attribute_response_key];
             }
 
-            if (data.containsKey(attribute_response_key)) {
-                data = data[attribute_response_key];
-            }
             attribute_request.Stop_Timeout_Timer();
-            attribute_request.Call_Callback(data);
+            attribute_request.Call_Callback(object);
 
             delete_callback:
             // Delete callback because the changes have been requested and the callback is no longer needed

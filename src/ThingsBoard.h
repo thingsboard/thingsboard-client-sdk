@@ -752,16 +752,12 @@ class ThingsBoardSized {
             Logger::printfln(UNABLE_TO_DE_SERIALIZE_JSON, error.c_str());
             return;
         }
-        // .as() is used instead of .to(), because it is meant to cast the JsonDocument to the given type,
-        // but it does not change the actual content of the JsonDocument, we don't want that because it contains content
-        // and .to() would result in the data being cleared ()"null"), instead .as() which allows accessing the data over a JsonObjectConst instead
-        JsonObjectConst data = json_buffer.template as<JsonObjectConst>();
 
         for (auto & api : m_api_implementations) {
             if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
                 continue;
             }
-            api->Process_Json_Response(topic, data);
+            api->Process_Json_Response(topic, json_buffer);
         }
     }
 

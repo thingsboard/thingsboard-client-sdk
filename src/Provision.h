@@ -98,7 +98,7 @@ class Provision : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
         m_provision_callback.Call_Callback(data);
         // Unsubscribe from the provision response topic,
         // Will be resubscribed if another request is sent anyway

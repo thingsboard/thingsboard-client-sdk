@@ -184,7 +184,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_ota.Process_Firmware_Packet(chunk, payload, length);
     }
 
-    void Process_Json_Response(char * const topic, JsonObjectConst & data) override {
+    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
         // Nothing to do
     }
 
@@ -405,7 +405,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     }
 
 #if !THINGSBOARD_ENABLE_STL
-    static void onStaticFirmwareReceived(JsonObjectConst const & data) {
+    static void onStaticFirmwareReceived(JsonDocument const & data) {
         if (m_subscribedInstance == nullptr) {
             return;
         }

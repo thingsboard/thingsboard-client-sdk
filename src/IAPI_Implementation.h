@@ -46,7 +46,7 @@ class IAPI_Implementation {
     /// and is responsible for handling the alredy serialized payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
-    virtual void Process_Json_Response(char * const topic, JsonObjectConst & data) = 0;
+    virtual void Process_Json_Response(char * const topic, JsonDocument const & data) = 0;
 
     /// @brief Returns a non-owning pointer to the respone topic string, that we should have received the actual data on.
     /// Used to check, which API Implementation needs to handle the current response to a previously sent request
