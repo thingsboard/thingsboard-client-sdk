@@ -34,6 +34,7 @@ bool HashGenerator::finish(char * hash_string) {
         sprintf(hash_string + (i * 2), "%02x", byte_hash[i]);
     }
     hash_string[sizeof(byte_hash) * 2] = '\0';
+    return success;
 }
 
 void HashGenerator::free() {
