@@ -103,6 +103,7 @@ constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
 constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
 constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
 constexpr char PROVISION_DEVICE_TASK_NAME[] = "provision_device_task";
+constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client mqttClient;
@@ -165,6 +166,11 @@ void InitWiFi() {
     ESP_ERROR_CHECK(esp_wifi_set_config(wifi_interface_t::WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_ERROR_CHECK(esp_wifi_connect());
+}
+
+/// @brief Attribute request did not receive a response in the expected amount of microseconds 
+void requestTimedOut() {
+    ESP_LOGE("MAIN", "Provision request timed out did not receive a response in (%llu) microseconds. Ensure client is connected to the MQTT broker", REQUEST_TIMEOUT_MICROSECONDS);
 }
 
 /// @brief Process the provisioning response received from the server
@@ -231,7 +237,7 @@ void provision_device(void *pvParameters) {
     }
 
     // Prepare and send the provision request
-    const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str());
+    const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str(), REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     provisionRequestSent = prov.Provision_Request(provisionCallback);
 
     // Wait for the provisioning response to be processed

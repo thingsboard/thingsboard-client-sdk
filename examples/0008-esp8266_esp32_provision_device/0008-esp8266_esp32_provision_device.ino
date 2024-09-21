@@ -103,6 +103,7 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
 constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
 constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
+constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 
 // Initialize underlying client, used to establish a connection
@@ -172,6 +173,11 @@ void setup() {
   delay(1000);
   InitWiFi();
   previous_processing_time = millis();
+}
+
+/// @brief Provision request did not receive a response in the expected amount of microseconds 
+void requestTimedOut() {
+  Serial.printf("Provision request timed out did not receive a response in (%llu) microseconds. Ensure client is connected to the MQTT broker\n", REQUEST_TIMEOUT_MICROSECONDS);
 }
 
 /// @brief Process the provisioning response received from the server
@@ -248,7 +254,7 @@ void loop() {
     }
 #endif
 
-    const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str());
+    const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str(), REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     provisionRequestSent = prov.Provision_Request(provisionCallback);
   }
   else if (provisionResponseProcessed) {

@@ -5,7 +5,7 @@ constexpr char ACCESS_TOKEN_CRED_TYPE[] = "ACCESS_TOKEN";
 constexpr char MQTT_BASIC_CRED_TYPE[] = "MQTT_BASIC";
 constexpr char X509_CERTIFICATE_CRED_TYPE[] = "X509_CERTIFICATE";
 
-Provision_Callback::Provision_Callback(Access_Token, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const device_name)
+Provision_Callback::Provision_Callback(Access_Token, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const device_name, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback)
   : Callback(callback)
   , m_device_key(provision_device_key)
   , m_device_secret(provision_device_secret)
@@ -16,11 +16,13 @@ Provision_Callback::Provision_Callback(Access_Token, function callback, char con
   , m_cred_client_id(nullptr)
   , m_hash(nullptr)
   , m_credentials_type(nullptr)
+  , m_timeout_microseconds(0U)
+  , m_timeout_callback()
 {
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Device_Access_Token, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const access_token, char const * const device_name)
+Provision_Callback::Provision_Callback(Device_Access_Token, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const access_token, char const * const device_name, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback)
   : Callback(callback)
   , m_device_key(provision_device_key)
   , m_device_secret(provision_device_secret)
@@ -31,11 +33,13 @@ Provision_Callback::Provision_Callback(Device_Access_Token, function callback, c
   , m_cred_client_id(nullptr)
   , m_hash(nullptr)
   , m_credentials_type(ACCESS_TOKEN_CRED_TYPE)
+  , m_timeout_microseconds(0U)
+  , m_timeout_callback()
 {
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const username, char const * const password, char const * const client_id, char const * const device_name)
+Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const username, char const * const password, char const * const client_id, char const * const device_name, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback)
   : Callback(callback)
   , m_device_key(provision_device_key)
   , m_device_secret(provision_device_secret)
@@ -46,11 +50,13 @@ Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback
   , m_cred_client_id(client_id)
   , m_hash(nullptr)
   , m_credentials_type(MQTT_BASIC_CRED_TYPE)
+  , m_timeout_microseconds(0U)
+  , m_timeout_callback()
 {
     // Nothing to do
 }
 
-Provision_Callback::Provision_Callback(X509_Certificate, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const hash, char const * const device_name)
+Provision_Callback::Provision_Callback(X509_Certificate, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const hash, char const * const device_name, uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback)
   : Callback(callback)
   , m_device_key(provision_device_key)
   , m_device_secret(provision_device_secret)
@@ -61,6 +67,8 @@ Provision_Callback::Provision_Callback(X509_Certificate, function callback, char
   , m_cred_client_id(nullptr)
   , m_hash(hash)
   , m_credentials_type(X509_CERTIFICATE_CRED_TYPE)
+  , m_timeout_microseconds(0U)
+  , m_timeout_callback()
 {
     // Nothing to do
 }
@@ -131,4 +139,33 @@ void Provision_Callback::Set_Certificate_Hash(char const * const hash) {
 
 const char* Provision_Callback::Get_Credentials_Type() const {
     return m_credentials_type;
+}
+
+uint64_t const & Provision_Callback::Get_Timeout() const {
+    return m_timeout_microseconds;
+}
+
+void Provision_Callback::Set_Timeout(uint64_t const & timeout_microseconds) {
+    m_timeout_microseconds = timeout_microseconds;
+}
+
+#if !THINGSBOARD_USE_ESP_TIMER
+void Provision_Callback::Update_Timeout_Timer() {
+    m_timeout_callback.update();
+}
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
+void Provision_Callback::Start_Timeout_Timer() {
+    if (m_timeout_microseconds == 0U) {
+        return;
+    }
+    m_timeout_callback.once(m_timeout_microseconds);
+}
+
+void Provision_Callback::Stop_Timeout_Timer() {
+    m_timeout_callback.detach();
+}
+
+void Provision_Callback::Set_Timeout_Callback(Callback_Watchdog::function timeout_callback) {
+    m_timeout_callback.Set_Callback(timeout_callback);
 }
