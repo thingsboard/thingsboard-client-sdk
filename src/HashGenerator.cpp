@@ -1,6 +1,9 @@
 // Header include.
 #include "HashGenerator.h"
 
+// Library include.
+#include <stdio.h>
+
 HashGenerator::~HashGenerator(void) {
     free();
 }
@@ -21,8 +24,16 @@ bool HashGenerator::update(uint8_t const * const data, size_t const & length) {
     return mbedtls_md_update(&m_ctx, data, length) == 0;
 }
 
-bool HashGenerator::finish(unsigned char * hash) {
-    return mbedtls_md_finish(&m_ctx, hash) == 0;
+bool HashGenerator::finish(char * hash_string) {
+    unsigned char byte_hash[MBEDTLS_MD_MAX_SIZE] = {};
+    bool const success = mbedtls_md_finish(&m_ctx, byte_hash) == 0;
+    if (!success) {
+        return success;
+    }
+    for (size_t i = 0; i < sizeof(byte_hash); ++i) {
+        sprintf(hash_string + (i * 2), "%02x", byte_hash[i]);
+    }
+    hash_string[sizeof(byte_hash) * 2] = '\0';
 }
 
 void HashGenerator::free() {

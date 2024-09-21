@@ -39,6 +39,7 @@ char constexpr HASH_EXPECTED[] = "Expected checksum: (%s)";
 char constexpr CHECKSUM_VERIFICATION_SUCCESS[] = "Checksum is the same as expected";
 char constexpr FW_UPDATE_SUCCESS[] = "Update success";
 #endif // THINGSBOARD_ENABLE_DEBUG
+size_t constexpr FIRMWARE_HASH_SIZE = 129U;
 
 
 /// @brief Handles the complete processing of received binary firmware data, including flashing it onto the device,
@@ -81,7 +82,7 @@ class OTA_Handler {
         m_fw_checksum_algorithm = fw_checksum_algorithm;
         m_fw_updater = m_fw_callback->Get_Updater();
         Request_First_Firmware_Packet();
-        (void)m_send_fw_state_callback.Call_Callback(FW_STATE_DOWNLOADING, nullptr);
+        (void)m_send_fw_state_callback.Call_Callback(FW_STATE_DOWNLOADING, "");
     }
 
     /// @brief Stops the firmware update completly and informs that user that the update has failed because it has been aborted, ongoing communication is discarded.
@@ -213,17 +214,16 @@ class OTA_Handler {
     /// both should be the same and if that is not the case that means that we received invalid firmware binary data and have to restart the update.
     /// If checking the hash was successfull we attempt to finish flashing the ota partition and then inform the user that the update was successfull
     void Finish_Firmware_Update()  {
-        (void)m_send_fw_state_callback.Call_Callback(FW_STATE_DOWNLOADED, nullptr);
+        (void)m_send_fw_state_callback.Call_Callback(FW_STATE_DOWNLOADED, "");
 
-        unsigned char calculated_hash[MBEDTLS_MD_MAX_SIZE] = {};
-        // Calculating final hash result is ignored, because it can only fail if the input parameters are invalid
-        (void)m_hash.finish(calculated_hash);
+        char calculated_checksum[FIRMWARE_HASH_SIZE] = {};
+        // Result of calculating final hash result is ignored,
+        // because it can only fail if the input parameters are invalid and we check it afterwards anyway
+        (void)m_hash.finish(calculated_checksum);
 
-        // Check if the initally received checksum is the same as the one we calculated from the received binary data,
-        // if not we assume the binary data has been changed or not completly downloaded --> Firmware update failed.
-        if (memcmp(m_fw_checksum, calculated_hash, sizeof(m_fw_checksum)) == 0) {
-            char message[Helper::detectSize(CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum)] = {};
-            (void)snprintf(message, sizeof(message), CHECKSUM_VERIFICATION_FAILED, calculated_hash, m_fw_checksum);
+        if (strncmp(m_fw_checksum, calculated_checksum, strlen(m_fw_checksum)) != 0) {
+            char message[Helper::detectSize(CHECKSUM_VERIFICATION_FAILED, calculated_checksum, m_fw_checksum)] = {};
+            (void)snprintf(message, sizeof(message), CHECKSUM_VERIFICATION_FAILED, calculated_checksum, m_fw_checksum);
             Logger::println(message);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, message);
         }
@@ -241,7 +241,7 @@ class OTA_Handler {
         Logger::println(FW_UPDATE_SUCCESS);
     #endif // THINGSBOARD_ENABLE_DEBUG
 
-        (void)m_send_fw_state_callback.Call_Callback(FW_STATE_UPDATING, nullptr);
+        (void)m_send_fw_state_callback.Call_Callback(FW_STATE_UPDATING, "");
         m_fw_callback->Call_Callback(true);
         (void)m_finish_callback.Call_Callback();
     }
@@ -250,7 +250,7 @@ class OTA_Handler {
     /// Will only execute the given failure response as long as there are still retries remaining, if there are not any further issue will cause the update to be aborted
     /// @param failure_response Possible response to a failure that the method should handle
     /// @param error_message Error message that should be printed if we abort the update
-    void Handle_Failure(OTA_Failure_Response const & failure_response, char const * const error_message = nullptr)  {
+    void Handle_Failure(OTA_Failure_Response const & failure_response, char const * const error_message)  {
         if (m_retries <= 0) {
             (void)m_send_fw_state_callback.Call_Callback(FW_STATE_FAILED, error_message);
             m_fw_callback->Call_Callback(false);
@@ -289,19 +289,19 @@ class OTA_Handler {
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
 
-    const OTA_Update_Callback                              *m_fw_callback = {};                     // Callback method that contains configuration information, about the over the air update
-    Callback<bool, size_t const &, size_t const &>         m_publish_callback = {};                 // Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
-    Callback<bool, char const * const, char const * const> m_send_fw_state_callback = {};           // Callback that is used to send information about the current state of the over the air update
-    Callback<bool>                                         m_finish_callback = {};                  // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
-    size_t                                                 m_fw_size = {};                          // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
-    char                                                   m_fw_checksum[MBEDTLS_MD_MAX_SIZE] = {}; // Checksum of the complete firmware binary, should be the same as the actually written data in the end
-    mbedtls_md_type_t                                      m_fw_checksum_algorithm = {};            // Algorithm type used to hash the firmware binary
-    IUpdater                                               *m_fw_updater = {};                      // Interface implementation that writes received firmware binary data onto the given device
-    HashGenerator                                          m_hash = {};                             // Class instance that allows to generate a hash from received firmware binary data
-    size_t                                                 m_total_chunks = {};                     // Total amount of chunks that need to be received to get the complete firmware binary
-    size_t                                                 m_requested_chunks = {};                 // Amount of successfully requested and received firmware binary chunks
-    uint8_t                                                m_retries = {};                          // Amount of request retries we attempt for each chunk, increasing makes the connection more stable
-    Callback_Watchdog                                      m_watchdog = {};                         // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
+    const OTA_Update_Callback                              *m_fw_callback = {};                    // Callback method that contains configuration information, about the over the air update
+    Callback<bool, size_t const &, size_t const &>         m_publish_callback = {};                // Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
+    Callback<bool, char const * const, char const * const> m_send_fw_state_callback = {};          // Callback that is used to send information about the current state of the over the air update
+    Callback<bool>                                         m_finish_callback = {};                 // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
+    size_t                                                 m_fw_size = {};                         // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
+    char                                                   m_fw_checksum[FIRMWARE_HASH_SIZE] = {}; // Checksum of the complete firmware binary, should be the same as the actually written data in the end
+    mbedtls_md_type_t                                      m_fw_checksum_algorithm = {};           // Algorithm type used to hash the firmware binary
+    IUpdater                                               *m_fw_updater = {};                     // Interface implementation that writes received firmware binary data onto the given device
+    HashGenerator                                          m_hash = {};                            // Class instance that allows to generate a hash from received firmware binary data
+    size_t                                                 m_total_chunks = {};                    // Total amount of chunks that need to be received to get the complete firmware binary
+    size_t                                                 m_requested_chunks = {};                // Amount of successfully requested and received firmware binary chunks
+    uint8_t                                                m_retries = {};                         // Amount of request retries we attempt for each chunk, increasing makes the connection more stable
+    Callback_Watchdog                                      m_watchdog = {};                        // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
 };
 
 #endif // OTA_Handler_h

@@ -41,12 +41,13 @@ class HashGenerator {
     /// @return Whether updating the hash for the given bytes was successful or not
     bool update(uint8_t const * const data, size_t const & length);
 
-    /// @brief Calculates the final hash value and stops the hash calculation no further calls to update() will work,
+    /// @brief Calculates the final hash string representation and stops the hash calculation no further calls to update() will work,
     /// instead the same context can be reused to start another hash calculation operation with start()
-    /// @param hash Output byte array that the hash value will be copied into, needs to be MBEDTLS_MD_MAX_SIZE (64 bytes).
-    /// Because it needs to be able to hold the biggest possible hash value which is SHA512 being 512 bit = 64 bytes big
+    /// @param hash_string Output string that the hash string representation will be copied into, needs to be big enough to hold the string representation of the mbedtls_md_type_t
+    /// meaning we require 2 bytes for every single byte of hash data, therefore the biggest hash string representation has a size of 128 bytes.
+    /// For the actual hash being SHA256, requiring 256 bits = 64 bytes * 2 for the string representation resulting in 128 bytes + 1 byte for the null termination character
     /// @return Whether stopping and caculating the final hash for the given bytes was successful or not
-    bool finish(unsigned char * hash);
+    bool finish(char * hash_string);
 
   private:
     /// @brief Frees all internally allocated memory to ensure no memory leak occurs, additionally check if a hash calculation was ever started,
