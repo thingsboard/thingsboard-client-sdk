@@ -237,7 +237,7 @@ class ThingsBoardSized {
             return false;
         }
         m_client.set_server(host, port);
-        return connectToHost(access_token, (client_id == nullptr) ? access_token : client_id, password);
+        return connectToHost(access_token, Helper::stringIsNullorEmpty(client_id) ? access_token : client_id, Helper::stringIsNullorEmpty(password) ? nullptr : password);
     }
 
     /// @brief Disconnects any connection that has been established already

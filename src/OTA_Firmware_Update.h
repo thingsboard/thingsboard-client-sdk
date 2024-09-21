@@ -73,6 +73,10 @@ class OTA_Firmware_Update : public IAPI_Implementation {
       , m_fw_attribute_update()
       , m_fw_attribute_request()
     {
+        // Can be ignored, because the topic is set correctly once we start an update anyway, therefore we simply insert 0 as the request id for now.
+        // It just has to be set to an actual value that is not an empty string, because that would make the internal callback receive all other responses from the server as well,
+        // even if they are not meant for this class and we are not currently updating the device
+        (void)snprintf(m_response_topic, sizeof(m_response_topic), FIRMWARE_RESPONSE_TOPIC, 0U);
 #if !THINGSBOARD_ENABLE_STL
         m_subscribedInstance = nullptr;
 #endif // !THINGSBOARD_ENABLE_STL
