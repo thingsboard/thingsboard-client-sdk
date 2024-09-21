@@ -52,22 +52,34 @@ void HashGenerator::free() {
 
 size_t HashGenerator::mbedtls_type_to_size(mbedtls_md_type_t const & type) {
     switch (type) {
-        case MBEDTLS_MD_MD2: // Fallthrough same behaviour
-        case MBEDTLS_MD_MD4:
-        case MBEDTLS_MD_MD5:
+#if MBEDTLS_VERSION_MAJOR < 3
+        case mbedtls_md_type_t::MBEDTLS_MD_MD2: // Fallthrough same behaviour
+        case mbedtls_md_type_t::MBEDTLS_MD_MD4:
+#endif // MBEDTLS_VERSION_MAJOR < 3
+        case mbedtls_md_type_t::MBEDTLS_MD_MD5:
             return 16U;
-        case MBEDTLS_MD_SHA1: // Fallthrough same behaviour
-        case MBEDTLS_MD_RIPEMD160:
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA1: // Fallthrough same behaviour
+        case mbedtls_md_type_t::MBEDTLS_MD_RIPEMD160:
             return 20U;
-        case MBEDTLS_MD_SHA224:
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA224:
             return 28U;
-        case MBEDTLS_MD_SHA256:
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA256:
             return 32U;
-        case MBEDTLS_MD_SHA384:
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA384:
             return 48U;
-        case MBEDTLS_MD_SHA512:
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA512:
             return 64U;
-        case MBEDTLS_MD_NONE: // Fallthrough same behaviour
+#if ((MBEDTLS_VERSION_MAJOR == 3 && MBEDTLS_VERSION_MINOR >= 5) || MBEDTLS_VERSION_MAJOR > 3)
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA3_224:
+            return 28U;
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA3_256:
+            return 32U;
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA3_384:
+            return 48U;
+        case mbedtls_md_type_t::MBEDTLS_MD_SHA3_512:
+            return 64U;
+#endif // ((MBEDTLS_VERSION_MAJOR == 3 && MBEDTLS_VERSION_MINOR >= 5) || MBEDTLS_VERSION_MAJOR > 3)
+        case mbedtls_md_type_t::MBEDTLS_MD_NONE: // Fallthrough same behaviour
         default:
             return 0U;
     }
