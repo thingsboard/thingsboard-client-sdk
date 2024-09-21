@@ -54,7 +54,15 @@ class HashGenerator {
     /// before freeing, because freeing without having started a hash calculation causes a crash.
     void free();
 
-    mbedtls_md_context_t m_ctx = {}; // Context used to access the already written bytes and update them latter
+    /// @brief Calculates the amount of bytes needed for the hash output.
+    /// Is used because we if we don't calculate the exact amount needed the final hash string representation, will always be filled up with hex 00 to the maximum size of the hash string representation being 129 bytes.
+    /// Which results in hash string representation with a lot of additional 00 at the end, which might make the further processing of those strings fail
+    /// @param type Supported type of hash that should be generated from this class
+    /// @return Amount of bytes needed to be allocated by the buffer that will hold the final hash that is then transformed into a string
+    size_t mbedtls_type_to_size(mbedtls_md_type_t const & type);
+
+    size_t               m_size = {}; // Actual size in bytes, depend on the mbedtls_md_type_t given in the start method
+    mbedtls_md_context_t m_ctx = {};  // Context used to access the already written bytes and update them latter
 };
 
 #endif // Hash_Generator_h

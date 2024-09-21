@@ -11,6 +11,7 @@ HashGenerator::~HashGenerator(void) {
 bool HashGenerator::start(mbedtls_md_type_t const & type) {
     // Clear the internal structure of any previous attempt, because if we do not the init function will not work correctly
     free();
+    m_size = mbedtls_type_to_size(type);
     // Initialize the context
     mbedtls_md_init(&m_ctx);
     // Choose the hash function
@@ -25,15 +26,15 @@ bool HashGenerator::update(uint8_t const * const data, size_t const & length) {
 }
 
 bool HashGenerator::finish(char * hash_string) {
-    unsigned char byte_hash[MBEDTLS_MD_MAX_SIZE] = {};
+    unsigned char byte_hash[m_size] = {};
     bool const success = mbedtls_md_finish(&m_ctx, byte_hash) == 0;
     if (!success) {
         return success;
     }
-    for (size_t i = 0; i < sizeof(byte_hash); ++i) {
+    for (size_t i = 0; i < m_size; ++i) {
         sprintf(hash_string + (i * 2), "%02x", byte_hash[i]);
     }
-    hash_string[sizeof(byte_hash) * 2] = '\0';
+    hash_string[m_size * 2] = '\0';
     return success;
 }
 
@@ -46,5 +47,28 @@ void HashGenerator::free() {
 #endif
         // Ensures to clean up the mbedtls memory after it has been used
         mbedtls_md_free(&m_ctx);
+    }
+}
+
+size_t HashGenerator::mbedtls_type_to_size(mbedtls_md_type_t const & type) {
+    switch (type) {
+        case MBEDTLS_MD_MD2: // Fallthrough same behaviour
+        case MBEDTLS_MD_MD4:
+        case MBEDTLS_MD_MD5:
+            return 16U;
+        case MBEDTLS_MD_SHA1: // Fallthrough same behaviour
+        case MBEDTLS_MD_RIPEMD160:
+            return 20U;
+        case MBEDTLS_MD_SHA224:
+            return 28U;
+        case MBEDTLS_MD_SHA256:
+            return 32U;
+        case MBEDTLS_MD_SHA384:
+            return 48U;
+        case MBEDTLS_MD_SHA512:
+            return 64U;
+        case MBEDTLS_MD_NONE: // Fallthrough same behaviour
+        default:
+            return 0U;
     }
 }
