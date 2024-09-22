@@ -39,7 +39,8 @@ char constexpr HASH_EXPECTED[] = "Expected checksum: (%s)";
 char constexpr CHECKSUM_VERIFICATION_SUCCESS[] = "Checksum is the same as expected";
 char constexpr FW_UPDATE_SUCCESS[] = "Update success";
 #endif // THINGSBOARD_ENABLE_DEBUG
-size_t constexpr FIRMWARE_HASH_SIZE = 129U;
+// Maximum size consists of size required for byte representation of the hash * 2 because every byte is 2 hex characters + 1 for null termination
+size_t constexpr FIRMWARE_HASH_SIZE = (MBEDTLS_MD_MAX_SIZE * 2U) + 1;
 
 
 /// @brief Handles the complete processing of received binary firmware data, including flashing it onto the device,

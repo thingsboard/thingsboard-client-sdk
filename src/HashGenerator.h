@@ -45,7 +45,8 @@ class HashGenerator {
     /// instead the same context can be reused to start another hash calculation operation with start()
     /// @param hash_string Output string that the hash string representation will be copied into, needs to be big enough to hold the string representation of the mbedtls_md_type_t
     /// meaning we require 2 bytes for every single byte of hash data, therefore the biggest hash string representation has a size of 128 bytes.
-    /// For the actual hash being SHA256, requiring 256 bits = 64 bytes * 2 for the string representation resulting in 128 bytes + 1 byte for the null termination character
+    /// For the actual hash being SHA256, requiring 256 bits = 64 bytes * 2 for the string representation resulting in 128 bytes + 1 byte for the null termination character.
+    /// Recommended size of the array to pass is simply (MBEDTLS_MD_MAX_SIZE * 2) + 1, which will result in 129 bytes, but additionally automatically update as well if the underlying max size changes
     /// @return Whether stopping and caculating the final hash for the given bytes was successful or not
     bool finish(char * hash_string);
 
