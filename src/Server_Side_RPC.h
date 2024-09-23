@@ -172,8 +172,8 @@ class Server_Side_RPC : public IAPI_Implementation {
         }
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return RPC_REQUEST_TOPIC;
+    bool Compare_Response_Topic(char const * topic) const override {
+        return strncmp(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0;
     }
 
     bool Unsubscribe() override {

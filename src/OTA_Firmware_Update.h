@@ -192,8 +192,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         // Nothing to do
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return m_response_topic;
+    bool Compare_Response_Topic(char const * topic) const override {
+        return strncmp(m_response_topic, topic, strlen(m_response_topic)) == 0;
     }
 
     bool Unsubscribe() override {

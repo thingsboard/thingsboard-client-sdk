@@ -705,7 +705,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         for (auto & api : m_api_implementations) {
-            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || !api->Compare_Response_Topic(topic)) {
                 continue;
             }
             api->Process_Response(topic, payload, length);
@@ -753,7 +753,7 @@ class ThingsBoardSized {
         }
 
         for (auto & api : m_api_implementations) {
-            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || api->Get_Response_Topic_String() == nullptr || strncmp(api->Get_Response_Topic_String(), topic, strlen(api->Get_Response_Topic_String())) != 0) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || !api->Compare_Response_Topic(topic)) {
                 continue;
             }
             api->Process_Json_Response(topic, json_buffer);

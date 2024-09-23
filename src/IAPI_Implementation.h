@@ -48,10 +48,13 @@ class IAPI_Implementation {
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     virtual void Process_Json_Response(char * const topic, JsonDocument const & data) = 0;
 
-    /// @brief Returns a non-owning pointer to the respone topic string, that we should have received the actual data on.
-    /// Used to check, which API Implementation needs to handle the current response to a previously sent request
-    /// @return Response topic null-terminated string
-    virtual char const * Get_Response_Topic_String() const = 0;
+    /// @brief Compares received response topic and the topic this api implementation handles responses on,
+    /// messages from all other topics are ignored and only messages from topics that match are handled.
+    /// For the comparsion we either compare the full expected string with the null termination, if the response topic does not include additional parameters.
+    /// Example being shared attribute update (v1/devices/me/attributes) or we compare only before the null termination for topics that include additional parameters in the response.
+    /// Like for example the original request id in the response of the attribute request (v1/devices/me/attributes/response/1)
+    /// @return Whether the received response topic matches the topic this api implementation handles responses on
+    virtual bool Compare_Response_Topic(char const * topic) const = 0;
 
     /// @brief Unsubcribes all callbacks, to clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
     /// @return Whether unsubcribing all the previously subscribed callbacks

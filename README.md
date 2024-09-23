@@ -379,8 +379,8 @@ class Custom_API_Implementation : public IAPI_Implementation {
         // Nothing to do
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return nullptr;
+    bool Compare_Response_Topic(char const * topic) const override {
+        return true;
     }
 
     bool Unsubscribe() override {

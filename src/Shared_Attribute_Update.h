@@ -155,8 +155,8 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         }
     }
 
-    char const * Get_Response_Topic_String() const override {
-        return ATTRIBUTE_TOPIC;
+    bool Compare_Response_Topic(char const * topic) const override {
+        return strncmp(ATTRIBUTE_TOPIC, topic, JSON_STRING_SIZE(strlen(ATTRIBUTE_TOPIC))) == 0;
     }
 
     bool Unsubscribe() override {
