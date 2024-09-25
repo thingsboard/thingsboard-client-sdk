@@ -114,12 +114,20 @@ class Client_Side_RPC : public IAPI_Implementation {
     void Process_Json_Response(char * const topic, JsonDocument const & data) override {
         size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
+#if THINGSBOARD_ENABLE_STL
+        auto it = std::find_if(m_rpc_request_callbacks.begin(), m_rpc_request_callbacks.end(), [](RPC_Request_Callback & rpc_request) {
+            return rpc_request.Get_Request_ID() == request_id;
+        });
+        if (it != m_rpc_request_callbacks.end()) {
+            auto & rpc_request = *it;
+#else
         for (auto it = m_rpc_request_callbacks.begin(); it != m_rpc_request_callbacks.end(); ++it) {
             auto & rpc_request = *it;
 
             if (rpc_request.Get_Request_ID() != request_id) {
                 continue;
             }
+#endif // THINGSBOARD_ENABLE_STL
             rpc_request.Stop_Timeout_Timer();
             rpc_request.Call_Callback(data);
 

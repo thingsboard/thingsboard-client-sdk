@@ -85,12 +85,24 @@ class Attribute_Request : public IAPI_Implementation {
         size_t const request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
         JsonObjectConst object = data.template as<JsonObjectConst>();
 
+#if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_DYNAMIC
+        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Attribute_Request_Callback & attribute_request) {
+#else
+        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Attribute_Request_Callback<MaxAttributes> & attribute_request) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+            return attribute_request.Get_Request_ID() == request_id;
+        });
+        if (it != m_attribute_request_callbacks.end()) {
+            auto & attribute_request = *it;
+#else
         for (auto it = m_attribute_request_callbacks.begin(); it != m_attribute_request_callbacks.end(); ++it) {
             auto & attribute_request = *it;
 
             if (attribute_request.Get_Request_ID() != request_id) {
                 continue;
             }
+#endif // THINGSBOARD_ENABLE_STL
             char const * const attribute_response_key = attribute_request.Get_Attribute_Key();
             if (attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
@@ -109,7 +121,9 @@ class Attribute_Request : public IAPI_Implementation {
             delete_callback:
             // Delete callback because the changes have been requested and the callback is no longer needed
             Helper::remove(m_attribute_request_callbacks, it);
+#if !THINGSBOARD_ENABLE_STL
             break;
+#endif // !THINGSBOARD_ENABLE_STL
         }
 
         // Unsubscribe from the shared attribute request topic,

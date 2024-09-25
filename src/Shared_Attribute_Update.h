@@ -7,12 +7,6 @@
 
 
 // Log messages.
-#if THINGSBOARD_ENABLE_DEBUG
-char constexpr ATT_CB_NO_KEYS[] = "No keys subscribed. Calling subscribed callback for any updated attributes, assumed to be subscribed to every possible key";
-char constexpr ATT_NO_CHANGE[] = "No keys that we subscribed too were changed, skipping callback";
-char constexpr SHARED_KEY_IS_NULL[] = "Subscribed shared attribute update key is NULL";
-char constexpr CALLING_ATT_CB[] = "Calling subscribed callback for updated shared attribute (%s)";
-#endif // THINGSBOARD_ENABLE_DEBUG
 #if !THINGSBOARD_ENABLE_DYNAMIC
 char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] = "shared attribute update";
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -112,11 +106,23 @@ class Shared_Attribute_Update : public IAPI_Implementation {
             object = object[SHARED_RESPONSE_KEY];
         }
 
+#if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_DYNAMIC
+        Vector<Shared_Attribute_Callback> filtered_shared_attribute_update_callbacks = {};
+        std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Shared_Attribute_Callback const & shared_attribute) {
+#else
+        Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions> filtered_shared_attribute_update_callbacks = {};
+        std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+            return (shared_attribute.Get_Attributes().empty() || std::find_if(shared_attribute.Get_Attributes().begin(), shared_attribute.Get_Attributes().end(), [&object](const char * att) {
+                return object.containsKey(att);
+            }) != shared_attribute.Get_Attributes().end());
+        });
+
+        for (auto const & shared_attribute : filtered_shared_attribute_update_callbacks) {
+#else
         for (auto const & shared_attribute : m_shared_attribute_update_callbacks) {
             if (shared_attribute.Get_Attributes().empty()) {
-#if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_CB_NO_KEYS);
-#endif // THINGSBOARD_ENABLE_DEBUG
                 // No specifc keys were subscribed so we call the callback anyway, assumed to be subscribed to any update
                 shared_attribute.Call_Callback(object);
                 continue;
@@ -126,9 +132,6 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 
             for (auto const & att : shared_attribute.Get_Attributes()) {
                 if (Helper::stringIsNullorEmpty(att)) {
-#if THINGSBOARD_ENABLE_DEBUG
-                    Logger::println(SHARED_KEY_IS_NULL);
-#endif // THINGSBOARD_ENABLE_DEBUG
                     continue;
                 }
                 // Check if the request contained any of our requested keys and
@@ -142,15 +145,9 @@ class Shared_Attribute_Update : public IAPI_Implementation {
             // Check if this callback did not request any keys that were in this response,
             // if there were not we simply continue with the next subscribed callback.
             if (requested_att == nullptr) {
-#if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_NO_CHANGE);
-#endif // THINGSBOARD_ENABLE_DEBUG
                 continue;
             }
-
-#if THINGSBOARD_ENABLE_DEBUG
-            Logger::printfln(CALLING_ATT_CB, requested_att);
-#endif // THINGSBOARD_ENABLE_DEBUG
+#endif // THINGSBOARD_ENABLE_STL
             shared_attribute.Call_Callback(object);
         }
     }

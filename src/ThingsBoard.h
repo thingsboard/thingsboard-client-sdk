@@ -667,8 +667,8 @@ class ThingsBoardSized {
     bool sendDataArray(InputIterator const & first, InputIterator const & last, bool telemetry) {
         size_t const size = Helper::distance(first, last);
 #if THINGSBOARD_ENABLE_DYNAMIC
-        // String are char const * and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
-        // Data structure size depends on the amount of key value pairs passed.
+        // char const * are stored as only a pointer inside the JsonDocument --> zero copy, meaning the size for the strings is 0 bytes.
+        // Data structure size, therefore only depends on the amount of key value pairs passed.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         TBJsonDocument json_buffer(JSON_OBJECT_SIZE(size));
 #else
@@ -679,6 +679,12 @@ class ThingsBoardSized {
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxKeyValuePairAmount)> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
+#if THINGSBOARD_ENABLE_STL
+        if (std::any_of(first, last, [&json_buffer](Telemetry const & data) { return !data.SerializeKeyValue(json_buffer); })) {
+            Logger::println(UNABLE_TO_SERIALIZE);
+            return false;
+        }
+#else
         for (auto it = first; it != last; ++it) {
             auto const & data = *it;
             if (!data.SerializeKeyValue(json_buffer)) {
@@ -686,6 +692,7 @@ class ThingsBoardSized {
                 return false;
             }
         }
+#endif // THINGSBOARD_ENABLE_STL
         return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
@@ -704,20 +711,47 @@ class ThingsBoardSized {
         Logger::printfln(RECEIVE_MESSAGE, length, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
+#if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_DYNAMIC
+        Vector<IAPI_Implementation *> filtered_api_implementations = {};
+#else
+        Array<IAPI_Implementation *, MaxEndpointsAmount> filtered_api_implementations = {};
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+        std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {
+            return (api != nullptr && api->Get_Process_Type() == API_Process_Type::RAW && api->Compare_Response_Topic(topic));
+        });
+
+        for (auto & api : filtered_api_implementations) {
+            api->Process_Response(topic, payload, length);
+        }
+
+        // If the filtered api implementations was not emtpy it means the response was processed as its raw bytes representation atleast once,
+        // and because we interpreted it as raw bytes instead of json, we skip the further processing of those raw bytes as json.
+        // We do that because the received response is in that case not even valid json in the first place and would therefore simply fail deserialization
+        if (!filtered_api_implementations.empty()) {
+            return;
+        }
+#else
+        bool processed_response_as_raw = false;
         for (auto & api : m_api_implementations) {
             if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || !api->Compare_Response_Topic(topic)) {
                 continue;
             }
             api->Process_Response(topic, payload, length);
+            processed_response_as_raw = true;
+        }
+
+        if (processed_response_as_raw) {
             return;
         }
+#endif // THINGSBOARD_ENABLE_STL
 
         // Calculate size with the total amount of commas, always denotes the end of a key-value pair besides for the last element in an array or in an object where the comma is not permitted,
         // therfore we have to add the space for another key-value pair for all the occurences of thoose symbols as well
         size_t const size = Helper::getOccurences(payload, ',', length) + Helper::getOccurences(payload, '{', length) + Helper::getOccurences(payload, '[', length);
 #if THINGSBOARD_ENABLE_DYNAMIC
-        // Buffer that we deserialize is writeable and not read only --> zero copy, meaning the size for the data is 0 bytes,1
-        // Data structure size depends on the amount of key value pairs received.
+        // Buffer that we deserialize is writeable and not read only and therefore stored as a pointer inside the JsonDocument --> zero copy, meaning the size for the received payload is 0 bytes.
+        // Data structure size, therefore only depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         size_t const document_size = JSON_OBJECT_SIZE(size);
         if (m_max_response_size != 0U && document_size > m_max_response_size) {
@@ -752,12 +786,23 @@ class ThingsBoardSized {
             return;
         }
 
+#if THINGSBOARD_ENABLE_STL
+        filtered_api_implementations.clear();
+        std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {
+            return (api != nullptr && api->Get_Process_Type() == API_Process_Type::JSON && api->Compare_Response_Topic(topic));
+        });
+
+        for (auto & api : filtered_api_implementations) {
+            api->Process_Json_Response(topic, json_buffer);
+        }
+#else
         for (auto & api : m_api_implementations) {
             if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || !api->Compare_Response_Topic(topic)) {
                 continue;
             }
             api->Process_Json_Response(topic, json_buffer);
         }
+#endif // THINGSBOARD_ENABLE_STL
     }
 
 #if !THINGSBOARD_ENABLE_STL

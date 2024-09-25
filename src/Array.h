@@ -81,7 +81,7 @@ class Array {
 
     /// @brief Gets the maximum amount of elements that can currently be stored in the underlying data container
     /// @return The maximum amount of items that can currently be stored in the underlying data container
-    size_t capacity() const {
+    size_t constexpr capacity() const {
         return Capacity;
     }
 

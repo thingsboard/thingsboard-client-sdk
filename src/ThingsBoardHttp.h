@@ -324,9 +324,6 @@ class ThingsBoardHttpSized {
     bool sendDataArray(InputIterator const & first, InputIterator const & last, bool telemetry) {
         size_t const size = Helper::distance(first, last);
 #if THINGSBOARD_ENABLE_DYNAMIC
-        // String are char const * and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
-        // Data structure size depends on the amount of key value pairs passed.
-        // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
         TBJsonDocument json_buffer(JSON_OBJECT_SIZE(size));
 #else
         if (size > MaxKeyValuePairAmount) {
@@ -336,6 +333,12 @@ class ThingsBoardHttpSized {
         StaticJsonDocument<JSON_OBJECT_SIZE(MaxKeyValuePairAmount)> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
+#if THINGSBOARD_ENABLE_STL
+        if (std::any_of(first, last, [&json_buffer](Telemetry const & data) { return !data.SerializeKeyValue(json_buffer); })) {
+            Logger::println(UNABLE_TO_SERIALIZE);
+            return false;
+        }
+#else
         for (auto it = first; it != last; ++it) {
             auto const & data = *it;
             if (!data.SerializeKeyValue(json_buffer)) {
@@ -343,6 +346,7 @@ class ThingsBoardHttpSized {
                 return false;
             }
         }
+#endif // THINGSBOARD_ENABLE_STL
         return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
