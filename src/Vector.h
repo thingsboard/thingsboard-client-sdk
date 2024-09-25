@@ -13,6 +13,8 @@
 template <typename T>
 class Vector {
   public:
+    using value_type = T;
+
     /// @brief Constructor
     Vector(void) = default;
 

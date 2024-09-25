@@ -14,6 +14,8 @@
 template <typename T, size_t Capacity>
 class Array {
   public:
+    using value_type = T;
+
     /// @brief Constructor
     Array(void) = default;
 
