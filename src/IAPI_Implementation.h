@@ -7,6 +7,10 @@
 #include "DefaultLogger.h"
 #include "API_Process_Type.h"
 
+// Library include.
+#if THINGSBOARD_ENABLE_STL
+#include <algorithm>
+#endif // THINGSBOARD_ENABLE_STL
 
 // Log messages.
 #if !THINGSBOARD_ENABLE_DYNAMIC
