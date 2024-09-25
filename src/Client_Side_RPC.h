@@ -115,7 +115,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
 #if THINGSBOARD_ENABLE_STL
-        auto it = std::find_if(m_rpc_request_callbacks.begin(), m_rpc_request_callbacks.end(), [](RPC_Request_Callback & rpc_request) {
+        auto it = std::find_if(m_rpc_request_callbacks.begin(), m_rpc_request_callbacks.end(), [&request_id](RPC_Request_Callback & rpc_request) {
             return rpc_request.Get_Request_ID() == request_id;
         });
         if (it != m_rpc_request_callbacks.end()) {
@@ -133,7 +133,9 @@ class Client_Side_RPC : public IAPI_Implementation {
 
             // Delete callback because the changes have been requested and the callback is no longer needed
             Helper::remove(m_rpc_request_callbacks, it);
+#if !THINGSBOARD_ENABLE_STL
             break;
+#endif // !THINGSBOARD_ENABLE_STL
         }
 
         // Attempt to unsubscribe from the shared attribute request topic,
