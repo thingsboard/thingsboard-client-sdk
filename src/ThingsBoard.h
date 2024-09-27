@@ -713,7 +713,7 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_CXX20
-        auto filtered_api_implementations = m_api_implementations | std::vews::filter([&topic](IAPI_Implementation const * api) {
+        auto filtered_api_implementations = m_api_implementations | std::views::filter([&topic](IAPI_Implementation const * api) {
 #else
 #if THINGSBOARD_ENABLE_DYNAMIC
         Vector<IAPI_Implementation *> filtered_api_implementations = {};
@@ -792,7 +792,7 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_CXX20
-        auto filtered_api_implementations = m_api_implementations | std::vews::filter([&topic](IAPI_Implementation const * api) {
+        filtered_api_implementations = m_api_implementations | std::views::filter([&topic](IAPI_Implementation const * api) {
 #else
         filtered_api_implementations.clear();
         std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {

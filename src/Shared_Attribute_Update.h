@@ -109,9 +109,9 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 #if THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_CXX20
 #if THINGSBOARD_ENABLE_DYNAMIC
-        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::vews::filter([&object](Shared_Attribute_Callback const & shared_attribute) {
+        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::views::filter([&object](Shared_Attribute_Callback const & shared_attribute) {
 #else
-        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::vews::filter([&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
+        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::views::filter([&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #else
 #if THINGSBOARD_ENABLE_DYNAMIC
