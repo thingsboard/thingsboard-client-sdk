@@ -42,6 +42,17 @@
 #    endif
 #  endif
 
+// Use advanced STL features if they are supported by the compiler (std::ranges::view, template constraints and concepts).
+// Currently only the case for ESP IDF when using a major version following 5 and when using Arduino following a major version 3.
+// Allows to improve performance significantly, because to filter arrays or vectors we do not have to make copies of them anymore.
+#  ifndef THINGSBOARD_ENABLE_CXX20
+#    if THINGSBOARD_ENABLE_STL && __cplusplus >= 202002L
+#      define THINGSBOARD_ENABLE_CXX20 1
+#    else
+#      define THINGSBOARD_ENABLE_CXX20 0
+#    endif
+#  endif
+
 // Use the esp_timer header internally for handling timeouts and callbacks, as long as the header exists, because it is more efficient than the Arduino Ticker implementation,
 // because we can stop the timer without having to delete it, removing the need to create a new timer to restart it. Because instead we can simply stop and start again.
 // Only exists following major version 3 minor version 0 on ESP32 (https://github.com/espressif/esp-idf/releases/tag/v3.0-rc1)and major version 3 minor version 1 on ESP8266 (https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.1-rc1)

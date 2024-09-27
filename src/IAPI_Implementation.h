@@ -11,6 +11,9 @@
 #if THINGSBOARD_ENABLE_STL
 #include <algorithm>
 #endif // THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_CXX20
+#include <ranges>
+#endif // THINGSBOARD_ENABLE_CXX20
 
 // Log messages.
 #if !THINGSBOARD_ENABLE_DYNAMIC

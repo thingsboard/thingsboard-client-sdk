@@ -712,12 +712,16 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DEBUG
 
 #if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_CXX20
+        auto filtered_api_implementations = m_api_implementations | std::vews::filter([&topic](IAPI_Implementation const * api) {
+#else
 #if THINGSBOARD_ENABLE_DYNAMIC
         Vector<IAPI_Implementation *> filtered_api_implementations = {};
 #else
         Array<IAPI_Implementation *, MaxEndpointsAmount> filtered_api_implementations = {};
 #endif // THINGSBOARD_ENABLE_DYNAMIC
         std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {
+#endif // THINGSBOARD_ENABLE_CXX20
             return (api != nullptr && api->Get_Process_Type() == API_Process_Type::RAW && api->Compare_Response_Topic(topic));
         });
 
@@ -787,8 +791,12 @@ class ThingsBoardSized {
         }
 
 #if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_CXX20
+        auto filtered_api_implementations = m_api_implementations | std::vews::filter([&topic](IAPI_Implementation const * api) {
+#else
         filtered_api_implementations.clear();
         std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {
+#endif // THINGSBOARD_ENABLE_CXX20
             return (api != nullptr && api->Get_Process_Type() == API_Process_Type::JSON && api->Compare_Response_Topic(topic));
         });
 

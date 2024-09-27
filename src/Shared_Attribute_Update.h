@@ -107,6 +107,13 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         }
 
 #if THINGSBOARD_ENABLE_STL
+#if THINGSBOARD_ENABLE_CXX20
+#if THINGSBOARD_ENABLE_DYNAMIC
+        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::vews::filter([&object](Shared_Attribute_Callback const & shared_attribute) {
+#else
+        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::vews::filter([&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+#else
 #if THINGSBOARD_ENABLE_DYNAMIC
         Vector<Shared_Attribute_Callback> filtered_shared_attribute_update_callbacks = {};
         std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Shared_Attribute_Callback const & shared_attribute) {
@@ -114,6 +121,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions> filtered_shared_attribute_update_callbacks = {};
         std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
+#endif // THINGSBOARD_ENABLE_CXX20
             return (shared_attribute.Get_Attributes().empty() || std::find_if(shared_attribute.Get_Attributes().begin(), shared_attribute.Get_Attributes().end(), [&object](const char * att) {
                 return object.containsKey(att);
             }) != shared_attribute.Get_Attributes().end());
