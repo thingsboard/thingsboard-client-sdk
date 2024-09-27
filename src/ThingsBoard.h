@@ -713,26 +713,26 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_CXX20
-        auto filtered_api_implementations = m_api_implementations | std::views::filter([&topic](IAPI_Implementation const * api) {
+        auto filtered_raw_api_implementations = m_api_implementations | std::views::filter([&topic](IAPI_Implementation const * api) {
 #else
 #if THINGSBOARD_ENABLE_DYNAMIC
-        Vector<IAPI_Implementation *> filtered_api_implementations = {};
+        Vector<IAPI_Implementation *> filtered_raw_api_implementations = {};
 #else
-        Array<IAPI_Implementation *, MaxEndpointsAmount> filtered_api_implementations = {};
+        Array<IAPI_Implementation *, MaxEndpointsAmount> filtered_raw_api_implementations = {};
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-        std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {
+        std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_raw_api_implementations), [&topic](IAPI_Implementation const * api) {
 #endif // THINGSBOARD_ENABLE_CXX20
             return (api != nullptr && api->Get_Process_Type() == API_Process_Type::RAW && api->Compare_Response_Topic(topic));
         });
 
-        for (auto & api : filtered_api_implementations) {
+        for (auto & api : filtered_raw_api_implementations) {
             api->Process_Response(topic, payload, length);
         }
 
         // If the filtered api implementations was not emtpy it means the response was processed as its raw bytes representation atleast once,
         // and because we interpreted it as raw bytes instead of json, we skip the further processing of those raw bytes as json.
         // We do that because the received response is in that case not even valid json in the first place and would therefore simply fail deserialization
-        if (!filtered_api_implementations.empty()) {
+        if (!filtered_raw_api_implementations.empty()) {
             return;
         }
 #else
@@ -792,15 +792,19 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_CXX20
-        filtered_api_implementations = m_api_implementations | std::views::filter([&topic](IAPI_Implementation const * api) {
+        auto filtered_json_api_implementations = m_api_implementations | std::views::filter([&topic](IAPI_Implementation const * api) {
 #else
-        filtered_api_implementations.clear();
-        std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_api_implementations), [&topic](IAPI_Implementation const * api) {
+#if THINGSBOARD_ENABLE_DYNAMIC
+        Vector<IAPI_Implementation *> filtered_json_api_implementations = {};
+#else
+        Array<IAPI_Implementation *, MaxEndpointsAmount> filtered_json_api_implementations = {};
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+        std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_json_api_implementations), [&topic](IAPI_Implementation const * api) {
 #endif // THINGSBOARD_ENABLE_CXX20
             return (api != nullptr && api->Get_Process_Type() == API_Process_Type::JSON && api->Compare_Response_Topic(topic));
         });
 
-        for (auto & api : filtered_api_implementations) {
+        for (auto & api : filtered_json_api_implementations) {
             api->Process_Json_Response(topic, json_buffer);
         }
 #else
