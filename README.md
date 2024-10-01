@@ -437,14 +437,14 @@ ThingsBoardSized<8, 10> tb(mqttClient, 128, apis);
 ### Custom Updater Instance
 
 When using the `ThingsBoard` class instance, the class used to flash the binary data onto the device is not hard coded,
-but instead the `OTA_Update_Callback` class expects an optional argument, the `IUpdater` implementation.
+but instead the `OTA_Update_Callback` class expects an argument, the `IUpdater` implementation.
 
 Thanks to it being an interface it allows an arbitrary implementation,
 meaning as long as the device can flash binary data and supports the C++ STL it supports OTA updates, with the `ThingsBoard` library.
 
-Currently, implemented in the library itself are the `Arduino_ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `Arduino_ESP8266_Updater` which is used with the `ESP8266` and `Arduino` and the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain.
+Currently, implemented in the library itself are the `Arduino_ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `Arduino_ESP8266_Updater` which is used with the `ESP8266` and `Arduino`, the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain and lastly the `SD_Card_Updater` which is used for both `Arduino` and the `Espressif IDF` to flash binary data onto an already initialized SD card.
 
-If another device wants to be supported, a custom interface implementation needs to be created.
+If another device or feature wants to be supported, a custom interface implementation needs to be created.
 For that a `class` needs to inherit the `IUpdater` interface and `override` the needed methods shown below:
 
 ```cpp
@@ -470,7 +470,7 @@ class Custom_Updater : public IUpdater {
 };
 ```
 
-Once that has been done it can simply be passed instead of the `Espressif_Updater`, `Arduino_ESP8266_Client` or the `Arduino_ESP32_Client` instance.
+Once that has been done it can simply be passed instead of the `Espressif_Updater`, `Arduino_ESP8266_Updater`, `Arduino_ESP32_Updater` or `SD_Card_Updater` instance.
 
 ```cpp
 // Initalize the Updater client instance used to flash binary to flash memory
@@ -489,7 +489,7 @@ meaning the underlying HTTP client can be whatever the user decides, so it can f
 
 Currently, implemented in the library itself is the `Arduino_HTTP_Client`, which is simply a wrapper around the [`ArduinoHttpClient`](https://github.com/arduino-libraries/ArduinoHttpClient), see [dependencies](https://github.com/arduino-libraries/ArduinoHttpClient?tab=readme-ov-file#dependencies) for whether the board you are using is supported or not.
 
-If another device wants to be supported, a custom interface implementation needs to be created.
+If another device or feature wants to be supported, a custom interface implementation needs to be created.
 For that a `class` needs to inherit the `IHTTP_Client` interface and `override` the needed methods shown below:
 
 ```cpp
@@ -557,7 +557,7 @@ meaning the underlying MQTT client can be whatever the user decides, so it can f
 
 Currently, implemented in the library itself is the `Arduino_MQTT_Client`, which is simply a wrapper around the [`PubSubClient`](https://github.com/thingsboard/pubsubclient), see [compatible Hardware](https://github.com/thingsboard/pubsubclient?tab=readme-ov-file#compatible-hardware) for whether the board you are using is supported or not, useful when using `Arduino`. As well as the `Espressif_MQTT_Client`, which is a simple wrapper around the [`esp-mqtt`](https://github.com/espressif/esp-mqtt), useful when using `Espressif IDF` with a `ESP32`.
 
-If another device wants to be supported, a custom interface implementation needs to be created.
+If another device or feature wants to be supported, a custom interface implementation needs to be created.
 For that a `class` needs to inherit the `IMQTT_Client` interface and `override` the needed methods shown below:
 
 ```cpp
