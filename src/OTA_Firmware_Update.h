@@ -96,7 +96,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         }
 
         // Request the firmware information
-        constexpr char const * const array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        constexpr char const * array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
         const Attribute_Request_Callback fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), callback.Get_Timeout(), std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
@@ -134,7 +134,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         }
 
         // Subscribes to changes of the firmware information
-        char const * const array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
+        char const * array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
 #if THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
         const Shared_Attribute_Callback fw_update_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
@@ -156,7 +156,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @param current_fw_title Current device firmware title
     /// @param current_fw_version Current device firmware version
     /// @return Whether sending the current device firmware information was successful or not
-    bool Firmware_Send_Info(char const * const current_fw_title, char const * const current_fw_version) {
+    bool Firmware_Send_Info(char const * current_fw_title, char const * current_fw_version) {
         StaticJsonDocument<JSON_OBJECT_SIZE(2)> current_firmware_info;
         current_firmware_info[CURR_FW_TITLE_KEY] = current_fw_title;
         current_firmware_info[CURR_FW_VER_KEY] = current_fw_version;
@@ -169,7 +169,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @param fw_error Firmware error message that describes the current firmware state,
     /// simply do not enter a value and the default value will be used which overwrites the firmware error messages, default = ""
     /// @return Whether sending the current firmware download state was successful or not
-    bool Firmware_Send_State(char const * const current_fw_state, char const * const fw_error = "") {
+    bool Firmware_Send_State(char const * current_fw_state, char const * fw_error = "") {
         StaticJsonDocument<JSON_OBJECT_SIZE(2)> current_firmware_state;
         current_firmware_state[FW_ERROR_KEY] = fw_error;
         current_firmware_state[FW_STATE_KEY] = current_fw_state;
@@ -180,7 +180,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return API_Process_Type::RAW;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         size_t const & request_id = m_fw_callback.Get_Request_ID();
         char response_topic[Helper::detectSize(FIRMWARE_RESPONSE_TOPIC, request_id)] = {};
         (void)snprintf(response_topic, sizeof(response_topic), FIRMWARE_RESPONSE_TOPIC, request_id);
@@ -188,7 +188,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_ota.Process_Firmware_Packet(chunk, payload, length);
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         // Nothing to do
     }
 
@@ -233,8 +233,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @param callback Callback method that will be called
     /// @return Whether checking and sending the current device firmware information was successful or not
     bool Prepare_Firmware_Settings(OTA_Update_Callback const & callback) {
-        char const * const current_fw_title = callback.Get_Firmware_Title();
-        char const * const current_fw_version = callback.Get_Firmware_Version();
+        char const * current_fw_title = callback.Get_Firmware_Title();
+        char const * current_fw_version = callback.Get_Firmware_Version();
 
         if (Helper::stringIsNullorEmpty(current_fw_title) || Helper::stringIsNullorEmpty(current_fw_version)) {
             return false;
@@ -321,14 +321,14 @@ class OTA_Firmware_Update : public IAPI_Implementation {
             return;
         }
 
-        char const * const fw_title = data[FW_TITLE_KEY];
-        char const * const fw_version = data[FW_VER_KEY];
-        char const * const fw_checksum = data[FW_CHKS_KEY];
-        char const * const fw_algorithm = data[FW_CHKS_ALGO_KEY];
+        char const * fw_title = data[FW_TITLE_KEY];
+        char const * fw_version = data[FW_VER_KEY];
+        char const * fw_checksum = data[FW_CHKS_KEY];
+        char const * fw_algorithm = data[FW_CHKS_ALGO_KEY];
         size_t const fw_size = data[FW_SIZE_KEY];
 
-        char const * const curr_fw_title = m_fw_callback.Get_Firmware_Title();
-        char const * const curr_fw_version = m_fw_callback.Get_Firmware_Version();
+        char const * curr_fw_title = m_fw_callback.Get_Firmware_Title();
+        char const * curr_fw_version = m_fw_callback.Get_Firmware_Version();
 
         if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm == nullptr || fw_checksum == nullptr) {
             Logger::println(EMPTY_FW);
@@ -430,7 +430,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return m_subscribedInstance->Publish_Chunk_Request(request_id, request_chunck);
     }
 
-    static bool staticFirmwareSend(char const * const current_fw_state, char const * const fw_error = nullptr) {
+    static bool staticFirmwareSend(char const * current_fw_state, char const * fw_error = nullptr) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }

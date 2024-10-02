@@ -31,7 +31,7 @@ class Telemetry {
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_integral declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_integral<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    Telemetry(char const * const key, T const & value)
+    Telemetry(char const * key, T const & value)
       : m_type(DataType::TYPE_INT)
       , m_key(key)
       , m_value()
@@ -52,7 +52,7 @@ class Telemetry {
               // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_floating_point declarations, previously accessible with ARDUINOJSON_NAMESPACE
               typename ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::enable_if<ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_floating_point<T>::value>::type* = nullptr>
 #endif // THINGSBOARD_ENABLE_STL
-    Telemetry(char const * const key, T const & value)
+    Telemetry(char const * key, T const & value)
       : m_type(DataType::TYPE_REAL)
       , m_key(key)
       , m_value()
@@ -63,12 +63,12 @@ class Telemetry {
     /// @brief Constructs telemetry record from boolean value	
     /// @param key Key of the key value pair we want to create	
     /// @param value Value of the key value pair we want to create	
-    Telemetry(char const * const key, bool value);
+    Telemetry(char const * key, bool value);
 
     /// @brief Constructs telemetry record from string value
     /// @param key Key of the key value pair we want to create
     /// @param value Value of the key value pair we want to create
-    Telemetry(char const * const key, char const * const value);
+    Telemetry(char const * key, char const * value);
 
     /// @brief Whether this record is empty or not
     /// @return Whether there is any data in this record or not
@@ -122,7 +122,7 @@ class Telemetry {
     };
 
     /// @brief Data type that the data container currently holds
-    enum class DataType: const uint8_t {
+    enum class DataType: uint8_t {
         TYPE_NONE, ///< Telemetry instance is empty and has not been assigned a value
         TYPE_BOOL, ///< Telemetry instance is a key value-pair with a boolean value
         TYPE_INT, ///< Telemetry instance is a key value-pair with an integral value

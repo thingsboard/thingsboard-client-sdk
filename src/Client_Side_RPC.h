@@ -60,7 +60,7 @@ class Client_Side_RPC : public IAPI_Implementation {
             return false;
         }
 
-        JsonArray const * const parameters = callback.Get_Parameters();
+        JsonArray const * parameters = callback.Get_Parameters();
 
 #if THINGSBOARD_ENABLE_DYNAMIC
         // String are const char* and therefore stored as a pointer --> zero copy, meaning the size for the strings is 0 bytes,
@@ -107,11 +107,11 @@ class Client_Side_RPC : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
 
 #if THINGSBOARD_ENABLE_STL

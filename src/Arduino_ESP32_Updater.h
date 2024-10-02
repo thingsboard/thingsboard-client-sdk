@@ -16,7 +16,7 @@ class Arduino_ESP32_Updater : public IUpdater {
   public:
     bool begin(size_t const & firmware_size) override;
   
-    size_t write(uint8_t * const payload, size_t const & total_bytes) override;
+    size_t write(uint8_t * payload, size_t const & total_bytes) override;
 
     void reset() override;
   

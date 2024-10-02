@@ -21,7 +21,7 @@ bool HashGenerator::start(mbedtls_md_type_t const & type) {
     return init_result;
 }
 
-bool HashGenerator::update(uint8_t const * const data, size_t const & length) {
+bool HashGenerator::update(uint8_t const * data, size_t const & length) {
     return mbedtls_md_update(&m_ctx, data, length) == 0;
 }
 

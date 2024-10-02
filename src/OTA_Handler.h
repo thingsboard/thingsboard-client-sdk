@@ -75,7 +75,7 @@ class OTA_Handler {
     /// @param fw_size Complete size of the firmware binary that will be downloaded and flashed onto this device
     /// @param fw_checksum Checksum of the complete firmware binary, should be the same as the actually written data in the end
     /// @param fw_checksum_algorithm Algorithm type used to hash the firmware binary
-    void Start_Firmware_Update(OTA_Update_Callback const & fw_callback, size_t const & fw_size, char const * const fw_checksum, mbedtls_md_type_t const & fw_checksum_algorithm) {
+    void Start_Firmware_Update(OTA_Update_Callback const & fw_callback, size_t const & fw_size, char const * fw_checksum, mbedtls_md_type_t const & fw_checksum_algorithm) {
         m_fw_callback = &fw_callback;
         m_fw_size = fw_size;
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
@@ -102,7 +102,7 @@ class OTA_Handler {
     /// @param current_chunk Index of the chunk we recieved the binary data for
     /// @param payload Firmware packet data of the current chunk
     /// @param total_bytes Amount of bytes in the current firmware packet data
-    void Process_Firmware_Packet(size_t const & current_chunk, uint8_t *payload, size_t const & total_bytes)  {
+    void Process_Firmware_Packet(size_t const & current_chunk, uint8_t * payload, size_t const & total_bytes)  {
         if (current_chunk != m_requested_chunks) {
             Logger::printfln(RECEIVED_UNEXPECTED_CHUNK, current_chunk, m_requested_chunks);
             return;
@@ -251,7 +251,7 @@ class OTA_Handler {
     /// Will only execute the given failure response as long as there are still retries remaining, if there are not any further issue will cause the update to be aborted
     /// @param failure_response Possible response to a failure that the method should handle
     /// @param error_message Error message that should be printed if we abort the update
-    void Handle_Failure(OTA_Failure_Response const & failure_response, char const * const error_message)  {
+    void Handle_Failure(OTA_Failure_Response const & failure_response, char const * error_message)  {
         if (m_retries <= 0) {
             (void)m_send_fw_state_callback.Call_Callback(FW_STATE_FAILED, error_message);
             m_fw_callback->Call_Callback(false);

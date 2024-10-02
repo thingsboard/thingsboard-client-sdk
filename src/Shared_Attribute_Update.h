@@ -96,11 +96,11 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         JsonObjectConst object = data.template as<JsonObjectConst>();
         if (object.containsKey(SHARED_RESPONSE_KEY)) {
             object = object[SHARED_RESPONSE_KEY];

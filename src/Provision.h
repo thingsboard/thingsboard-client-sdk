@@ -95,11 +95,11 @@ class Provision : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         m_provision_callback.Stop_Timeout_Timer();
         m_provision_callback.Call_Callback(data);
         // Unsubscribe from the provision response topic,

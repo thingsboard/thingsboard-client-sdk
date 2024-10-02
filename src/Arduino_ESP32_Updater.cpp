@@ -10,7 +10,7 @@ bool Arduino_ESP32_Updater::begin(size_t const & firmware_size) {
     return Update.begin(firmware_size);
 }
 
-size_t Arduino_ESP32_Updater::write(uint8_t * const payload, size_t const & total_bytes) {
+size_t Arduino_ESP32_Updater::write(uint8_t * payload, size_t const & total_bytes) {
     return Update.write(payload, total_bytes);
 }
 
@@ -23,4 +23,3 @@ bool Arduino_ESP32_Updater::end() {
 }
 
 #endif // defined(ESP32) && defined(ARDUINO)
-

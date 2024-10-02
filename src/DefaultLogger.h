@@ -20,7 +20,7 @@ class DefaultLogger {
     /// @param ...args Arguments that will be formatted and inserted into the resulting string, replacing their respective specifiers
     /// @return Either the written amount of characters or an error indicator (being a negative number) if one occured
     template<typename ...Args>
-    static int printfln(char const * const format, Args const &... args) {
+    static int printfln(char const * format, Args const &... args) {
         int const size = Helper::detectSize(format, args...);
         char arguments[size] = {};
         int const written_characters = snprintf(arguments, size, format, args...);
@@ -32,7 +32,7 @@ class DefaultLogger {
     /// @brief Prints the given message containing a new line character at the end of the message, but no format specifiers (subsequences beginning with %)
     /// @param message Message that should be simply printed to the console, without any additional arguments, use peintfln() for that
     /// @return Either the written amount of characters or an error indicator (being a negative number) if one occured
-    static int println(char const * const message) {
+    static int println(char const * message) {
         return printf(LOG_MESSAGE_FORMAT, message);
     }
 };

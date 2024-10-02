@@ -23,7 +23,7 @@ class Helper {
     /// @param ...args Arguments that will be forwarded into the snprintf method see https://cplusplus.com/reference/cstdio/snprintf/ for more information
     /// @return Amount of bytes in characters, needed for the formatted string with the given arguments inserted, to be displayed completly
     template<typename... Args>
-    static int detectSize(char const * const format, Args const &... args) {
+    static int detectSize(char const * format, Args const &... args) {
         // Result is what would have been written if the passed buffer would have been large enough not counting null character,
         // or if an error occured while creating the string a negative number is returned instead. To ensure this will not crash the system
         // when creating an array with negative size we assert beforehand with a clear error message.
@@ -38,13 +38,13 @@ class Helper {
     /// @param length Length of the byte payload, meaning if we reach the given length and have not found any occurence of the symbol we return 0.
     /// Ensure to never pass a length that is longer than the actualy payload, because this will cause this method to read outside of the bounds of the buffer
     /// @return Amount of occurences of the given symbol
-    static size_t getOccurences(uint8_t const * const bytes, char symbol, unsigned int length);
+    static size_t getOccurences(uint8_t const * bytes, char symbol, unsigned int length);
 
     /// @brief Returns wheter the given string is either a nullptr or is an empty string,
     /// meaning it only contains a null terminator and no other characters
     /// @param str String that we want to check for emptiness
     /// @return Wheter the given string is a nullptr or empty
-    static bool stringIsNullorEmpty(char const * const str);
+    static bool stringIsNullorEmpty(char const * str);
 
     /// @brief Returns the portion of the received topic after the base topic as an integer.
     /// Should contain the request id that the original request was sent with
@@ -52,7 +52,7 @@ class Helper {
     /// @param base_topic Base portion of the topic that does not contain any parameters (v1/devices/me/attributes/response/)
     /// @param received_topic Received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id)
     /// @return Converted integral request id if possible or 0 if parsing as an integer failed
-    static size_t parseRequestId(char const * const base_topic, char const * const received_topic);
+    static size_t parseRequestId(char const * base_topic, char const * received_topic);
 
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
     /// Be aware that null terminator will later not be serialied in the serializeJson() call,

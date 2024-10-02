@@ -24,7 +24,7 @@ Espressif_MQTT_Client::~Espressif_MQTT_Client() {
     (void)esp_mqtt_client_destroy(m_mqtt_client);
 }
 
-bool Espressif_MQTT_Client::set_server_certificate(const char *server_certificate_pem) {
+bool Espressif_MQTT_Client::set_server_certificate(char const * server_certificate_pem) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely.
     // Because PEM format is expected for the server certificate we do not need to set the certificate_len,
     // because the PEM format expects a null-terminated string.
@@ -46,7 +46,7 @@ bool Espressif_MQTT_Client::set_server_crt_bundle_attach(esp_err_t (*crt_bundle_
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_keep_alive_timeout(const uint16_t& keep_alive_timeout_seconds) {
+bool Espressif_MQTT_Client::set_keep_alive_timeout(uint16_t keep_alive_timeout_seconds) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.keepalive = keep_alive_timeout_seconds;
@@ -56,7 +56,7 @@ bool Espressif_MQTT_Client::set_keep_alive_timeout(const uint16_t& keep_alive_ti
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_disable_keep_alive(const bool& disable_keep_alive) {
+bool Espressif_MQTT_Client::set_disable_keep_alive(bool disable_keep_alive) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.disable_keepalive = disable_keep_alive;
@@ -66,7 +66,7 @@ bool Espressif_MQTT_Client::set_disable_keep_alive(const bool& disable_keep_aliv
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_disable_auto_reconnect(const bool& disable_auto_reconnect) {
+bool Espressif_MQTT_Client::set_disable_auto_reconnect(bool disable_auto_reconnect) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.disable_auto_reconnect = disable_auto_reconnect;
@@ -76,7 +76,7 @@ bool Espressif_MQTT_Client::set_disable_auto_reconnect(const bool& disable_auto_
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_mqtt_task_configuration(const uint8_t& priority, const uint16_t& stack_size) {
+bool Espressif_MQTT_Client::set_mqtt_task_configuration(uint8_t priority, uint16_t&stack_size) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.task_prio = priority;
@@ -88,7 +88,7 @@ bool Espressif_MQTT_Client::set_mqtt_task_configuration(const uint8_t& priority,
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_reconnect_timeout(const uint16_t& reconnect_timeout_milliseconds) {
+bool Espressif_MQTT_Client::set_reconnect_timeout(uint16_t reconnect_timeout_milliseconds) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.reconnect_timeout_ms = reconnect_timeout_milliseconds;
@@ -98,7 +98,7 @@ bool Espressif_MQTT_Client::set_reconnect_timeout(const uint16_t& reconnect_time
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_network_timeout(const uint16_t& network_timeout_milliseconds) {
+bool Espressif_MQTT_Client::set_network_timeout(uint16_t network_timeout_milliseconds) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.network_timeout_ms = network_timeout_milliseconds;
@@ -108,7 +108,7 @@ bool Espressif_MQTT_Client::set_network_timeout(const uint16_t& network_timeout_
     return update_configuration();
 }
 
-void Espressif_MQTT_Client::set_enqueue_messages(const bool& enqueue_messages) {
+void Espressif_MQTT_Client::set_enqueue_messages(bool enqueue_messages) {
     m_enqueue_messages = enqueue_messages;
 }
 
@@ -146,7 +146,7 @@ uint16_t Espressif_MQTT_Client::get_buffer_size() {
 #endif // ESP_IDF_VERSION_MAJOR < 5
 }
 
-void Espressif_MQTT_Client::set_server(const char *domain, uint16_t port) {
+void Espressif_MQTT_Client::set_server(char const * domain, uint16_t port) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.host = domain;
@@ -172,7 +172,7 @@ void Espressif_MQTT_Client::set_server(const char *domain, uint16_t port) {
 #endif // ESP_IDF_VERSION_MAJOR < 5
 }
 
-bool Espressif_MQTT_Client::connect(const char *client_id, const char *user_name, const char *password) {
+bool Espressif_MQTT_Client::connect(char const * client_id, char const * user_name, char const * password) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.client_id = client_id;
@@ -217,7 +217,7 @@ bool Espressif_MQTT_Client::loop() {
     return m_connected;
 }
 
-bool Espressif_MQTT_Client::publish(const char *topic, const uint8_t *payload, const size_t& length) {
+bool Espressif_MQTT_Client::publish(char const * topic, uint8_t const * payload, size_t const & length) {
     int message_id = MQTT_FAILURE_MESSAGE_ID;
 
     if (m_enqueue_messages) {
@@ -235,7 +235,7 @@ bool Espressif_MQTT_Client::publish(const char *topic, const uint8_t *payload, c
     return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
-bool Espressif_MQTT_Client::subscribe(const char *topic) {
+bool Espressif_MQTT_Client::subscribe(char const * topic) {
     // The esp_mqtt_client_subscribe method does not return false, if we send a subscribe request while not being connected to a broker,
     // so we have to check for that case to ensure the end user is informed that their subscribe request could not be sent and has been ignored.
     if (!connected()) {
@@ -245,7 +245,7 @@ bool Espressif_MQTT_Client::subscribe(const char *topic) {
     return message_id > MQTT_FAILURE_MESSAGE_ID;
 }
 
-bool Espressif_MQTT_Client::unsubscribe(const char *topic) {
+bool Espressif_MQTT_Client::unsubscribe(char const * topic) {
     // The esp_mqtt_client_unsubscribe method does not return false, if we send a unsubscribe request while not being connected to a broker,
     // so we have to check for that case to ensure the end user is informed that their unsubscribe request could not be sent and has been ignored.
     if (!connected()) {
@@ -270,7 +270,7 @@ bool Espressif_MQTT_Client::update_configuration() {
     return error == ESP_OK;
 }
 
-void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, const esp_mqtt_event_id_t& event_id, void *event_data) {
+void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void * event_data) {
     const esp_mqtt_event_handle_t event = static_cast<esp_mqtt_event_handle_t>(event_data);
 
     switch (event_id) {
@@ -310,7 +310,7 @@ void Espressif_MQTT_Client::mqtt_event_handler(esp_event_base_t base, const esp_
     }
 }
 
-void Espressif_MQTT_Client::static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
+void Espressif_MQTT_Client::static_mqtt_event_handler(void * handler_args, esp_event_base_t base, int32_t event_id, void * event_data) {
     if (handler_args == nullptr) {
         return;
     }

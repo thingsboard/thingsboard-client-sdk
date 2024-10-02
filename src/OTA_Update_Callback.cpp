@@ -1,7 +1,7 @@
 // Header include.
 #include "OTA_Update_Callback.h"
 
-OTA_Update_Callback::OTA_Update_Callback(char const * const current_fw_title, char const * const current_fw_version, IUpdater * const updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback, Callback<void>::function update_starting_callback, uint8_t chunk_retries, uint16_t chunk_size, uint64_t const & timeout_microseconds)
+OTA_Update_Callback::OTA_Update_Callback(char const * current_fw_title, char const * current_fw_version, IUpdater * updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback, Callback<void>::function update_starting_callback, uint8_t chunk_retries, uint16_t chunk_size, uint64_t const & timeout_microseconds)
   : Callback(finished_callback)
   , m_current_fw_title(current_fw_title)
   , m_current_fw_version(current_fw_version)
@@ -19,7 +19,7 @@ char const * OTA_Update_Callback::Get_Firmware_Title() const {
     return m_current_fw_title;
 }
 
-void OTA_Update_Callback::Set_Firmware_Title(char const * const current_fw_title) {
+void OTA_Update_Callback::Set_Firmware_Title(char const * current_fw_title) {
     m_current_fw_title = current_fw_title;
 }
 
@@ -27,7 +27,7 @@ char const * OTA_Update_Callback::Get_Firmware_Version() const {
     return m_current_fw_version;
 }
 
-void OTA_Update_Callback::Set_Firmware_Version(char const * const current_fw_version) {
+void OTA_Update_Callback::Set_Firmware_Version(char const * current_fw_version) {
     m_current_fw_version = current_fw_version;
 }
 

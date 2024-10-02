@@ -105,29 +105,29 @@ class Server_Side_RPC : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         if (!data.containsKey(RPC_METHOD_KEY)) {
 #if THINGSBOARD_ENABLE_DEBUG
             Logger::println(SERVER_RPC_METHOD_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
             return;
         }
-        char const * const method_name = data[RPC_METHOD_KEY];
+        char const * method_name = data[RPC_METHOD_KEY];
 
 #if THINGSBOARD_ENABLE_STL
         auto it = std::find_if(m_rpc_callbacks.begin(), m_rpc_callbacks.end(), [&method_name](RPC_Callback const & rpc) {
-            char const * const subscribedMethodName = rpc.Get_Name();
+            char const * subscribedMethodName = rpc.Get_Name();
             return (!Helper::stringIsNullorEmpty(subscribedMethodName) && strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) == 0);
         });
         if (it != m_rpc_callbacks.end()) {
             auto & rpc = *it;
 #else
         for (auto const & rpc : m_rpc_callbacks) {
-            char const * const subscribedMethodName = rpc.Get_Name();
+            char const * subscribedMethodName = rpc.Get_Name();
             if (Helper::stringIsNullorEmpty(subscribedMethodName) || strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) != 0) {
               continue;
             }

@@ -166,7 +166,7 @@ class Vector {
     /// @param first Iterator pointing to the first element we want to copy into our underlying data container
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     template<typename InputIterator>
-    void insert(T const * const position, InputIterator const & first, InputIterator const & last) {
+    void insert(T const * position, InputIterator const & first, InputIterator const & last) {
         for (auto it = first; it != last; ++it) {
             push_back(*it);
         }

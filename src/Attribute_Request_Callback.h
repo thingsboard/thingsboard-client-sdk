@@ -88,7 +88,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// and which type we requests depends on which method the class instance is passed as a parameter to
     /// @param attribute_key Key that the data is saved into,
     /// "client" for client-side attributes and "shared" for shared scope attributes
-    void Set_Attribute_Key(char const * const attribute_key) {
+    void Set_Attribute_Key(char const * attribute_key) {
         m_attribute_key = attribute_key;
     }
 

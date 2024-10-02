@@ -7,14 +7,14 @@
 #include <esp_ota_ops.h>
 
 bool Espressif_Updater::begin(size_t const & firmware_size) {
-    esp_partition_t const * const running = esp_ota_get_running_partition();
-    esp_partition_t const * const configured = esp_ota_get_boot_partition();
+    esp_partition_t const * running = esp_ota_get_running_partition();
+    esp_partition_t const * configured = esp_ota_get_boot_partition();
 
     if (configured != running) {
         return false;
     }
 
-    esp_partition_t const * const update_partition = esp_ota_get_next_update_partition(nullptr);
+    esp_partition_t const * update_partition = esp_ota_get_next_update_partition(nullptr);
 
     if (update_partition == nullptr) {
         return false;

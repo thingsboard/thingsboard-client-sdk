@@ -45,7 +45,7 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     // because the whole chunk is saved into the heap before it can be processed and is then erased again after it has been used, default = CHUNK_SIZE
     /// @param timeout Maximum amount of time in microseconds for the OTA firmware update for each seperate chunk,
     /// until that chunk counts as a timeout, retries is then subtraced by one and the download is retried, default = REQUEST_TIMEOUT
-    OTA_Update_Callback(char const * const current_fw_title, char const * const current_fw_version, IUpdater * const updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback = nullptr, Callback<void>::function update_starting_callback = nullptr, uint8_t chunk_retries = CHUNK_RETRIES, uint16_t chunk_size = CHUNK_SIZE, uint64_t const & timeout_microseconds = REQUEST_TIMEOUT);
+    OTA_Update_Callback(char const * current_fw_title, char const * current_fw_version, IUpdater * updater, function finished_callback, Callback<void, size_t const &, size_t const &>::function progress_callback = nullptr, Callback<void>::function update_starting_callback = nullptr, uint8_t chunk_retries = CHUNK_RETRIES, uint16_t chunk_size = CHUNK_SIZE, uint64_t const & timeout_microseconds = REQUEST_TIMEOUT);
 
     /// @brief Gets the current firmware title, used to decide if an OTA firmware update is already installed and therefore should not be downladed,
     /// this is only done if the title of the update and the current firmware title are the same because if they are not then this firmware is meant for another device type

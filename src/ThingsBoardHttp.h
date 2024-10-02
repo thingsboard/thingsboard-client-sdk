@@ -45,7 +45,7 @@ class ThingsBoardHttpSized {
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keep_alive Attempts to keep the establishes TCP connection alive to make sending data faster
     /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    ThingsBoardHttpSized(IHTTP_Client & client, char const * const access_token, char const * const host, uint16_t port = 80U, bool keep_alive = true, size_t const & max_stack_size = Default_Max_Stack_Size)
+    ThingsBoardHttpSized(IHTTP_Client & client, char const * access_token, char const * host, uint16_t port = 80U, bool keep_alive = true, size_t const & max_stack_size = Default_Max_Stack_Size)
       : m_client(client)
       , m_max_stack(max_stack_size)
       , m_token(access_token)
@@ -68,7 +68,7 @@ class ThingsBoardHttpSized {
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & json_size) {
+    bool Send_Json(char const * topic, JsonDocument const & source, size_t const & json_size) {
         // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
@@ -110,7 +110,7 @@ class ThingsBoardHttpSized {
     /// @param topic Topic we want to send the data over
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool Send_Json_String(char const * const topic, char const * const json) {
+    bool Send_Json_String(char const * topic, char const * json) {
         if (json == nullptr || m_token == nullptr) {
             return false;
         }
@@ -130,7 +130,7 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendTelemetryData(char const * const key, T const & value) {
+    bool sendTelemetryData(char const * key, T const & value) {
         return sendKeyValue(key, value);
     }
 
@@ -161,7 +161,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    bool sendTelemetryString(char const * const json) {
+    bool sendTelemetryString(char const * json) {
         return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
     }
 
@@ -181,9 +181,9 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
 #if THINGSBOARD_ENABLE_STL
-    bool sendGetRequest(char const * const path, std::string & response) {
+    bool sendGetRequest(char const * path, std::string & response) {
 #else
-    bool sendGetRequest(char const * const path, String& response) {
+    bool sendGetRequest(char const * path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
         return getMessage(path, response);
     }
@@ -192,7 +192,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
-    bool sendPostRequest(char const * const path, char const * const json) {
+    bool sendPostRequest(char const * path, char const * json) {
         return postMessage(path, json);
     }
 
@@ -206,7 +206,7 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendAttributeData(char const * const key, T const & value) {
+    bool sendAttributeData(char const * key, T const & value) {
         return sendKeyValue(key, value, false);
     }
 
@@ -237,7 +237,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    bool sendAttributeString(char const * const json) {
+    bool sendAttributeString(char const * json) {
         return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
     }
 
@@ -268,7 +268,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
-    bool postMessage(char const * const path, char const * const json) {
+    bool postMessage(char const * path, char const * json) {
         bool success = m_client.post(path, HTTP_POST_PATH, json) == 0;
         int const status = m_client.get_response_status_code();
 
@@ -287,9 +287,9 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
 #if THINGSBOARD_ENABLE_STL
-    bool getMessage(char const * const path, std::string& response) {
+    bool getMessage(char const * path, std::string& response) {
 #else
-    bool getMessage(char const * const path, String& response) {
+    bool getMessage(char const * path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
         bool success = m_client.get(path);
         int const status = m_client.get_response_status_code();
@@ -357,7 +357,7 @@ class ThingsBoardHttpSized {
     /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
     /// @return Whetherr sending the data was successful or not
     template<typename T>
-    bool sendKeyValue(char const * const key, T value, bool telemetry = true) {
+    bool sendKeyValue(char const * key, T value, bool telemetry = true) {
         Telemetry const t(key, value);
         if (t.IsEmpty()) {
             // Message is ignored and not sent at all.

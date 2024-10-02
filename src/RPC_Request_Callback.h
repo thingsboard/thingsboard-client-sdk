@@ -22,7 +22,7 @@ class RPC_Request_Callback : public Callback<void, JsonDocument const &> {
     /// If the value is 0 we will not start the timer and therefore never call the timeout callback method, default = 0
     /// @param timeout_callback Optional callback method that will be called upon request timeout (did not receive a response in the given timeout time). Can happen if the requested method does not exist on the cloud,
     /// or if the connection could not be established, default = nullptr
-    RPC_Request_Callback(char const * const method_name, function received_callback, JsonArray const * const parameters = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
+    RPC_Request_Callback(char const * method_name, function received_callback, JsonArray const * parameters = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which RPC_Request_Callback
@@ -42,7 +42,7 @@ class RPC_Request_Callback : public Callback<void, JsonDocument const &> {
 
     /// @brief Sets the poiner to the underlying name of the client side RPC method we want to call on the cloud
     /// @param method_name Pointer to the passed method name
-    void Set_Name(char const * const method_name);
+    void Set_Name(char const * method_name);
 
     /// @brief Gets the pointer to the underlying paramaters we want to call the client side RPC method on the cloud with
     /// @return Pointer to the passed parameters
@@ -50,7 +50,7 @@ class RPC_Request_Callback : public Callback<void, JsonDocument const &> {
 
     /// @brief Sets the pointer to the underlying paramaters we want to call the client side RPC method on the cloud with
     /// @param parameters Pointer to the passed parameters
-    void Set_Parameters(JsonArray const * const parameters);
+    void Set_Parameters(JsonArray const * parameters);
 
     /// @brief Gets the amount of microseconds until we expect to have received a response
     /// @return Timeout time until timeout callback is called

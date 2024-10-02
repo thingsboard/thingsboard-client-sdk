@@ -371,11 +371,11 @@ class Custom_API_Implementation : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         // Nothing to do
     }
 
@@ -452,11 +452,11 @@ For that a `class` needs to inherit the `IUpdater` interface and `override` the 
 
 class Custom_Updater : public IUpdater {
   public:
-    bool begin(const size_t& firmware_size) override {
+    bool begin(size_t const & firmware_size) override {
         return true;
     }
   
-    size_t write(uint8_t* payload, const size_t& total_bytes) override {
+    size_t write(uint8_t * payload, size_t const & total_bytes) override {
         return total_bytes;
     }
   
@@ -501,7 +501,7 @@ class Custom_HTTP_Client : public IHTTP_Client {
         // Nothing to do
     }
 
-    int connect(const char *host, uint16_t port) override {
+    int connect(char const * host, uint16_t port) override {
         return 0;
     }
 
@@ -509,7 +509,7 @@ class Custom_HTTP_Client : public IHTTP_Client {
         // Nothing to do
     }
 
-    int post(const char *url_path, const char *content_type, const char *request_body) override {
+    int post(char const * url_path, char const * content_type, char const * request_body) override {
         return 0;
     }
 
@@ -517,7 +517,7 @@ class Custom_HTTP_Client : public IHTTP_Client {
         return 200;
     }
 
-    int get(const char *url_path) override {
+    int get(char const * url_path) override {
         return 0;
     }
 
@@ -581,11 +581,11 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return 0U;
     }
 
-    void set_server(const char *domain, uint16_t port) override {
+    void set_server(char const * domain, uint16_t port) override {
         // Nothing to do
     }
 
-    bool connect(const char *client_id, const char *user_name, const char *password) override {
+    bool connect(char const * client_id, char const * user_name, char const * password) override {
         return true;
     }
 
@@ -597,15 +597,15 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return true;
     }
 
-    bool publish(const char *topic, const uint8_t *payload, const size_t& length) override {
+    bool publish(char const * topic, uint8_t const * payload, size_t const & length) override {
         return true;
     }
 
-    bool subscribe(const char *topic) override {
+    bool subscribe(char const * topic) override {
         return true;
     }
 
-    bool unsubscribe(const char *topic) override {
+    bool unsubscribe(char const * topic) override {
         return true;
     }
 
@@ -615,7 +615,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 
-    bool begin_publish(const char *topic, const size_t& length) override {
+    bool begin_publish(char const * topic, size_t const & length) override {
         return true;
     }
 
@@ -631,7 +631,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return 1U;
     }
 
-    size_t write(const uint8_t *buffer, size_t size) override {
+    size_t write(uint8_t const * buffer, size_t const & size) override {
         return size;
     }
 
@@ -669,11 +669,11 @@ For that a `class` needs to fulfill the contract and implement the needed method
 class CustomLogger {
   public:
     template<typename ...Args>
-    static int printfln(char const * const format, Args const &... args) {
+    static int printfln(char const * format, Args const &... args) {
         return 0;
     }
 
-    static int println(char const * const message) {
+    static int println(char const * message) {
         return 0;
     }
 };

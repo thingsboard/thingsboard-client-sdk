@@ -10,7 +10,7 @@ bool Arduino_ESP8266_Updater::begin(size_t const & firmware_size) {
     return Update.begin(firmware_size);
 }
 
-size_t Arduino_ESP8266_Updater::write(uint8_t * const payload, size_t const & total_bytes) {
+size_t Arduino_ESP8266_Updater::write(uint8_t * payload, size_t const & total_bytes) {
     return Update.write(payload, total_bytes);
 }
 

@@ -11,18 +11,18 @@
 /// under the hood to write the given binary firmware data into a file. Can be used to write the binary into an intermediate SD card instead of directly updating to flash memory.
 class SDCard_Updater : public IUpdater {
   public:
-    SDCard_Updater(char const * const file_path);
+    SDCard_Updater(char const * file_path);
 
     bool begin(size_t const & firmware_size) override;
   
-    size_t write(uint8_t * const payload, size_t const & total_bytes) override;
+    size_t write(uint8_t * payload, size_t const & total_bytes) override;
 
     void reset() override;
   
     bool end() override;
 
   private:
-    char const * const m_path = {}; // Path to the file the binary data is written into
+    char const * m_path = {}; // Path to the file the binary data is written into
 };
 
 #endif // SDCard_Updater_h

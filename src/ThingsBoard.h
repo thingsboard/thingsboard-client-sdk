@@ -232,7 +232,7 @@ class ThingsBoardSized {
     /// so it possible to discern which device is communicating, default = Value of passed access token
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard, default = nullptr
     /// @return Whether connecting to ThingsBoard was successful or not
-    bool connect(char const * const host, char const * const access_token = PROV_ACCESS_TOKEN, uint16_t port = DEFAULT_MQTT_PORT, char const * const client_id = nullptr, char const * const password = nullptr) {
+    bool connect(char const * host, char const * access_token = PROV_ACCESS_TOKEN, uint16_t port = DEFAULT_MQTT_PORT, char const * client_id = nullptr, char const * password = nullptr) {
         if (host == nullptr) {
             return false;
         }
@@ -273,7 +273,7 @@ class ThingsBoardSized {
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool Send_Json(char const * const topic, JsonDocument const & source, size_t const & json_size) {
+    bool Send_Json(char const * topic, JsonDocument const & source, size_t const & json_size) {
         // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
@@ -330,7 +330,7 @@ class ThingsBoardSized {
     /// @param topic Topic we want to send the data over
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool Send_Json_String(char const * const topic, char const * const json) {
+    bool Send_Json_String(char const * topic, char const * json) {
         if (json == nullptr) {
             return false;
         }
@@ -411,7 +411,7 @@ class ThingsBoardSized {
     /// pass nullptr or an empty string if the user should be able to claim the device without any password
     /// @param duration_ms Total time in milliseconds the user has to claim their device as their own
     /// @return Whether sending the claiming request was successful or not
-    bool Claim_Request(char const * const secret_key, size_t const & duration_ms) {
+    bool Claim_Request(char const * secret_key, size_t const & duration_ms) {
         StaticJsonDocument<JSON_OBJECT_SIZE(2)> request_buffer;
 
         if (!Helper::stringIsNullorEmpty(secret_key)) {
@@ -431,7 +431,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendTelemetryData(char const * const key, T const & value) {
+    bool sendTelemetryData(char const * key, T const & value) {
         return sendKeyValue(key, value);
     }
 
@@ -462,7 +462,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool sendTelemtryString(char const * const json) {
+    bool sendTelemtryString(char const * json) {
         return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
@@ -486,7 +486,7 @@ class ThingsBoardSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendAttributeData(char const * const key, T const & value) {
+    bool sendAttributeData(char const * key, T const & value) {
         return sendKeyValue(key, value, false);
     }
 
@@ -517,7 +517,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool sendAttributeString(char const * const json) {
+    bool sendAttributeString(char const * json) {
         return Send_Json_String(ATTRIBUTE_TOPIC, json);
     }
 
@@ -540,7 +540,7 @@ class ThingsBoardSized {
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool Serialize_Json(char const * const topic, JsonDocument const & source, size_t const & json_size) {
+    bool Serialize_Json(char const * topic, JsonDocument const & source, size_t const & json_size) {
         if (!m_client.begin_publish(topic, json_size)) {
             Logger::println(UNABLE_TO_SERIALIZE_JSON);
             return false;
@@ -571,14 +571,14 @@ class ThingsBoardSized {
     /// @brief Subscribes the given topic with the underlying client interface
     /// @param topic Topic that should be subscribed
     /// @return Whether subscribing was successfull or not
-    bool clientSubscribe(char const * const topic) {
+    bool clientSubscribe(char const * topic) {
         return m_client.subscribe(topic);
     }
 
     /// @brief Unsubscribes the given topic with the underlying client interface
     /// @param topic Topic that should be unsubscribed
     /// @return Whether unsubscribing was successfull or not
-    bool clientUnsubscribe(char const * const topic) {
+    bool clientUnsubscribe(char const * topic) {
         return m_client.unsubscribe(topic);
     }
 
@@ -605,7 +605,7 @@ class ThingsBoardSized {
     /// @param client_id Client username that can be used to differentiate the user that is connecting the given device to ThingsBoard
     /// @param password Client password that can be used to authenticate the user that is connecting the given device to ThingsBoard
     /// @return Whether connecting to ThingsBoard was successful or not
-    bool connectToHost(char const * const access_token, char const * const client_id, char const * const password) {
+    bool connectToHost(char const * access_token, char const * client_id, char const * password) {
         bool const connection_result = m_client.connect(client_id, access_token, password);
         if (!connection_result) {
             Logger::println(CONNECT_FAILED);
@@ -635,7 +635,7 @@ class ThingsBoardSized {
     /// @param telemetry Whether the data we want to send should be sent as an attribute or telemetry data value
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendKeyValue(char const * const key, T const & value, bool telemetry = true) {
+    bool sendKeyValue(char const * key, T const & value, bool telemetry = true) {
         const Telemetry t(key, value);
         if (t.IsEmpty()) {
             return false;
@@ -839,28 +839,28 @@ class ThingsBoardSized {
         m_subscribedInstance->Subscribe_API_Implementation(api);
     }
 
-    static bool staticSendJson(char const * const topic, JsonDocument const & source, size_t const & json_size) {
+    static bool staticSendJson(char const * topic, JsonDocument const & source, size_t const & json_size) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
         return m_subscribedInstance->Send_Json(topic, source, json_size);
     }
 
-    static bool staticSendJsonString(char const * const topic, char const * const json) {
+    static bool staticSendJsonString(char const * topic, char const * json) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
         return m_subscribedInstance->Send_Json_String(topic, json);
     }
 
-    static bool staticClientSubscribe(char const * const topic) {
+    static bool staticClientSubscribe(char const * topic) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
         return m_subscribedInstance->clientSubscribe(topic);
     }
 
-    static bool staticClientUnsubscribe(char const * const topic) {
+    static bool staticClientUnsubscribe(char const * topic) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }

@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-SDCard_Updater::SDCard_Updater(char const * const file_path)
+SDCard_Updater::SDCard_Updater(char const * file_path)
   : m_path(file_path)
 {
     // Nothing to do
@@ -20,7 +20,7 @@ bool SDCard_Updater::begin(size_t const & firmware_size) {
     return true;
 }
 
-size_t SDCard_Updater::write(uint8_t * const payload, size_t const & total_bytes) {
+size_t SDCard_Updater::write(uint8_t * payload, size_t const & total_bytes) {
     FILE* file = fopen(m_path, "a");
     if (file == nullptr) {
         return 0;

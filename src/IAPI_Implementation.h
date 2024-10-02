@@ -47,13 +47,13 @@ class IAPI_Implementation {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    virtual void Process_Response(char * const topic, uint8_t * payload, unsigned int length) = 0;
+    virtual void Process_Response(char const * topic, uint8_t * payload, unsigned int length) = 0;
 
     /// @brief Process callback that will be called upon response arrival
     /// and is responsible for handling the alredy serialized payload and calling the appropriate previously subscribed callbacks
     /// @param topic Previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
-    virtual void Process_Json_Response(char * const topic, JsonDocument const & data) = 0;
+    virtual void Process_Json_Response(char const * topic, JsonDocument const & data) = 0;
 
     /// @brief Compares received response topic and the topic this api implementation handles responses on,
     /// messages from all other topics are ignored and only messages from topics that match are handled.

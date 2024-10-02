@@ -34,7 +34,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// See https://stackoverflow.blog/2020/12/14/security-considerations-for-ota-software-updates-for-iot-gateway-devices/ for more information on the aforementioned security risk
     /// @param server_certificate_pem Null-terminated string containg the root certificate in PEM format, of the server we are attempting to send to and receive MQTT data from
     /// @return Whether changing the internal server certificate was successful or not, ensure to disconnect and reconnect to actually apply the change
-    bool set_server_certificate(char const * const server_certificate_pem);
+    bool set_server_certificate(char const * server_certificate_pem);
 
     /// @brief Configure a bundle of root certificates for verification, which allows for connecting to the MQTT broker over a secure TLS / SSL connection.
     /// Instead of providing a single server certificate, this allows providing a collection of root certificates, including the bundle that can be automatically included by enabling CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
@@ -47,7 +47,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning a value bigger than 300 seconds with the default config defeats the purpose of the keep alive alltogether
     /// @param keep_alive_timeout_seconds Timeout until we send another PINGREQ control packet to the broker to establish that we are still connected
     /// @return Whether changing the internal keep alive timeout was successful or not
-    bool set_keep_alive_timeout(uint16_t const & keep_alive_timeout_seconds); 
+    bool set_keep_alive_timeout(uint16_t keep_alive_timeout_seconds); 
     
     /// @brief Whether to disable or enable the keep alive mechanism, meaning we do not send any PINGREQ control packets to the broker anymore, meaning if we do not send other packet the device will be marked as inactive.
     /// The default value is false meaning the keep alive mechanism is enabled.
@@ -56,12 +56,12 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// then the device will change states between active and inactive depending on when we send the packets
     /// @param disable_keep_alive Whether to enable or disable the internal keep alive mechanism, which sends PINGREQ control packets every keep alive timeout seconds, configurable in set_keep_alive_timeout()
     /// @return Whether enabling or disabling the internal keep alive mechanism was successful or not
-    bool set_disable_keep_alive(bool const & disable_keep_alive);
+    bool set_disable_keep_alive(bool disable_keep_alive);
 
     /// @brief Wheter to disable or enable that the MQTT client will reconnect to the server automatically if it errors or disconnects. The default is false meaning we will automatically reconnect
     /// @param disable_auto_reconnect Whether to automatically reconnect if the the client errors or disconnects
     /// @return Whether enabling or disabling the internal auto reconnect mechanism was successful or not
-    bool set_disable_auto_reconnect(bool const & disable_auto_reconnect);
+    bool set_disable_auto_reconnect(bool disable_auto_reconnect);
 
     /// @brief Sets the priority and stack size of the MQTT task running in the background, that is handling the receiving and sending of any outstanding MQTT messages to or from the broker.
     /// The default value for the priority is 5 and can also be changed in the ESP IDF menuconfig, whereas the default value for the stack size is 6144 bytes and can also be changed in the ESP IDF menuconfig
@@ -69,20 +69,20 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @param stack_size Task stack size meaning how much stack size the MQTT task can allocate before the device crashes with a StackOverflow, might need to be increased
     /// if the user allocates a lot of memory on the stack in a request callback method, because those functions are dispatched from the MQTT event task
     /// @return Whether changing the internal MQTT task configurations were successfull or not
-    bool set_mqtt_task_configuration(uint8_t const & priority, uint16_t const & stack_size);
+    bool set_mqtt_task_configuration(uint8_t priority, uint16_t stack_size);
 
     /// @brief Sets the amount of time in milliseconds that we wait before we automatically reconnect to the MQTT broker if the connection has been lost. The default value is 10 seconds.
     /// Will be ignored if set_disable_auto_reconnect() has been set to true, because we will not reconnect automatically anymore, instead that would have to be done by the user themselves
     /// @param reconnect_timeout_milliseconds Time in milliseconds until we automatically reconnect to the MQTT broker
     /// @return Whether changing the internal reconnect timeout was successfull or not
-    bool set_reconnect_timeout(uint16_t const & reconnect_timeout_milliseconds);
+    bool set_reconnect_timeout(uint16_t reconnect_timeout_milliseconds);
 
     /// @brief Sets the amount of time in millseconds that we wait until we expect a netowrk operation on the MQTT client to have successfully finished. The defalt value is 10 seconds.
     /// If that is not the case then the network operation will be aborted, might be useful to increase for devices that perform other high priority tasks and do not have enough CPU resources,
     /// to send bigger messages to the MQTT broker in time, which can cause disconnects and the sent message being discarded
     /// @param network_timeout_milliseconds Time in milliseconds that we wait until we abort the network operation if it has not completed yet
     /// @return Whether changing the internal network timeout was successfull or not
-    bool set_network_timeout(uint16_t const & network_timeout_milliseconds);
+    bool set_network_timeout(uint16_t network_timeout_milliseconds);
 
     /// @brief Sets whether to enqueue published messages or not, enqueueing has to save them in the out buffer, meaning the internal buffer size might need to be increased,
     /// but the MQTT client can in exchange send the publish messages once the main MQTT task is running again, instead of blocking in the task that has called the publish method.
@@ -91,7 +91,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// If enqueueing the messages to be published fails once this options has been enabled, then the internal buffer size might need to be increased. Ensure to call set_buffer_size() with a bigger value
     /// and check if enqueueing the messages to be published works successfully again
     /// @param enqueue_messages Whether to enqueue published messages or not, where setting the value to true means that the messages are enqueued and therefor non blocking on the called from task
-    void set_enqueue_messages(bool const & enqueue_messages);
+    void set_enqueue_messages(bool enqueue_messages);
 
     void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override;
 
@@ -101,19 +101,19 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 
     uint16_t get_buffer_size() override;
 
-    void set_server(char const * const domain, uint16_t port) override;
+    void set_server(char const * domain, uint16_t port) override;
 
-    bool connect(char const * const client_id, char const * const user_name, char const * const password) override;
+    bool connect(char const * client_id, char const * user_name, char const * password) override;
 
     void disconnect() override;
 
     bool loop() override;
 
-    bool publish(char const * const topic, uint8_t const * const payload, size_t const & length) override;
+    bool publish(char const * topic, uint8_t const * payload, size_t const & length) override;
 
-    bool subscribe(char const * const topic) override;
+    bool subscribe(char const * topic) override;
 
-    bool unsubscribe(char const * const topic) override;
+    bool unsubscribe(char const * topic) override;
 
     bool connected() override;
 
@@ -128,9 +128,9 @@ private:
     /// @param base Event base for the handler
     /// @param event_id The id for the received event
     /// @param event_data The data for the event, esp_mqtt_event_handle_t
-    void mqtt_event_handler(esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void *event_data);
+    void mqtt_event_handler(esp_event_base_t base, esp_mqtt_event_id_t const & event_id, void * event_data);
 
-    static void static_mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+    static void static_mqtt_event_handler(void * handler_args, esp_event_base_t base, int32_t event_id, void * event_data);
 
     Callback<void, char *, uint8_t *, unsigned int> m_received_data_callback = {}; // Callback that will be called as soon as the mqtt client receives any data
     Callback<void>                                  m_connected_callback = {};     // Callback that will be called as soon as the mqtt client has connected

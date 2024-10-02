@@ -28,7 +28,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// @param provision_device_secret Device profile provisioning secret of the device profile that should be used to create the device under
     /// @param device_name Name the created device should have on the cloud,
     /// pass nullptr or an empty string if a random string should be used as a name instead
-    Provision_Callback(Access_Token, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
+    Provision_Callback(Access_Token, function callback, char const * provision_device_key, char const * provision_device_secret, char const * device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
     /// @brief Constructs callback that will be fired upon a provision request arrival,
     /// where the requested credentials were sent by the cloud and received by the client.
@@ -43,7 +43,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// If the value is 0 we will not start the timer and therefore never call the timeout callback method, default = 0
     /// @param timeout_callback Optional callback method that will be called upon request timeout (did not receive a response in the given timeout time). Can happen if the requested method does not exist on the cloud,
     /// or if the connection could not be established, default = nullptr
-    Provision_Callback(Device_Access_Token, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const access_token, char const * const device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
+    Provision_Callback(Device_Access_Token, function callback, char const * provision_device_key, char const * provision_device_secret, char const * access_token, char const * device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
     /// @brief Constructs callback that will be fired upon a provision request arrival,
     /// where the requested credentials were sent by the cloud and received by the client.
@@ -60,7 +60,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// If the value is 0 we will not start the timer and therefore never call the timeout callback method, default = 0
     /// @param timeout_callback Optional callback method that will be called upon request timeout (did not receive a response in the given timeout time). Can happen if the requested method does not exist on the cloud,
     /// or if the connection could not be established, default = nullptr
-    Provision_Callback(Basic_MQTT_Credentials, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const username, char const * const password, char const * const client_id, char const * const device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
+    Provision_Callback(Basic_MQTT_Credentials, function callback, char const * provision_device_key, char const * provision_device_secret, char const * username, char const * password, char const * client_id, char const * device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
     /// @brief Constructs callback that will be fired upon a provision request arrival,
     /// where the requested credentials were sent by the cloud and received by the client.
@@ -75,7 +75,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// If the value is 0 we will not start the timer and therefore never call the timeout callback method, default = 0
     /// @param timeout_callback Optional callback method that will be called upon request timeout (did not receive a response in the given timeout time). Can happen if the requested method does not exist on the cloud,
     /// or if the connection could not be established, default = nullptr
-    Provision_Callback(X509_Certificate, function callback, char const * const provision_device_key, char const * const provision_device_secret, char const * const hash, char const * const device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
+    Provision_Callback(X509_Certificate, function callback, char const * provision_device_key, char const * provision_device_secret, char const * hash, char const * device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
     /// @brief Gets the device profile provisioning key of the device profile,
     /// that should be used to create the device under
@@ -85,7 +85,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// @brief Sets the device profile provisioning key of the device profile,
     /// that should be used to create the device under
     /// @param provision_device_key Device profile provisioning key
-    void Set_Device_Key(char const * const provision_device_key);
+    void Set_Device_Key(char const * provision_device_key);
 
     /// @brief Gets the device profile provisioning secret of the device profile,
     /// that should be used to create the device under
@@ -95,7 +95,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// @brief Gets the device profile provisioning secret of the device profile,
     /// that should be used to create the device under
     /// @param provision_device_secret Device profile provisioning secret
-    void Set_Device_Secret(char const * const provision_device_secret);
+    void Set_Device_Secret(char const * provision_device_secret);
 
     /// @brief Gets the name the created device should have on the cloud,
     /// is a nullptr or an empty string if a random string should be used as a name instead
@@ -105,7 +105,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// @brief Sets the name the created device should have on the cloud,
     /// is a nullptr or an empty string if a random string should be used as a name instead
     /// @param device_name Name the created device should have on the cloud
-    void Set_Device_Name(char const * const device_name) ;
+    void Set_Device_Name(char const * device_name) ;
 
     /// @brief Gets the access token generated by the device,
     /// that will be used by the provisioned device,
@@ -117,7 +117,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// that will be used by the provisioned device,
     /// alternative to letting the access token be generated by the cloud instead
     /// @param access_token Access token generated by the device
-    void Set_Device_Access_Token(char const * const access_token);
+    void Set_Device_Access_Token(char const * access_token);
 
     /// @brief Gets the basic MQTT credentials username, that will be used by the provisioned device
     /// @return Basic MQTT credentials username
@@ -125,7 +125,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
 
     /// @brief Sets the basic MQTT credentials username, that will be used by the provisioned device
     /// @param username Basic MQTT credentials username
-    void Set_Credentials_Username(char const * const username);
+    void Set_Credentials_Username(char const * username);
 
     /// @brief Gets the basic MQTT credentials password, that will be used by the provisioned device
     /// @return Basic MQTT credentials password
@@ -133,7 +133,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
 
     /// @brief Sets the basic MQTT credentials password, that will be used by the provisioned device
     /// @param password Basic MQTT credentials password
-    void Set_Credentials_Password(char const * const password);
+    void Set_Credentials_Password(char const * password);
 
     /// @brief Gets the basic MQTT credentials client_id, that will be used by the provisioned device
     /// @return Basic MQTT credentials client_id
@@ -141,7 +141,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
 
     /// @brief Sets the basic MQTT credentials client_id, that will be used by the provisioned device
     /// @param client_id Basic MQTT credentials client_id
-    void Set_Credentials_Client_ID(char const * const client_id);
+    void Set_Credentials_Client_ID(char const * client_id);
 
     /// @brief Gets the public X.509 certificate hash, that will be used by the provisioned device
     /// @return Public X.509 certificate hash
@@ -149,7 +149,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
 
     /// @brief Sets the public X.509 certificate hash, that will be used by the provisioned device
     /// @param hash Public X.509 certificate hash
-    void Set_Certificate_Hash(char const * const hash);
+    void Set_Certificate_Hash(char const * hash);
 
     /// @brief Gets the string containing the used credentials type that decides which provisioning method is actually used,
     /// by the Provision_Callback and therefore decides what response we will receive from the server

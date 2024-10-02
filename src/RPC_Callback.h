@@ -22,9 +22,9 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
 #if THINGSBOARD_ENABLE_DYNAMIC
     /// @param response_size Internal size the JsonDocument should be able to hold to contain the response to the server side RPC call.
     /// Use JSON_OBJECT_SIZE() and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size, default = Default_RPC_Amount (0)
-    RPC_Callback(char const * const method_name, function callback, size_t const & response_size = JSON_OBJECT_SIZE(Default_RPC_Amount))
+    RPC_Callback(char const * method_name, function callback, size_t const & response_size = JSON_OBJECT_SIZE(Default_RPC_Amount))
 #else
-    RPC_Callback(char const * const method_name, function callback)
+    RPC_Callback(char const * method_name, function callback)
 #endif // THINGSBOARD_ENABLE_DYNAMIC
       : Callback(callback)
       , m_method_name(method_name)
@@ -43,7 +43,7 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
 
     /// @brief Sets the poiner to the underlying name we expect to be sent via. server-side RPC so that this method callback will be called
     /// @param method_name Pointer to the passed method name
-    void Set_Name(char const * const method_name) {
+    void Set_Name(char const * method_name) {
         m_method_name = method_name;
     }
 

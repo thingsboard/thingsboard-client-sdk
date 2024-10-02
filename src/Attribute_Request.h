@@ -77,11 +77,11 @@ class Attribute_Request : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char * const topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
         // Nothing to do
     }
 
-    void Process_Json_Response(char * const topic, JsonDocument const & data) override {
+    void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         size_t const request_id = Helper::parseRequestId(ATTRIBUTE_RESPONSE_TOPIC, topic);
         JsonObjectConst object = data.template as<JsonObjectConst>();
 
@@ -103,7 +103,7 @@ class Attribute_Request : public IAPI_Implementation {
                 continue;
             }
 #endif // THINGSBOARD_ENABLE_STL
-            char const * const attribute_response_key = attribute_request.Get_Attribute_Key();
+            char const * attribute_response_key = attribute_request.Get_Attribute_Key();
             if (attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
                 Logger::println(ATT_KEY_NOT_FOUND);
@@ -173,9 +173,9 @@ class Attribute_Request : public IAPI_Implementation {
     /// @param attribute_response_key Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
 #if THINGSBOARD_ENABLE_DYNAMIC
-    bool Attributes_Request(Attribute_Request_Callback const & callback, char const * const attribute_request_key, char const * const attribute_response_key) {
+    bool Attributes_Request(Attribute_Request_Callback const & callback, char const * attribute_request_key, char const * attribute_response_key) {
 #else
-    bool Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback, char const * const attribute_request_key, char const * const attribute_response_key) {
+    bool Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback, char const * attribute_request_key, char const * attribute_response_key) {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
         auto const & attributes = callback.Get_Attributes();
 
