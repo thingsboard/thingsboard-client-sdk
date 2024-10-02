@@ -76,7 +76,7 @@ bool Espressif_MQTT_Client::set_disable_auto_reconnect(bool disable_auto_reconne
     return update_configuration();
 }
 
-bool Espressif_MQTT_Client::set_mqtt_task_configuration(uint8_t priority, uint16_t&stack_size) {
+bool Espressif_MQTT_Client::set_mqtt_task_configuration(uint8_t priority, uint16_t stack_size) {
     // ESP_IDF_VERSION_MAJOR Version 5 is a major breaking changes were the complete esp_mqtt_client_config_t structure changed completely
 #if ESP_IDF_VERSION_MAJOR < 5
     m_mqtt_configuration.task_prio = priority;
