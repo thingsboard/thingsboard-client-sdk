@@ -3,6 +3,7 @@
 
 // Local include.
 #include "Callback.h"
+#include "DefaultLogger.h"
 
 // Library include.
 #if THINGSBOARD_ENABLE_STREAM_UTILS

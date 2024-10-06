@@ -3,6 +3,7 @@
 
 // Local include.
 #include "Configuration.h"
+#include "DefaultLogger.h"
 
 // Library include.
 #include <stddef.h>
