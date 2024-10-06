@@ -7,7 +7,6 @@ set(srcs
     ../../../src/Arduino_MQTT_Client.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
     ../../../src/Arduino_ESP8266_Updater.cpp
-    ../../../src/SDCard_Updater.cpp
     ../../../src/HashGenerator.cpp
     ../../../src/Helper.cpp
     ../../../src/OTA_Update_Callback.cpp
