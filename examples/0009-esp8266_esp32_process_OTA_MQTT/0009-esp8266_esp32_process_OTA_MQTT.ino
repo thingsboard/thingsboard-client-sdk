@@ -133,7 +133,7 @@ ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
 Arduino_ESP8266_Updater updater;
 #else
 #ifdef ESP32
-Espressif_Updater updater;
+Espressif_Updater<> updater;
 #endif // ESP32
 #endif // ESP8266
 

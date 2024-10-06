@@ -442,7 +442,7 @@ but instead the `OTA_Update_Callback` class expects an argument, the `IUpdater` 
 Thanks to it being an interface it allows an arbitrary implementation,
 meaning as long as the device can flash binary data and supports the C++ STL it supports OTA updates, with the `ThingsBoard` library.
 
-Currently, implemented in the library itself are the `Arduino_ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `Arduino_ESP8266_Updater` which is used with the `ESP8266` and `Arduino`, the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain and lastly the `SD_Card_Updater` which is used for both `Arduino` and the `Espressif IDF` to flash binary data onto an already initialized SD card.
+Currently, implemented in the library itself are the `Arduino_ESP32_Updater`, which is used for flashing the binary data when using a `ESP32` and `Arduino`, the `Arduino_ESP8266_Updater` which is used with the `ESP8266` and `Arduino`, the `Espressif_Updater` which is used with the `ESP32` and the `Espressif IDF` tool chain and lastly the `SDCard_Updater` which is used for both `Arduino` and the `Espressif IDF` to flash binary data onto an already initialized SD card.
 
 If another device or feature wants to be supported, a custom interface implementation needs to be created.
 For that a `class` needs to inherit the `IUpdater` interface and `override` the needed methods shown below:
@@ -470,7 +470,7 @@ class Custom_Updater : public IUpdater {
 };
 ```
 
-Once that has been done it can simply be passed instead of the `Espressif_Updater`, `Arduino_ESP8266_Updater`, `Arduino_ESP32_Updater` or `SD_Card_Updater` instance.
+Once that has been done it can simply be passed instead of the `Espressif_Updater`, `Arduino_ESP8266_Updater`, `Arduino_ESP32_Updater` or `SDCard_Updater` instance.
 
 ```cpp
 // Initalize the Updater client instance used to flash binary to flash memory
