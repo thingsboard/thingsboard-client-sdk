@@ -83,7 +83,7 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 
 
 // Initalize the Mqtt client instance
-Espressif_MQTT_Client mqttClient;
+Espressif_MQTT_Client<> mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 

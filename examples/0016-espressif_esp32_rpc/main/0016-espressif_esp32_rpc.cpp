@@ -87,7 +87,7 @@ constexpr uint8_t MAX_RPC_SUBSCRIPTIONS = 3U;
 constexpr uint8_t MAX_RPC_RESPONSE = 5U;
 
 // Initalize the Mqtt client instance
-Espressif_MQTT_Client mqttClient;
+Espressif_MQTT_Client<> mqttClient;
 // Initialize used apis
 Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
 const std::array<IAPI_Implementation*, 1U> apis = {

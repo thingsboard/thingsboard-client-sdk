@@ -106,7 +106,7 @@ constexpr char PROVISION_DEVICE_TASK_NAME[] = "provision_device_task";
 constexpr uint64_t REQUEST_TIMEOUT_MICROSECONDS = 5000U * 1000U;
 
 // Initalize the Mqtt client instance
-Espressif_MQTT_Client mqttClient;
+Espressif_MQTT_Client<> mqttClient;
 // Initialize used apis
 Provision<> prov;
 const std::array<IAPI_Implementation*, 1U> apis = {

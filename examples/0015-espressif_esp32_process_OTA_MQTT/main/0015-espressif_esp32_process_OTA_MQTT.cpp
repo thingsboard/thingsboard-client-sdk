@@ -101,7 +101,7 @@ constexpr char UPDAT_FILE_PATH[] = "/sd/update.bin";
 
 
 // Initalize the Mqtt client instance
-Espressif_MQTT_Client mqttClient;
+Espressif_MQTT_Client<> mqttClient;
 // Initialize used apis
 OTA_Firmware_Update<> ota;
 const std::array<IAPI_Implementation*, 1U> apis = {

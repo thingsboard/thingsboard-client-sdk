@@ -89,7 +89,7 @@ char constexpr FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
 char constexpr FW_SIZE_KEY[] = "fw_size";
 
 // Initalize the Mqtt client instance
-Espressif_MQTT_Client mqttClient;
+Espressif_MQTT_Client<> mqttClient;
 // Initialize used apis
 Shared_Attribute_Update<1U, MAX_ATTRIBUTES> shared_update;
 const std::array<IAPI_Implementation*, 1U> apis = {
