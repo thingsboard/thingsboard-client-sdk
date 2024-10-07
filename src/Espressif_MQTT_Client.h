@@ -11,6 +11,7 @@
 
 // Library includes.
 #include <mqtt_client.h>
+#include <esp_crt_bundle.h>
 
 // The error integer -1 means a general failure while handling the mqtt client,
 // where as -2 means that the outbox is filled and the message can therefore not be sent.
@@ -69,22 +70,43 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         return update_configuration();
     }
 
-    /// @brief Configure a bundle of root certificates for verification, which allows for connecting to the MQTT broker over a secure TLS / SSL connection.
-    /// Instead of providing a single server certificate, this allows providing a collection of root certificates, including the bundle that can be automatically included by enabling CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
-    /// @param crt_bundle_attach Function pointer that attaches the root certificates, e.g. esp_crt_bundle_attach
-    /// @return Whether changing the bundle was successful or not, ensure to disconnect and reconnect to actually apply the change
-    bool set_server_crt_bundle_attach(esp_err_t (*crt_bundle_attach)(void *conf)) {
+    /// @brief Configures a bundle of root certificates for verification and enables the MQTT broker to use certificate bundles, which allows for connecting to the MQTT broker over a secure TLS / SSL connection with any website associated with the root certificates in the bundle.
+    /// Has to be called atleast once for the feature to be activated because an internal function pointer in the underlying client has to be configured..
+    /// Instead of providing a single server certificate, this then allows providing a collection of root certificates. If nullptr is passed as the x509_bundle it will simply use the default root certificate bundle instead, which contains the full Mozilla root certificate bundle (130 certificates).
+    /// It is recommended to use menuconfig to configure the default certificate bundle, which will then read those certificates from the embedded application. Use CONFIG_MBEDTLS_DEFAULT_CERTIFICATE_BUNDLE to filter which certificates to include from the default bundle,
+    /// or use CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH to specify the path of additional certificates which should be embedded into the bundle
+    /// See https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/protocols/esp_crt_bundle.html for more information on ESP x509 Certificate Bundles
+    /// @param x509_bundle Pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from.
+    /// Simply pass nullptr if the default root certificate bundle should be used instead
+    /// @param bundle_size Total size of bundle with all certificates in bytes
+    /// @return Whether changing the bundle attach function was successful or not, ensure to disconnect and reconnect to actually apply the change
+    bool set_server_crt_bundle(uint8_t const * x509_bundle, size_t const & bundle_size) {
+        esp_err_t (*crt_bundle_attach)(void * conf) = nullptr;
+#ifdef ARDUINO
+        crt_bundle_attach = arduino_esp_crt_bundle_attach;
+#else
+        crt_bundle_attach = esp_crt_bundle_attach;
+#endif // ARDUINO
+
 #if ESP_IDF_VERSION_MAJOR < 5
         m_mqtt_configuration.crt_bundle_attach = crt_bundle_attach;
 #else
         m_mqtt_configuration.broker.verification.crt_bundle_attach = crt_bundle_attach;
 #endif // ESP_IDF_VERSION_MAJOR < 5
+
+        if (x509_bundle != nullptr) {
+#ifdef ARDUINO
+            arduino_esp_crt_bundle_set(x509_bundle);
+#else
+            (void)esp_crt_bundle_set(x509_bundle, bundle_size);
+#endif // ARDUINO
+        }
         return update_configuration();
     }
 
     /// @brief Sets the keep alive timeout in seconds, if the value is 0 then the default of 120 seconds is used instead to disable the keep alive mechanism use set_disable_keep_alive() instead.
-    /// The default timeout value ThingsBoard expectes to receive any message including a keep alive to not show the device as inactive can be found here https://thingsboard.io/docs/user-guide/install/config/#mqtt-server-parameters
-    /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning a value bigger than 300 seconds with the default config defeats the purpose of the keep alive alltogether
+    /// The default timeout value ThingsBoard expectes to receive any message including a keep alive to not show the device as inactive can be found here https://thingsboard.io/fig/#mqtt-server-parameters
+    /// under the transport.sessions.inactivity_timeout section and is 300 seconds. Meaning a value bigger than 300 seconds with the default config defeats the purpose of the keep alive alltogetherdocs/user-guide/install/con
     /// @param keep_alive_timeout_seconds Timeout until we send another PINGREQ control packet to the broker to establish that we are still connected
     /// @return Whether changing the internal keep alive timeout was successful or not
     bool set_keep_alive_timeout(uint16_t keep_alive_timeout_seconds) {
