@@ -64,7 +64,7 @@ class Espressif_Updater : public IUpdater {
     }
 
     void reset() override {
-#if defined(ESP8266) || (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 3, 0))
+#if defined(ESP8266) || (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR < 3) || ESP_IDF_VERSION_MAJOR < 4
         (void)end();
 #else
         (void)esp_ota_abort(m_ota_handle);

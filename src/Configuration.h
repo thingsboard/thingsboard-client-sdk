@@ -104,7 +104,7 @@
 // Additionally, for all the expected API calls to be implemented atleast, major version 2 minor version 1 on ESP32 and major version 3 minor version 0 on ESP8266 is required.
 #  ifndef THINGSBOARD_USE_ESP_PARTITION
 #    ifdef __has_include
-#      if __has_include(<esp_ota_ops.h>) && (!defined(ESP32) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(2, 1, 0))) && (!defined(ESP8266) || ESP_IDF_VERSION_MAJOR >= 3)
+#      if __has_include(<esp_ota_ops.h>) && (!defined(ESP32) || ((ESP_IDF_VERSION_MAJOR == 2 && ESP_IDF_VERSION_MINOR >= 1) || ESP_IDF_VERSION_MAJOR > 2)) && (!defined(ESP8266) || ESP_IDF_VERSION_MAJOR >= 3)
 #        define THINGSBOARD_USE_ESP_PARTITION 1
 #      else
 #        define THINGSBOARD_USE_ESP_PARTITION 0
