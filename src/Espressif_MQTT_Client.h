@@ -98,11 +98,11 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 #ifdef ARDUINO
             arduino_esp_crt_bundle_set(x509_bundle);
 #else
-#if (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR < 4 && ESP_IDF_VERSION_PATCH < 2) || ESP_IDF_VERSION_MAJOR < 4
+#if (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR <= 4 && ESP_IDF_VERSION_PATCH < 2) || ESP_IDF_VERSION_MAJOR < 4
         (void)esp_crt_bundle_set(x509_bundle);
 #else
         (void)esp_crt_bundle_set(x509_bundle, bundle_size);
-#endif // (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR < 4 ESP_IDF_VERSION_MINO < 2) || ESP_IDF_VERSION_MAJOR < 4
+#endif // (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR <= 4 ESP_IDF_VERSION_MINO < 2) || ESP_IDF_VERSION_MAJOR < 4
 #endif // ARDUINO
         }
         return update_configuration();
