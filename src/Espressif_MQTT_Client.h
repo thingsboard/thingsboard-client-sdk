@@ -76,11 +76,11 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// It is recommended to use menuconfig to configure the default certificate bundle, which will then read those certificates from the embedded application. Use CONFIG_MBEDTLS_DEFAULT_CERTIFICATE_BUNDLE to filter which certificates to include from the default bundle,
     /// or use CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH to specify the path of additional certificates which should be embedded into the bundle
     /// See https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/protocols/esp_crt_bundle.html for more information on ESP x509 Certificate Bundles
-    /// @param x509_bundle Pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from.
-    /// Simply pass nullptr if the default root certificate bundle should be used instead
-    /// @param bundle_size Total size of bundle with all certificates in bytes
+    /// @param x509_bundle Optional Pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from.
+    /// Simply pass nullptr if the default root certificate bundle should be used instead, default = nullptr
+    /// @param bundle_size Optional total size of bundle with all certificates in bytes, only used if the x509 bundle is a valid pointer and when not using the Arduino framework, default = 0
     /// @return Whether changing the bundle attach function was successful or not, ensure to disconnect and reconnect to actually apply the change
-    bool set_server_crt_bundle(uint8_t const * x509_bundle, size_t const & bundle_size) {
+    bool set_server_crt_bundle(uint8_t const * x509_bundle = nullptr, size_t const & bundle_size = 0U) {
         esp_err_t (*crt_bundle_attach)(void * conf) = nullptr;
 #ifdef ARDUINO
         crt_bundle_attach = arduino_esp_crt_bundle_attach;
