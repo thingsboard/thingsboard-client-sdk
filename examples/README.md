@@ -57,5 +57,6 @@ The remaining features have to be implemented by hand with the `sendGetRequest`
 | `0015-espressif_esp32_process_OTA_MQTT`           | Process OTA updates via MQTT on ESP32 using ESP-IDF.             | ESP32 (ESP-IDF)                   |
 | `0016-espressif_esp32_rpc`                        | Handle RPC on ESP32 using ESP-IDF.                               | ESP32 (ESP-IDF)                   |
 | `0017-espressif_esp32_process_shared_attribute_update` | Process shared attribute updates on ESP32 using ESP-IDF.    | ESP32 (ESP-IDF)                   |
+| `0018-espressif_esp32_provision_device`           | Device provisioning on ESP32 using ESP-IDF.                      | ESP32 (ESP-IDF)                   |
 
 Each folder contains a `README.md` file with more information about the example. Please refer to the specific `README.md` in each folder for more detailed guidance.

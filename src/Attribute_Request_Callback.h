@@ -2,17 +2,10 @@
 #define Attribute_Request_Callback_h
 
 // Local includes.
-#include "Callback.h"
+#include "Callback_Watchdog.h"
 #if !THINGSBOARD_ENABLE_DYNAMIC
 #include "Constants.h"
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
-
-
-#if THINGSBOARD_ENABLE_PROGMEM
-constexpr char ATT_REQUEST_CB_IS_NULL[] PROGMEM = "Client-side or shared attribute request callback is NULL";
-#else
-constexpr char ATT_REQUEST_CB_IS_NULL[] = "Client-side or shared attribute request callback is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
 
 
 /// @brief Client-side or shared attributes request callback wrapper,
@@ -45,13 +38,19 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// The last option is a copy constructor where we pass a vector and the values of that vector will be copied into our buffer
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the vector constructor and therefore allow to use every overloaded vector constructor without having to implement them
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
+    /// @param timeout_microseconds Optional amount of microseconds until we expect to have received a response and if we didn't, we call the previously subscribed callback.
+    /// If the value is 0 we will not start the timer and therefore never call the timeout callback method, default = 0
+    /// @param timeout_callback Optional callback method that will be called upon request timeout (did not receive a response in the given timeout time). Can happen if the requested method does not exist on the cloud,
+    /// or if the connection could not be established, default = nullptr
     /// @param ...args Arguments that will be forwarded into the overloaded vector constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
-    Attribute_Request_Callback(function callback, Args const &... args)
-      : Callback(callback, ATT_REQUEST_CB_IS_NULL)
+    Attribute_Request_Callback(function callback, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr, Args const &... args)
+      : Callback(callback)
       , m_attributes(args...)
       , m_request_id(0U)
       , m_attribute_key(nullptr)
+      , m_timeout_microseconds(timeout_microseconds)
+      , m_timeout_callback(timeout_callback)
     {
         // Nothing to do
     }
@@ -60,10 +59,9 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
     /// @return Unique identifier connected to the requested client-side or shared attributes
-    const size_t& Get_Request_ID() const {
+    size_t const & Get_Request_ID() const {
         return m_request_id;
     }
-
 
     /// @brief Sets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
@@ -90,7 +88,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// and which type we requests depends on which method the class instance is passed as a parameter to
     /// @param attribute_key Key that the data is saved into,
     /// "client" for client-side attributes and "shared" for shared scope attributes
-    void Set_Attribute_Key(char const * const attribute_key) {
+    void Set_Attribute_Key(char const * attribute_key) {
         m_attribute_key = attribute_key;
     }
 
@@ -124,14 +122,56 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
         m_attributes.assign(args...);
     }
 
+    /// @brief Gets the amount of microseconds until we expect to have received a response
+    /// @return Timeout time until timeout callback is called
+    uint64_t const & Get_Timeout() const {
+        return m_timeout_microseconds;
+    }
+
+    /// @brief Sets the amount of microseconds until we expect to have received a response
+    /// @param timeout_microseconds Timeout time until timeout callback is called
+    void Set_Timeout(uint64_t const & timeout_microseconds) {
+        m_timeout_microseconds = timeout_microseconds;
+    }
+
+#if !THINGSBOARD_USE_ESP_TIMER
+    /// @brief Updates the internal timeout timer
+    void Update_Timeout_Timer() {
+        m_timeout_callback.update();
+    }
+#endif // !THINGSBOARD_USE_ESP_TIMER
+
+    /// @brief Starts the internal timeout timer if we actually received a configured valid timeout time and a valid callback.
+    /// Is called as soon as the request is actually sent
+    void Start_Timeout_Timer() {
+        if (m_timeout_microseconds == 0U) {
+            return;
+        }
+        m_timeout_callback.once(m_timeout_microseconds);
+    }
+
+    /// @brief Stops the internal timeout timer, is called as soon as an answer is received from the cloud
+    /// if it isn't we call the previously subscribed callback instead
+    void Stop_Timeout_Timer() {
+        m_timeout_callback.detach();
+    }
+
+    /// @brief Sets the callback method that will be called upon request timeout (did not receive a response in the given timeout time)
+    /// @param timeout_callback Callback function that will be called
+    void Set_Timeout_Callback(Callback_Watchdog::function timeout_callback) {
+        m_timeout_callback.Set_Callback(timeout_callback);
+    }
+
   private:
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *>               m_attributes;     // Attribute we want to request
+    Vector<char const *>               m_attributes = {};           // Attribute we want to request
 #else
-    Array<char const *, MaxAttributes> m_attributes;     // Attribute we want to request
+    Array<char const *, MaxAttributes> m_attributes = {};           // Attribute we want to request
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    size_t                             m_request_id;     // Id the request was called with
-    char const                         *m_attribute_key; // Attribute key that we wil receive the response on ("client" or "shared")
+    size_t                             m_request_id = {};           // Id the request was called with
+    char const                         *m_attribute_key = {};       // Attribute key that we wil receive the response on ("client" or "shared")
+    uint64_t                           m_timeout_microseconds = {}; // Timeout time until we expect response to request
+    Callback_Watchdog                  m_timeout_callback = {};     // Handles callback that will be called if request times out
 };
 
 #endif // Attribute_Request_Callback_h

@@ -4,8 +4,6 @@
 // Local include.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 #if defined(ESP32) && defined(ARDUINO)
 
 // Local include.
@@ -18,7 +16,7 @@ class Arduino_ESP32_Updater : public IUpdater {
   public:
     bool begin(size_t const & firmware_size) override;
   
-    size_t write(uint8_t * const payload, size_t const & total_bytes) override;
+    size_t write(uint8_t * payload, size_t const & total_bytes) override;
 
     void reset() override;
   
@@ -26,7 +24,5 @@ class Arduino_ESP32_Updater : public IUpdater {
 };
 
 #endif // defined(ESP32) && defined(ARDUINO)
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // Arduino_ESP32_Updater_h

@@ -3,8 +3,7 @@
 
 // Local include.
 #include "Configuration.h"
-
-#if THINGSBOARD_ENABLE_OTA
+#include "DefaultLogger.h"
 
 // Library include.
 #include <stddef.h>
@@ -23,7 +22,7 @@ class IUpdater {
     /// @param payload Firmware packet data that should be written
     /// @param total_bytes Amount of bytes in the current firmware packet data
     /// @return Total amount of bytes that were successfully written
-    virtual size_t write(uint8_t * const payload, size_t const & total_bytes) = 0;
+    virtual size_t write(uint8_t * payload, size_t const & total_bytes) = 0;
   
     /// @brief Resets the writing of the given data so it can be restarted with begin
     virtual void reset() = 0;
@@ -32,7 +31,5 @@ class IUpdater {
     /// @return Whether the complete amount of bytes initally given was successfully written or not
     virtual bool end() = 0;
 };
-
-#endif // THINGSBOARD_ENABLE_OTA
 
 #endif // IUpdater_h

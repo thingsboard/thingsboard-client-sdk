@@ -8,13 +8,6 @@
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 
 
-#if THINGSBOARD_ENABLE_PROGMEM
-char constexpr ATT_CB_IS_NULL[] PROGMEM = "Shared attribute update callback is NULL";
-#else
-char constexpr ATT_CB_IS_NULL[] = "Shared attribute update callback is NULL";
-#endif // THINGSBOARD_ENABLE_PROGMEM
-
-
 /// @brief Shared attribute update callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
@@ -27,16 +20,6 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
   public:
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     Shared_Attribute_Callback() = default;
-
-    /// @brief Constructs callback, will be called upon shared attribute update arrival,
-    /// of any existing or new shared attribute on the given device
-    /// @param cb Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
-    explicit Shared_Attribute_Callback(function cb)
-      : Callback(cb, ATT_CB_IS_NULL)
-      , m_attributes()
-    {
-        // Nothing to do
-    }
 
     /// @brief Constructs callback, will be called upon shared attribute update arrival,
     /// where atleast one of the given multiple shared attributes passed was updated by the cloud.
@@ -54,7 +37,7 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
     /// @param ...args Arguments that will be forwarded into the overloaded vector constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
     Shared_Attribute_Callback(function callback, Args const &... args)
-      : Callback(callback, ATT_CB_IS_NULL)
+      : Callback(callback)
       , m_attributes(args...)
     {
         // Nothing to do
@@ -92,9 +75,9 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
 
   private:
 #if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *>                 m_attributes; // Shared attribute we want to subscribe to receive a message if they change
+    Vector<char const *>                 m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
 #else
-    Array<char const *, MaxAttributes>   m_attributes; // Shared attribute we want to subscribe to receive a message if they change
+    Array<char const *, MaxAttributes>   m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 };
 

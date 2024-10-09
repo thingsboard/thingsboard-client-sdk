@@ -16,9 +16,6 @@
 #include <ThingsBoard.h>
 
 
-// Examples using arduino used PROGMEM to save constants into flash memory,
-// this is not needed when using Espressif IDF because per default
-// all read only variables will be saved into DROM (flash memory).
 // See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/memory-types.html#drom-data-stored-in-flash
 // for more information about the aforementioned feature
 constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
@@ -86,7 +83,7 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 
 
 // Initalize the Mqtt client instance
-Espressif_MQTT_Client mqttClient;
+Espressif_MQTT_Client<> mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
