@@ -47,7 +47,7 @@ class Espressif_Updater : public IUpdater {
         esp_ota_handle_t ota_handle;
         esp_err_t const error = esp_ota_begin(update_partition, firmware_size, &ota_handle);
 
-        if (error != ESP_OK) {
+        if (error != esp_err_t::ESP_OK) {
             Logger::printfln(BEGIN_UPDATE_FAILED, esp_err_to_name(error));
             return false;
         }
@@ -59,7 +59,7 @@ class Espressif_Updater : public IUpdater {
 
     size_t write(uint8_t * payload, size_t const & total_bytes) override {
         esp_err_t const error = esp_ota_write(m_ota_handle, payload, total_bytes);
-        size_t const written_bytes = (error == ESP_OK) ? total_bytes : 0U;
+        size_t const written_bytes = (error == esp_err_t::ESP_OK) ? total_bytes : 0U;
         return written_bytes;
     }
 
@@ -73,12 +73,12 @@ class Espressif_Updater : public IUpdater {
 
     bool end() override {
         esp_err_t error = esp_ota_end(m_ota_handle);
-        if (error != ESP_OK) {
+        if (error != esp_err_t::ESP_OK) {
             return false;
         }
 
         error = esp_ota_set_boot_partition(m_update_partition);
-        return error == ESP_OK;
+        return error == esp_err_t::ESP_OK;
     }
 
   private:

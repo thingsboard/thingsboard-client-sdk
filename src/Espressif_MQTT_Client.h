@@ -22,6 +22,7 @@ constexpr char MQTT_DATA_EXCEEDS_BUFFER[] = "Received amount of data (%u) is big
 #if THINGSBOARD_ENABLE_DEBUG
 constexpr char RECEIVED_MQTT_EVENT[] = "Handling received mqtt event: (%s)";
 constexpr char UPDATING_CONFIGURATION[] = "Updated configuration after inital connection with response: (%s)";
+constexpr char OVERRIDING_DEFAULT_CRT_BUNDLE[] = "Overriding default CRT bundle with response: (%s)";
 #endif // THINGSBOARD_ENABLE_DEBUG
 
 
@@ -76,8 +77,8 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// It is recommended to use menuconfig to configure the default certificate bundle, which will then read those certificates from the embedded application. Use CONFIG_MBEDTLS_DEFAULT_CERTIFICATE_BUNDLE to filter which certificates to include from the default bundle,
     /// or use CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH to specify the path of additional certificates which should be embedded into the bundle
     /// See https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/protocols/esp_crt_bundle.html for more information on ESP x509 Certificate Bundles
-    /// @param x509_bundle Optional Pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from.
-    /// Simply pass nullptr if the default root certificate bundle should be used instead, default = nullptr
+    /// @param x509_bundle Optional Pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from, overrides the default certificate bundle previously configured with menuconfig.
+    /// The bundle to be sorted by the certificate subject, becuase the underlying implementation uses binary search to find used certificates. Simply pass nullptr if the default root certificate bundle should be used instead, default = nullptr
     /// @param bundle_size Optional total size of bundle with all certificates in bytes, only used if the x509 bundle is a valid pointer and when not using the Arduino framework, default = 0
     /// @return Whether changing the bundle attach function was successful or not, ensure to disconnect and reconnect to actually apply the change
     bool set_server_crt_bundle(uint8_t const * x509_bundle = nullptr, size_t const & bundle_size = 0U) {
@@ -95,15 +96,19 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 #endif // ESP_IDF_VERSION_MAJOR < 5
 
         if (x509_bundle != nullptr) {
+            esp_err_t error = esp_err_t::ESP_OK;
 #ifdef ARDUINO
             arduino_esp_crt_bundle_set(x509_bundle);
 #else
 #if (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR <= 4 && ESP_IDF_VERSION_PATCH < 2) || ESP_IDF_VERSION_MAJOR < 4
-        (void)esp_crt_bundle_set(x509_bundle);
+            error = esp_crt_bundle_set(x509_bundle);
 #else
-        (void)esp_crt_bundle_set(x509_bundle, bundle_size);
+            error = esp_crt_bundle_set(x509_bundle, bundle_size);
 #endif // (ESP_IDF_VERSION_MAJOR == 4 && ESP_IDF_VERSION_MINOR <= 4 ESP_IDF_VERSION_MINO < 2) || ESP_IDF_VERSION_MAJOR < 4
 #endif // ARDUINO
+#if THINGSBOARD_ENABLE_DEBUG
+            Logger::printfln(OVERRIDING_DEFAULT_CRT_BUNDLE, esp_err_to_name(error));
+#endif // THINGSBOARD_ENABLE_DEBUG
         }
         return update_configuration();
     }
@@ -278,7 +283,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         // but simply force reconnection with the client because it has lost that connection
         if (m_mqtt_client != nullptr) {
             const esp_err_t error = esp_mqtt_client_reconnect(m_mqtt_client);
-            return error == ESP_OK;
+            return error == esp_err_t::ESP_OK;
         }
 
         // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
@@ -286,11 +291,11 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         m_mqtt_client = esp_mqtt_client_init(&m_mqtt_configuration);
         esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, this);
 
-        if (error != ESP_OK) {
+        if (error != esp_err_t::ESP_OK) {
             return false;
         }
         error = esp_mqtt_client_start(m_mqtt_client);
-        return error == ESP_OK;
+        return error == esp_err_t::ESP_OK;
     }
 
     void disconnect() override {
@@ -361,7 +366,7 @@ private:
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(UPDATING_CONFIGURATION, esp_err_to_name(error));
 #endif // THINGSBOARD_ENABLE_DEBUG
-        return error == ESP_OK;
+        return error == esp_err_t::ESP_OK;
     }
 
 #if THINGSBOARD_ENABLE_DEBUG
