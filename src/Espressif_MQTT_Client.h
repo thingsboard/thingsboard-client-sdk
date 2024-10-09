@@ -96,7 +96,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 #endif // ESP_IDF_VERSION_MAJOR < 5
 
         if (x509_bundle != nullptr) {
-            esp_err_t error = esp_err_t::ESP_OK;
+            esp_err_t error = ESP_OK;
 #ifdef ARDUINO
             arduino_esp_crt_bundle_set(x509_bundle);
 #else
@@ -283,7 +283,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         // but simply force reconnection with the client because it has lost that connection
         if (m_mqtt_client != nullptr) {
             const esp_err_t error = esp_mqtt_client_reconnect(m_mqtt_client);
-            return error == esp_err_t::ESP_OK;
+            return error == ESP_OK;
         }
 
         // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
@@ -291,11 +291,11 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         m_mqtt_client = esp_mqtt_client_init(&m_mqtt_configuration);
         esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, this);
 
-        if (error != esp_err_t::ESP_OK) {
+        if (error != ESP_OK) {
             return false;
         }
         error = esp_mqtt_client_start(m_mqtt_client);
-        return error == esp_err_t::ESP_OK;
+        return error == ESP_OK;
     }
 
     void disconnect() override {
@@ -366,7 +366,7 @@ private:
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(UPDATING_CONFIGURATION, esp_err_to_name(error));
 #endif // THINGSBOARD_ENABLE_DEBUG
-        return error == esp_err_t::ESP_OK;
+        return error == ESP_OK;
     }
 
 #if THINGSBOARD_ENABLE_DEBUG

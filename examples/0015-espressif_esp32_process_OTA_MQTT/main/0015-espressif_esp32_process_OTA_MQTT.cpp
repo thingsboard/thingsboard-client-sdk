@@ -139,7 +139,7 @@ void otaSDToFlashTask(void* pvParameter) {
         ESP_LOGE("MAIN", "Failed to open file for Update");
         vTaskDelete(NULL);
     } else {
-        esp_err_t error = esp_err_t::ESP_OK;
+        esp_err_t error = ESP_OK;
         ESP_LOGI("MAIN", "Opened File for Update");
         fseek(ota_bin_file, 0, SEEK_END);
         data.size = ftell(ota_bin_file);
@@ -158,16 +158,16 @@ void otaSDToFlashTask(void* pvParameter) {
             data.remaining_size -= FIRMWARE_PACKET_SIZE;
             vTaskDelay(0);
         }
-        if (error != esp_err_t::ESP_OK) {
+        if (error != ESP_OK) {
             ESP_LOGE("MAIN", "Failed to write OTA data: 0x%X (%s)", error, esp_err_to_name(error));
         }
         error = esp_ota_end(update_handle);
-        if (error != esp_err_t::ESP_OK) {
+        if (error != ESP_OK) {
             ESP_LOGE("MAIN", "Failed to end OTA update: 0x%X (%s)", error, esp_err_to_name(error));
         }
 
         error = esp_ota_set_boot_partition(update_partition);
-        if (error != esp_err_t::ESP_OK) {
+        if (error != ESP_OK) {
             ESP_LOGE("MAIN", "Failed to set boot partition: 0x%X (%s)", error, esp_err_to_name(error));
         } else {
             ESP_LOGI("MAIN", "Updated with data from SD card, Restarting");

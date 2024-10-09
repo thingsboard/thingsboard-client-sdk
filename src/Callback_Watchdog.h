@@ -105,7 +105,7 @@ class Callback_Watchdog : public Callback<void> {
         };
 
         const esp_err_t error = esp_timer_create(&oneshot_timer_args, &m_oneshot_timer);
-        if (error != esp_err_t::ESP_OK) {
+        if (error != ESP_OK) {
             return;
         }
     }
