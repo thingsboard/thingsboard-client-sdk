@@ -1,0 +1,5 @@
+<map id="Callback_Watchdog" name="Callback_Watchdog">
+<area shape="rect" id="node1" title="Wrapper class which allows to start a timer and if it is not stopped in the given time then the callb..." alt="" coords="9,183,146,208"/>
+<area shape="rect" id="node2" href="$classCallback.html" title=" " alt="" coords="18,108,137,133"/>
+<area shape="rect" id="node3" href="$classCallback.html" title="General purpose safe callback wrapper. Expects either c&#45;style or c++ style function pointer,..." alt="" coords="5,5,149,45"/>
+</map>

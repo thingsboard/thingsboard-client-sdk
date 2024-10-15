@@ -1,0 +1,4 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classIUpdater.html" title="Updater interface that contains the method that a class that can be used to flash given binary data o..." alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="$classSDCard__Updater.html" title="IUpdater implementation that uses the c fopen function (https://cplusplus.com/reference/cstdio/fopen/..." alt="" coords="125,5,308,31"/>
+</map>

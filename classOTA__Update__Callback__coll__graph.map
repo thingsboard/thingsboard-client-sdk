@@ -1,0 +1,5 @@
+<map id="OTA_Update_Callback" name="OTA_Update_Callback">
+<area shape="rect" id="node1" title="Over the air firmware update callback wrapper, contains the needed configuration settings to create t..." alt="" coords="5,197,160,223"/>
+<area shape="rect" id="node2" href="$classCallback.html" title=" " alt="" coords="13,108,152,148"/>
+<area shape="rect" id="node3" href="$classCallback.html" title="General purpose safe callback wrapper. Expects either c&#45;style or c++ style function pointer,..." alt="" coords="11,5,155,45"/>
+</map>

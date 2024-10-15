@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classIAPI__Implementation.html" title="Base functionality required by all API implementation." alt="" coords="5,281,149,307"/>
+<area shape="rect" id="node2" href="$classAttribute__Request.html" title=" " alt="" coords="221,5,419,60"/>
+<area shape="rect" id="node3" href="$classShared__Attribute__Update.html" title=" " alt="" coords="217,84,423,139"/>
+<area shape="rect" id="node4" href="$classAttribute__Request.html" title="Handles the internal implementation of the ThingsBoard shared and server&#45;side Attribute API...." alt="" coords="211,163,429,217"/>
+<area shape="rect" id="node5" href="$classClient__Side__RPC.html" title="Handles the internal implementation of the ThingsBoard client side RPC API. See https://thingsboard...." alt="" coords="200,242,440,282"/>
+<area shape="rect" id="node6" href="$classOTA__Firmware__Update.html" title="Handles the internal implementation of the ThingsBoard over the air firmware update API...." alt="" coords="241,306,399,346"/>
+<area shape="rect" id="node7" href="$classProvision.html" title="Handles the internal implementation of the ThingsBoard provision API. See https://thingsboard...." alt="" coords="251,371,389,396"/>
+<area shape="rect" id="node8" href="$classServer__Side__RPC.html" title="Handles the internal implementation of the ThingsBoard server side RPC API. See https://thingsboard...." alt="" coords="197,421,443,461"/>
+<area shape="rect" id="node9" href="$classShared__Attribute__Update.html" title="Handles the internal implementation of the ThingsBoard shared attribute update API...." alt="" coords="207,485,433,540"/>
+</map>
