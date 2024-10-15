@@ -25,7 +25,7 @@ Please review the complete guide for `ESP32` Pico Kit `GPIO` control and `DHT22`
 
 Example usage for `Espressif` can be found in the `examples/0014-espressif_esp32_send_data` folder, all other code portions can be implemented the same way only initialization of the needed dependencies is slightly different. Meaning internal call to `ThingsBoard` works the same on both `Espressif` and `Arduino`.
 
-This is also the case, because the only always used dependency that is remaining, is [`ArduinoJson`](https://arduinojson.org/), which despite its name does not require any `Arduino` component.
+This is also the case, because the only always used dependency that is remaining, is [`ArduinoJson`](https://arduinojson.org/), which despite its name does not require any `Arduino` component. _Please Note:_ you must use `v6.x.x` of this library as `v7.x.x` is not yet supported. Please see [this issue](https://github.com/thingsboard/thingsboard-client-sdk/issues/186#issuecomment-1877641466) for details as to why. 
 
 ## Installation
 
@@ -75,7 +75,7 @@ To add an external library, we simply have to open `Tools` -> `Manage Libraries`
 Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
- - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — needed for dealing with the `JSON` payload that is sent to and received by `ThingsBoard`
+ - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — needed for dealing with the `JSON` payload that is sent to and received by `ThingsBoard`. _Please Note:_ you must use `v6.x.x` of this library as `v7.x.x` is not yet supported. Please see [this issue](https://github.com/thingsboard/thingsboard-client-sdk/issues/186#issuecomment-1877641466) for details as to why. 
 
 **Needs to be installed manually:**
  - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`.
