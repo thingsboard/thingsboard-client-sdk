@@ -4,8 +4,6 @@
 // Local includes.
 #include "Configuration.h"
 
-#if THINGSBOARD_ENABLE_OTA
-
 // Library includes.
 #if THINGSBOARD_USE_MBED_TLS
 #include <mbedtls/md.h>
@@ -41,23 +39,31 @@ class HashGenerator {
     /// @param data Data that should be added to generate the hash
     /// @param length Length of data entered
     /// @return Whether updating the hash for the given bytes was successful or not
-    bool update(uint8_t const * const data, size_t const & length);
+    bool update(uint8_t const * data, size_t const & length);
 
-    /// @brief Calculates the final hash value and stops the hash calculation no further calls to update() will work,
+    /// @brief Calculates the final hash string representation and stops the hash calculation no further calls to update() will work,
     /// instead the same context can be reused to start another hash calculation operation with start()
-    /// @param hash Output byte array that the hash value will be copied into, needs to be MBEDTLS_MD_MAX_SIZE (64 bytes).
-    /// Because it needs to be able to hold the biggest possible hash value which is SHA512 being 512 bit = 64 bytes big
+    /// @param hash_string Output string that the hash string representation will be copied into, needs to be big enough to hold the string representation of the mbedtls_md_type_t
+    /// meaning we require 2 bytes for every single byte of hash data, therefore the biggest hash string representation has a size of 128 bytes.
+    /// For the actual hash being SHA256, requiring 256 bits = 64 bytes * 2 for the string representation resulting in 128 bytes + 1 byte for the null termination character.
+    /// Recommended size of the array to pass is simply (MBEDTLS_MD_MAX_SIZE * 2) + 1, which will result in 129 bytes, but additionally automatically update as well if the underlying max size changes
     /// @return Whether stopping and caculating the final hash for the given bytes was successful or not
-    bool finish(unsigned char * hash);
+    bool finish(char * hash_string);
 
   private:
-    mbedtls_md_context_t m_ctx; // Context used to access the already written bytes and update them latter
-
     /// @brief Frees all internally allocated memory to ensure no memory leak occurs, additionally check if a hash calculation was ever started,
     /// before freeing, because freeing without having started a hash calculation causes a crash.
     void free();
-};
 
-#endif // THINGSBOARD_ENABLE_OTA
+    /// @brief Calculates the amount of bytes needed for the hash output.
+    /// Is used because we if we don't calculate the exact amount needed the final hash string representation, will always be filled up with hex 00 to the maximum size of the hash string representation being 129 bytes.
+    /// Which results in hash string representation with a lot of additional 00 at the end, which might make the further processing of those strings fail
+    /// @param type Supported type of hash that should be generated from this class
+    /// @return Amount of bytes needed to be allocated by the buffer that will hold the final hash that is then transformed into a string
+    size_t mbedtls_type_to_size(mbedtls_md_type_t const & type);
+
+    size_t               m_size = {}; // Actual size in bytes, depend on the mbedtls_md_type_t given in the start method
+    mbedtls_md_context_t m_ctx = {};  // Context used to access the already written bytes and update them latter
+};
 
 #endif // Hash_Generator_h

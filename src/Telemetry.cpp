@@ -1,3 +1,4 @@
+// Header include.
 #include "Telemetry.h"
 
 Telemetry::Telemetry()
@@ -8,7 +9,7 @@ Telemetry::Telemetry()
     // Nothing to do
 }
 
-Telemetry::Telemetry(char const * const key, bool value)
+Telemetry::Telemetry(char const * key, bool value)
   : m_type(DataType::TYPE_BOOL)
   , m_key(key)
   , m_value()
@@ -16,7 +17,7 @@ Telemetry::Telemetry(char const * const key, bool value)
     m_value.boolean = value;
 }
 
-Telemetry::Telemetry(char const * const key, char const * const value)
+Telemetry::Telemetry(char const * key, char const * value)
   : m_type(DataType::TYPE_STR)
   , m_key(key)
   , m_value()

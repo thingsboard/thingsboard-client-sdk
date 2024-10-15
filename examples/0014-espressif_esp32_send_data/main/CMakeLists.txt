@@ -5,12 +5,8 @@ set(srcs
     0014-espressif_esp32_send_data.cpp
     ../../../src/Arduino_HTTP_Client.cpp
     ../../../src/Arduino_MQTT_Client.cpp
-    ../../../src/Callback_Watchdog.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
     ../../../src/Arduino_ESP8266_Updater.cpp
-    ../../../src/Espressif_Updater.cpp
-    ../../../src/SDCard_Updater.cpp
-    ../../../src/Espressif_MQTT_Client.cpp
     ../../../src/HashGenerator.cpp
     ../../../src/Helper.cpp
     ../../../src/OTA_Update_Callback.cpp

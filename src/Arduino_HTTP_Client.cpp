@@ -3,19 +3,19 @@
 
 #ifdef ARDUINO
 
-Arduino_HTTP_Client::Arduino_HTTP_Client(Client& transport_client, char const * const host, uint16_t const & port) :
+Arduino_HTTP_Client::Arduino_HTTP_Client(Client& transport_client, char const * host, uint16_t port) :
     m_http_client(transport_client, host, port)
 {
     // Nothing to do
 }
 
-void Arduino_HTTP_Client::set_keep_alive(bool const & keep_alive) {
+void Arduino_HTTP_Client::set_keep_alive(bool keep_alive) {
     if (keep_alive) {
         m_http_client.connectionKeepAlive();
     }
 }
 
-int Arduino_HTTP_Client::connect(char const * const host, uint16_t const & port) {
+int Arduino_HTTP_Client::connect(char const * host, uint16_t port) {
     return m_http_client.connect(host, port);
 }
 
@@ -23,7 +23,7 @@ void Arduino_HTTP_Client::stop() {
     m_http_client.stop();
 }
 
-int Arduino_HTTP_Client::post(char const * const url_path, char const * const content_type, char const * const request_body) {
+int Arduino_HTTP_Client::post(char const * url_path, char const * content_type, char const * request_body) {
     return m_http_client.post(url_path, content_type, request_body);
 }
 
@@ -31,7 +31,7 @@ int Arduino_HTTP_Client::get_response_status_code() {
     return m_http_client.responseStatusCode();
 }
 
-int Arduino_HTTP_Client::get(char const * const url_path) {
+int Arduino_HTTP_Client::get(char const * url_path) {
     return m_http_client.get(url_path);
 }
 

@@ -2,17 +2,13 @@
 #define IMQTT_Client_h
 
 // Local include.
-#include "Configuration.h"
+#include "Callback.h"
+#include "DefaultLogger.h"
 
 // Library include.
-#if THINGSBOARD_ENABLE_STL
-#include <functional>
-#endif // THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 #include <Print.h>
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
-#include <stdint.h>
-#include <stddef.h>
 
 
 /// @brief MQTT Client interface that contains the method that a class that can be used to send and receive data over an MQTT connection should implement.
@@ -34,23 +30,16 @@ class IMQTT_Client : public Print {
 class IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
   public:
-      /// @brief Callback signature
-#if THINGSBOARD_ENABLE_STL
-    using data_function = std::function<void(char * topic, uint8_t * payload, unsigned int length)>;
-    using connect_function = std::function<void(void)>;
-#else
-    using data_function = void (*)(char * topic, uint8_t * payload, unsigned int length);
-    using connect_function = void (*)(void);
-#endif // THINGSBOARD_ENABLE_STL
-
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
-    /// as well as the payload data and the size of that payload data
+    /// as well as the payload data and the size of that payload data. Directly set by the used ThingsBoard client to its internal methods,
+    /// therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on received MQTT response
-    virtual void set_data_callback(data_function callback) = 0;
+    virtual void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) = 0;
 
-    /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker
+    /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker.
+    /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on established MQTT connection
-    virtual void set_connect_callback(connect_function callback) = 0;
+    virtual void set_connect_callback(Callback<void>::function callback) = 0;
 
     /// @brief Changes the size of the buffer for sent and received MQTT messages,
     /// using a bigger value than uint16_t for passing the buffer size does not make any sense because the maximum message size received
@@ -59,7 +48,7 @@ class IMQTT_Client {
     /// expected behaviour is that, if bigger packets are received they are discarded and a warning is printed to the console
     /// and if we attempt to send data that is bigger, it will simply not be sent and a message is printed to the console instead
     /// @return Whether allocating the needed memory for the given buffer_size was successful or not
-    virtual bool set_buffer_size(uint16_t const & buffer_size) = 0;
+    virtual bool set_buffer_size(uint16_t buffer_size) = 0;
 
     /// @brief Gets the previously set size of the internal buffer size for sent and received MQTT
     /// @return Internal size of the buffer
@@ -75,14 +64,14 @@ class IMQTT_Client {
     /// However if Over the Air udpates are enabled secure communication should definetly be enabled, because if that is not done a 3rd party might impersonate the server sending a malicious payload,
     /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or make it otherwise unusable.
     /// See https://stackoverflow.blog/2020/12/14/security-considerations-for-ota-software-updates-for-iot-gateway-devices/ for more information on the aforementioned security risk
-    virtual void set_server(char const * const domain, uint16_t const & port) = 0;
+    virtual void set_server(char const * domain, uint16_t port) = 0;
 
     /// @brief Connects to the previously with set_server configured server instance that should be connected to over the previously defined port
     /// @param client_id Client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker
     /// @param user_name Client username that is used to authenticate, who is connecting over MQTT
     /// @param password Client password that is used to authenticate, who is connecting over MQTT
     /// @return Whether the client could establish the connection successfully or not
-    virtual bool connect(char const * const client_id, char const * const user_name, char const * const password) = 0;
+    virtual bool connect(char const * client_id, char const * user_name, char const * password) = 0;
 
     /// @brief Disconnects from a previously connected server and should release all used resources
     virtual void disconnect() = 0;
@@ -97,20 +86,20 @@ class IMQTT_Client {
     /// @param payload Payload containg the json data that should be sent
     /// @param length Length of the payload in bytes
     /// @return Whether publishing the payload on the given topic was successful or not
-    virtual bool publish(char const * const topic, uint8_t const * const payload, size_t const & length) = 0;
+    virtual bool publish(char const * topic, uint8_t const * payload, size_t const & length) = 0;
 
     /// @brief Subscribes to MQTT message on the given topic, which will cause an internal callback to be called for each message received on that topic from the server,
     /// it should then, call the previously configured callback with set_data_callback() with the received data
     /// @param topic Topic we want to receive a notification about if messages are sent by the server
     /// @return Wheter subscribing the given topic was possible or not, should return false and a warning should be printed,
     /// if the connection has been lost or the topic does not exist
-    virtual bool subscribe(char const * const topic) = 0;
+    virtual bool subscribe(char const * topic) = 0;
   
     /// @brief Unsubscribes to previously subscribed MQTT message on the given topic
     /// @param topic Topic we want to stop receiving a notification about if messages are sent by the server
     /// @return Wheter unsubscribing the given topic was possible or not, should return false and a warning should be printed,
     /// if the connection has been lost or the topic was not previously subscribed
-    virtual bool unsubscribe(char const * const topic) = 0;
+    virtual bool unsubscribe(char const * topic) = 0;
 
     /// @brief Returns our current connection status to MQTT, true meaning we are connected,
     /// false meaning we have been disconnected or have not established a connection yet
@@ -125,7 +114,7 @@ class IMQTT_Client {
     /// @param topic Topic that the message is sent over, where different MQTT topics expect a different kind of payload
     /// @param length Length of the payload in bytes
     /// @return Whether starting to publish on the given topic was successful or not
-    virtual bool begin_publish(char const * const topic, size_t const & length) = 0;
+    virtual bool begin_publish(char const * topic, size_t const & length) = 0;
 
     /// @brief Finishes any publish message started with begin_publish()
     /// @return Whether the complete packet was sent successfully or not
@@ -148,7 +137,7 @@ class IMQTT_Client {
     /// @param buffer Buffer containing part of the payload that should be sent
     /// @param size Amount of bytes contained in the buffer that should be sent
     /// @return The amount of bytes successfully written
-    virtual size_t write(uint8_t const * const buffer, size_t const & size) = 0;
+    virtual size_t write(uint8_t const * buffer, size_t const & size) = 0;
 
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 };

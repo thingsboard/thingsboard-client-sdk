@@ -5,22 +5,14 @@ set(srcs
     0018-espressif_esp32_provision_device.cpp
     ../../../src/Arduino_HTTP_Client.cpp
     ../../../src/Arduino_MQTT_Client.cpp
-    ../../../src/Attribute_Request_Callback.cpp
-    ../../../src/Callback_Watchdog.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
     ../../../src/Arduino_ESP8266_Updater.cpp
-    ../../../src/Espressif_Updater.cpp
-    ../../../src/Espressif_MQTT_Client.cpp
     ../../../src/HashGenerator.cpp
     ../../../src/Helper.cpp
     ../../../src/OTA_Update_Callback.cpp
     ../../../src/Provision_Callback.cpp
-    ../../../src/RPC_Callback.cpp
     ../../../src/RPC_Request_Callback.cpp
-    ../../../src/RPC_Response.cpp
-    ../../../src/Shared_Attribute_Callback.cpp
     ../../../src/Telemetry.cpp
-    ../../../src/ThingsBoardDefaultLogger.cpp
 )
 
 idf_component_register(
