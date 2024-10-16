@@ -462,7 +462,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool sendTelemtryString(char const * json) {
+    bool sendTelemetryString(char const * json) {
         return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
