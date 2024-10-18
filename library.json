@@ -9,7 +9,7 @@
     "dependencies": {
         "bblanchon/ArduinoJson": "^6.21.5"
     },
-    "version": "0.14.0",
+    "version": "0.14.1",
     "examples": "examples/*/*.ino",
     "frameworks": "*",
     "license": "MIT"
