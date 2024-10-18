@@ -869,7 +869,7 @@ class ThingsBoardSized {
 
     static size_t * staticGetRequestID() {
         if (m_subscribedInstance == nullptr) {
-            return false;
+            return nullptr;
         }
         return m_subscribedInstance->getRequestID();
     }
