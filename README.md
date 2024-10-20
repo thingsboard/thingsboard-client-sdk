@@ -670,10 +670,6 @@ class CustomLogger {
   public:
     template<typename ...Args>
     static int printfln(char const * format, Args const &... args) {
-        // Check if variadic template contains any actual additional arguments that should be inserted into format message
-        if (constexpr sizeof...(Args) == 0U) {
-            return 0;
-        }
         return 0;
     }
 };
