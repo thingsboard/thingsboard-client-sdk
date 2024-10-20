@@ -200,7 +200,7 @@ class ThingsBoardSized {
     bool setBufferSize(uint16_t buffer_size) {
         bool const result = m_client.set_buffer_size(buffer_size);
         if (!result) {
-            Logger::println(UNABLE_TO_ALLOCATE_BUFFER);
+            Logger::printfln(UNABLE_TO_ALLOCATE_BUFFER);
         }
         return result;
     }
@@ -277,13 +277,13 @@ class ThingsBoardSized {
         // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
-            Logger::println(UNABLE_TO_ALLOCATE_JSON);
+            Logger::printfln(UNABLE_TO_ALLOCATE_JSON);
             return false;
         }
         // Check if inserting any of the internal values failed because the JsonDocument was too small,
         // if it did the overflowed() method will return true. See https://arduinojson.org/v6/api/jsondocument/overflowed/ for more information
         if (source.overflowed()) {
-            Logger::println(JSON_SIZE_TO_SMALL);
+            Logger::printfln(JSON_SIZE_TO_SMALL);
             return false;
         }
         bool result = false;
@@ -304,7 +304,7 @@ class ThingsBoardSized {
         if (json_size > getMaximumStackSize()) {
             char* json = new char[json_size]();
             if (serializeJson(source, json, json_size) < json_size - 1) {
-                Logger::println(UNABLE_TO_SERIALIZE_JSON);
+                Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             }
             else {
                 result = Send_Json_String(topic, json);
@@ -317,7 +317,7 @@ class ThingsBoardSized {
         else {
             char json[json_size] = {};
             if (serializeJson(source, json, json_size) < json_size - 1) {
-                Logger::println(UNABLE_TO_SERIALIZE_JSON);
+                Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
                 return result;
             }
             result = Send_Json_String(topic, json);
@@ -542,13 +542,13 @@ class ThingsBoardSized {
     /// @return Whether sending the data was successful or not
     bool Serialize_Json(char const * topic, JsonDocument const & source, size_t const & json_size) {
         if (!m_client.begin_publish(topic, json_size)) {
-            Logger::println(UNABLE_TO_SERIALIZE_JSON);
+            Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             return false;
         }
         BufferingPrint buffered_print(m_client, getBufferingSize());
         size_t const bytes_serialized = serializeJson(source, buffered_print);
         if (bytes_serialized < json_size) {
-            Logger::println(UNABLE_TO_SERIALIZE_JSON);
+            Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             return false;
         }
         buffered_print.flush();
@@ -608,7 +608,7 @@ class ThingsBoardSized {
     bool connectToHost(char const * access_token, char const * client_id, char const * password) {
         bool const connection_result = m_client.connect(client_id, access_token, password);
         if (!connection_result) {
-            Logger::println(CONNECT_FAILED);
+            Logger::printfln(CONNECT_FAILED);
         }
         return connection_result;
     }
@@ -643,7 +643,7 @@ class ThingsBoardSized {
 
         StaticJsonDocument<JSON_OBJECT_SIZE(1)> json_buffer;
         if (!t.SerializeKeyValue(json_buffer)) {
-            Logger::println(UNABLE_TO_SERIALIZE);
+            Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
         return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
@@ -681,14 +681,14 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
         if (std::any_of(first, last, [&json_buffer](Telemetry const & data) { return !data.SerializeKeyValue(json_buffer); })) {
-            Logger::println(UNABLE_TO_SERIALIZE);
+            Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
 #else
         for (auto it = first; it != last; ++it) {
             auto const & data = *it;
             if (!data.SerializeKeyValue(json_buffer)) {
-                Logger::println(UNABLE_TO_SERIALIZE);
+                Logger::printfln(UNABLE_TO_SERIALIZE);
                 return false;
             }
         }

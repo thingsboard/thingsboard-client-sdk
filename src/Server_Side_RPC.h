@@ -112,7 +112,7 @@ class Server_Side_RPC : public IAPI_Implementation {
     void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         if (!data.containsKey(RPC_METHOD_KEY)) {
 #if THINGSBOARD_ENABLE_DEBUG
-            Logger::println(SERVER_RPC_METHOD_NULL);
+            Logger::printfln(SERVER_RPC_METHOD_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
             return;
         }
@@ -134,7 +134,7 @@ class Server_Side_RPC : public IAPI_Implementation {
 #endif // THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_DEBUG
             if (!data.containsKey(RPC_PARAMS_KEY)) {
-                Logger::println(NO_RPC_PARAMS_PASSED);
+                Logger::printfln(NO_RPC_PARAMS_PASSED);
             }
 #endif // THINGSBOARD_ENABLE_DEBUG
 
@@ -154,7 +154,7 @@ class Server_Side_RPC : public IAPI_Implementation {
 
             if (json_buffer.isNull()) {
 #if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(RPC_RESPONSE_NULL);
+                Logger::printfln(RPC_RESPONSE_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 return;
             }

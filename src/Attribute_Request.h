@@ -106,7 +106,7 @@ class Attribute_Request : public IAPI_Implementation {
             char const * attribute_response_key = attribute_request.Get_Attribute_Key();
             if (attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_NOT_FOUND);
+                Logger::printfln(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 goto delete_callback;
             }
@@ -182,13 +182,13 @@ class Attribute_Request : public IAPI_Implementation {
         // Check if any sharedKeys were requested
         if (attributes.empty()) {
 #if THINGSBOARD_ENABLE_DEBUG
-            Logger::println(NO_KEYS_TO_REQUEST);
+            Logger::printfln(NO_KEYS_TO_REQUEST);
 #endif // THINGSBOARD_ENABLE_DEBUG
             return false;
         }
         else if (attribute_request_key == nullptr || attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-            Logger::println(ATT_KEY_NOT_FOUND);
+            Logger::printfln(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
             return false;
         }
@@ -227,7 +227,7 @@ class Attribute_Request : public IAPI_Implementation {
         for (const auto & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_IS_NULL);
+                Logger::printfln(ATT_KEY_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 continue;
             }
@@ -245,7 +245,7 @@ class Attribute_Request : public IAPI_Implementation {
 
         size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
-            Logger::println(REQUEST_ID_NULL);
+            Logger::printfln(REQUEST_ID_NULL);
             return false;
         }
         auto & request_id = *p_request_id;

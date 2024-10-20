@@ -91,7 +91,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @return Whether subscribing the given callback was successful or not
     bool Start_Firmware_Update(OTA_Update_Callback const & callback) {
         if (!Prepare_Firmware_Settings(callback))  {
-            Logger::println(RESETTING_FAILED);
+            Logger::printfln(RESETTING_FAILED);
             return false;
         }
 
@@ -129,7 +129,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @return Whether subscribing the given callback was successful or not
     bool Subscribe_Firmware_Update(OTA_Update_Callback const & callback) {
         if (!Prepare_Firmware_Settings(callback))  {
-            Logger::println(RESETTING_FAILED);
+            Logger::printfln(RESETTING_FAILED);
             return false;
         }
 
@@ -245,7 +245,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 
         size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
-            Logger::println(REQUEST_ID_NULL);
+            Logger::printfln(REQUEST_ID_NULL);
             return false;
         }
         auto & request_id = *p_request_id;
@@ -262,7 +262,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         if (!m_subscribe_topic_callback.Call_Callback(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
             char message[JSON_STRING_SIZE(strlen(SUBSCRIBE_TOPIC_FAILED)) + JSON_STRING_SIZE(strlen(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC))] = {};
             (void)snprintf(message, sizeof(message), SUBSCRIBE_TOPIC_FAILED, FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
-            Logger::println(message);
+            Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return false;
         }
@@ -306,7 +306,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @brief Handler if the firmware shared attribute request times out without getting a response.
     /// Is used to signal that the update could not be started, because the current firmware information could not be fetched
     void Request_Timeout() {
-        Logger::println(NO_FW_REQUEST_RESPONSE);
+        Logger::printfln(NO_FW_REQUEST_RESPONSE);
         Firmware_Send_State(FW_STATE_FAILED, NO_FW_REQUEST_RESPONSE);
     }
 
@@ -316,7 +316,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     void Firmware_Shared_Attribute_Received(JsonObjectConst const & data) {
         // Check if firmware is available for our device
         if (!data.containsKey(FW_VER_KEY) || !data.containsKey(FW_TITLE_KEY) || !data.containsKey(FW_CHKS_KEY) || !data.containsKey(FW_CHKS_ALGO_KEY) || !data.containsKey(FW_SIZE_KEY)) {
-            Logger::println(NO_FW);
+            Logger::printfln(NO_FW);
             Firmware_Send_State(FW_STATE_FAILED, NO_FW);
             return;
         }
@@ -331,7 +331,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         char const * curr_fw_version = m_fw_callback.Get_Firmware_Version();
 
         if (fw_title == nullptr || fw_version == nullptr || curr_fw_title == nullptr || curr_fw_version == nullptr || fw_algorithm == nullptr || fw_checksum == nullptr) {
-            Logger::println(EMPTY_FW);
+            Logger::printfln(EMPTY_FW);
             Firmware_Send_State(FW_STATE_FAILED, EMPTY_FW);
             return;
         }
@@ -346,7 +346,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
             char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(fw_title)) + JSON_STRING_SIZE(strlen(curr_fw_title))] = {};
             (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, fw_title, curr_fw_title);
-            Logger::println(message);
+            Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return;
         }
@@ -368,7 +368,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         else {
             char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(strlen(fw_algorithm))] = {};
             (void)snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
-            Logger::println(message);
+            Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
             return;
         }
@@ -381,12 +381,12 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         }
 
 #if THINGSBOARD_ENABLE_DEBUG
-        Logger::println(PAGE_BREAK);
-        Logger::println(NEW_FW);
+        Logger::printfln(PAGE_BREAK);
+        Logger::printfln(NEW_FW);
         char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))] = {};
         (void)snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
-        Logger::println(firmware);
-        Logger::println(DOWNLOADING_FW);
+        Logger::printfln(firmware);
+        Logger::printfln(DOWNLOADING_FW);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
         // Calculate the number of chuncks we need to request,
@@ -399,7 +399,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 
         // Increase size of receive buffer
         if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(chunk_size + 50U)) {
-            Logger::println(NOT_ENOUGH_RAM);
+            Logger::printfln(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
             m_fw_callback.Call_Callback(false);
             return;
