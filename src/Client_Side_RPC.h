@@ -49,7 +49,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         char const * method_name = callback.Get_Name();
 
         if (Helper::stringIsNullorEmpty(method_name)) {
-            Logger::println(CLIENT_RPC_METHOD_NULL);
+            Logger::printfln(CLIENT_RPC_METHOD_NULL);
             return false;
         }
         RPC_Request_Callback * registered_callback = nullptr;
@@ -90,7 +90,7 @@ class Client_Side_RPC : public IAPI_Implementation {
 
         size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
-            Logger::println(REQUEST_ID_NULL);
+            Logger::printfln(REQUEST_ID_NULL);
             return false;
         }
         auto & request_id = *p_request_id;

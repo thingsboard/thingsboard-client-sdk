@@ -672,10 +672,6 @@ class CustomLogger {
     static int printfln(char const * format, Args const &... args) {
         return 0;
     }
-
-    static int println(char const * message) {
-        return 0;
-    }
 };
 ```
 

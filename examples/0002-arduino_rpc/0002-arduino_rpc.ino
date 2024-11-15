@@ -53,7 +53,7 @@ WiFiEspClient espClient;
 Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
-const IAPI_Implementation* apis[1U] = {
+IAPI_Implementation* apis[1U] = {
   &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size

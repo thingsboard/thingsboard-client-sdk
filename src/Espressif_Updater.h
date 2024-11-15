@@ -30,14 +30,14 @@ class Espressif_Updater : public IUpdater {
         esp_partition_t const * configured = esp_ota_get_boot_partition();
 
         if (configured != running) {
-            Logger::println(INVALID_OTA_PARTIION);
+            Logger::printfln(INVALID_OTA_PARTIION);
             return false;
         }
 
         esp_partition_t const * update_partition = esp_ota_get_next_update_partition(nullptr);
 
         if (update_partition == nullptr) {
-            Logger::println(MISSING_OTA_APP);
+            Logger::printfln(MISSING_OTA_APP);
             return false;
         }
 

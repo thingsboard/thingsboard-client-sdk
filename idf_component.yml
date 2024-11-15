@@ -1,4 +1,4 @@
-version: "0.14.0"
+version: "0.14.1"
 description: Provides access to ThingsBoard platform over the MQTT protocol or alternatively over HTTP/S.
 url: https://github.com/thingsboard/thingsboard-client-sdk
 dependencies:
