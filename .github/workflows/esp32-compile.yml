@@ -71,7 +71,7 @@ jobs:
             - examples/0011-esp8266_esp32_subscribe_OTA_MQTT/0011-esp8266_esp32_subscribe_OTA_MQTT.ino
             - examples/0012-esp8266_esp32_request_shared_attribute/0012-esp8266_esp32_request_shared_attribute.ino
             - examples/0013-esp8266_esp32_request_rpc/0013-esp8266_esp32_request_rpc.ino
-            - examples/0019-esp8266_esp32_send_attributes/0019_esp8266_esp32_send_attributes.ino
+            - examples/0019-esp8266_esp32_send_attributes/0019-esp8266_esp32_send_attributes.ino
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
           enable-warnings-report: 'true'
 
