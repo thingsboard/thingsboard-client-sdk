@@ -224,10 +224,9 @@ void loop() {
     { ACTIVE_KEY,       true     },
   };
 
-  Telemetry* begin = data;
-  Telemetry* end = data + ATTRIBUTES_SIZE;
+  Telemetry* begin = attributes;
+  Telemetry* end = attributes + ATTRIBUTES_SIZE;
   tb.sendAttributes<ATTRIBUTES_SIZE>(begin, end);
-
 
 #if !USING_HTTPS
   tb.loop();
