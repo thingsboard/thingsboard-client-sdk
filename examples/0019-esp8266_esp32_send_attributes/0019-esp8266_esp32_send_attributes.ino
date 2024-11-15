@@ -226,7 +226,11 @@ void loop() {
 
   Telemetry* begin = attributes;
   Telemetry* end = attributes + ATTRIBUTES_SIZE;
+#if THINGSBOARD_ENABLE_DYNAMIC
+  tb.sendAttributes(begin, end);
+#else
   tb.sendAttributes<ATTRIBUTES_SIZE>(begin, end);
+#endif // THINGSBOARD_ENABLE_DYNAMIC
 
 #if !USING_HTTPS
   tb.loop();
