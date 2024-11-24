@@ -108,7 +108,7 @@ class Provision : public IAPI_Implementation {
     }
 
     bool Compare_Response_Topic(char const * topic) const override {
-        return strncmp(PROV_RESPONSE_TOPIC, topic, JSON_STRING_SIZE(strlen(PROV_RESPONSE_TOPIC))) == 0;
+        return strncmp(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC) + 1) == 0;
     }
 
     bool Unsubscribe() override {

@@ -63,7 +63,7 @@ class Helper {
     /// @return Total size required for the string that would be produced by serializeJson + 1 byte for the string null terminator
     template <typename TSource>
     static size_t Measure_Json(TSource const & source) {
-        return JSON_STRING_SIZE(measureJson(source));
+        return measureJson(source) + 1;
     }
 
     /// @brief Removes the element with the given index, which allows to use data containers that do not have a random-access iterator.

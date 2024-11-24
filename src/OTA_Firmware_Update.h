@@ -260,7 +260,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @return Whether subscribing to the firmware response topic was successful or not
     bool Firmware_OTA_Subscribe() {
         if (!m_subscribe_topic_callback.Call_Callback(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
-            char message[JSON_STRING_SIZE(strlen(SUBSCRIBE_TOPIC_FAILED)) + JSON_STRING_SIZE(strlen(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC))] = {};
+            char message[strlen(SUBSCRIBE_TOPIC_FAILED) + strlen(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC) + 2] = {};
             (void)snprintf(message, sizeof(message), SUBSCRIBE_TOPIC_FAILED, FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
             Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
@@ -344,7 +344,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device
         // and downloading it on this device could possibly cause hardware issues or even destroy the device
         else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
-            char message[JSON_STRING_SIZE(strlen(FW_NOT_FOR_US)) + JSON_STRING_SIZE(strlen(fw_title)) + JSON_STRING_SIZE(strlen(curr_fw_title))] = {};
+            char message[strlen(FW_NOT_FOR_US) + strlen(fw_title) + strlen(curr_fw_title) + 3] = {};
             (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, fw_title, curr_fw_title);
             Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
@@ -366,7 +366,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
             fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
         }
         else {
-            char message[JSON_STRING_SIZE(strlen(FW_CHKS_ALGO_NOT_SUPPORTED)) + JSON_STRING_SIZE(strlen(fw_algorithm))] = {};
+            char message[strlen(FW_CHKS_ALGO_NOT_SUPPORTED) + strlen(fw_algorithm) + 2] = {};
             (void)snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
             Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
@@ -383,7 +383,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(PAGE_BREAK);
         Logger::printfln(NEW_FW);
-        char firmware[JSON_STRING_SIZE(strlen(FROM_TOO)) + JSON_STRING_SIZE(strlen(curr_fw_version)) + JSON_STRING_SIZE(strlen(fw_version))] = {};
+        char firmware[strlen(FROM_TOO) + strlen(curr_fw_version) + strlen(fw_version) + 3] = {};
         (void)snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
         Logger::printfln(firmware);
         Logger::printfln(DOWNLOADING_FW);

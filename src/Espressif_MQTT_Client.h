@@ -416,15 +416,20 @@ private:
             case esp_mqtt_event_id_t::MQTT_EVENT_DISCONNECTED:
                 m_connected = false;
                 break;
-            case esp_mqtt_event_id_t::MQTT_EVENT_DATA:
+            case esp_mqtt_event_id_t::MQTT_EVENT_DATA: {
                 // Check wheter the given message has not bee received completly, but instead would be received in multiple chunks,
                 // if it were we discard the message because receiving a message over multiple chunks is currently not supported
                 if (event->data_len != event->total_data_len) {
                     Logger::printfln(MQTT_DATA_EXCEEDS_BUFFER, event->total_data_len, get_buffer_size());
                     break;
                 }
-                m_received_data_callback.Call_Callback(event->topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
+                // Topic is not null terminated, to fix this issue we copy the topic string.
+                // This overhead is acceptable, because we nearly always copy only a few bytes (around 20), meaning the overhead is insignificant.
+                char topic[event->topic_len + 1] = {};
+                strncpy(topic, event->topic, event->topic_len);
+                m_received_data_callback.Call_Callback(topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
                 break;
+            }
             default:
                 // Nothing to do
                 break;
