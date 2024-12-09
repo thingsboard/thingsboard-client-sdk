@@ -39,7 +39,8 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint16_t MAX_MESSAGE_SIZE = 256U;
+constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 256U;
+constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 256U;
 
 // Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
@@ -111,7 +112,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &attr_request
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
 
 // Statuses for requesting of attributes
 bool requestedClient = false;

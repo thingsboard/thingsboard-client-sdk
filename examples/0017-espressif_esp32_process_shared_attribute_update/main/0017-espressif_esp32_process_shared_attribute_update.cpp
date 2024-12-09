@@ -37,7 +37,8 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint16_t MAX_MESSAGE_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 128U;
 
 // Maximum amount of attributs we can request or subscribe, has to be set both in the ThingsBoard template list and Attribute_Request_Callback template list
 // and should be the same as the amount of variables in the passed array. If it is less not all variables will be requested or subscribed
@@ -96,7 +97,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &shared_update
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

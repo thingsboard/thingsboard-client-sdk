@@ -58,7 +58,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
       , m_send_json_string_callback()
       , m_subscribe_topic_callback()
       , m_unsubscribe_topic_callback()
-      , m_get_size_callback()
+      , m_get_receive_size_callback()
+      , m_get_send_size_callback()
       , m_set_buffer_size_callback()
       , m_get_request_id_callback()
       , m_fw_callback()
@@ -216,13 +217,14 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_subscribe_api_callback.Call_Callback(m_fw_attribute_request);
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_subscribe_api_callback.Set_Callback(subscribe_api_callback);
         m_send_json_callback.Set_Callback(send_json_callback);
         m_send_json_string_callback.Set_Callback(send_json_string_callback);
         m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
         m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
-        m_get_size_callback.Set_Callback(get_size_callback);
+        m_get_receive_size_callback.Set_Callback(get_receive_size_callback);
+        m_get_send_size_callback.Set_Callback(get_send_size_callback);
         m_set_buffer_size_callback.Set_Callback(set_buffer_size_callback);
         m_get_request_id_callback.Set_Callback(get_request_id_callback);
     }
@@ -277,7 +279,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         // to allow to receive ota chunck packets that might be much bigger than the normal
         // buffer size would allow, therefore we return to the previous value to decrease overall memory usage
         if (m_changed_buffer_size) {
-            (void)m_set_buffer_size_callback.Call_Callback(m_previous_buffer_size);
+            (void)m_set_buffer_size_callback.Call_Callback(m_previous_buffer_size, m_get_send_size_callback.Call_Callback());
         }
         // Reset now not needed private member variables
         m_fw_callback = OTA_Update_Callback();
@@ -394,11 +396,11 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
 
         // Get the previous buffer size and cache it so the previous settings can be restored.
-        m_previous_buffer_size = m_get_size_callback.Call_Callback();
+        m_previous_buffer_size = m_get_receive_size_callback.Call_Callback();
         m_changed_buffer_size = m_previous_buffer_size < (chunk_size + 50U);
 
         // Increase size of receive buffer
-        if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(chunk_size + 50U)) {
+        if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(chunk_size + 50U, m_get_send_size_callback.Call_Callback())) {
             Logger::printfln(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
             m_fw_callback.Call_Callback(false);
@@ -455,8 +457,9 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     Callback<bool, char const * const, char const * const>                   m_send_json_string_callback = {};         // Send json string callback
     Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};          // Subscribe mqtt topic client callback
     Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};        // Unubscribe mqtt topic client callback
-    Callback<uint16_t>                                                       m_get_size_callback = {};                 // Get client buffer size callback
-    Callback<bool, uint16_t>                                                 m_set_buffer_size_callback = {};          // Set client buffer size callback
+    Callback<uint16_t>                                                       m_get_receive_size_callback = {};         // Get client receive buffer size callback
+    Callback<uint16_t>                                                       m_get_send_size_callback = {};            // Get client send buffer size callback
+    Callback<bool, uint16_t, uint16_t>                                       m_set_buffer_size_callback = {};          // Set client buffer size callback
     Callback<size_t *>                                                       m_get_request_id_callback = {};           // Get internal request id callback
 
     OTA_Update_Callback                                                      m_fw_callback = {};                       // OTA update response callback

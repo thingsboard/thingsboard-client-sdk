@@ -38,7 +38,8 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint16_t MAX_MESSAGE_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 128U;
 
 #if ENCRYPTED
 // See https://comodosslstore.com/resources/what-is-a-root-ca-certificate-and-how-do-i-download-it/
@@ -85,7 +86,7 @@ constexpr char HUMIDITY_KEY[] = "humidity";
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client<> mqttClient;
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;

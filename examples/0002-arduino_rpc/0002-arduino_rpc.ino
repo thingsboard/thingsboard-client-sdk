@@ -29,7 +29,8 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded
-constexpr uint16_t MAX_MESSAGE_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 128U;
+constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 128U;
 
 // Baud rate for the debugging serial connection
 // If the Serial output is mangled, ensure to change the monitor speed accordingly to this variable
@@ -56,8 +57,9 @@ Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
 IAPI_Implementation* apis[1U] = {
   &rpc
 };
-// Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis + 0U, apis + 1U);
+// Initialize ThingsBoard instance with the maximum needed buffer sizes
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis + 0U, apis + 1U);
+
 
 // Statuses for subscribing to rpc
 bool subscribed = false;

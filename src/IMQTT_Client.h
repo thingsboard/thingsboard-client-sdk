@@ -44,15 +44,24 @@ class IMQTT_Client {
     /// @brief Changes the size of the buffer for sent and received MQTT messages,
     /// using a bigger value than uint16_t for passing the buffer size does not make any sense because the maximum message size received
     /// or sent by MQTT can never be bigger than 64K, because it relies on TCP and the TCP size limit also uses a uint16_t internally for the size parameter
-    /// @param buffer_size Maximum amount of data that can be either received or sent via MQTT at once,
-    /// expected behaviour is that, if bigger packets are received they are discarded and a warning is printed to the console
-    /// and if we attempt to send data that is bigger, it will simply not be sent and a message is printed to the console instead
-    /// @return Whether allocating the needed memory for the given buffer_size was successful or not
-    virtual bool set_buffer_size(uint16_t buffer_size) = 0;
+    /// @param receive_buffer_size Maximum amount of data that can be received via MQTT at once,
+    /// expected behaviour is that, if bigger packets are received they are discarded and a warning is printed to the console.
+    /// Should be big enough to hold the biggest response that is expected to be ever received by the device at once.
+    /// @param send_buffer_size Maximum amount of data that can be sent via MQTT at once,
+    /// expected behaviour is that, if we attempt to send data that is bigger, it will simply not be sent and a message is printed to the console instead.
+    /// Should be big enough to hold the biggest request that is expected to be ever sent by the device at once.
+    /// Alternatively it is possible if THINGSBOARD_ENABLE_STREAM_UTILS is enabled, requires using the Arduino framework and simply installing StreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library,
+    /// to only set the value of this paramter to the same value as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes
+    /// @return Whether allocating the needed memory for the given buffer sizes was successful or not
+    virtual bool set_buffer_size(uint16_t receive_buffer_size, uint16_t send_buffer_size) = 0;
 
-    /// @brief Gets the previously set size of the internal buffer size for sent and received MQTT
+    /// @brief Gets the previously set size of the internal buffer size for sent MQTT data
     /// @return Internal size of the buffer
-    virtual uint16_t get_buffer_size() = 0;
+    virtual uint16_t get_receive_buffer_size() = 0;
+
+    /// @brief Gets the previously set size of the internal buffer size for received MQTT data
+    /// @return Internal size of the buffer
+    virtual uint16_t get_send_buffer_size() = 0;
 
     /// @brief Configures the server and port that the client should connect to MQTT over,
     /// should be called atleast once before calling connect() so it is clear which server to connect too
