@@ -76,10 +76,10 @@ Following dependencies are installed automatically or must be installed, too:
 
 **Installed automatically:**
  - [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) — needed for dealing with the `JSON` payload that is sent to and received by `ThingsBoard`. _Please Note:_ you must use `v6.x.x` of this library as `v7.x.x` is not yet supported. Please see [this issue](https://github.com/thingsboard/thingsboard-client-sdk/issues/186#issuecomment-1877641466) for details as to why. 
+ - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`. Only installed if this library is used over `Arduino IDE` or `PlatformIO` with the Arduino framework.
+ - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`. Only installed if this library is used over `Arduino IDE` or `PlatformIO` with the Arduino framework.
 
 **Needs to be installed manually:**
- - [MQTT PubSub Client](https://github.com/thingsboard/pubsubclient) — for interacting with `MQTT`, when using the `Arduino_MQTT_Client` instance as an argument to `ThingsBoard`.
- - [Arduino Http Client](https://github.com/arduino-libraries/ArduinoHttpClient) — for interacting with `HTTP/S` when using the `Arduino_HTTP_Client` instance as an argument to `ThingsBoardHttp`.
  - [MbedTLS Library](https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls) — needed to create hashes for the OTA update for non `Espressif` boards.
  - [Arduino Timer](https://github.com/contrem/arduino-timer) - needed to create non-blocking callback timers for non `Espressif` boards.
  - [WiFiEsp Client](https://github.com/bportaluri/WiFiEsp) — needed when using a `Arduino Uno` with a `ESP8266`.
