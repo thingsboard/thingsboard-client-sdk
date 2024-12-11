@@ -6,10 +6,28 @@
         "type": "git",
         "url": "https://github.com/thingsboard/thingsboard-client-sdk"
     },
-    "dependencies": {
-        "bblanchon/ArduinoJson": "^6.21.5"
-    },
-    "version": "0.14.0",
+    "dependencies": 
+    [
+        {
+            "owner": "bblanchon",
+            "name": "ArduinoJson",
+            "version": "^6.21.5"
+        },
+        {
+            "owner": "thingsboard",
+            "name": "TBPubSubClient",
+            "version": "^2.11.0",
+            "frameworks": ["arduino"]
+        },
+        {
+            "owner": "arduino-libraries",
+            "name": "ArduinoHttpClient",
+            "version": "^0.6.1",
+            "frameworks": ["arduino"]
+        },
+        "Update"
+    ],
+    "version": "0.15.0",
     "examples": "examples/*/*.ino",
     "frameworks": "*",
     "license": "MIT"

@@ -92,7 +92,7 @@ class OTA_Handler {
     void Stop_Firmware_Update()  {
         m_watchdog.detach();
         m_fw_updater->reset();
-        Logger::println(FW_UPDATE_ABORTED);
+        Logger::printfln(FW_UPDATE_ABORTED);
         Handle_Failure(OTA_Failure_Response::RETRY_NOTHING, FW_UPDATE_ABORTED);
         m_fw_callback = nullptr;
     }
@@ -121,7 +121,7 @@ class OTA_Handler {
         if (current_chunk == 0U) {
             // Initialize Flash
             if (!m_fw_updater->begin(m_fw_size)) {
-                Logger::println(ERROR_UPDATE_BEGIN);
+                Logger::printfln(ERROR_UPDATE_BEGIN);
                 return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_BEGIN);
             }
         }
@@ -131,7 +131,7 @@ class OTA_Handler {
         if (written_bytes != total_bytes) {
             char message[Helper::detectSize(ERROR_UPDATE_WRITE, written_bytes, total_bytes)] = {};
             (void)snprintf(message, sizeof(message), ERROR_UPDATE_WRITE, written_bytes, total_bytes);
-            Logger::println(message);
+            Logger::printfln(message);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, message);
         }
 
@@ -145,7 +145,7 @@ class OTA_Handler {
         // Ensure to check if the update was cancelled during the progress callback,
         // if it was the callback variable was reset and there is no need to request the next firmware packet
         if (m_fw_callback == nullptr) {
-            Logger::println(OTA_CB_IS_NULL);
+            Logger::printfln(OTA_CB_IS_NULL);
             return Handle_Failure(OTA_Failure_Response::RETRY_NOTHING, OTA_CB_IS_NULL);
         }
 
@@ -201,7 +201,7 @@ class OTA_Handler {
         }
 
         if (!m_publish_callback.Call_Callback(m_fw_callback->Get_Request_ID(), m_requested_chunks)) {
-            Logger::println(UNABLE_TO_REQUEST_CHUNCKS);
+            Logger::printfln(UNABLE_TO_REQUEST_CHUNCKS);
         }
 
         // Watchdog gets started no matter if publishing request was successful or not in hopes,
@@ -225,21 +225,21 @@ class OTA_Handler {
         if (strncmp(m_fw_checksum, calculated_checksum, strlen(m_fw_checksum)) != 0) {
             char message[Helper::detectSize(CHECKSUM_VERIFICATION_FAILED, calculated_checksum, m_fw_checksum)] = {};
             (void)snprintf(message, sizeof(message), CHECKSUM_VERIFICATION_FAILED, calculated_checksum, m_fw_checksum);
-            Logger::println(message);
+            Logger::printfln(message);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, message);
         }
 
     #if THINGSBOARD_ENABLE_DEBUG
-        Logger::println(CHECKSUM_VERIFICATION_SUCCESS);
+        Logger::printfln(CHECKSUM_VERIFICATION_SUCCESS);
     #endif // THINGSBOARD_ENABLE_DEBUG
 
         if (!m_fw_updater->end()) {
-            Logger::println(ERROR_UPDATE_END);
+            Logger::printfln(ERROR_UPDATE_END);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_END);
         }
 
     #if THINGSBOARD_ENABLE_DEBUG
-        Logger::println(FW_UPDATE_SUCCESS);
+        Logger::printfln(FW_UPDATE_SUCCESS);
     #endif // THINGSBOARD_ENABLE_DEBUG
 
         (void)m_send_fw_state_callback.Call_Callback(FW_STATE_UPDATING, "");
@@ -286,7 +286,7 @@ class OTA_Handler {
         uint64_t const & timeout = m_fw_callback->Get_Timeout();
         char message[Helper::detectSize(CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout)] = {};
         (void)snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout);
-        Logger::println(message);
+        Logger::printfln(message);
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
 

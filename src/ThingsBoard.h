@@ -18,7 +18,7 @@ uint16_t constexpr DEFAULT_MQTT_PORT = 1883U;
 char constexpr PROV_ACCESS_TOKEN[] = "provision";
 // Log messages.
 char constexpr UNABLE_TO_DE_SERIALIZE_JSON[] = "Unable to de-serialize received json data with error (DeserializationError::%s)";
-char constexpr INVALID_BUFFER_SIZE[] = "Buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or set THINGSBOARD_ENABLE_STREAM_UTILS to 1 before including ThingsBoard";
+char constexpr INVALID_BUFFER_SIZE[] = "Send buffer size (%u) to small for the given payloads size (%u), increase with setBufferSize accordingly or install the StreamUtils library";
 char constexpr UNABLE_TO_ALLOCATE_BUFFER[] = "Allocating memory for the internal MQTT buffer failed";
 char constexpr MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME[] = "MaxEndpointsAmount";
 #if THINGSBOARD_ENABLE_DYNAMIC
@@ -71,18 +71,14 @@ class ThingsBoardSized {
     /// and to the end of the data container (last element + 1) and then every element between those iteratos will be copied, in the same order as in the original data container
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor and therefore allow to use every overloaded vector constructor without having to implement them
     /// @param client MQTT Client implementation that should be used to establish the connection to ThingsBoard
-    /// @param buffer_size Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
-    /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
-    /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
-    /// can be theoretically set to only be as big as the biggest message we should every receive from ThingsBoard,
-    /// this will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal buffer,
+    /// @param receive_buffer_size Maximum amount of data that can be received by this device at once, if bigger packets are received they are discarded and the update lost instead, default = Default_Payload_Size (64)
+    /// @param send_buffer_size Maximum amount of data that can be sent from this device at once. If we attempt to send data that is bigger, it will not be sent instead.
+    /// Alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
+    /// can be theoretically set the value as big as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes.
+    /// This will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal buffer,
     /// which needs more time than sending a message directly but has the advantage of requiring less memory.
-    /// So if that is a problem on the board it might be useful to enable the THINGSBOARD_ENABLE_STREAM_UTILS option
-    /// and decrease the internal buffer size of the mqtt client to what is needed to receive all MQTT messages,
-    /// that size can vary but if all ThingsBoard features are used a buffer size of 256 bytes should suffice for receiving most responses.
-    /// If the aforementioned feature is not enabled the buffer size might need to be much bigger though,
-    /// but in that case if a message was too big to be sent the user will be informed with a message to the Logger.
-    /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it, default = Default_Payload_Size (64)
+    /// So if the available heap memory is a problem on the board it might be useful to enable the THINGSBOARD_ENABLE_STREAM_UTILS option.
+    /// This can be done by simply using Arduino as the framework and installing the StreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library, default = Default_Payload_Size (64)
     /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size (1024)
     /// @param ...args Arguments that will be forwarded into the overloaded Array or Vector (THINGSBOARD_ENABLE_DYNAMIC) constructor
     template<typename... Args>
@@ -95,7 +91,7 @@ class ThingsBoardSized {
     /// especially because attempting to allocate too much memory, will cause the allocation to fail, which is checked. But if the failure of that heap allocation is subscribed for example with the heap_caps_register_failed_alloc_callback method on the ESP32,
     /// then that subscribed callback will be called and could theoretically restart the device. To circumvent that we can simply set the size of this variable to a value that should never be exceeded by a non malicious json payload, received by attribute requests, shared attribute updates, server-side or client-side rpc.
     /// If this safety feature is not required, because the heap allocation failure callback is not subscribed, then the value of the variable can simply be kept as 0, which means we will not check the received payload for its size before the allocation happens, default = Default_Max_Response_Size (0)
-    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t receive_buffer_size = Default_Payload_Size, uint16_t send_buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
 #else
     /// @param max_response_size Maximum amount of bytes allocated for the interal JsonDocument structure that holds the received payload.
     /// Size is calculated automatically from certain characters in the received payload (',', '{', '[') but if we receive a malicious payload that contains these symbols in a string {"example":",,,,,,..."}.
@@ -103,14 +99,14 @@ class ThingsBoardSized {
     /// especially because attempting to allocate too much memory, will cause the allocation to fail, which is checked. But if the failure of that heap allocation is subscribed for example with the heap_caps_register_failed_alloc_callback method on the ESP32,
     /// then that subscribed callback will be called and could theoretically restart the device. To circumvent that we can simply set the size of this variable to a value that should never be exceeded by a non malicious json payload, received by attribute requests, shared attribute updates, server-side or client-side rpc.
     /// If this safety feature is not required, because the heap allocation failure callback is not subscribed, then the value of the variable can simply be kept as 0, which means we will not check the received payload for its size before the allocation happens, default = Default_Max_Response_Size (0)
-    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t receive_buffer_size = Default_Payload_Size, uint16_t send_buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & max_response_size = Default_Max_Response_Size, Args const &... args)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #else
 #if THINGSBOARD_ENABLE_STREAM_UTILS
     /// @param buffering_size Amount of bytes allocated to speed up serialization, default = Default_Buffering_Size (64)
-    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, Args const &... args)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t receive_buffer_size = Default_Payload_Size, uint16_t send_buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, size_t const & buffering_size = Default_Buffering_Size, Args const &... args)
 #else
-    ThingsBoardSized(IMQTT_Client & client, uint16_t buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, Args const &... args)
+    ThingsBoardSized(IMQTT_Client & client, uint16_t receive_buffer_size = Default_Payload_Size, uint16_t send_buffer_size = Default_Payload_Size, size_t const & max_stack_size = Default_Max_Stack_Size, Args const &... args)
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #endif // THINGSBOARD_ENABLE_DYNAMIC
       : m_client(client)
@@ -128,13 +124,13 @@ class ThingsBoardSized {
                 continue;
             }
 #if THINGSBOARD_ENABLE_STL
-            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientReceiveBufferSize, this), std::bind(&ThingsBoardSized::getClientSendBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::getRequestID, this));
 #else
-            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientReceiveBufferSize, ThingsBoardSized::staticGetClientSendBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
 #endif // THINGSBOARD_ENABLE_STL
             api->Initialize();
         }
-        (void)setBufferSize(buffer_size);
+        (void)setBufferSize(receive_buffer_size, send_buffer_size);
         // Initialize callback.
 #if THINGSBOARD_ENABLE_STL
         m_client.set_data_callback(std::bind(&ThingsBoardSized::onMQTTMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -183,24 +179,23 @@ class ThingsBoardSized {
     }
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
-    /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard
-    /// @param buffer_size Maximum amount of data that can be either received or sent to ThingsBoard at once, if bigger packets are received they are discarded
-    /// and if we attempt to send data that is bigger, it will not be sent, the internal value can be changed later at any time with the setBufferSize() method
-    /// alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
-    /// can be theoretically set to only be as big as the biggest message we should every receive from ThingsBoard,
-    /// this will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal buffer,
+    /// @brief Sets the size of the buffer for the underlying network client that will be used to establish the connection to ThingsBoard.
+    /// The internal values can be changed later again, at any time with the setBufferSize() method. Is split into two arguments, because it allows seperating the buffer that received data from the one that sends data.
+    /// This makes it possible to optimize the memory used and to handle received data without copying it, while sending data in between.
+    /// Meaning it is possible to read the values in callback functions even after you send more data from this device. 
+    /// @param receive_buffer_size Maximum amount of data that can be received by this device at once, if bigger packets are received they are discarded and the update lost instead
+    /// @param send_buffer_size Maximum amount of data that can be sent from this device at once. If we attempt to send data that is bigger, it will not be sent instead.
+    /// Alternatively setting THINGSBOARD_ENABLE_STREAM_UTILS to 1 allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
+    /// can be theoretically set the value as big as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes.
+    /// This will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal buffer,
     /// which needs more time than sending a message directly but has the advantage of requiring less memory.
-    /// So if that is a problem on the board it might be useful to enable the THINGSBOARD_ENABLE_STREAM_UTILS option
-    /// and decrease the internal buffer size of the mqtt client to what is needed to receive all MQTT messages,
-    /// that size can vary but if all ThingsBoard features are used a buffer size of 256 bytes should suffice for receiving most responses.
-    /// If the aforementioned feature is not enabled the buffer size might need to be much bigger though,
-    /// but in that case if a message was too big to be sent the user will be informed with a message to the logger implementation.
-    /// The aforementioned options can only be enabled if Arduino is used to build this library, because the StreamUtils library requires it
-    /// @return Whether allocating the needed memory for the given buffer size was successful or not
-    bool setBufferSize(uint16_t buffer_size) {
-        bool const result = m_client.set_buffer_size(buffer_size);
+    /// So if the available heap memory is a problem on the board it might be useful to enable the THINGSBOARD_ENABLE_STREAM_UTILS option.
+    /// This can be done by simply using Arduino as the framework and installing the StreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library
+    /// @return Whether allocating the needed memory for the given buffer sizes was successful or not
+    bool setBufferSize(uint16_t receive_buffer_size, uint16_t send_buffer_size) {
+        bool const result = m_client.set_buffer_size(receive_buffer_size, send_buffer_size);
         if (!result) {
-            Logger::println(UNABLE_TO_ALLOCATE_BUFFER);
+            Logger::printfln(UNABLE_TO_ALLOCATE_BUFFER);
         }
         return result;
     }
@@ -277,13 +272,13 @@ class ThingsBoardSized {
         // Check if allocating needed memory failed when trying to create the JsonDocument,
         // if it did the isNull() method will return true. See https://arduinojson.org/v6/api/jsonvariant/isnull/ for more information
         if (source.isNull()) {
-            Logger::println(UNABLE_TO_ALLOCATE_JSON);
+            Logger::printfln(UNABLE_TO_ALLOCATE_JSON);
             return false;
         }
         // Check if inserting any of the internal values failed because the JsonDocument was too small,
         // if it did the overflowed() method will return true. See https://arduinojson.org/v6/api/jsondocument/overflowed/ for more information
         if (source.overflowed()) {
-            Logger::println(JSON_SIZE_TO_SMALL);
+            Logger::printfln(JSON_SIZE_TO_SMALL);
             return false;
         }
         bool result = false;
@@ -304,7 +299,7 @@ class ThingsBoardSized {
         if (json_size > getMaximumStackSize()) {
             char* json = new char[json_size]();
             if (serializeJson(source, json, json_size) < json_size - 1) {
-                Logger::println(UNABLE_TO_SERIALIZE_JSON);
+                Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             }
             else {
                 result = Send_Json_String(topic, json);
@@ -317,7 +312,7 @@ class ThingsBoardSized {
         else {
             char json[json_size] = {};
             if (serializeJson(source, json, json_size) < json_size - 1) {
-                Logger::println(UNABLE_TO_SERIALIZE_JSON);
+                Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
                 return result;
             }
             result = Send_Json_String(topic, json);
@@ -335,11 +330,11 @@ class ThingsBoardSized {
             return false;
         }
 
-        uint16_t currentBufferSize = m_client.get_buffer_size();
+        uint16_t current_send_buffer_size = m_client.get_send_buffer_size();
         size_t const json_size = strlen(json);
 
-        if (currentBufferSize < json_size) {
-            Logger::printfln(INVALID_BUFFER_SIZE, currentBufferSize, json_size);
+        if (current_send_buffer_size < json_size) {
+            Logger::printfln(INVALID_BUFFER_SIZE, current_send_buffer_size, json_size);
             return false;
         }
 
@@ -360,9 +355,9 @@ class ThingsBoardSized {
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_STL
-        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
+        api.Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientReceiveBufferSize, this), std::bind(&ThingsBoardSized::getClientSendBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::getRequestID, this));
 #else
-        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
+        api.Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientReceiveBufferSize, ThingsBoardSized::staticGetClientSendBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
 #endif // THINGSBOARD_ENABLE_STL
         api.Initialize();
         m_api_implementations.push_back(&api);
@@ -391,9 +386,9 @@ class ThingsBoardSized {
                 continue;
             }
 #if THINGSBOARD_ENABLE_STL
-            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getRequestID, this));
+            api->Set_Client_Callbacks(std::bind(&ThingsBoardSized::Subscribe_API_Implementation, this, std::placeholders::_1), std::bind(&ThingsBoardSized::Send_Json, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), std::bind(&ThingsBoardSized::Send_Json_String, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::clientSubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::clientUnsubscribe, this, std::placeholders::_1), std::bind(&ThingsBoardSized::getClientReceiveBufferSize, this), std::bind(&ThingsBoardSized::getClientSendBufferSize, this), std::bind(&ThingsBoardSized::setBufferSize, this, std::placeholders::_1, std::placeholders::_2), std::bind(&ThingsBoardSized::getRequestID, this));
 #else
-            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
+            api->Set_Client_Callbacks(ThingsBoardSized::staticSubscribeImplementation, ThingsBoardSized::staticSendJson, ThingsBoardSized::staticSendJsonString, ThingsBoardSized::staticClientSubscribe, ThingsBoardSized::staticClientUnsubscribe, ThingsBoardSized::staticGetClientReceiveBufferSize, ThingsBoardSized::staticGetClientSendBufferSize, ThingsBoardSized::staticSetBufferSize, ThingsBoardSized::staticGetRequestID);
 #endif // THINGSBOARD_ENABLE_STL
             api->Initialize();
         }
@@ -462,7 +457,7 @@ class ThingsBoardSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whether sending the data was successful or not
-    bool sendTelemtryString(char const * json) {
+    bool sendTelemetryString(char const * json) {
         return Send_Json_String(TELEMETRY_TOPIC, json);
     }
 
@@ -542,13 +537,13 @@ class ThingsBoardSized {
     /// @return Whether sending the data was successful or not
     bool Serialize_Json(char const * topic, JsonDocument const & source, size_t const & json_size) {
         if (!m_client.begin_publish(topic, json_size)) {
-            Logger::println(UNABLE_TO_SERIALIZE_JSON);
+            Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             return false;
         }
         BufferingPrint buffered_print(m_client, getBufferingSize());
         size_t const bytes_serialized = serializeJson(source, buffered_print);
         if (bytes_serialized < json_size) {
-            Logger::println(UNABLE_TO_SERIALIZE_JSON);
+            Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             return false;
         }
         buffered_print.flush();
@@ -562,10 +557,16 @@ class ThingsBoardSized {
         return m_max_stack;
     }
 
-    /// @brief Returns the current buffer size of the underlying client interface
-    /// @return Current internal buffer size
-    uint16_t getClientBufferSize() {
-        return m_client.get_buffer_size();
+    /// @brief Returns the current receive buffer size of the underlying client interface
+    /// @return Current internal send buffer size
+    uint16_t getClientReceiveBufferSize() {
+        return m_client.get_receive_buffer_size();
+    }
+
+    /// @brief Returns the current send buffer size of the underlying client interface
+    /// @return Current internal receive buffer size
+    uint16_t getClientSendBufferSize() {
+        return m_client.get_send_buffer_size();
     }
 
     /// @brief Subscribes the given topic with the underlying client interface
@@ -608,7 +609,7 @@ class ThingsBoardSized {
     bool connectToHost(char const * access_token, char const * client_id, char const * password) {
         bool const connection_result = m_client.connect(client_id, access_token, password);
         if (!connection_result) {
-            Logger::println(CONNECT_FAILED);
+            Logger::printfln(CONNECT_FAILED);
         }
         return connection_result;
     }
@@ -643,7 +644,7 @@ class ThingsBoardSized {
 
         StaticJsonDocument<JSON_OBJECT_SIZE(1)> json_buffer;
         if (!t.SerializeKeyValue(json_buffer)) {
-            Logger::println(UNABLE_TO_SERIALIZE);
+            Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
         return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
@@ -681,14 +682,14 @@ class ThingsBoardSized {
 
 #if THINGSBOARD_ENABLE_STL
         if (std::any_of(first, last, [&json_buffer](Telemetry const & data) { return !data.SerializeKeyValue(json_buffer); })) {
-            Logger::println(UNABLE_TO_SERIALIZE);
+            Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
 #else
         for (auto it = first; it != last; ++it) {
             auto const & data = *it;
             if (!data.SerializeKeyValue(json_buffer)) {
-                Logger::println(UNABLE_TO_SERIALIZE);
+                Logger::printfln(UNABLE_TO_SERIALIZE);
                 return false;
             }
         }
@@ -869,23 +870,30 @@ class ThingsBoardSized {
 
     static size_t * staticGetRequestID() {
         if (m_subscribedInstance == nullptr) {
-            return false;
+            return nullptr;
         }
         return m_subscribedInstance->getRequestID();
     }
 
-    static uint16_t staticGetClientBufferSize() {
+    static uint16_t staticGetClientReceiveBufferSize() {
         if (m_subscribedInstance == nullptr) {
             return 0U;
         }
-        return m_subscribedInstance->getClientBufferSize();
+        return m_subscribedInstance->getClientReceiveBufferSize();
     }
 
-    static bool staticSetBufferSize(uint16_t buffer_size) {
+    static uint16_t staticGetClientSendBufferSize() {
+        if (m_subscribedInstance == nullptr) {
+            return 0U;
+        }
+        return m_subscribedInstance->getClientSendBufferSize();
+    }
+
+    static bool staticSetBufferSize(uint16_t receive_buffer_size, uint16_t send_buffer_size) {
         if (m_subscribedInstance == nullptr) {
             return false;
         }
-        return m_subscribedInstance->setBufferSize(buffer_size);
+        return m_subscribedInstance->setBufferSize(receive_buffer_size, send_buffer_size);
     }
 
     // PubSub client cannot call a instanced method when message arrives on subscribed topic.

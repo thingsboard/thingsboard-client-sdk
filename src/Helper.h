@@ -63,7 +63,7 @@ class Helper {
     /// @return Total size required for the string that would be produced by serializeJson + 1 byte for the string null terminator
     template <typename TSource>
     static size_t Measure_Json(TSource const & source) {
-        return JSON_STRING_SIZE(measureJson(source));
+        return measureJson(source) + 1;
     }
 
     /// @brief Removes the element with the given index, which allows to use data containers that do not have a random-access iterator.
@@ -96,7 +96,6 @@ class Helper {
         // to keep compatibility with code that supports the STL we allow InputIterators, therefore we have to implement the size calculation the more inneficient O(n) way instead.
         // This allows the edge case where an end-user uses this method themselves in the code with their own implemented list data type.
         size_t size = 0U;
-        auto it = first;
         for (auto it = first; it != last; ++it, ++size) {}
         return size;
 #endif // THINGSBOARD_ENABLE_STL

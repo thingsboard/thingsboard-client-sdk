@@ -57,7 +57,8 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 // and a little bit more for the topic we received the message on.
 // This has to be done at least until the issue https://github.com/espressif/esp-mqtt/issues/267 has been fixed in the esp-mqtt client,
 // or if an older version of the esp-mqtt client is used that does not include the possible fixes to the aforementioned issue yet.
-constexpr uint16_t MAX_MESSAGE_SIZE = FIRMWARE_PACKET_SIZE + 50U;
+constexpr uint16_t MAX_MESSAGE_SEND_SIZE = FIRMWARE_PACKET_SIZE + 50U;
+constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = FIRMWARE_PACKET_SIZE + 50U;
 
 #if ENCRYPTED
 // See https://comodosslstore.com/resources/what-is-a-root-ca-certificate-and-how-do-i-download-it/
@@ -108,7 +109,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &ota
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
 // Initalize the Updater client instance used to flash binary to flash memory
 SDCard_Updater<> updater(UPDAT_FILE_PATH);
 

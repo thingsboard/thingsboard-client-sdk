@@ -106,7 +106,7 @@ class Attribute_Request : public IAPI_Implementation {
             char const * attribute_response_key = attribute_request.Get_Attribute_Key();
             if (attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_NOT_FOUND);
+                Logger::printfln(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 goto delete_callback;
             }
@@ -158,7 +158,7 @@ class Attribute_Request : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_size_callback, Callback<bool, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_send_json_callback.Set_Callback(send_json_callback);
         m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
         m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
@@ -182,13 +182,13 @@ class Attribute_Request : public IAPI_Implementation {
         // Check if any sharedKeys were requested
         if (attributes.empty()) {
 #if THINGSBOARD_ENABLE_DEBUG
-            Logger::println(NO_KEYS_TO_REQUEST);
+            Logger::printfln(NO_KEYS_TO_REQUEST);
 #endif // THINGSBOARD_ENABLE_DEBUG
             return false;
         }
         else if (attribute_request_key == nullptr || attribute_response_key == nullptr) {
 #if THINGSBOARD_ENABLE_DEBUG
-            Logger::println(ATT_KEY_NOT_FOUND);
+            Logger::printfln(ATT_KEY_NOT_FOUND);
 #endif // THINGSBOARD_ENABLE_DEBUG
             return false;
         }
@@ -227,7 +227,7 @@ class Attribute_Request : public IAPI_Implementation {
         for (const auto & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
-                Logger::println(ATT_KEY_IS_NULL);
+                Logger::printfln(ATT_KEY_IS_NULL);
 #endif // THINGSBOARD_ENABLE_DEBUG
                 continue;
             }
@@ -245,7 +245,7 @@ class Attribute_Request : public IAPI_Implementation {
 
         size_t * p_request_id = m_get_request_id_callback.Call_Callback();
         if (p_request_id == nullptr) {
-            Logger::println(REQUEST_ID_NULL);
+            Logger::printfln(REQUEST_ID_NULL);
             return false;
         }
         auto & request_id = *p_request_id;

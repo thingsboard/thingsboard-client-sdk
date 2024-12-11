@@ -31,9 +31,11 @@ class Arduino_MQTT_Client : public IMQTT_Client {
 
     void set_connect_callback(Callback<void>::function callback) override;
 
-    bool set_buffer_size(uint16_t buffer_size) override;
+    bool set_buffer_size(uint16_t receive_buffer_size, uint16_t send_buffer_size) override;
 
-    uint16_t get_buffer_size() override;
+    uint16_t get_receive_buffer_size() override;
+
+    uint16_t get_send_buffer_size() override;
 
     void set_server(char const * domain, uint16_t port) override;
 
