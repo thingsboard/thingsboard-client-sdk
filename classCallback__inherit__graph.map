@@ -1,0 +1,29 @@
+<map id="Callback&lt; return_typ, argument_types &gt;" name="Callback&lt; return_typ, argument_types &gt;">
+<area shape="rect" id="node1" title="General purpose safe callback wrapper. Expects either c&#45;style or c++ style function pointer,..." alt="" coords="5,724,149,764"/>
+<area shape="rect" id="node2" href="$classCallback.html" title=" " alt="" coords="408,165,588,205"/>
+<area shape="rect" id="node9" href="$classCallback.html" title=" " alt="" coords="439,344,557,370"/>
+<area shape="rect" id="node11" href="$classCallback.html" title=" " alt="" coords="429,394,567,434"/>
+<area shape="rect" id="node13" href="$classCallback.html" title=" " alt="" coords="397,458,599,498"/>
+<area shape="rect" id="node16" href="$classCallback.html" title=" " alt="" coords="388,522,608,562"/>
+<area shape="rect" id="node18" href="$classCallback.html" title=" " alt="" coords="403,587,593,642"/>
+<area shape="rect" id="node19" href="$classCallback.html" title=" " alt="" coords="429,666,567,706"/>
+<area shape="rect" id="node20" href="$classCallback.html" title=" " alt="" coords="430,731,566,756"/>
+<area shape="rect" id="node21" href="$classCallback.html" title=" " alt="" coords="427,781,569,821"/>
+<area shape="rect" id="node22" href="$classCallback.html" title=" " alt="" coords="416,846,580,900"/>
+<area shape="rect" id="node23" href="$classCallback.html" title=" " alt="" coords="428,924,568,950"/>
+<area shape="rect" id="node24" href="$classCallback.html" title=" " alt="" coords="423,974,573,1014"/>
+<area shape="rect" id="node25" href="$classCallback.html" title=" " alt="" coords="409,1038,587,1078"/>
+<area shape="rect" id="node26" href="$classCallback.html" title=" " alt="" coords="439,1103,557,1128"/>
+<area shape="rect" id="node27" href="$classCallback.html" title=" " alt="" coords="409,1154,587,1194"/>
+<area shape="rect" id="node3" href="$classAttribute__Request__Callback.html" title=" " alt="" coords="993,15,1205,40"/>
+<area shape="rect" id="node4" href="$classAttribute__Request__Callback.html" title=" " alt="" coords="1008,93,1191,133"/>
+<area shape="rect" id="node5" href="$classShared__Attribute__Callback.html" title=" " alt="" coords="1011,182,1187,222"/>
+<area shape="rect" id="node6" href="$classShared__Attribute__Callback.html" title=" " alt="" coords="997,280,1202,306"/>
+<area shape="rect" id="node7" href="$classAttribute__Request__Callback.html" title="Client&#45;side or shared attributes request callback wrapper, contains the needed configuration settings..." alt="" coords="657,57,840,97"/>
+<area shape="rect" id="node8" href="$classShared__Attribute__Callback.html" title="Shared attribute update callback wrapper, contains the needed configuration settings to create the re..." alt="" coords="661,222,837,262"/>
+<area shape="rect" id="node10" href="$classCallback__Watchdog.html" title="Wrapper class which allows to start a timer and if it is not stopped in the given time then the callb..." alt="" coords="680,347,817,372"/>
+<area shape="rect" id="node12" href="$classOTA__Update__Callback.html" title="Over the air firmware update callback wrapper, contains the needed configuration settings to create t..." alt="" coords="671,400,826,426"/>
+<area shape="rect" id="node14" href="$classProvision__Callback.html" title="Provisioning callback wrapper, contains the needed configuration settings to create the request that ..." alt="" coords="682,450,815,475"/>
+<area shape="rect" id="node15" href="$classRPC__Request__Callback.html" title="Client&#45;side RPC callback wrapper, contains the needed configuration settings to create the request th..." alt="" coords="668,499,829,524"/>
+<area shape="rect" id="node17" href="$classRPC__Callback.html" title="Server&#45;side RPC callback wrapper, contains the needed configuration settings to create the request th..." alt="" coords="695,548,802,574"/>
+</map>

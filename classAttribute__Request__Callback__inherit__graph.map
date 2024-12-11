@@ -1,0 +1,6 @@
+<map id="Attribute_Request_Callback&lt; MaxAttributes &gt;" name="Attribute_Request_Callback&lt; MaxAttributes &gt;">
+<area shape="rect" id="node1" title="Client&#45;side or shared attributes request callback wrapper, contains the needed configuration settings..." alt="" coords="20,212,203,252"/>
+<area shape="rect" id="node4" href="$classAttribute__Request__Callback.html" title=" " alt="" coords="5,315,217,340"/>
+<area shape="rect" id="node2" href="$classCallback.html" title=" " alt="" coords="21,123,201,163"/>
+<area shape="rect" id="node3" href="$classCallback.html" title="General purpose safe callback wrapper. Expects either c&#45;style or c++ style function pointer,..." alt="" coords="39,5,183,45"/>
+</map>

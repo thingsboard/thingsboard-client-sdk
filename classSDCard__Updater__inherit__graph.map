@@ -1,0 +1,4 @@
+<map id="SDCard_Updater&lt; Logger &gt;" name="SDCard_Updater&lt; Logger &gt;">
+<area shape="rect" id="node1" title="IUpdater implementation that uses the c fopen function (https://cplusplus.com/reference/cstdio/fopen/..." alt="" coords="5,79,188,104"/>
+<area shape="rect" id="node2" href="$classIUpdater.html" title="Updater interface that contains the method that a class that can be used to flash given binary data o..." alt="" coords="61,5,133,31"/>
+</map>
