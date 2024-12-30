@@ -138,9 +138,9 @@ Arduino_MQTT_Client mqttClient(espClient);
 const std::array<IAPI_Implementation*, 0U> apis = {};
 // Initialize ThingsBoard instance with the maximum needed buffer size
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, Default_Buffering_Size, Default_Max_Response_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, Default_Buffering_Size, Default_Max_Response_Size, apis.cbegin(), apis.cend());
 #else
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, Default_Max_Response_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, Default_Max_Response_Size, apis.cbegin(), apis.cend());
 #endif
 #endif
 
