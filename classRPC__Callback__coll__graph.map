@@ -1,0 +1,5 @@
+<map id="RPC_Callback" name="RPC_Callback">
+<area shape="rect" id="node1" title="Server&#45;side RPC callback wrapper, contains the needed configuration settings to create the request th..." alt="" coords="62,212,169,237"/>
+<area shape="rect" id="node2" href="$classCallback.html" title=" " alt="" coords="5,123,225,163"/>
+<area shape="rect" id="node3" href="$classCallback.html" title="General purpose safe callback wrapper. Expects either c&#45;style or c++ style function pointer,..." alt="" coords="43,5,187,45"/>
+</map>

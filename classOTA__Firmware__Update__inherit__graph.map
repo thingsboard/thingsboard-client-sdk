@@ -1,0 +1,4 @@
+<map id="OTA_Firmware_Update&lt; Logger &gt;" name="OTA_Firmware_Update&lt; Logger &gt;">
+<area shape="rect" id="node1" title="Handles the internal implementation of the ThingsBoard over the air firmware update API...." alt="" coords="5,79,164,119"/>
+<area shape="rect" id="node2" href="$classIAPI__Implementation.html" title="Base functionality required by all API implementation." alt="" coords="13,5,157,31"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="Shared_Attribute_Callback&lt; MaxAttributes &gt;" name="Shared_Attribute_Callback&lt; MaxAttributes &gt;">
+<area shape="rect" id="node1" title="Shared attribute update callback wrapper, contains the needed configuration settings to create the re..." alt="" coords="7,212,183,252"/>
+<area shape="rect" id="node2" href="$classCallback.html" title=" " alt="" coords="5,123,185,163"/>
+<area shape="rect" id="node3" href="$classCallback.html" title="General purpose safe callback wrapper. Expects either c&#45;style or c++ style function pointer,..." alt="" coords="23,5,167,45"/>
+</map>

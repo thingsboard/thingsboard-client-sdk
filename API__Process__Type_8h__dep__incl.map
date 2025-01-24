@@ -1,0 +1,11 @@
+<map id="src/API_Process_Type.h" name="src/API_Process_Type.h">
+<area shape="rect" id="node1" title=" " alt="" coords="389,5,556,31"/>
+<area shape="rect" id="node2" href="$IAPI__Implementation_8h.html" title=" " alt="" coords="385,79,561,104"/>
+<area shape="rect" id="node3" href="$Attribute__Request_8h.html" title=" " alt="" coords="5,159,164,185"/>
+<area shape="rect" id="node4" href="$OTA__Firmware__Update_8h.html" title=" " alt="" coords="107,240,297,265"/>
+<area shape="rect" id="node5" href="$Client__Side__RPC_8h.html" title=" " alt="" coords="239,159,394,185"/>
+<area shape="rect" id="node6" href="$Provision_8h.html" title=" " alt="" coords="419,159,527,185"/>
+<area shape="rect" id="node7" href="$Server__Side__RPC_8h.html" title=" " alt="" coords="551,159,709,185"/>
+<area shape="rect" id="node8" href="$Shared__Attribute__Update_8h.html" title=" " alt="" coords="734,152,875,192"/>
+<area shape="rect" id="node9" href="$ThingsBoard_8h.html" title=" " alt="" coords="900,159,1027,185"/>
+</map>
