@@ -116,7 +116,11 @@ class Provision : public IAPI_Implementation {
     }
 
     bool Resubscribe_Topic() override {
-        return Unsubscribe();
+        // Unsubscription required only if we are currently subscribed to the topic
+        if (m_provision_callback.Get_Device_Key() != nullptr) {
+            return Unsubscribe() && m_subscribe_topic_callback.Call_Callback(PROV_RESPONSE_TOPIC);
+        }
+        return true;
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
