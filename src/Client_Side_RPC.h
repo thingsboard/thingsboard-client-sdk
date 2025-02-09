@@ -155,6 +155,7 @@ class Client_Side_RPC : public IAPI_Implementation {
     }
 
     bool Resubscribe_Topic() override {
+        m_rpc_request_callbacks.clear();
         return Unsubscribe();
     }
 
@@ -204,7 +205,7 @@ class Client_Side_RPC : public IAPI_Implementation {
     /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the client-side RPC response topic, was successful or not
     bool RPC_Request_Unsubscribe() {
-        m_rpc_request_callbacks.clear();
+        (void)Resubscribe_Topic();
         return m_unsubscribe_topic_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 

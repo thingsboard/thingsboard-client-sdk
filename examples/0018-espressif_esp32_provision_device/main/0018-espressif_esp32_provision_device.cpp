@@ -237,6 +237,10 @@ void provision_device(void *pvParameters) {
         return;
     }
 
+    while (!tb.connected()) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
     // Prepare and send the provision request
     const Provision_Callback provisionCallback(Access_Token(), &processProvisionResponse, PROVISION_DEVICE_KEY, PROVISION_DEVICE_SECRET, device_name.c_str(), REQUEST_TIMEOUT_MICROSECONDS, &requestTimedOut);
     provisionRequestSent = prov.Provision_Request(provisionCallback);

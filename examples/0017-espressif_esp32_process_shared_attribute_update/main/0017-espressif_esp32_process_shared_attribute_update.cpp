@@ -146,7 +146,15 @@ void InitWiFi() {
 /// @param data Data containing the shared attributes that were changed and their current value
 void processSharedAttributeUpdate(const JsonObjectConst &data) {
     for (auto it = data.begin(); it != data.end(); ++it) {
-        ESP_LOGI("MAIN", "Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
+        if (it->value().is<const char *>()) {
+            ESP_LOGI("MAIN", "Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
+        }
+        else if (it->value().is<int>()) {
+            ESP_LOGI("MAIN", "Key: %s, Value: %d", it->key().c_str(), it->value().as<int>());
+        }
+        else {
+            ESP_LOGI("MAIN", "Key: %s", it->key().c_str());
+        }
     }
 
     const size_t jsonSize = Helper::Measure_Json(data);

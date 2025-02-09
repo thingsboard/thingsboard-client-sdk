@@ -116,10 +116,7 @@ class Provision : public IAPI_Implementation {
     }
 
     bool Resubscribe_Topic() override {
-        // Unsubscription required only if we are currently subscribed to the topic
-        if (m_provision_callback.Get_Device_Key() != nullptr) {
-            return Unsubscribe() && m_subscribe_topic_callback.Call_Callback(PROV_RESPONSE_TOPIC);
-        }
+        m_provision_callback = Provision_Callback();
         return true;
     }
 
@@ -135,8 +132,6 @@ class Provision : public IAPI_Implementation {
 
     void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_send_json_callback.Set_Callback(send_json_callback);
-        m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
-        m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
     }
 
 private:
@@ -145,10 +140,6 @@ private:
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
     bool Provision_Subscribe(Provision_Callback const & callback) {
-        if (!m_subscribe_topic_callback.Call_Callback(PROV_RESPONSE_TOPIC)) {
-            Logger::printfln(SUBSCRIBE_TOPIC_FAILED, PROV_RESPONSE_TOPIC);
-            return false;
-        }
         m_provision_callback = callback;
         return true;
     }
@@ -157,13 +148,10 @@ private:
     /// @return Whether unsubcribing the previously subscribed callback
     /// and from the provision response topic, was successful or not
     bool Provision_Unsubscribe() {
-        m_provision_callback = Provision_Callback();
-        return m_unsubscribe_topic_callback.Call_Callback(PROV_RESPONSE_TOPIC);
+        return Resubscribe_Topic();
     }
 
     Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};         // Send json document callback
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};   // Subscribe mqtt topic client callback
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {}; // Unubscribe mqtt topic client callback
 
     Provision_Callback                                                       m_provision_callback = {};         // Provision response callback
 };

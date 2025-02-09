@@ -143,7 +143,8 @@ class Attribute_Request : public IAPI_Implementation {
     }
 
     bool Resubscribe_Topic() override {
-        return Unsubscribe();
+        m_attribute_request_callbacks.clear();
+        return true;
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
@@ -213,7 +214,7 @@ class Attribute_Request : public IAPI_Implementation {
         // Calculate the size required for the char buffer containing all the attributes seperated by a comma,
         // before initalizing it so it is possible to allocate it on the stack
         size_t size = 0U;
-        for (const auto & att : attributes) {
+        for (auto const & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
                 continue;
             }
@@ -222,9 +223,14 @@ class Attribute_Request : public IAPI_Implementation {
             size += strlen(",");
         }
 
+        // Add space for null termination at the end of the char array, has to be done,
+        // because we later cast it to const char *, meaning the original size information is lost
+        // and is instead handled by null termination at the end of the string
+        size += 1;
+
         // Initalizes complete array to 0, required because strncat needs both destination and source to contain proper null terminated strings
         char request[size] = {};
-        for (const auto & att : attributes) {
+        for (auto const & att : attributes) {
             if (Helper::stringIsNullorEmpty(att)) {
 #if THINGSBOARD_ENABLE_DEBUG
                 Logger::printfln(ATT_KEY_IS_NULL);
@@ -287,7 +293,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the  attribute response topic, was successful or not
     bool Attributes_Request_Unsubscribe() {
-        m_attribute_request_callbacks.clear();
+        (void)Resubscribe_Topic();
         return m_unsubscribe_topic_callback.Call_Callback(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 

@@ -153,9 +153,15 @@ bool reconnect() {
 /// @param data Data containing the shared attributes that were changed and their current value
 void processSharedAttributeUpdate(const JsonObjectConst &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
-    Serial.println(it->key().c_str());
-    // Shared attributes have to be parsed by their type.
-    Serial.println(it->value().as<const char*>());
+    if (it->value().is<const char *>()) {
+      Serial.printf("Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
+    }
+    else if (it->value().is<int>()) {
+      Serial.printf("Key: %s, Value: %d", it->key().c_str(), it->value().as<int>());
+    }
+    else {
+      Serial.printf("Key: %s", it->key().c_str());
+    }
   }
 
   const size_t jsonSize = Helper::Measure_Json(data);

@@ -55,7 +55,7 @@ class Helper {
     static size_t parseRequestId(char const * base_topic, char const * received_topic);
 
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
-    /// Be aware that null terminator will later not be serialied in the serializeJson() call,
+    /// Be aware that null terminator will later not be serialized in the serializeJson() call,
     /// meaning the returned written amount of bytes is the return value of this method - 1.
     /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
