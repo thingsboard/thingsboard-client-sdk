@@ -110,13 +110,13 @@ size_t Arduino_MQTT_Client::write(uint8_t const * buffer, size_t const & size) {
 
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 
-MQTT_Connection_Error connect_mqtt_client(char const * client_id, char const * user_name, char const * password) {
+MQTT_Connection_Error Arduino_MQTT_Client::connect_mqtt_client(char const * client_id, char const * user_name, char const * password) {
     m_mqtt_client.connect(client_id, user_name, password);
     int const current_state = m_mqtt_client.state();
     return current_state < 0 ?  MQTT_Connection_Error::REFUSE_SERVER_UNAVAILABLE : static_cast<MQTT_Connection_Error>(current_state);
 }
 
-void update_connection_state(MQTT_Connection_State new_state) {
+void Arduino_MQTT_Client::update_connection_state(MQTT_Connection_State new_state) {
   m_connection_state = new_state;
   m_connection_state_changed_callback.Call_Callback(get_connection_state(), get_last_connection_error());
 }
