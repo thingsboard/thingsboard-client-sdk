@@ -41,7 +41,7 @@ void Arduino_MQTT_Client::set_server(char const * domain, uint16_t port) {
 bool Arduino_MQTT_Client::connect(char const * client_id, char const * user_name, char const * password) {
     update_connection_state(MQTT_Connection_State::CONNECTING);
     MQTT_Connection_Error const connection_error = connect_mqtt_client(client_id, user_name, password);
-    bool const result = connection_error == MQTT_Connection_Error::NONE
+    bool const result = connection_error == MQTT_Connection_Error::NONE;
     if (result) {
         m_connected_callback.Call_Callback();
         update_connection_state(MQTT_Connection_State::CONNECTED);
