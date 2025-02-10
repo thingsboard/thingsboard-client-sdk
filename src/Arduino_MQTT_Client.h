@@ -78,6 +78,10 @@ class Arduino_MQTT_Client : public IMQTT_Client {
   private:
     MQTT_Connection_Error connect_mqtt_client(char const * client_id, char const * user_name, char const * password);
 
+    /// @brief Updates the interal connection state and informs the subscribed subject, about changes to the internal state
+    /// @param new_state New state the connection to the MQTT broker is in now and the subject should be informed about
+    void update_connection_state(MQTT_Connection_State new_state);
+
     MQTT_Connection_State                                        m_connection_state = {};                  // Current connection state to the MQTT broker
     MQTT_Connection_Error                                        m_last_connection_error = {};             // Last error that occured while trying to establish a connection to the MQTT broker
     Callback<void, MQTT_Connection_State, MQTT_Connection_Error> m_connection_state_changed_callback = {}; // Callback that will be called as soon as the mqtt client connection changes

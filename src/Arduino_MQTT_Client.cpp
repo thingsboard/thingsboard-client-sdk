@@ -39,23 +39,23 @@ void Arduino_MQTT_Client::set_server(char const * domain, uint16_t port) {
 }
 
 bool Arduino_MQTT_Client::connect(char const * client_id, char const * user_name, char const * password) {
-    m_connection_state_changed_callback.Call_Callback(MQTT_Connection_State::CONNECTING);
+    update_connection_state(MQTT_Connection_State::CONNECTING)
     MQTT_Connection_Error const connection_error = connect_mqtt_client(client_id, user_name, password);
     bool const result = connection_error == MQTT_Connection_Error::NONE
     if (result) {
         m_connected_callback.Call_Callback();
-        m_connection_state_changed_callback.Call_Callback(MQTT_Connection_State::CONNECTED);
+        update_connection_state(MQTT_Connection_State::CONNECTED)
         return result;
     }
     m_last_connection_error = connection_error;
-    m_connection_state_changed_callback.Call_Callback(MQTT_Connection_State::ERROR);
+    update_connection_state(MQTT_Connection_State::ERROR)
     return result;
 }
 
 void Arduino_MQTT_Client::disconnect() {
-    m_connection_state_changed_callback.Call_Callback(MQTT_Connection_State::DISCONNECTING);
+    update_connection_state(MQTT_Connection_State::DISCONNECTING)
     m_mqtt_client.disconnect();
-    m_connection_state_changed_callback.Call_Callback(MQTT_Connection_State::DISCONNECTED);
+    update_connection_state(MQTT_Connection_State::DISCONNECTED)
 }
 
 bool Arduino_MQTT_Client::loop() {
@@ -114,6 +114,11 @@ MQTT_Connection_Error connect_mqtt_client(char const * client_id, char const * u
     m_mqtt_client.connect(client_id, user_name, password);
     int const current_state = m_mqtt_client.state();
     return current_state < 0 ?  MQTT_Connection_Error::REFUSE_SERVER_UNAVAILABLE : static_cast<MQTT_Connection_Error>(current_state);
+}
+
+void update_connection_state(MQTT_Connection_State new_state) {
+  m_connection_state = new_state;
+  m_connection_state_changed_callback.Call_Callback(get_connection_state(), get_last_connection_error());
 }
 
 #endif // ARDUINO
