@@ -171,7 +171,7 @@ All internal methods call attempt to utilize the stack as far as possible and co
 
 ### Too much data fields must be serialized
 
-The `sendAttributes` and `sendTelemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) this requires the `MaxKeyValuePairAmount` template argument to be passed in the method template list. If more key-value pairs are sent than specified, the `"Serial Monitor"` window will get a respective log showing an error:
+The `Send_Attributes` and `Send_Telemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) this requires the `MaxKeyValuePairAmount` template argument to be passed in the method template list. If more key-value pairs are sent than specified, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
 [TB] Unable to serialize key-value json
@@ -611,6 +611,18 @@ class Custom_MQTT_Client : public IMQTT_Client {
 
     bool connected() override {
         return true;
+    }
+
+    MQTT_Connection_State get_connection_state() override {
+        return MQTT_Connection_State::DISCONNECTED;
+    }
+
+    MQTT_Connection_Error get_last_connection_error() override {
+        return MQTT_Connection_Error::NONE;
+    }
+
+    void set_connect_cycle_callback(Callback<void(MQTT_Connection_State, MQTT_Connection_Error)>::function callback) override {
+        // Nothing to do
     }
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS

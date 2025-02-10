@@ -210,10 +210,10 @@ void loop() {
 
   // Send each attribute individually
   Serial.println("Sending device type attribute...");
-  tb.sendAttributeData(DEVICE_TYPE_KEY, SENSOR_VALUE);
+  tb.Send_Attribute_Data(DEVICE_TYPE_KEY, SENSOR_VALUE);
 
   Serial.println("Sending active attribute...");
-  tb.sendAttributeData(ACTIVE_KEY, false);
+  tb.Send_Attribute_Data(ACTIVE_KEY, false);
 
 
   // Send attributes in a batch
@@ -228,9 +228,9 @@ void loop() {
   Telemetry* begin = attributes;
   Telemetry* end = attributes + ATTRIBUTES_SIZE;
 #if THINGSBOARD_ENABLE_DYNAMIC
-  tb.sendAttributes(begin, end);
+  tb.Send_Attributes(begin, end);
 #else
-  tb.sendAttributes<ATTRIBUTES_SIZE>(begin, end);
+  tb.Send_Attributes<ATTRIBUTES_SIZE>(begin, end);
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
 #if !USING_HTTPS

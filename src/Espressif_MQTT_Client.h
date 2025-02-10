@@ -35,16 +35,7 @@ template <typename Logger = DefaultLogger>
 class Espressif_MQTT_Client : public IMQTT_Client {
   public:
     /// @brief Constructs a IMQTT_Client implementation which creates and empty esp_mqtt_client_config_t, which then has to be configured with the other methods in the class
-    Espressif_MQTT_Client()
-      : m_received_data_callback()
-      , m_connected_callback()
-      , m_connected(false)
-      , m_enqueue_messages(false)
-      , m_mqtt_configuration()
-      , m_mqtt_client(nullptr)
-    {
-        // Nothing to do
-    }
+    Espressif_MQTT_Client() = default;
 
     /// @brief Destructor
     ~Espressif_MQTT_Client() {
@@ -276,46 +267,22 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     }
 
     bool connect(char const * client_id, char const * user_name, char const * password) override {
-#if ESP_IDF_VERSION_MAJOR < 5
-        m_mqtt_configuration.client_id = client_id;
-        m_mqtt_configuration.username = user_name;
-        m_mqtt_configuration.password = password;
-#else
-        m_mqtt_configuration.credentials.client_id = client_id;
-        m_mqtt_configuration.credentials.username = user_name;
-        m_mqtt_configuration.credentials.authentication.password = password;
-#endif // ESP_IDF_VERSION_MAJOR < 5
-        // Update configuration is called to ensure that if we connected previously and call connect again with other credentials,
-        // then we also update the client_id, username and password we connect with. Especially important for the provisioning workflow to work correctly
-        update_configuration();
-
-        // Check wheter the client has been initalzed before already, it it has we do not want to reinitalize,
-        // but simply force reconnection with the client because it has lost that connection
-        if (m_mqtt_client != nullptr) {
-            const esp_err_t error = esp_mqtt_client_reconnect(m_mqtt_client);
-            return error == ESP_OK;
+        esp_err_t const error = start_or_reconnect_mqtt_client(client_id, user_name, password);
+        if (error == ESP_OK) {
+            update_connection_state(MQTT_Connection_State::CONNECTING);
         }
-
-        // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
-        // additionally before we attempt to connect with the client we have to ensure it is configued by then.
-        m_mqtt_client = esp_mqtt_client_init(&m_mqtt_configuration);
-        esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, this);
-
-        if (error != ESP_OK) {
-            return false;
-        }
-        error = esp_mqtt_client_start(m_mqtt_client);
         return error == ESP_OK;
     }
 
     void disconnect() override {
         (void)esp_mqtt_client_disconnect(m_mqtt_client);
+        update_connection_state(MQTT_Connection_State::DISCONNECTING);
     }
 
     bool loop() override {
         // Unused because the esp mqtt client uses its own task to handle receiving and sending of data, therefore we do not need to do anything in the loop method.
         // Because the loop method is meant for clients that do not have their own process method but instead rely on the upper level code calling a loop method to provide processsing time.
-        return m_connected;
+        return connected();
     }
 
     bool publish(char const * topic, uint8_t const * payload, size_t const & length) override {
@@ -357,7 +324,19 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     }
 
     bool connected() override {
-        return m_connected;
+        return m_connection_state == MQTT_Connection_State::CONNECTED;
+    }
+
+    MQTT_Connection_State get_connection_state() override {
+        return m_connection_state;
+    }
+
+    MQTT_Connection_Error get_last_connection_error() override {
+        return m_last_connection_error;
+    }
+
+    void set_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override {
+        m_connection_state_changed_callback.Set_Callback(callback);
     }
 
 private:
@@ -377,6 +356,44 @@ private:
         Logger::printfln(UPDATING_CONFIGURATION, esp_err_to_name(error));
 #endif // THINGSBOARD_ENABLE_DEBUG
         return error == ESP_OK;
+    }
+
+    esp_err_t start_or_reconnect_mqtt_client(char const * client_id, char const * user_name, char const * password) {
+#if ESP_IDF_VERSION_MAJOR < 5
+        m_mqtt_configuration.client_id = client_id;
+        m_mqtt_configuration.username = user_name;
+        m_mqtt_configuration.password = password;
+#else
+        m_mqtt_configuration.credentials.client_id = client_id;
+        m_mqtt_configuration.credentials.username = user_name;
+        m_mqtt_configuration.credentials.authentication.password = password;
+#endif // ESP_IDF_VERSION_MAJOR < 5
+        // Update configuration is called to ensure that if we connected previously and call connect again with other credentials,
+        // then we also update the client_id, username and password we connect with. Especially important for the provisioning workflow to work correctly
+        update_configuration();
+
+        // Check wheter the client has been initalzed before already, it it has we do not want to reinitalize,
+        // but simply force reconnection with the client because it has lost that connection
+        if (m_mqtt_client != nullptr) {
+            return esp_mqtt_client_reconnect(m_mqtt_client);
+        }
+
+        // The client is first initalized once the connect has actually been called, this is done because the passed setting are required for the client inizialitation structure,
+        // additionally before we attempt to connect with the client we have to ensure it is configued by then.
+        m_mqtt_client = esp_mqtt_client_init(&m_mqtt_configuration);
+        esp_err_t error = esp_mqtt_client_register_event(m_mqtt_client, esp_mqtt_event_id_t::MQTT_EVENT_ANY, Espressif_MQTT_Client::static_mqtt_event_handler, this);
+
+        if (error == ESP_OK) {
+            error = esp_mqtt_client_start(m_mqtt_client);
+        }
+        return error;
+    }
+
+    /// @brief Updates the interal connection state and informs the subscribed subject, about changes to the internal state
+    /// @param new_state New state the connection to the MQTT broker is in now and the subject should be informed about
+    void update_connection_state(MQTT_Connection_State new_state) {
+        m_connection_state = new_state;
+        m_connection_state_changed_callback.Call_Callback(get_connection_state(), get_last_connection_error());
     }
 
 #if THINGSBOARD_ENABLE_DEBUG
@@ -420,11 +437,11 @@ private:
 #endif // THINGSBOARD_ENABLE_DEBUG
         switch (event_id) {
             case esp_mqtt_event_id_t::MQTT_EVENT_CONNECTED:
-                m_connected = true;
                 m_connected_callback.Call_Callback();
+                update_connection_state(MQTT_Connection_State::CONNECTED);
                 break;
             case esp_mqtt_event_id_t::MQTT_EVENT_DISCONNECTED:
-                m_connected = false;
+                update_connection_state(MQTT_Connection_State::DISCONNECTED);
                 break;
             case esp_mqtt_event_id_t::MQTT_EVENT_DATA: {
                 // Check wheter the given message has not bee received completly, but instead would be received in multiple chunks,
@@ -438,6 +455,15 @@ private:
                 char topic[event->topic_len + 1] = {};
                 strncpy(topic, event->topic, event->topic_len);
                 m_received_data_callback.Call_Callback(topic, reinterpret_cast<uint8_t*>(event->data), event->data_len);
+                break;
+            }
+            case esp_mqtt_event_id_t::MQTT_EVENT_ERROR: {
+                esp_mqtt_error_codes_t const * error = event->error_handle;
+                if (error == nullptr) {
+                    break;
+                }
+                m_last_connection_error = static_cast<MQTT_Connection_Error>(error->connect_return_code);
+                update_connection_state(MQTT_Connection_State::ERROR);
                 break;
             }
             default:
@@ -454,12 +480,14 @@ private:
         instance->mqtt_event_handler(base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
     }
 
-    Callback<void, char *, uint8_t *, unsigned int> m_received_data_callback = {}; // Callback that will be called as soon as the mqtt client receives any data
-    Callback<void>                                  m_connected_callback = {};     // Callback that will be called as soon as the mqtt client has connected
-    bool                                            m_connected = {};              // Whether the client has received the connected or disconnected event
-    bool                                            m_enqueue_messages = {};       // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
-    esp_mqtt_client_config_t                        m_mqtt_configuration = {};     // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
-    esp_mqtt_client_handle_t                        m_mqtt_client = {};            // Handle to the underlying mqtt client, used to establish the communication
+    Callback<void, char *, uint8_t *, unsigned int>              m_received_data_callback = {};            // Callback that will be called as soon as the mqtt client receives any data
+    Callback<void>                                               m_connected_callback = {};                // Callback that will be called as soon as the mqtt client has connected
+    Callback<void, MQTT_Connection_State, MQTT_Connection_Error> m_connection_state_changed_callback = {}; // Callback that will be called as soon as the mqtt client connection changes
+    MQTT_Connection_State                                        m_connection_state = {};                  // Current connection state to the MQTT broker
+    MQTT_Connection_Error                                        m_last_connection_error = {};             // Last error that occured while trying to establish a connection to the MQTT broker
+    bool                                                         m_enqueue_messages = {};                  // Whether we enqueue messages making nearly all ThingsBoard calls non blocking or wheter we publish instead
+    esp_mqtt_client_config_t                                     m_mqtt_configuration = {};                // Configuration of the underlying mqtt client, saved as a private variable to allow changes after inital configuration with the same options for all non changed settings
+    esp_mqtt_client_handle_t                                     m_mqtt_client = {};                       // Handle to the underlying mqtt client, used to establish the communication
 };
 
 #endif // THINGSBOARD_USE_ESP_MQTT

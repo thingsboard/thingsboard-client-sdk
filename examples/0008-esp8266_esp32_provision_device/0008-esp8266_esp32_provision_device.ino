@@ -273,8 +273,8 @@ void loop() {
       }
     } else {
       Serial.println("Sending telemetry...");
-      tb.sendTelemetryData(TEMPERATURE_KEY, 22);
-      tb.sendTelemetryData(HUMIDITY_KEY, 42.5);
+      tb.Send_Telemetry_Data(TEMPERATURE_KEY, 22);
+      tb.Send_Telemetry_Data(HUMIDITY_KEY, 42.5);
     }
   }
 

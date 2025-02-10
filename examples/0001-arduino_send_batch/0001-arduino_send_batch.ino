@@ -144,7 +144,7 @@ void loop() {
   // for more details
   Telemetry* begin = data;
   Telemetry* end = data + TELEMETRY_SIZE;
-  tb.sendTelemetry<TELEMETRY_SIZE>(begin, end);
+  tb.Send_Telemetry<TELEMETRY_SIZE>(begin, end);
 
   Serial.println("Sending attributes data...");
 
@@ -168,7 +168,7 @@ void loop() {
   // for more details
   begin = attributes;
   end = attributes + ATTRIBUTES_SIZE;
-  tb.sendAttributes<ATTRIBUTES_SIZE>(begin, end);
+  tb.Send_Attributes<ATTRIBUTES_SIZE>(begin, end);
 
   tb.loop();
 }

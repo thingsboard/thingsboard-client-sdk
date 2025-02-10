@@ -4,6 +4,8 @@
 // Local include.
 #include "Callback.h"
 #include "DefaultLogger.h"
+#include "MQTT_Connection_State.h"
+#include "MQTT_Connection_Error.h"
 
 // Library include.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -37,7 +39,8 @@ class IMQTT_Client {
     virtual void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) = 0;
 
     /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker.
-    /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
+    /// Directly set by the used ThingsBoard client to its internal method, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing.
+    /// It is recommended to use @ref set_connection_state_changed_callback method instead
     /// @param callback Method that should be called on established MQTT connection
     virtual void set_connect_callback(Callback<void>::function callback) = 0;
 
@@ -114,6 +117,24 @@ class IMQTT_Client {
     /// false meaning we have been disconnected or have not established a connection yet
     /// @return Whether the client is currently connected or not
     virtual bool connected() = 0;
+
+    /// @brief Get the current connection state to MQTT, includes intermediate states between connecting and disconnecting for the @ref Espressif_MQTT_Client which is non blocking.
+    /// Meaning calling disconnect will not immediately disconnect from the cloud but instead require a while. In comparsion @ref Arduino_MQTT_Client is blocking, meaning we block until we disconnected or connected.
+    /// If the ERROR state is returned, the reason for the failed connection can be deciphered more clearly using @ref get_last_connection_error
+    /// @return The current state of the connection to the MQTT broker
+    virtual MQTT_Connection_State get_connection_state() = 0;
+
+    /// @brief Allows to deciper the reason for a failure, while attempting to establish a connection to the MQTT broker.
+    /// Shows the reason for the last failure to connect or the current one, if @ref get_connection_state returns the ERROR state
+    /// @return The last error that occured while attempting to establish a connection to MQTT
+    virtual MQTT_Connection_Error get_last_connection_error() = 0;
+
+    /// @brief Sets the callback that is called, whenever the underlying state of our connection with the MQTT broker changes.
+    /// Meaning it is called when we for example attempt to connect to the MQTT broker, or once the underlying client has connected or failed.
+    /// Passes the current connection state, also accessible with @ref get_connection_state
+    /// and the last error that occured while trying to connect, also accessible with @ref get_last_connection_error as additional information
+    /// @param callback Method that should be called on state changes to our MQTT connection 
+    virtual void set_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) = 0;
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 

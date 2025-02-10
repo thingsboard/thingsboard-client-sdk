@@ -36,11 +36,11 @@ Send_Json   KEYWORD2
 Send_Json_String    KEYWORD2
 Claim_Request   KEYWORD2
 Provision_Request   KEYWORD2
-sendTelemetryData   KEYWORD2
-sendTelemetry   KEYWORD2
+Send_Telemetry_Data   KEYWORD2
+Send_Telemetry   KEYWORD2
 sendTelemetryJson   KEYWORD2
-sendAttributeData   KEYWORD2
-sendAttributes  KEYWORD2
+Send_Attribute_Data   KEYWORD2
+Send_Attributes  KEYWORD2
 sendAttributeJSON   KEYWORD2
 Client_Attributes_Request   KEYWORD2
 RPC_Subscribe   KEYWORD2

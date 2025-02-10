@@ -58,7 +58,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Sets the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack
-    void setMaximumStackSize(size_t const & max_stack_size) {
+    void Set_Maximum_Stack_Size(size_t const & max_stack_size) {
         m_max_stack = max_stack_size;
     }
 
@@ -82,7 +82,7 @@ class ThingsBoardHttpSized {
             return false;
         }
         bool result = false;
-        if (getMaximumStackSize() < json_size) {
+        if (Get_Maximum_Stack_Size() < json_size) {
             char * json = new char[json_size]();
             if (serializeJson(source, json, json_size) < json_size - 1) {
                 Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
@@ -117,7 +117,7 @@ class ThingsBoardHttpSized {
 
         char path[Helper::detectSize(topic, m_token)] = {};
         (void)snprintf(path, sizeof(path), topic, m_token);
-        return postMessage(path, json);
+        return Post_Message(path, json);
     }
 
     //----------------------------------------------------------------------------
@@ -130,8 +130,8 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendTelemetryData(char const * key, T const & value) {
-        return sendKeyValue(key, value);
+    bool Send_Telemetry_Data(char const * key, T const & value) {
+        return Send_Key_Value_Pair(key, value);
     }
 
     /// @brief Attempts to send aggregated telemetry data, expects iterators to a container containing Telemetry class instances.
@@ -149,11 +149,11 @@ class ThingsBoardHttpSized {
     /// Should simply be the biggest distance between first and last iterator this method is ever called with
     template<size_t MaxKeyValuePairAmount, typename InputIterator>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    bool sendTelemetry(InputIterator const & first, InputIterator const & last) {
+    bool Send_Telemetry(InputIterator const & first, InputIterator const & last) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-        return sendDataArray(first, last, true);
+        return Send_Data_Array(first, last, true);
 #else
-        return sendDataArray<MaxKeyValuePairAmount>(first, last, true);
+        return Send_Data_Array<MaxKeyValuePairAmount>(first, last, true);
 #endif // THINGSBOARD_ENABLE_DYNAMIC
     }
 
@@ -161,7 +161,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    bool sendTelemetryString(char const * json) {
+    bool Send_Telemetry_String(char const * json) {
         return Send_Json_String(HTTP_TELEMETRY_TOPIC, json);
     }
 
@@ -171,7 +171,7 @@ class ThingsBoardHttpSized {
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool sendTelemetryJson(JsonDocument const & source, size_t const & json_size) {
+    bool Send_Telemetry_Json(JsonDocument const & source, size_t const & json_size) {
         return Send_Json(HTTP_TELEMETRY_TOPIC, source, json_size);
     }
 
@@ -181,19 +181,19 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
 #if THINGSBOARD_ENABLE_STL
-    bool sendGetRequest(char const * path, std::string & response) {
+    bool Send_Get_Request(char const * path, std::string & response) {
 #else
-    bool sendGetRequest(char const * path, String& response) {
+    bool Send_Get_Request(char const * path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
-        return getMessage(path, response);
+        return Get_Message(path, response);
     }
 
     /// @brief Attempts to send a POST request over HTTP or HTTPS
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
-    bool sendPostRequest(char const * path, char const * json) {
-        return postMessage(path, json);
+    bool Send_Post_Request(char const * path, char const * json) {
+        return Post_Message(path, json);
     }
 
     //----------------------------------------------------------------------------
@@ -206,8 +206,8 @@ class ThingsBoardHttpSized {
     /// @param value Value of the key value pair we want to send
     /// @return Whether sending the data was successful or not
     template<typename T>
-    bool sendAttributeData(char const * key, T const & value) {
-        return sendKeyValue(key, value, false);
+    bool Send_Attribute_Data(char const * key, T const & value) {
+        return Send_Key_Value_Pair(key, value, false);
     }
 
     /// @brief Attempts to send aggregated attribute data, expects iterators to a container containing Attribute class instances.
@@ -225,11 +225,11 @@ class ThingsBoardHttpSized {
     /// Should simply be the biggest distance between first and last iterator this method is ever called with
     template<size_t MaxKeyValuePairAmount, typename InputIterator>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    bool sendAttributes(InputIterator const & first, InputIterator const & last) {
+    bool Send_Attributes(InputIterator const & first, InputIterator const & last) {
 #if THINGSBOARD_ENABLE_DYNAMIC
-        return sendDataArray(first, last, false);
+        return Send_Data_Array(first, last, false);
 #else
-        return sendDataArray<MaxKeyValuePairAmount>(first, last, false);
+        return Send_Data_Array<MaxKeyValuePairAmount>(first, last, false);
 #endif // THINGSBOARD_ENABLE_DYNAMIC
     }
 
@@ -237,7 +237,7 @@ class ThingsBoardHttpSized {
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the data was successful or not
-    bool sendAttributeString(char const * json) {
+    bool Send_Attribute_String(char const * json) {
         return Send_Json_String(HTTP_ATTRIBUTES_TOPIC, json);
     }
 
@@ -247,20 +247,20 @@ class ThingsBoardHttpSized {
     /// is checked before usage for any possible occuring internal errors. See https://arduinojson.org/v6/api/jsondocument/ for more information
     /// @param json_size Size of the data inside the source
     /// @return Whether sending the data was successful or not
-    bool sendAttributeJson(JsonDocument const & source, size_t const & json_size) {
+    bool Send_Attribute_Json(JsonDocument const & source, size_t const & json_size) {
         return Send_Json(HTTP_ATTRIBUTES_TOPIC, source, json_size);
     }
 
   private:
     /// @brief Returns the maximum amount of bytes that we want to allocate on the stack, before the memory is allocated on the heap instead
     /// @return Maximum amount of bytes we want to allocate on the stack
-    size_t const & getMaximumStackSize() const {
+    size_t const & Get_Maximum_Stack_Size() const {
         return m_max_stack;
     }
 
     /// @brief Clears any remaining memory of the previous conenction,
     /// and resets the TCP as well, if data is resend the TCP connection has to be re-established
-    void clearConnection() {
+    void Clear_Connection() {
         m_client.stop();
     }
 
@@ -268,7 +268,7 @@ class ThingsBoardHttpSized {
     /// @param path API path we want to send data to (example: /api/v1/$TOKEN/attributes)
     /// @param json String containing our json key value pairs we want to attempt to send
     /// @return Whetherr sending the POST request was successful or not
-    bool postMessage(char const * path, char const * json) {
+    bool Post_Message(char const * path, char const * json) {
         bool success = m_client.post(path, HTTP_POST_PATH, json) == 0;
         int const status = m_client.get_response_status_code();
 
@@ -277,7 +277,7 @@ class ThingsBoardHttpSized {
             success = false;
         }
 
-        clearConnection();
+        Clear_Connection();
         return success;
     }
 
@@ -287,9 +287,9 @@ class ThingsBoardHttpSized {
     /// will not be changed if the GET request wasn't successful
     /// @return Whetherr sending the GET request was successful or not
 #if THINGSBOARD_ENABLE_STL
-    bool getMessage(char const * path, std::string& response) {
+    bool Get_Message(char const * path, std::string& response) {
 #else
-    bool getMessage(char const * path, String& response) {
+    bool Get_Message(char const * path, String& response) {
 #endif // THINGSBOARD_ENABLE_STL
         bool success = m_client.get(path);
         int const status = m_client.get_response_status_code();
@@ -302,7 +302,7 @@ class ThingsBoardHttpSized {
         response = m_client.get_response_body();
 
         cleanup:
-        clearConnection();
+        Clear_Connection();
         return success;
     }
 
@@ -321,7 +321,7 @@ class ThingsBoardHttpSized {
     /// Should simply be the biggest distance between first and last iterator this method is ever called with
     template<size_t MaxKeyValuePairAmount, typename InputIterator>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-    bool sendDataArray(InputIterator const & first, InputIterator const & last, bool telemetry) {
+    bool Send_Data_Array(InputIterator const & first, InputIterator const & last, bool telemetry) {
         size_t const size = Helper::distance(first, last);
 #if THINGSBOARD_ENABLE_DYNAMIC
         TBJsonDocument json_buffer(JSON_OBJECT_SIZE(size));
@@ -347,7 +347,7 @@ class ThingsBoardHttpSized {
             }
         }
 #endif // THINGSBOARD_ENABLE_STL
-        return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
+        return telemetry ? Send_Telemetry_Json(json_buffer, Helper::Measure_Json(json_buffer)) : Send_Attribute_Json(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
     /// @brief Sends single key-value attribute or telemetry data in a generic way
@@ -357,7 +357,7 @@ class ThingsBoardHttpSized {
     /// @param telemetry Whetherr the aggregated data is telemetry (true) or attribut (false)
     /// @return Whetherr sending the data was successful or not
     template<typename T>
-    bool sendKeyValue(char const * key, T value, bool telemetry = true) {
+    bool Send_Key_Value_Pair(char const * key, T value, bool telemetry = true) {
         Telemetry const t(key, value);
         if (t.IsEmpty()) {
             // Message is ignored and not sent at all.
@@ -369,7 +369,7 @@ class ThingsBoardHttpSized {
             Logger::printfln(UNABLE_TO_SERIALIZE);
             return false;
         }
-        return telemetry ? sendTelemetryJson(json_buffer, Helper::Measure_Json(json_buffer)) : sendAttributeJson(json_buffer, Helper::Measure_Json(json_buffer));
+        return telemetry ? Send_Telemetry_Json(json_buffer, Helper::Measure_Json(json_buffer)) : Send_Attribute_Json(json_buffer, Helper::Measure_Json(json_buffer));
     }
 
     IHTTP_Client& m_client = {};     // HttpClient instance

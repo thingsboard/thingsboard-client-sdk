@@ -211,10 +211,10 @@ void loop() {
   // See https://thingsboard.io/docs/reference/http-api/#telemetry-upload-api
   // for more details
   Serial.println("Sending temperature data...");
-  tb.sendTelemetryData(TEMPERATURE_KEY, random(10, 31));
+  tb.Send_Telemetry_Data(TEMPERATURE_KEY, random(10, 31));
 
   Serial.println("Sending humidity data...");
-  tb.sendTelemetryData(HUMIDITY_KEY, random(40, 90));
+  tb.Send_Telemetry_Data(HUMIDITY_KEY, random(40, 90));
 
 #if !USING_HTTPS
   tb.loop();
