@@ -47,7 +47,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         size_t const size = Helper::distance(first, last);
         if (m_shared_attribute_update_callbacks.size() + size > m_shared_attribute_update_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -74,7 +74,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_shared_attribute_update_callbacks.size() + 1U > m_shared_attribute_update_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

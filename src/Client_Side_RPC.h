@@ -188,7 +188,7 @@ class Client_Side_RPC : public IAPI_Implementation {
     bool RPC_Request_Subscribe(RPC_Request_Callback const & callback, RPC_Request_Callback * & registered_callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, CLIENT_SIDE_RPC_SUBSCRIPTIONS);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, CLIENT_SIDE_RPC_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

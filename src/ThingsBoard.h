@@ -24,6 +24,8 @@ char constexpr MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME[] = "MaxEndpointsAmount";
 #if THINGSBOARD_ENABLE_DYNAMIC
 char constexpr MAXIMUM_RESPONSE_EXCEEDED[] = "Prevented allocation on the heap (%u) for JsonDocument. Discarding message that is bigger than maximum response size (%u)";
 char constexpr HEAP_ALLOCATION_FAILED[] = "Failed allocating required size (%u) for JsonDocument. Ensure there is enough heap memory left";
+#else
+char constexpr API_SUBSCRIPTIONS[] = "API implementation";
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
 char constexpr RECEIVE_MESSAGE[] = "Received (%u) bytes of data from server over topic (%s)";
@@ -363,7 +365,7 @@ class ThingsBoardSized {
     void Subscribe_API_Implementation(IAPI_Implementation & api) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_api_implementations.size() + 1 > m_api_implementations.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME, MaxEndpointsAmount);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, API_SUBSCRIPTIONS, MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME);
             return;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -389,7 +391,7 @@ class ThingsBoardSized {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         size_t const size = Helper::distance(first, last);
         if (m_api_implementations.size() + size > m_api_implementations.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME, MaxEndpointsAmount);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, API_SUBSCRIPTIONS, MAX_ENDPOINTS_AMOUNT_TEMPLATE_NAME);
             return;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC

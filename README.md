@@ -214,7 +214,7 @@ Alternatively to remove the need for the `MaxResponse`template argument in the c
 The possible event subscription classes that are passed to internal methods, use arrays which reside on the stack those require the `MaxSubscriptions` template argument to be passed in the constructor template list. The default value is 1, if the method call attempts to subscribe more than that many events in total, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
-[TB] Too many shared attribute update subscriptions, increase MaxSubscriptions or unsubscribe
+[TB] Too many (shared attribute update) subscriptions, increase (MaxSubscriptions) or unsubscribe"
 ```
 
 Important is that both server-side RPC and request attribute values are temporary, meaning once the request has been received it is deleted, and it is therefore possible to subscribe another event again. However, all other subscriptions like client-side RPC or attribute update subscription are permanent meaning once the event has been subscribed we can only unsubscribe all events to make more room.

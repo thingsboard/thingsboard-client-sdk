@@ -60,7 +60,7 @@ class Server_Side_RPC : public IAPI_Implementation {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         size_t const size = Helper::distance(first, last);
         if (m_rpc_callbacks.size() + size > m_rpc_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, SERVER_SIDE_RPC_SUBSCRIPTIONS);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SERVER_SIDE_RPC_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -83,7 +83,7 @@ class Server_Side_RPC : public IAPI_Implementation {
     bool RPC_Subscribe(RPC_Callback const & callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_rpc_callbacks.size() + 1 > m_rpc_callbacks.capacity()) {
-            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, MAX_SUBSCRIPTIONS_TEMPLATE_NAME, SERVER_SIDE_RPC_SUBSCRIPTIONS);
+            Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SERVER_SIDE_RPC_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
             return false;
         }
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
