@@ -262,9 +262,7 @@ class ThingsBoardSized {
         m_client.set_connection_state_changed_callback(callback);
     }
 
-    /// @brief Receives / sends any outstanding messages from and to the MQTT broker.
-    /// Additionally when not being able to use the ESP Timer, it updates the internal timeout timers
-    /// @return Whether sending or receiving the oustanding the messages was successful or not
+    /// @copybrief IMQTT_Client::loop
     bool loop() {
 #if !THINGSBOARD_USE_ESP_TIMER
         for (auto & api : m_api_implementations) {

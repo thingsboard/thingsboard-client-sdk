@@ -8,16 +8,22 @@
 #include <assert.h>
 
 
-/// @brief Replacement data container for boards that do not support the C++ STL and therefore do not have the std::array class.
-/// @tparam T Type of the underlying data the list should point too.
-/// @tparam Capacity Amount of elements that can be saved into the underlying data structure allows to wrap a simple c-array and allocate it on the stack.
+/// @brief Replacement data container for boards that do not support the C++ STL and therefore do not have the std::array class
+/// @tparam T Type of the underlying data the list should point too
+/// @tparam Capacity Amount of elements that can be saved into the underlying data structure allows to wrap a simple c-array and allocate it on the stack
 template <typename T, size_t Capacity>
 class Array {
   public:
     using value_type = T;
 
-    /// @brief Constructor
-    Array(void) = default;
+    /// @brief Default constructor, simply initalizes the underlying c-style array with the necessary capacity.
+    /// That capacity always has to be bigger than 0, because initalizing a 0 length c-style array makes no sense
+    Array()
+      : m_elements()
+      , m_size(0U)
+    {
+        static_assert(Capacity > 0);
+    }
 
     /// @brief Constructor that allows compatibility with std::vector, simply forwards call to internal insert method and copies all data between the first and last iterator
     /// @tparam InputIterator Class that points to the begin and end iterator
@@ -27,8 +33,7 @@ class Array {
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     template<typename InputIterator>
     Array(InputIterator const & first, InputIterator const & last)
-      : m_elements()
-      , m_size(0U)
+      : Array()
     {
         insert(nullptr, first, last);
     }
@@ -41,8 +46,7 @@ class Array {
     /// @param container Data container with begin() and end() method that we want to copy fully into our underlying data container
     template<typename Container>
     Array(Container const & container)
-      : m_elements()
-      , m_size(0U)
+      : Array()
     {
         insert(nullptr, container.begin(), container.end());
     }

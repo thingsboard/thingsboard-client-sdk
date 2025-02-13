@@ -85,12 +85,18 @@ class IMQTT_Client {
     /// @return Whether the client could establish the connection successfully or not
     virtual bool connect(char const * client_id, char const * user_name, char const * password) = 0;
 
-    /// @brief Disconnects from a previously connected server and should release all used resources
+    /// @brief Force disconnects from the previously connected server and should release all used resources.
+    /// @note Be aware that @ref Espressif_MQTT_Client automatically reconnects, as long as @ref Espressif_MQTT_Client::set_disable_auto_reconnect was not set to true
     virtual void disconnect() = 0;
 
-    /// @brief Receives and sends any outstanding messages from and to the MQTT broker
-    /// @return Whether sending or receiving the oustanding the messages was successful or not,
-    /// should return false if an internal error occured or the connection has been lost
+    /// @brief Receives / sends any outstanding messages from and to the MQTT broker,
+    /// only required if the MQTT client is blocking and does not use a seperate task to process messages.
+    /// This is the case for @ref Arduino_MQTT_Client, which requires calls to this method to actually process the received and sent data.
+    /// For the @ref Espressif_MQTT_Client however, this method simply does nothing and never needs to be called,
+    /// because received and set data is processed using a seperate FreeRTOS task
+    /// @return Whether sending or receiving the oustanding the messages was successful or not.
+    /// Returns false if an internal error occured or the connection has been lost.
+    /// Exact state can be read from @ref get_connection_state and @ref get_last_connection_error
     virtual bool loop() = 0;
 
     /// @brief Sends the given payload over the previously established connection with connect
