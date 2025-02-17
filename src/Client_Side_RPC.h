@@ -146,7 +146,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         }
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return strncmp(RPC_RESPONSE_TOPIC, topic, strlen(RPC_RESPONSE_TOPIC)) == 0;
     }
 
@@ -154,7 +154,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         return RPC_Request_Unsubscribe();
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         m_rpc_request_callbacks.clear();
         return Unsubscribe();
     }
@@ -205,7 +205,7 @@ class Client_Side_RPC : public IAPI_Implementation {
     /// @return Whether unsubcribing the previously subscribed callbacks
     /// and from the client-side RPC response topic, was successful or not
     bool RPC_Request_Unsubscribe() {
-        (void)Resubscribe_Topic();
+        (void)Resubscribe_Permanent_Subscriptions();
         return m_unsubscribe_topic_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);
     }
 

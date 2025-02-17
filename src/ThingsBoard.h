@@ -136,7 +136,7 @@ class ThingsBoardSized {
         // Initialize callback.
 #if THINGSBOARD_ENABLE_STL
         m_client.set_data_callback(std::bind(&ThingsBoardSized::On_MQTT_Message, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-        m_client.set_connect_callback(std::bind(&ThingsBoardSized::Resubscribe_Topics, this));
+        m_client.set_connect_callback(std::bind(&ThingsBoardSized::Resubscribe_Permanent_Subscriptionss, this));
 #else
         m_client.set_data_callback(ThingsBoardSized::On_Static_MQTT_Message);
         m_client.set_connect_callback(ThingsBoardSized::Static_MQTT_Connect);
@@ -626,13 +626,13 @@ class ThingsBoardSized {
     /// Only the topics that establish a permanent connection are resubscribed, because all not yet received data is discard on the MQTT broker,
     // once we establish a connection again. This is the case because we connect with the cleanSession attribute set to true.
     // Therefore we can also clear the buffer of all non-permanent topics.
-    void Resubscribe_Topics() {
+    void Resubscribe_Permanent_Subscriptionss() {
         // Results are ignored, because the important part of clearing internal data structures always succeeds
         for (auto & api : m_api_implementations) {
             if (api == nullptr) {
                 continue;
             }
-            (void)api->Resubscribe_Topic();
+            (void)api->Resubscribe_Permanent_Subscriptions();
         }
     }
 
@@ -730,7 +730,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
         std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_raw_api_implementations), [&topic](IAPI_Implementation const * api) {
 #endif // THINGSBOARD_ENABLE_CXX20
-            return (api != nullptr && api->Get_Process_Type() == API_Process_Type::RAW && api->Compare_Response_Topic(topic));
+            return (api != nullptr && api->Get_Process_Type() == API_Process_Type::RAW && api->Is_Response_Topic_Matching(topic));
         });
 
         for (auto & api : filtered_raw_api_implementations) {
@@ -746,7 +746,7 @@ class ThingsBoardSized {
 #else
         bool processed_response_as_raw = false;
         for (auto & api : m_api_implementations) {
-            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || !api->Compare_Response_Topic(topic)) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::RAW || !api->Is_Response_Topic_Matching(topic)) {
                 continue;
             }
             api->Process_Response(topic, payload, length);
@@ -809,7 +809,7 @@ class ThingsBoardSized {
 #endif // THINGSBOARD_ENABLE_DYNAMIC
         std::copy_if(m_api_implementations.begin(), m_api_implementations.end(), std::back_inserter(filtered_json_api_implementations), [&topic](IAPI_Implementation const * api) {
 #endif // THINGSBOARD_ENABLE_CXX20
-            return (api != nullptr && api->Get_Process_Type() == API_Process_Type::JSON && api->Compare_Response_Topic(topic));
+            return (api != nullptr && api->Get_Process_Type() == API_Process_Type::JSON && api->Is_Response_Topic_Matching(topic));
         });
 
         for (auto & api : filtered_json_api_implementations) {
@@ -817,7 +817,7 @@ class ThingsBoardSized {
         }
 #else
         for (auto & api : m_api_implementations) {
-            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || !api->Compare_Response_Topic(topic)) {
+            if (api == nullptr || api->Get_Process_Type() != API_Process_Type::JSON || !api->Is_Response_Topic_Matching(topic)) {
                 continue;
             }
             api->Process_Json_Response(topic, json_buffer);
@@ -837,7 +837,7 @@ class ThingsBoardSized {
         if (m_subscribedInstance == nullptr) {
             return;
         }
-        m_subscribedInstance->Resubscribe_Topics();
+        m_subscribedInstance->Resubscribe_Permanent_Subscriptionss();
     }
 
     static void Static_Subscribe_Implementation(IAPI_Implementation & api) {

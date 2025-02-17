@@ -379,7 +379,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         // Nothing to do
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return true;
     }
 
@@ -387,7 +387,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         return true;
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         return true;
     }
 

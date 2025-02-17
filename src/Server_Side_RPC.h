@@ -171,7 +171,7 @@ class Server_Side_RPC : public IAPI_Implementation {
         }
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return strncmp(RPC_REQUEST_TOPIC, topic, strlen(RPC_REQUEST_TOPIC)) == 0;
     }
 
@@ -179,7 +179,7 @@ class Server_Side_RPC : public IAPI_Implementation {
         return RPC_Unsubscribe();
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         if (!m_rpc_callbacks.empty() && !m_subscribe_topic_callback.Call_Callback(RPC_SUBSCRIBE_TOPIC)) {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, RPC_SUBSCRIBE_TOPIC);
             return false;

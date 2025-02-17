@@ -160,7 +160,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         }
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return strncmp(ATTRIBUTE_TOPIC, topic, strlen(ATTRIBUTE_TOPIC) + 1) == 0;
     }
 
@@ -168,7 +168,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         return Shared_Attributes_Unsubscribe();
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         if (!m_shared_attribute_update_callbacks.empty() && !m_subscribe_topic_callback.Call_Callback(ATTRIBUTE_TOPIC)) {
             Logger::printfln(SUBSCRIBE_TOPIC_FAILED, ATTRIBUTE_TOPIC);
             return false;

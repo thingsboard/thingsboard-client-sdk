@@ -107,7 +107,7 @@ class Provision : public IAPI_Implementation {
         (void)Provision_Unsubscribe();
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return strncmp(PROV_RESPONSE_TOPIC, topic, strlen(PROV_RESPONSE_TOPIC) + 1) == 0;
     }
 
@@ -115,7 +115,7 @@ class Provision : public IAPI_Implementation {
         return Provision_Unsubscribe();
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         m_provision_callback = Provision_Callback();
         return true;
     }
@@ -148,7 +148,7 @@ private:
     /// @return Whether unsubcribing the previously subscribed callback
     /// and from the provision response topic, was successful or not
     bool Provision_Unsubscribe() {
-        return Resubscribe_Topic();
+        return Resubscribe_Permanent_Subscriptions();
     }
 
     Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};         // Send json document callback

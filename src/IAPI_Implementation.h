@@ -57,11 +57,12 @@ class IAPI_Implementation {
 
     /// @brief Compares received response topic and the topic this api implementation handles responses on,
     /// messages from all other topics are ignored and only messages from topics that match are handled.
-    /// For the comparsion we either compare the full expected string with the null termination, if the response topic does not include additional parameters.
-    /// Example being shared attribute update (v1/devices/me/attributes) or we compare only before the null termination for topics that include additional parameters in the response.
+    /// For the comparsion we either compare the full expected string with the null termination,
+    /// if the response topic does not include additional parameters, example being shared attribute update (v1/devices/me/attributes).
+    /// Or we compare only before the null termination for topics that include additional parameters in the response.
     /// Like for example the original request id in the response of the attribute request (v1/devices/me/attributes/response/1)
     /// @return Whether the received response topic matches the topic this api implementation handles responses on
-    virtual bool Compare_Response_Topic(char const * topic) const = 0;
+    virtual bool Is_Response_Topic_Matching(char const * topic) const = 0;
 
     /// @brief Unsubcribes all callbacks, to clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
     /// @return Whether unsubcribing all the previously subscribed callbacks
@@ -71,7 +72,7 @@ class IAPI_Implementation {
     /// @brief Forwards the call to let the API clear up any ongoing single-event subscriptions (Provision, Attribute Request, RPC Request)
     /// and simply resubscribes the topic for all permanent subscriptions (RPC, Shared Attribute Update)
     /// @return Whether resubscribing was successfull or not
-    virtual bool Resubscribe_Topic() = 0;
+    virtual bool Resubscribe_Permanent_Subscriptions() = 0;
 
 #if !THINGSBOARD_USE_ESP_TIMER
     /// @brief Internal loop method to update inernal timers for API calls that can timeout.

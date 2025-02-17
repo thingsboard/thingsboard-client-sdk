@@ -193,7 +193,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         // Nothing to do
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return strncmp(m_response_topic, topic, strlen(m_response_topic)) == 0;
     }
 
@@ -202,7 +202,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return true;
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         return Firmware_OTA_Subscribe();
     }
 
