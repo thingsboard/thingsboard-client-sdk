@@ -6,6 +6,10 @@
 // Library include.
 #include <Update.h>
 
+Arduino_ESP32_Updater::~Arduino_ESP32_Updater() {
+    reset();
+}
+
 bool Arduino_ESP32_Updater::begin(size_t const & firmware_size) {
     return Update.begin(firmware_size);
 }

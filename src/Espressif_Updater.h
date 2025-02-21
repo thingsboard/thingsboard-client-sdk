@@ -25,6 +25,10 @@ class Espressif_Updater : public IUpdater {
   public:
     Espressif_Updater() = default;
 
+    ~Espressif_Updater() override {
+        reset();
+    }
+
     bool begin(size_t const & firmware_size) override {
         esp_partition_t const * running = esp_ota_get_running_partition();
         esp_partition_t const * configured = esp_ota_get_boot_partition();

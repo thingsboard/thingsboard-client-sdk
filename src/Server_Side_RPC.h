@@ -41,6 +41,8 @@ class Server_Side_RPC : public IAPI_Implementation {
     /// @brief Constructor
     Server_Side_RPC() = default;
 
+    ~Server_Side_RPC() override = default;
+
     /// @brief Subscribes multiple server side RPC callbacks,
     /// that will be called if a request from the server for the method with the given name is received.
     /// Can be called even if we are currently not connected to the cloud,

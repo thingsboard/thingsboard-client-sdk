@@ -77,6 +77,8 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// or if the connection could not be established, default = nullptr
     Provision_Callback(X509_Certificate, function callback, char const * provision_device_key, char const * provision_device_secret, char const * hash, char const * device_name = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
+    ~Provision_Callback() override = default;
+
     /// @brief Gets the device profile provisioning key of the device profile,
     /// that should be used to create the device under
     /// @return Device profile provisioning key

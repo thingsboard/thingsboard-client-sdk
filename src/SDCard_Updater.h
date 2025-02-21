@@ -22,6 +22,10 @@ class SDCard_Updater : public IUpdater {
         // Nothing to do
     }
 
+    ~SDCard_Updater() override {
+        reset();
+    }
+
     bool begin(size_t const & firmware_size) override {
         FILE* file = fopen(m_path, "w");
         if (file == nullptr) {

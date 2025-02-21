@@ -47,8 +47,7 @@ class Callback_Watchdog : public Callback<void> {
     }
 
 #if THINGSBOARD_USE_ESP_TIMER
-    /// @brief Destructor
-    ~Callback_Watchdog() {
+    ~Callback_Watchdog() override {
         // Timer only has to deleted at the end of the lifetime of this object, to ensure no memory leak occurs.
         // But besides that the same timer can simply be stopped and restarted without needing to delete and create the timer again everytime.
         (void)esp_timer_delete(m_oneshot_timer);

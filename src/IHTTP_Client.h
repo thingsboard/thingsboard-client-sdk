@@ -21,6 +21,9 @@
 /// and for Espressif IDF the implementations has not been created yet, the implementations have been tested and should be compatible when used in conjunction with the ThingsBoardHttp client.
 class IHTTP_Client {
   public:
+    /// @copybrief Callback::~Callback
+    virtual ~IHTTP_Client() {}
+
     /// @brief Sets whether to close the HTTP connection for every single request and reconnect once a new request is sent
     /// @param keep_alive Enable or disable to keep the connection alive after a message has been sent.
     /// Is recommended to be always enabled to improve performance and speed, because opening a new connection takes a while especially when using HTTPS

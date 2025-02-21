@@ -22,6 +22,8 @@ class Arduino_MQTT_Client : public IMQTT_Client {
     /// but the actual type of connection does not matter (Ethernet or WiFi)
     Arduino_MQTT_Client(Client & transport_client);
 
+    ~Arduino_MQTT_Client() override = default;
+
     /// @brief Sets the client has to be used if the empty constructor was used initally
     /// @param transport_client Client that is used to send the actual payload via. MQTT, needs to implement the client interface,
     /// but the actual type of connection does not matter (Ethernet or WiFi)

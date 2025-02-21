@@ -42,9 +42,6 @@ char constexpr PAGE_BREAK[] = "=================================";
 char constexpr NEW_FW[] = "A new Firmware is available:";
 char constexpr FROM_TOO[] = "(%s) => (%s)";
 char constexpr DOWNLOADING_FW[] = "Attempting to download over MQTT...";
-char constexpr MQTT_TEMP_BUFFER_INCREASE[] = "Temporarily increasing receive buffer size for OTA update from (%u) too (%u)";
-char constexpr MQTT_TEMP_BUFFER_REVERT[] = "Reverting temporarily increased receive buffer size for OTA update back too (%u)";
-char constexpr SKIP_TEMP_BUFFER_INCREASE[] = "Buffer size of (%u) is already big enough to hold maximum received data from OTA update (%u), skipping increase";
 #endif // THINGSBOARD_ENABLE_DEBUG
 
 
@@ -85,6 +82,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         m_subscribedInstance = nullptr;
 #endif // !THINGSBOARD_ENABLE_STL
     }
+
+    ~OTA_Firmware_Update() override = default;
 
     /// @brief Checks if firmware settings are assigned to the connected device and if they are attempts to use those settings to start a firmware update.
     /// Will only be checked once and if there is no firmware assigned or if the assigned firmware is already installed this method will not update.
@@ -282,9 +281,6 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         // to allow to receive ota chunck packets that might be much bigger than the normal
         // buffer size would allow, therefore we return to the previous value to decrease overall memory usage
         if (m_changed_buffer_size) {
-#if THINGSBOARD_ENABLE_DEBUG
-            Logger::printfln(MQTT_TEMP_BUFFER_REVERT, m_previous_buffer_size);
-#endif // THINGSBOARD_ENABLE_DEBUG
             (void)m_set_buffer_size_callback.Call_Callback(m_previous_buffer_size, m_get_send_size_callback.Call_Callback());
         }
         // Reset now not needed private member variables
@@ -399,19 +395,14 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 
         // Calculate the number of chuncks we need to request,
         // in order to download the complete firmware binary
-        uint16_t const & chunk_size = m_fw_callback.Get_Chunk_Size();
+        const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
 
         // Get the previous buffer size and cache it so the previous settings can be restored.
         m_previous_buffer_size = m_get_receive_size_callback.Call_Callback();
-        uint16_t const target_buffer_size = (chunk_size + 50U);
-        m_changed_buffer_size = m_previous_buffer_size < target_buffer_size;
-
-#if THINGSBOARD_ENABLE_DEBUG
-        Logger::printfln(m_changed_buffer_size ? MQTT_TEMP_BUFFER_INCREASE : SKIP_TEMP_BUFFER_INCREASE, m_previous_buffer_size, target_buffer_size);
-#endif // THINGSBOARD_ENABLE_DEBUG
+        m_changed_buffer_size = m_previous_buffer_size < (chunk_size + 50U);
 
         // Increase size of receive buffer
-        if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(target_buffer_size, m_get_send_size_callback.Call_Callback())) {
+        if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(chunk_size + 50U, m_get_send_size_callback.Call_Callback())) {
             Logger::printfln(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);
             m_fw_callback.Call_Callback(false);

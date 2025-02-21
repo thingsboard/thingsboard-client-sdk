@@ -24,6 +24,8 @@ class RPC_Request_Callback : public Callback<void, JsonDocument const &> {
     /// or if the connection could not be established, default = nullptr
     RPC_Request_Callback(char const * method_name, function received_callback, JsonArray const * parameters = nullptr, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr);
 
+    ~RPC_Request_Callback() override = default;
+
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which RPC_Request_Callback
     /// is connected to which received client-side RPC response

@@ -51,6 +51,11 @@ class Callback {
         // Nothing to do
     }
 
+    /// @brief Virtual default destructor, created to ensure that if a pointer to this class is used and deleted, we will also call the derived base class destructor.
+    /// Deleting a base class destructor that does not have a virtual destructor is undefined behaviour, because the derived class destructor originally instantiated with new is never called.
+    /// This can cause potential memory leaks, because derived classes can not clean up their internal members as expected and instead simply leak them
+    virtual ~Callback() = default;
+
     /// @brief Calls the callback that was subscribed, when this class instance was initally created.
     /// If the default constructor was used or a nullptr was passed instead of a valid function pointer,
     /// this method will check beforehand and simply return with a defaulted instance of the requested return variable

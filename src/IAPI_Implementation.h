@@ -36,6 +36,9 @@ char constexpr TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
 /// @brief Base functionality required by all API implementation
 class IAPI_Implementation {
   public:
+    /// @copybrief Callback::~Callback
+    virtual ~IAPI_Implementation() {}
+
     /// @brief Returns the way the server response should be processed.
     /// Only ever uses one at the time, because the response is either unserialized data which we need to process as such (OTA Firmware Update)
     /// or actually JSON which needs to be serialized (everything else)

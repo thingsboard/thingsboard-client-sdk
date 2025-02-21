@@ -43,6 +43,8 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
         // Nothing to do
     }
 
+    ~Shared_Attribute_Callback() override = default;
+
     /// @brief Gets all the subscribed shared attributes that will result,
     /// in the subscribed method being called if any of those attributes values is changed by the cloud,
     /// with their current value they have been changed to

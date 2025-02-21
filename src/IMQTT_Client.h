@@ -32,6 +32,9 @@ class IMQTT_Client : public Print {
 class IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
   public:
+    /// @copybrief Callback::~Callback
+    virtual ~IMQTT_Client() {}
+
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,
     /// as well as the payload data and the size of that payload data. Directly set by the used ThingsBoard client to its internal methods,
     /// therefore calling again and overriding as a user ist not recommended, unless you know what you are doing

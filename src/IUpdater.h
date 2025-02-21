@@ -13,6 +13,9 @@
 /// @brief Updater interface that contains the method that a class that can be used to flash given binary data onto a device has to implement
 class IUpdater {
   public:
+    /// @copybrief Callback::~Callback
+    virtual ~IUpdater() {}
+
     /// @brief Initalizes the writing of the given data
     /// @param firmware_size Total size of the data that should be written, is done in multiple packets
     /// @return Whether initalizing the update was successful or not

@@ -35,6 +35,8 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
         // Nothing to do
     }
 
+    ~RPC_Callback() override = default;
+
     /// @brief Gets the poiner to the underlying name we expect to be sent via. server-side RPC so that this method callback will be called
     /// @return Pointer to the passed method name
     char const * Get_Name() const {

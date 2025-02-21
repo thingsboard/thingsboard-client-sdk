@@ -38,6 +38,8 @@ class Client_Side_RPC : public IAPI_Implementation {
     /// @brief Constructor
     Client_Side_RPC() = default;
 
+    ~Client_Side_RPC() override = default;
+
     /// @brief Requests one client-side RPC callback,
     /// that will be called if a response from the server for the method with the given name is received.
     /// Because the client-side RPC request is a single event subscription, meaning we only ever receive a response to our request once,

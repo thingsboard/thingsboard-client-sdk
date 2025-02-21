@@ -37,8 +37,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     /// @brief Constructs a IMQTT_Client implementation which creates and empty esp_mqtt_client_config_t, which then has to be configured with the other methods in the class
     Espressif_MQTT_Client() = default;
 
-    /// @brief Destructor
-    ~Espressif_MQTT_Client() {
+    ~Espressif_MQTT_Client() override {
         (void)esp_mqtt_client_destroy(m_mqtt_client);
     }
 

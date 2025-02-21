@@ -28,6 +28,8 @@ class Shared_Attribute_Update : public IAPI_Implementation {
     /// @brief Constructor
     Shared_Attribute_Update() = default;
 
+    ~Shared_Attribute_Update() override = default;
+
     /// @brief Subscribes multiple shared attribute callbacks,
     /// that will be called if the key-value pair from the server for the given shared attributes is received.
     /// Can be called even if we are currently not connected to the cloud,

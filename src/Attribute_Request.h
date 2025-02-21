@@ -43,6 +43,8 @@ class Attribute_Request : public IAPI_Implementation {
     /// @brief Constructor
     Attribute_Request() = default;
 
+    ~Attribute_Request() override = default;
+
     /// @brief Requests one client-side attribute calllback,
     /// that will be called if the key-value pair from the server for the given client-side attributes is received.
     /// Because the client-side attribute request is a single event subscription, meaning we only ever receive a response to our request once,

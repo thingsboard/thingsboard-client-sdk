@@ -30,6 +30,8 @@ class Provision : public IAPI_Implementation {
     /// @brief Constructor
     Provision() = default;
 
+    ~Provision() override = default;
+
     /// @brief Sends provisioning request for a new device, meaning we want to create a device that we can then connect over,
     /// where the given provision device key / secret decide which device profile is used to create the given device with.
     /// Optionally a device name can be passed or be left empty (cloud will use a random string as the name instead).

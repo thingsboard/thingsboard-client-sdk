@@ -55,6 +55,8 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
         // Nothing to do
     }
 
+    ~Attribute_Request_Callback() override = default;
+
     /// @brief Gets the unique request identifier that is connected to the original request,
     /// and will be later used to verifiy which Attribute_Request_Callback
     /// is connected to which received client-side or shared attributes
