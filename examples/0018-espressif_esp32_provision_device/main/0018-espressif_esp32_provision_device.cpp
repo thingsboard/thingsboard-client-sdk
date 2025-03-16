@@ -256,6 +256,11 @@ void provision_device(void *pvParameters) {
         tb.disconnect();
     }
 
+    // Wait for the provisioning device to disconnect
+    while (tb.connected()) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
     // Connect to the ThingsBoard server, as the provisioned client
     tb.connect(THINGSBOARD_SERVER, credentials.username.c_str(), THINGSBOARD_PORT, credentials.client_id.c_str(), credentials.password.c_str());
 

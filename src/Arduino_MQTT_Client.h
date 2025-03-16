@@ -59,7 +59,7 @@ class Arduino_MQTT_Client : public IMQTT_Client {
 
     MQTT_Connection_Error get_last_connection_error() override;
 
-    void set_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override;
+    void subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override;
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 

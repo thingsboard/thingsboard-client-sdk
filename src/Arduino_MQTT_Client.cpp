@@ -86,7 +86,7 @@ MQTT_Connection_Error Arduino_MQTT_Client::get_last_connection_error() {
     return m_last_connection_error;
 }
 
-void Arduino_MQTT_Client::set_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) {
+void Arduino_MQTT_Client::subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) {
     m_connection_state_changed_callback.Set_Callback(callback);
 }
 

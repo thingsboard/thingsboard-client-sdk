@@ -2,7 +2,8 @@
 #include <esp_log.h>
 #include <esp_wifi.h>
 #include <nvs_flash.h>
-#include <string.h>
+#include <esp_random.h>
+
 
 // Whether the given script is using encryption or not,
 // generally recommended as it increases security (communication with the server is not in clear text anymore),
@@ -10,8 +11,8 @@
 // which might not be avaialable on lower end devices.
 #define ENCRYPTED false
 
+
 #include <Espressif_MQTT_Client.h>
-#include <Shared_Attribute_Update.h>
 #include <ThingsBoard.h>
 
 
@@ -24,7 +25,7 @@ constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
 // to understand how to obtain an access token
 constexpr char TOKEN[] = "YOUR_DEVICE_ACCESS_TOKEN";
 
-// Thingsboard we want to establish a connection to
+// Thingsboard we want to establish a connection too
 constexpr char THINGSBOARD_SERVER[] = "demo.thingsboard.io";
 
 // MQTT port used to communicate with the server, 1883 is the default unencrypted MQTT port,
@@ -39,10 +40,6 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 // if the size is to small messages might not be sent or received messages will be discarded
 constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 128U;
 constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 128U;
-
-// Maximum amount of attributs we can request or subscribe, has to be set both in the ThingsBoard template list and Attribute_Request_Callback template list
-// and should be the same as the amount of variables in the passed array. If it is less not all variables will be requested or subscribed
-constexpr size_t MAX_ATTRIBUTES = 6U;
 
 #if ENCRYPTED
 // See https://comodosslstore.com/resources/what-is-a-root-ca-certificate-and-how-do-i-download-it/
@@ -82,27 +79,17 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 )";
 #endif
 
-constexpr const char FW_TAG_KEY[] = "fw_tag";
-char constexpr FW_VER_KEY[] = "fw_version";
-char constexpr FW_TITLE_KEY[] = "fw_title";
-char constexpr FW_CHKS_KEY[] = "fw_checksum";
-char constexpr FW_CHKS_ALGO_KEY[] = "fw_checksum_algorithm";
-char constexpr FW_SIZE_KEY[] = "fw_size";
+constexpr char TEMPERATURE_KEY[] = "temperature";
+constexpr char HUMIDITY_KEY[] = "humidity";
+
 
 // Initalize the Mqtt client instance
 Espressif_MQTT_Client<> mqttClient;
-// Initialize used apis
-Shared_Attribute_Update<1U, MAX_ATTRIBUTES> shared_update;
-const std::array<IAPI_Implementation*, 1U> apis = {
-    &shared_update
-};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;
-// Statuses for subscribing to shared attributes
-bool subscribed = false;
 
 
 /// @brief Callback method that is called if we got an ip address from the connected WiFi meaning we successfully established a connection
@@ -114,56 +101,78 @@ void on_got_ip(void* event_handler_arg, esp_event_base_t event_base, int32_t eve
     wifi_connected = true;
 }
 
+/// @brief Converts the error enum value into a string
+/// @param error Reason the device failed to connect
+/// @return String representing a description of the connection error
+const char * connection_error_to_string(MQTT_Connection_Error error) {
+    switch (error) {
+        case MQTT_Connection_Error::NONE:
+            return "Device connected";
+        case MQTT_Connection_Error::REFUSE_PROTOCOL:
+            return "Non matching MQTT protocol version";
+        case MQTT_Connection_Error::REFUSE_ID_REJECTED:
+            return "Client ID not allowed by the server";
+        case MQTT_Connection_Error::REFUSE_SERVER_UNAVAILABLE:
+            return "MQTT server is unavailable";
+        case MQTT_Connection_Error::REFUSE_BAD_USERNAME:
+            return "Data in the username or password is in the wrong format";
+        case MQTT_Connection_Error::REFUSE_NOT_AUTHORIZED:
+            return "Client is not authorized to connect";
+    }
+}
+
+/// @brief Callback method that is called if the underlying state of the connetion to the MQTT broker changes, meaning we are not connected anymore but attempting to disconnect and so on
+/// @param state Current connection state to the MQTT broker
+/// @param error Last error reason received from the MQTT broker (Relevant if the state is in error mode)
+void on_connection_state_changed(MQTT_Connection_State state, MQTT_Connection_Error error) {
+    switch (state)
+    {
+        case MQTT_Connection_State::DISCONNECTED:
+            ESP_LOGI("MAIN", "Device successfully force disconnected from MQTT broker. Be aware we automatically reconnect after a while if set_disable_auto_reconnect was not called with true");
+            break;
+        case MQTT_Connection_State::CONNECTING:
+            ESP_LOGI("MAIN", "Device is attempting to connect to the MQTT broker");
+            break;
+        case MQTT_Connection_State::CONNECTED:
+            ESP_LOGI("MAIN", "Device successfully connected to the MQTT broker");
+            break;
+        case MQTT_Connection_State::DISCONNECTING:
+            ESP_LOGI("MAIN", "Device is attempting to force disconnect to the MQTT broker");
+            break;
+        case MQTT_Connection_State::ERROR:
+            ESP_LOGI("MAIN", "Device disconnected, because of an underlying error: (%s)", connection_error_to_string(error));
+            break;
+    }
+}
+
 /// @brief Initalizes WiFi connection,
 // will endlessly delay until a connection has been successfully established
 void InitWiFi() {
-    const wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
+  const wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
 
-    esp_netif_config_t netif_config = ESP_NETIF_DEFAULT_WIFI_STA();
-    esp_netif_t *netif = esp_netif_new(&netif_config);
-    assert(netif);
+  esp_netif_config_t netif_config = ESP_NETIF_DEFAULT_WIFI_STA();
+  esp_netif_t *netif = esp_netif_new(&netif_config);
+  assert(netif);
 
-    ESP_ERROR_CHECK(esp_netif_attach_wifi_station(netif));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ip_event_t::IP_EVENT_STA_GOT_IP, &on_got_ip, NULL));
-    ESP_ERROR_CHECK(esp_wifi_set_default_wifi_sta_handlers());
-    ESP_ERROR_CHECK(esp_wifi_set_storage(wifi_storage_t::WIFI_STORAGE_RAM));
+  ESP_ERROR_CHECK(esp_netif_attach_wifi_station(netif));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ip_event_t::IP_EVENT_STA_GOT_IP, &on_got_ip, NULL));
+  ESP_ERROR_CHECK(esp_wifi_set_default_wifi_sta_handlers());
+  ESP_ERROR_CHECK(esp_wifi_set_storage(wifi_storage_t::WIFI_STORAGE_RAM));
 
-    wifi_config_t wifi_config;
-    memset(&wifi_config, 0, sizeof(wifi_config));
-    strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), WIFI_SSID, strlen(WIFI_SSID) + 1);
-    strncpy(reinterpret_cast<char*>(wifi_config.sta.password), WIFI_PASSWORD, strlen(WIFI_PASSWORD) + 1);
+  wifi_config_t wifi_config;
+  memset(&wifi_config, 0, sizeof(wifi_config));
+  strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), WIFI_SSID, strlen(WIFI_SSID) + 1);
+  strncpy(reinterpret_cast<char*>(wifi_config.sta.password), WIFI_PASSWORD, strlen(WIFI_PASSWORD) + 1);
 
-    ESP_LOGI("MAIN", "Connecting to %s...", wifi_config.sta.ssid);
-    ESP_ERROR_CHECK(esp_wifi_set_mode(wifi_mode_t::WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(wifi_interface_t::WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_connect());
+  ESP_LOGI("MAIN", "Connecting to %s...", wifi_config.sta.ssid);
+  ESP_ERROR_CHECK(esp_wifi_set_mode(wifi_mode_t::WIFI_MODE_STA));
+  ESP_ERROR_CHECK(esp_wifi_set_config(wifi_interface_t::WIFI_IF_STA, &wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_connect());
 }
 
-/// @brief Update callback that will be called as soon as one of the provided shared attributes changes value,
-/// if none are provided we subscribe to any shared attribute change instead
-/// @param data Data containing the shared attributes that were changed and their current value
-void processSharedAttributeUpdate(const JsonObjectConst &data) {
-    for (auto it = data.begin(); it != data.end(); ++it) {
-        if (it->value().is<const char *>()) {
-            ESP_LOGI("MAIN", "Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
-        }
-        else if (it->value().is<int>()) {
-            ESP_LOGI("MAIN", "Key: %s, Value: %d", it->key().c_str(), it->value().as<int>());
-        }
-        else {
-            ESP_LOGI("MAIN", "Key: %s", it->key().c_str());
-        }
-    }
-
-    const size_t jsonSize = Helper::Measure_Json(data);
-    char buffer[jsonSize];
-    serializeJson(data, buffer, jsonSize);
-    ESP_LOGI("MAIN", "%s", buffer);
-}
-
-extern "C" void app_main(void) {
+extern "C" void app_main() {
     ESP_LOGI("MAIN", "[APP] Startup..");
     ESP_LOGI("MAIN", "[APP] Free memory: %" PRIu32 " bytes", esp_get_free_heap_size());
     ESP_LOGI("MAIN", "[APP] IDF version: %s", esp_get_idf_version());
@@ -175,6 +184,8 @@ extern "C" void app_main(void) {
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     InitWiFi();
+
+    tb.Subscribe_Connection_State_Changed_Callback(&on_connection_state_changed);
 
 #if ENCRYPTED
     mqttClient.set_server_certificate(ROOT_CERT);
@@ -191,19 +202,14 @@ extern "C" void app_main(void) {
             tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT);
         }
 
-        while (!tb.connected()) {
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-
-        if (!subscribed) {
-            // Shared attributes we want to request from the server
-            constexpr std::array<const char*, MAX_ATTRIBUTES> SUBSCRIBED_SHARED_ATTRIBUTES = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TAG_KEY, FW_TITLE_KEY, FW_VER_KEY};
-            const Shared_Attribute_Callback<MAX_ATTRIBUTES> callback(&processSharedAttributeUpdate, SUBSCRIBED_SHARED_ATTRIBUTES);
-            subscribed = shared_update.Shared_Attributes_Subscribe(callback);
-        }
-
         tb.loop();
-        
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+        if (tb.connected()) {
+            tb.disconnect();
+        }
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

@@ -273,6 +273,10 @@ extern "C" void app_main() {
             tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT);
         }
 
+        while (!tb.connected()) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+
         if (!currentFWSent) {
             currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
         }

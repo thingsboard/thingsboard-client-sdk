@@ -13,7 +13,6 @@ uint8_t constexpr OTA_ATTRIBUTE_KEYS_AMOUNT = 5U;
 char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys. Ensure keys exist and device is connected";
 // Firmware topics.
 char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/%u/chunk/";
-char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/+";
 char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/%u/chunk/%u";
 // Firmware data keys.
 char constexpr CURR_FW_TITLE_KEY[] = "current_fw_title";
@@ -263,13 +262,6 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @brief Subscribes to the firmware response topic
     /// @return Whether subscribing to the firmware response topic was successful or not
     bool Firmware_OTA_Subscribe() {
-        if (!m_subscribe_topic_callback.Call_Callback(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC)) {
-            char message[strlen(SUBSCRIBE_TOPIC_FAILED) + strlen(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC) + 2] = {};
-            (void)snprintf(message, sizeof(message), SUBSCRIBE_TOPIC_FAILED, FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
-            Logger::printfln(message);
-            Firmware_Send_State(FW_STATE_FAILED, message);
-            return false;
-        }
         return true;
     }
 
@@ -285,8 +277,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         }
         // Reset now not needed private member variables
         m_fw_callback = OTA_Update_Callback();
-        // Unsubscribe from the topic
-        return m_unsubscribe_topic_callback.Call_Callback(FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC);
+        return true;
     }
 
     /// @brief Publishes a request for the given firmware chunk

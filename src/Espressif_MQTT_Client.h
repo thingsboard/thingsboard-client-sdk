@@ -334,7 +334,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         return m_last_connection_error;
     }
 
-    void set_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override {
+    void subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override {
         m_connection_state_changed_callback.Set_Callback(callback);
     }
 

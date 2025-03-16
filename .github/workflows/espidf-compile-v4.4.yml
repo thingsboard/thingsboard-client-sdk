@@ -54,3 +54,9 @@ jobs:
         esp_idf_version: v4.4
         target: esp32
         path: 'examples/0018-espressif_esp32_provision_device'
+    - name: Build process connection state example on v4.4
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v4.4
+        target: esp32
+        path: 'examples/0020-espressif_esp32_connection_state'

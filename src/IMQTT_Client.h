@@ -43,7 +43,7 @@ class IMQTT_Client {
 
     /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker.
     /// Directly set by the used ThingsBoard client to its internal method, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing.
-    /// It is recommended to use @ref set_connection_state_changed_callback method instead
+    /// It is recommended to use @ref subscribe_connection_state_changed_callback method instead
     /// @param callback Method that should be called on established MQTT connection
     virtual void set_connect_callback(Callback<void>::function callback) = 0;
 
@@ -143,7 +143,7 @@ class IMQTT_Client {
     /// Passes the current connection state, also accessible with @ref get_connection_state
     /// and the last error that occured while trying to connect, also accessible with @ref get_last_connection_error as additional information
     /// @param callback Method that should be called on state changes to our MQTT connection 
-    virtual void set_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) = 0;
+    virtual void subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) = 0;
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 

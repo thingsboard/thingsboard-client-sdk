@@ -257,9 +257,9 @@ class ThingsBoardSized {
         return m_client.get_last_connection_error();
     }
 
-    /// @copybrief IMQTT_Client::set_connection_state_changed_callback
-    void Set_Connection_State_Changed_Callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) {
-        m_client.set_connection_state_changed_callback(callback);
+    /// @copybrief IMQTT_Client::subscribe_connection_state_changed_callback
+    void Subscribe_Connection_State_Changed_Callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) {
+        m_client.subscribe_connection_state_changed_callback(callback);
     }
 
     /// @copybrief IMQTT_Client::loop

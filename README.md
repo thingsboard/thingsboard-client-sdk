@@ -631,7 +631,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return MQTT_Connection_Error::NONE;
     }
 
-    void set_connect_cycle_callback(Callback<void(MQTT_Connection_State, MQTT_Connection_Error)>::function callback) override {
+    void subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override;
         // Nothing to do
     }
 

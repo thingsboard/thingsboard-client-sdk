@@ -214,6 +214,10 @@ extern "C" void app_main(void) {
             tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT);
         }
 
+        while (!tb.connected()) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+
         if (!subscribed) {
             const std::array<RPC_Callback, MAX_RPC_SUBSCRIPTIONS> callbacks = {
               // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
