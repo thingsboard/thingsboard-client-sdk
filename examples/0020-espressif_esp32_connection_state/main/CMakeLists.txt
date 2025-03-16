@@ -2,7 +2,7 @@
 # This has to be done because the examples are build to test if they are still working and to automatically inform the library if a pull request would break examples.
 # To actually include the library in your ESP-IDF project read the documentation especially the Installation section
 set(srcs
-    0014-espressif_esp32_send_data.cpp
+    0020-espressif_esp32_connection_state.cpp
     ../../../src/Arduino_HTTP_Client.cpp
     ../../../src/Arduino_MQTT_Client.cpp
     ../../../src/Arduino_ESP32_Updater.cpp
