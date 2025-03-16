@@ -119,6 +119,7 @@ const char * connection_error_to_string(MQTT_Connection_Error error) {
         case MQTT_Connection_Error::REFUSE_NOT_AUTHORIZED:
             return "Client is not authorized to connect";
     }
+    return "Unhandled error case";
 }
 
 /// @brief Callback method that is called if the underlying state of the connetion to the MQTT broker changes, meaning we are not connected anymore but attempting to disconnect and so on
