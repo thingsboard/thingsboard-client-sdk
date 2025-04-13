@@ -16,8 +16,8 @@ Provision_Callback::Provision_Callback(Access_Token, function callback, char con
   , m_cred_client_id(nullptr)
   , m_hash(nullptr)
   , m_credentials_type(nullptr)
-  , m_timeout_microseconds(0U)
-  , m_timeout_callback()
+  , m_timeout_microseconds(timeout_microseconds)
+  , m_timeout_callback(timeout_callback)
 {
     // Nothing to do
 }
@@ -33,8 +33,8 @@ Provision_Callback::Provision_Callback(Device_Access_Token, function callback, c
   , m_cred_client_id(nullptr)
   , m_hash(nullptr)
   , m_credentials_type(ACCESS_TOKEN_CRED_TYPE)
-  , m_timeout_microseconds(0U)
-  , m_timeout_callback()
+  , m_timeout_microseconds(timeout_microseconds)
+  , m_timeout_callback(timeout_callback)
 {
     // Nothing to do
 }
@@ -50,8 +50,8 @@ Provision_Callback::Provision_Callback(Basic_MQTT_Credentials, function callback
   , m_cred_client_id(client_id)
   , m_hash(nullptr)
   , m_credentials_type(MQTT_BASIC_CRED_TYPE)
-  , m_timeout_microseconds(0U)
-  , m_timeout_callback()
+  , m_timeout_microseconds(timeout_microseconds)
+  , m_timeout_callback(timeout_callback)
 {
     // Nothing to do
 }
@@ -67,8 +67,8 @@ Provision_Callback::Provision_Callback(X509_Certificate, function callback, char
   , m_cred_client_id(nullptr)
   , m_hash(hash)
   , m_credentials_type(X509_CERTIFICATE_CRED_TYPE)
-  , m_timeout_microseconds(0U)
-  , m_timeout_callback()
+  , m_timeout_microseconds(timeout_microseconds)
+  , m_timeout_callback(timeout_callback)
 {
     // Nothing to do
 }

@@ -80,14 +80,14 @@ class Container {
     }
 
     /// @brief Accesses the begin and end iterator of the given data container and forwards the call to the iterator based constructor.
-    /// @tparam Container Class that contains the actual data we want to copy into our internal data container,
+    /// @tparam Iterable_Container Class that contains the actual data we want to copy into our internal data container,
     /// requires access to a begin() and end() method, that point to the first element and one past the last element we want to copy respectively.
     /// Both methods need to return an InputIterator, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param container Data container with begin() and end() method that we want to copy fully into our underlying data container
-    template<typename Container>
-    Container(Container const & container)
-      : Container(container.begin(), container.end())
+    template<typename Iterable_Container>
+    Container(Iterable_Container const & container)
+      : Container(container.cbegin(), container.cend())
     {
         // Nothing to do.
     }
@@ -101,7 +101,7 @@ class Container {
     /// @copydoc Container::Container(Container const &)
     template<typename Container>
     void assign(Container const & container) {
-        assign(container.begin(), container.end());
+        assign(container.cbegin(), container.cend());
     }
 
     /// @brief Returns whether there are any elements in the underlying data container
@@ -214,8 +214,9 @@ class Container {
     /// @param first Iterator pointing to the first element we want to copy into our underlying data container
     /// @param last Iterator pointing to one past the end of the elements we want to copy into our underlying data container
     template<typename InputIterator>
-    void insert(const_pointer position, InputIterator const & first, InputIterator const & last) {
-        assert(begin() >= --position < end());
+    void insert(iterator position, InputIterator const & first, InputIterator const & last) {
+        (void)--position;
+        assert_iterator_in_range(position);
 #if !THINGSBOARD_ENABLE_DYNAMIC
         assert((m_size + Helper::distance(first, last)) < Capacity);
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -224,7 +225,7 @@ class Container {
             increase_capacity();
 #endif // THINGSBOARD_ENABLE_DYNAMIC
             *position = *it;
-            ++m_size;
+            (void)++m_size;
         }
     }
 
@@ -237,15 +238,15 @@ class Container {
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param position Iterator pointing to the element, that should be removed from the underlying data container
-    void erase(const_pointer position) {
-        assert(begin() >= position <= end());
-        size_type const index = Helper::distance(begin(), position);
+    void erase(const_iterator position) {
+        assert_iterator_in_range(position);
+        size_type const index = Helper::distance(cbegin(), position);
         // Move all elements after the index one position to the left
         for (size_type i = index; i <= m_size; ++i) {
             m_elements[i] = m_elements[i + 1];
         }
         // Decrease the size of the array to remove the last element, because either it was moved one index to the left or was the element we wanted to delete anyway
-        --m_size;
+        (void)--m_size;
     }
 
     /// @brief Returns a reference to the element at specified location index, with bounds checking
@@ -282,6 +283,11 @@ class Container {
     }
 
   private:
+    void assert_iterator_in_range(const_iterator position) {
+        assert(cbegin() >= position);
+        assert(position < cend());
+    }
+
 #if THINGSBOARD_ENABLE_DYNAMIC
     /// @brief Increases the internal capacity exponentially (current capacity * 2), if the underlying data container is currently full
     void increase_capacity() {
