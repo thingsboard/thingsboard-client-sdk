@@ -32,7 +32,7 @@ class IMQTT_Client : public Print {
 class IMQTT_Client {
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
   public:
-    /// @copybrief Callback::~Callback
+    /// @copydoc Callback::~Callback
     virtual ~IMQTT_Client() {}
 
     /// @brief Sets the callback that is called, if any message is received by the MQTT broker, including the topic string that the message was received over,

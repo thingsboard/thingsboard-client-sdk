@@ -13,10 +13,16 @@
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
 #if !THINGSBOARD_ENABLE_DYNAMIC
 /// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost, default = Default_Attributes_Amount (5)
-template <size_t MaxAttributes = Default_Attributes_Amount>
+/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost, default = DEFAULT_ATTRIBUTES_AMOUNT (5)
+template <size_t MaxAttributes = DEFAULT_ATTRIBUTES_AMOUNT>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>  {
+#if THINGSBOARD_ENABLE_DYNAMIC
+    using CString_Container = Container<char const *>;
+#else
+    using CString_Container = Container<char const *, MaxAttributes>;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
   public:
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     Shared_Attribute_Callback() = default;
@@ -49,11 +55,7 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
     /// in the subscribed method being called if any of those attributes values is changed by the cloud,
     /// with their current value they have been changed to
     /// @return Subscribed shared attributes
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *> const & Get_Attributes() const {
-#else
-    Array<char const *, MaxAttributes> const & Get_Attributes() const {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    CString_Container const & Get_Attributes() const {
         return m_attributes;
     }
 
@@ -76,11 +78,7 @@ class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>
     }
 
   private:
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *>                 m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
-#else
-    Array<char const *, MaxAttributes>   m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    CString_Container m_attributes = {}; // Shared attribute we want to subscribe to receive a message if they change
 };
 
 #endif // Shared_Attribute_Callback

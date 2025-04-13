@@ -3,11 +3,7 @@
 
 // Local includes.
 #include "Configuration.h"
-#if !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-#include "Vector.h"
-#else
-#include "Array.h"
-#endif // !THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
+#include "Container.h"
 
 // Library includes.
 #include <ArduinoJson.h>
@@ -18,9 +14,9 @@
 
 
 #if THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
-/// @brief Vector signature, makes it possible to use the Vector name everywhere instead of having to differentiate between C++ STL support or not
+/// @brief Container signature, makes it possible to use the Container name everywhere instead of having to differentiate between C++ STL support or not
 template<typename T>
-using Vector = std::vector<T>;
+using Container = std::vector<T>;
 #endif // THINGSBOARD_ENABLE_STL && THINGSBOARD_ENABLE_DYNAMIC
 
 

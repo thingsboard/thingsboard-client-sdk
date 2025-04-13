@@ -44,8 +44,8 @@ class ThingsBoardHttpSized {
     /// @param host Host server we want to establish a connection to (example: "demo.thingsboard.io")
     /// @param port Port we want to establish a connection over (80 for HTTP, 443 for HTTPS)
     /// @param keep_alive Attempts to keep the establishes TCP connection alive to make sending data faster
-    /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack, default = Default_Max_Stack_Size
-    ThingsBoardHttpSized(IHTTP_Client & client, char const * access_token, char const * host, uint16_t port = 80U, bool keep_alive = true, size_t const & max_stack_size = Default_Max_Stack_Size)
+    /// @param max_stack_size Maximum amount of bytes we want to allocate on the stack, default = DEFAULT_MAX_STACK_SIZE
+    ThingsBoardHttpSized(IHTTP_Client & client, char const * access_token, char const * host, uint16_t port = 80U, bool keep_alive = true, size_t const & max_stack_size = DEFAULT_MAX_STACK_SIZE)
       : m_client(client)
       , m_max_stack(max_stack_size)
       , m_token(access_token)
@@ -136,7 +136,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Attempts to send aggregated telemetry data, expects iterators to a container containing Telemetry class instances.
     /// See https://thingsboard.io/docs/user-guide/telemetry/ for more information
-    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param first Iterator pointing to the first element in the data container
@@ -212,7 +212,7 @@ class ThingsBoardHttpSized {
 
     /// @brief Attempts to send aggregated attribute data, expects iterators to a container containing Attribute class instances.
     /// See https://thingsboard.io/docs/user-guide/attributes/ for more information
-    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param first Iterator pointing to the first element in the data container
@@ -307,7 +307,7 @@ class ThingsBoardHttpSized {
     }
 
     /// @brief Attempts to send aggregated attribute or telemetry data
-    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param first Iterator pointing to the first element in the data container

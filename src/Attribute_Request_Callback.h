@@ -10,32 +10,38 @@
 
 /// @brief Client-side or shared attributes request callback wrapper,
 /// contains the needed configuration settings to create the request that should be sent to the server.
-/// Which attribute scope will be requested from either client-side or shared, is decided depending on which method the class instance is passed to as an argument.
+///@note Which attribute scope will be requested from either client-side or shared, is decided depending on which method the class instance is passed to as an argument.
 /// If that method is the Client_Attributes_Request() then the passed attributes are requested and if they exist are received from the client scope,
 /// but if that method is the Shared_Attributes_Request() then the passed attributes are requested and if they exist are received from the shared scope instead.
 /// To achieve that some internal member variables get set automatically by those methods, the first one being a string to differentiate which attribute scope was requested
-/// and the second being the id of the mqtt request, where the response by the server will use the same id, which makes it easy to know which method intially requested the data and should now receive it.
+/// and the second being the ID of the mqtt request, where the response by the server will use the same ID, which makes it easy to know which method intially requested the data and should now receive it.
 /// Documentation about the specific use of Requesting client-side or shared scope atrributes in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server
 #if !THINGSBOARD_ENABLE_DYNAMIC
 /// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost, default = Default_Attributes_Amount (5)
-template <size_t MaxAttributes = Default_Attributes_Amount>
+/// Be aware though the size set in this template and the size passed to the Attribute_Request class MaxAttributes template need to be the same or lower than the value in this class,
+/// if not some of the requested keys may be lost, default = DEFAULT_ATTRIBUTES_AMOUNT (5)
+template <size_t MaxAttributes = DEFAULT_ATTRIBUTES_AMOUNT>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &> {
+#if THINGSBOARD_ENABLE_DYNAMIC
+    using CString_Container = Container<char const *>;
+#else
+    using CString_Container = Container<char const *, MaxAttributes>;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
   public:
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     Attribute_Request_Callback() = default;
 
     /// @brief Constructs callback, will be called upon client-side or shared attribute request arrival
     /// where the given multiple requested client-side or shared attributes were sent by the cloud and received by the client.
-    /// Directly forwards the given arguments to the overloaded vector constructor,
-    /// meaning all combinatons of arguments that would initalize a vector can be used to call this constructor.
-    /// See possible vector constructors https://en.cppreference.com/w/cpp/container/vector/vector, for the possible passed parameters.
+    /// @note Directly forwards the given arguments to the overloaded Array or Vector constructor,
+    /// meaning all combinatons of arguments that would initalize an std::vector can be used to call this constructor.
+    /// See possible std::vector constructors here https://en.cppreference.com/w/cpp/container/vector/vector, for the possible passable parameters.
     /// The possibilites mainly consist out of the fill constructor, where a value and a number n is given and then that many elements of the value will be copied into
-    /// or be created with their default value, or out of the range constructor where we can pass an interator the start of another data container
-    /// and to the end of the data container (last element + 1)
-    /// and then every element between those iteratos will be copied, in the same order as in the original data container.
-    /// The last option is a copy constructor where we pass a vector and the values of that vector will be copied into our buffer
+    /// or be created with their default value, or the range constructor where we can pass an interator the start and to the end of the data container (last element + 1)
+    /// to copy every element in between thoose iterators, in the same order as in the original data container.
+    /// The last option is a copy constructor where we pass another container and all the values of that container will be copied into our buffer
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the vector constructor and therefore allow to use every overloaded vector constructor without having to implement them
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
     /// @param timeout_microseconds Optional amount of microseconds until we expect to have received a response and if we didn't, we call the previously subscribed callback.
@@ -98,11 +104,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// in the subscribed method being called when the response with their current value
     /// is sent from the cloud and received by the client
     /// @return Requested client-side or shared attributes
-#if THINGSBOARD_ENABLE_DYNAMIC
-    const Vector<char const *>& Get_Attributes() const {
-#else
-    const Array<char const *, MaxAttributes>& Get_Attributes() const {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    CString_Container const & Get_Attributes() const {
         return m_attributes;
     }
 
@@ -165,15 +167,11 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     }
 
   private:
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<char const *>               m_attributes = {};           // Attribute we want to request
-#else
-    Array<char const *, MaxAttributes> m_attributes = {};           // Attribute we want to request
-#endif // THINGSBOARD_ENABLE_DYNAMIC
-    size_t                             m_request_id = {};           // Id the request was called with
-    char const                         *m_attribute_key = {};       // Attribute key that we wil receive the response on ("client" or "shared")
-    uint64_t                           m_timeout_microseconds = {}; // Timeout time until we expect response to request
-    Callback_Watchdog                  m_timeout_callback = {};     // Handles callback that will be called if request times out
+    CString_Container m_attributes = {};           // Attribute we want to request
+    size_t            m_request_id = {};           // Id the request was called with
+    char const        *m_attribute_key = {};       // Attribute key that we wil receive the response on ("client" or "shared")
+    uint64_t          m_timeout_microseconds = {}; // Timeout time until we expect response to request
+    Callback_Watchdog m_timeout_callback = {};     // Handles callback that will be called if request times out
 };
 
 #endif // Attribute_Request_Callback_h

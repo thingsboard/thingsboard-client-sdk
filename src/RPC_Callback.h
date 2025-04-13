@@ -21,8 +21,8 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
     /// See https://arduinojson.org/v6/api/jsondocument/ for more information on how to enter data into a JsonDocument
 #if THINGSBOARD_ENABLE_DYNAMIC
     /// @param response_size Internal size the JsonDocument should be able to hold to contain the response to the server side RPC call.
-    /// Use JSON_OBJECT_SIZE() and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size, default = Default_RPC_Amount (0)
-    RPC_Callback(char const * method_name, function callback, size_t const & response_size = JSON_OBJECT_SIZE(Default_RPC_Amount))
+    /// Use JSON_OBJECT_SIZE() and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size, default = DEFAULT_RPC_AMOUNT (0)
+    RPC_Callback(char const * method_name, function callback, size_t const & response_size = JSON_OBJECT_SIZE(DEFAULT_RPC_AMOUNT))
 #else
     RPC_Callback(char const * method_name, function callback)
 #endif // THINGSBOARD_ENABLE_DYNAMIC

@@ -34,11 +34,19 @@ char constexpr CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS[] = "client or shared attri
 template <typename Logger = DefaultLogger>
 #else
 /// @tparam MaxSubscriptions Maximum amount of simultaneous server side rpc subscriptions.
-/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (1)
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback, allows to use an array on the stack in the background, default = Default_Attributes_Amount (5)
-template<size_t MaxSubscriptions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount, typename Logger = DefaultLogger>
+/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = DEFAULT_SUBSCRIPTION_AMOUNT (1)
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Attribute_Request_Callback, allows to use an array on the stack in the background, default = DEFAULT_ATTRIBUTES_AMOUNT (5)
+template<size_t MaxSubscriptions = DEFAULT_SUBSCRIPTION_AMOUNT, size_t MaxAttributes = DEFAULT_ATTRIBUTES_AMOUNT, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class Attribute_Request : public IAPI_Implementation {
+#if THINGSBOARD_ENABLE_DYNAMIC
+    using Callback_Value = Attribute_Request_Callback;
+    using Callback_Container = Container<Callback_Watchdog_h>;
+#else
+    using Callback_Value = Attribute_Request_Callback<MaxAttributes>;
+    using Callback_Container = Container<Callback_Value, MaxSubscriptions>;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
   public:
     /// @brief Constructor
     Attribute_Request() = default;
@@ -52,11 +60,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-#if THINGSBOARD_ENABLE_DYNAMIC
-    bool Client_Attributes_Request(Attribute_Request_Callback const & callback) {
-#else
-    bool Client_Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    bool Client_Attributes_Request(Callback_Value const & callback) {
         return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
     }
 
@@ -67,11 +71,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#request-attribute-values-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether requesting the given callback was successful or not
-#if THINGSBOARD_ENABLE_DYNAMIC
-    bool Shared_Attributes_Request(Attribute_Request_Callback const & callback) {
-#else
-    bool Shared_Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    bool Shared_Attributes_Request(Callback_Value const & callback) {
         return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
 
@@ -88,11 +88,7 @@ class Attribute_Request : public IAPI_Implementation {
         JsonObjectConst object = data.template as<JsonObjectConst>();
 
 #if THINGSBOARD_ENABLE_STL
-#if THINGSBOARD_ENABLE_DYNAMIC
-        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Attribute_Request_Callback & attribute_request) {
-#else
-        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Attribute_Request_Callback<MaxAttributes> & attribute_request) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Request_Callback_Value & attribute_request) {
             return attribute_request.Get_Request_ID() == request_id;
         });
         if (it != m_attribute_request_callbacks.end()) {
@@ -122,7 +118,7 @@ class Attribute_Request : public IAPI_Implementation {
 
             delete_callback:
             // Delete callback because the changes have been requested and the callback is no longer needed
-            Helper::remove(m_attribute_request_callbacks, it);
+            m_attribute_request_callbacks.erase(it);
 #if !THINGSBOARD_ENABLE_STL
             break;
 #endif // !THINGSBOARD_ENABLE_STL
@@ -175,11 +171,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// @param attribute_request_key Key of the key-value pair that will contain the attributes we want to request
     /// @param attribute_response_key Key of the key-value pair that will contain the attributes we got as a response
     /// @return Whether requesting the given callback was successful or not
-#if THINGSBOARD_ENABLE_DYNAMIC
-    bool Attributes_Request(Attribute_Request_Callback const & callback, char const * attribute_request_key, char const * attribute_response_key) {
-#else
-    bool Attributes_Request(Attribute_Request_Callback<MaxAttributes> const & callback, char const * attribute_request_key, char const * attribute_response_key) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    bool Attributes_Request(Callback_Value const & callback, char const * attribute_request_key, char const * attribute_response_key) {
         auto const & attributes = callback.Get_Attributes();
 
         // Check if any sharedKeys were requested
@@ -196,11 +188,7 @@ class Attribute_Request : public IAPI_Implementation {
             return false;
         }
 
-#if THINGSBOARD_ENABLE_DYNAMIC
-        Attribute_Request_Callback * registered_callback = nullptr;
-#else
-        Attribute_Request_Callback<MaxAttributes> * registered_callback = nullptr;
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+        Callback_Value * registered_callback = nullptr;
         if (!Attributes_Request_Subscribe(callback, registered_callback)) {
             return false;
         }
@@ -271,11 +259,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// @param callback Callback method that will be called
     /// @param registered_callback Editable pointer to a reference of the local version that was copied from the passed callback
     /// @return Whether requesting the given callback was successful or not
-#if THINGSBOARD_ENABLE_DYNAMIC
-    bool Attributes_Request_Subscribe(Attribute_Request_Callback const & callback, Attribute_Request_Callback * & registered_callback) {
-#else
-    bool Attributes_Request_Subscribe(Attribute_Request_Callback<MaxAttributes> const & callback, Attribute_Request_Callback<MaxAttributes> * & registered_callback) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    bool Attributes_Request_Subscribe(Callback_Value const & callback, Callback_Value * & registered_callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
             Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, CLIENT_SHARED_ATTRIBUTE_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
@@ -303,20 +287,7 @@ class Attribute_Request : public IAPI_Implementation {
     Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};    // Subscribe mqtt topic client callback
     Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};  // Unubscribe mqtt topic client callback
     Callback<size_t *>                                                       m_get_request_id_callback = {};     // Get internal request id callback
-
-    // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
-    // even if the user only temporarily created the object before the method was called.
-    // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
-    // does not require a huge memory overhead and is acceptable especially in comparsion to possible problems that could
-    // arise if references were used and the end user does not take care to ensure the Callbacks live on for the entirety
-    // of its usage, which will lead to dangling references and undefined behaviour.
-    // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
-    // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<Attribute_Request_Callback>                                       m_attribute_request_callbacks = {}; // Client-side or shared attribute request callback vector
-#else
-    Array<Attribute_Request_Callback<MaxAttributes>, MaxSubscriptions>       m_attribute_request_callbacks = {}; // Client-side or shared attribute request callback array
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    Callback_Container                                                       m_attribute_request_callbacks = {}; // Client-side or shared attribute request callback vector
 };
 
 #endif // Attribute_Request_h

@@ -4,7 +4,7 @@
 // Library include.
 #include <stdio.h>
 
-HashGenerator::~HashGenerator(void) {
+HashGenerator::~HashGenerator() {
     free();
 }
 

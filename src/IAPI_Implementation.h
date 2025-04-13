@@ -36,7 +36,7 @@ char constexpr TELEMETRY_TOPIC[] = "v1/devices/me/telemetry";
 /// @brief Base functionality required by all API implementation
 class IAPI_Implementation {
   public:
-    /// @copybrief Callback::~Callback
+    /// @copydoc Callback::~Callback
     virtual ~IAPI_Implementation() {}
 
     /// @brief Returns the way the server response should be processed.

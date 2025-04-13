@@ -66,22 +66,8 @@ class Helper {
         return measureJson(source) + 1;
     }
 
-    /// @brief Removes the element with the given index, which allows to use data containers that do not have a random-access iterator.
-    /// The user is also cautioned that this function only erases the element, and that if the element is itself a pointer,
-    /// the pointed-to memory is not touched in any way. Managing the pointer is the user's responsibility.
-    /// @tparam DataContainer Class which allows to pass any arbitrary data container that contains the erase() method
-    /// @tparam InputIterator Class that points to the iterator position that should be erased
-    /// in the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
-    /// @param container Data container holding the elements we want to remove an element from
-    /// @param index Iterator position we want to remove the element at
-    template<typename DataContainer, typename InputIterator>
-    static void remove(DataContainer & container, InputIterator const & iterator) {
-        container.erase(iterator);
-    }
-
     /// @brief Calculates the distance between two iterators
-    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param first Iterator pointing to the first element in the data container

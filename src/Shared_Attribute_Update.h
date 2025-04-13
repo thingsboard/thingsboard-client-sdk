@@ -19,11 +19,19 @@ char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] = "shared attribute updat
 template <typename Logger = DefaultLogger>
 #else
 /// @tparam MaxSubscriptions Maximum amount of simultaneous server side rpc subscriptions.
-/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (1)
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Shared_Attribute_Callback, allows to use an array on the stack in the background, default = Default_Attributes_Amount (5)
-template<size_t MaxSubscriptions = Default_Subscriptions_Amount, size_t MaxAttributes = Default_Attributes_Amount, typename Logger = DefaultLogger>
+/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = DEFAULT_SUBSCRIPTION_AMOUNT (1)
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Shared_Attribute_Callback, allows to use an array on the stack in the background, default = DEFAULT_ATTRIBUTES_AMOUNT (5)
+template<size_t MaxSubscriptions = DEFAULT_SUBSCRIPTION_AMOUNT, size_t MaxAttributes = DEFAULT_ATTRIBUTES_AMOUNT, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class Shared_Attribute_Update : public IAPI_Implementation {
+#if THINGSBOARD_ENABLE_DYNAMIC
+    using Callback_Value = Shared_Attribute_Callback;
+    using Callback_Container = Container<Callback_Value>;
+#else
+    using Callback_Value = Shared_Attribute_Callback<MaxAttributes>;
+    using Callback_Container = Container<Callback_Value, MaxSubscriptions>;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
   public:
     /// @brief Constructor
     Shared_Attribute_Update() = default;
@@ -38,7 +46,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
     /// Therefore this method can simply be called once at startup before a connection has been established
     /// and will then automatically handle the subscription of the topic once the connection has been established.
     /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
-    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param first Iterator pointing to the first element in the data container
@@ -69,11 +77,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
     /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
     /// @param callback Callback method that will be called
     /// @return Whether subscribing the given callback was successful or not
-#if THINGSBOARD_ENABLE_DYNAMIC
-    bool Shared_Attributes_Subscribe(Shared_Attribute_Callback const & callback) {
-#else
-    bool Shared_Attributes_Subscribe(Shared_Attribute_Callback<MaxAttributes> const & callback) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    bool Shared_Attributes_Subscribe(Callback_Value const & callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_shared_attribute_update_callbacks.size() + 1U > m_shared_attribute_update_callbacks.capacity()) {
             Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
@@ -110,19 +114,10 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 
 #if THINGSBOARD_ENABLE_STL
 #if THINGSBOARD_ENABLE_CXX20
-#if THINGSBOARD_ENABLE_DYNAMIC
-        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::views::filter([&object](Shared_Attribute_Callback const & shared_attribute) {
+        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::views::filter([&object](Callback_Value const & shared_attribute) {
 #else
-        auto filtered_shared_attribute_update_callbacks = m_shared_attribute_update_callbacks | std::views::filter([&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
-#else
-#if THINGSBOARD_ENABLE_DYNAMIC
-        Vector<Shared_Attribute_Callback> filtered_shared_attribute_update_callbacks = {};
-        std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Shared_Attribute_Callback const & shared_attribute) {
-#else
-        Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions> filtered_shared_attribute_update_callbacks = {};
-        std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Shared_Attribute_Callback<MaxAttributes> const & shared_attribute) {
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+        Callback_Container filtered_shared_attribute_update_callbacks = {};
+        std::copy_if(m_shared_attribute_update_callbacks.begin(), m_shared_attribute_update_callbacks.end(), std::back_inserter(filtered_shared_attribute_update_callbacks), [&object](Callback_Value const & shared_attribute) {
 #endif // THINGSBOARD_ENABLE_CXX20
             return (shared_attribute.Get_Attributes().empty() || std::find_if(shared_attribute.Get_Attributes().begin(), shared_attribute.Get_Attributes().end(), [&object](const char * att) {
                 return object.containsKey(att);
@@ -196,20 +191,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
   private:
     Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};          // Subscribe mqtt topic client callback
     Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};        // Unubscribe mqtt topic client callback
-
-    // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
-    // even if the user only temporarily created the object before the method was called.
-    // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
-    // does not require a huge memory overhead and is acceptable especially in comparsion to possible problems that could
-    // arise if references were used and the end user does not take care to ensure the Callbacks live on for the entirety
-    // of its usage, which will lead to dangling references and undefined behaviour.
-    // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
-    // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<Shared_Attribute_Callback>                                        m_shared_attribute_update_callbacks = {}; // Shared attribute update callbacks vector
-#else
-    Array<Shared_Attribute_Callback<MaxAttributes>, MaxSubscriptions>        m_shared_attribute_update_callbacks = {}; // Shared attribute update callbacks array
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    Callback_Container                                                       m_shared_attribute_update_callbacks = {}; // Shared attribute update callbacks array
 };
 
 #endif // Shared_Attribute_Update_h

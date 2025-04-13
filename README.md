@@ -710,7 +710,7 @@ Arduino_MQTT_Client mqttClient(espClient);
 // ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
-ThingsBoardSized<32, Default_Response_Amount, CustomLogger> tb(mqttClient, 128, 128);
+ThingsBoardSized<32, DEFAULT_RESPONSE_AMOUNT, CustomLogger> tb(mqttClient, 128, 128);
 ```
 
 ## Have a question or proposal?

@@ -13,7 +13,7 @@
 /// @brief Updater interface that contains the method that a class that can be used to flash given binary data onto a device has to implement
 class IUpdater {
   public:
-    /// @copybrief Callback::~Callback
+    /// @copydoc Callback::~Callback
     virtual ~IUpdater() {}
 
     /// @brief Initalizes the writing of the given data

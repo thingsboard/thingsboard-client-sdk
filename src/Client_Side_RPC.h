@@ -26,12 +26,12 @@ char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
 template <typename Logger = DefaultLogger>
 #else
 /// @tparam MaxSubscriptions Maximum amount of simultaneous client side rpc requests.
-/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = Default_Subscriptions_Amount (1)
+/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = DEFAULT_SUBSCRIPTION_AMOUNT (1)
 /// @tparam MaxRequestRPC Maximum amount of key-value pairs that will ever be sent as parameters to the requests client side rpc method, allows to use a StaticJsonDocument on the stack in the background.
 /// Is expected to only request client side rpc requests, that do not additionally send any parameters. If we attempt to send parameters, we have to adjust the size accordingly.
 /// Default value is big enough to hold no parameters, but simply the default method name and params key needed for the request, if additional parameters are sent with the request the size has to be increased by one for each key-value pair.
-/// See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 and add 2 to receive the required MaxRequestRPC value, default = Default_Request_RPC_Amount (2)
-template<size_t MaxSubscriptions = Default_Subscriptions_Amount, size_t MaxRequestRPC = Default_Request_RPC_Amount, typename Logger = DefaultLogger>
+/// See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 and add 2 to receive the required MaxRequestRPC value, default = DEFAULT_Request_RPC_AMOUNT (2)
+template<size_t MaxSubscriptions = DEFAULT_SUBSCRIPTION_AMOUNT, size_t MaxRequestRPC = DEFAULT_Request_RPC_AMOUNT, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class Client_Side_RPC : public IAPI_Implementation {
   public:
@@ -134,7 +134,7 @@ class Client_Side_RPC : public IAPI_Implementation {
             rpc_request.Call_Callback(data);
 
             // Delete callback because the changes have been requested and the callback is no longer needed
-            Helper::remove(m_rpc_request_callbacks, it);
+            m_rpc_request_callbacks.erase(it);
 #if !THINGSBOARD_ENABLE_STL
             break;
 #endif // !THINGSBOARD_ENABLE_STL
@@ -181,6 +181,12 @@ class Client_Side_RPC : public IAPI_Implementation {
     }
 
   private:
+#if THINGSBOARD_ENABLE_DYNAMIC
+    using Callback_Container = Container<RPC_Request_Callback>;
+#else
+    using Callback_Container = Container<RPC_Request_Callback, MaxSubscriptions>;
+#endif // THINGSBOARD_ENABLE_DYNAMIC
+
     /// @brief Subscribes to the client-side RPC response topic,
     /// that will be called if a reponse from the server for the method with the given name is received.
     /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
@@ -215,20 +221,7 @@ class Client_Side_RPC : public IAPI_Implementation {
     Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};    // Subscribe mqtt topic client callback
     Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};  // Unubscribe mqtt topic client callback
     Callback<size_t *>                                                       m_get_request_id_callback = {};     // Get internal request id callback
-
-    // Vectors or array (depends on wheter if THINGSBOARD_ENABLE_DYNAMIC is set to 1 or 0), hold copy of the actual passed data, this is to ensure they stay valid,
-    // even if the user only temporarily created the object before the method was called.
-    // This can be done because all Callback methods mostly consists of pointers to actual object so copying them
-    // does not require a huge memory overhead and is acceptable especially in comparsion to possible problems that could
-    // arise if references were used and the end user does not take care to ensure the Callbacks live on for the entirety
-    // of its usage, which will lead to dangling references and undefined behaviour.
-    // Therefore copy-by-value has been choosen as for this specific use case it is more advantageous,
-    // especially because at most we copy internal vectors or array, that will only ever contain a few pointers
-#if THINGSBOARD_ENABLE_DYNAMIC
-    Vector<RPC_Request_Callback>                                             m_rpc_request_callbacks = {};       // Server side RPC callbacks vector
-#else
-    Array<RPC_Request_Callback, MaxSubscriptions>                            m_rpc_request_callbacks = {};       // Server side RPC callbacks array
-#endif // THINGSBOARD_ENABLE_DYNAMIC
+    Callback_Container                                                       m_rpc_request_callbacks = {};       // Server side RPC callbacks vector
 };
 
 #endif // Client_Side_RPC_h

@@ -58,7 +58,7 @@ IAPI_Implementation* apis[1U] = {
   &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer sizes
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis + 0U, apis + 1U);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, apis + 0U, apis + 1U);
 
 
 // Statuses for subscribing to rpc
