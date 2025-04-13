@@ -16,6 +16,13 @@
 #    endif
 #  endif
 
+// Enabled the usage of int64_t and double values with ArduinoJson. Making the JsonVariant store double and int64_t instead of float and int32_t.
+// See https://arduinojson.org/v6/api/config/use_long_long/ for more information. Use double is now enabled by default since ArduinoJson 6.19.4
+// and use long long as well, if the board is 32 bits. However because this library supports non 32-bit boards we still have to override the defines to ensure
+// both settings are actually enabled. See https://arduinojson.org/news/2022/01/08/arduinojson-6-19-0/#default-configuration for more information.
+#define ARDUINOJSON_USE_LONG_LONG 1
+#define ARDUINOJSON_USE_DOUBLE 1
+
 // Enable the usage of the C++ STL library, depending on if needed STL base functionality is supported,
 // allows to use c++ style function pointers as callbacks removing the need to store a static pointer to the instance of the class.
 // Additionally it allows to store data in the vector class, which in case it does not exist we have to fall back to an own custom implementation

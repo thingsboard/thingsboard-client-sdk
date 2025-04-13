@@ -88,7 +88,7 @@ class Attribute_Request : public IAPI_Implementation {
         JsonObjectConst object = data.template as<JsonObjectConst>();
 
 #if THINGSBOARD_ENABLE_STL
-        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Request_Callback_Value & attribute_request) {
+        auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Callback_Value & attribute_request) {
             return attribute_request.Get_Request_ID() == request_id;
         });
         if (it != m_attribute_request_callbacks.end()) {
