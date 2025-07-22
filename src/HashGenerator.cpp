@@ -27,7 +27,7 @@ bool HashGenerator::update(uint8_t const * data, size_t const & length) {
 
 HashGenerator::HashString HashGenerator::finish() {
     unsigned char byte_hash[m_size] = {};
-    HashGenerator hash_string = {};
+    HashString hash_string = {};
     if (mbedtls_md_finish(&m_ctx, byte_hash) != 0) {
         return hash_string;
     }

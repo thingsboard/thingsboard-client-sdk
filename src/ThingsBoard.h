@@ -7,7 +7,6 @@
 #include "IMQTT_Client.h"
 #include "DefaultLogger.h"
 #include "Telemetry.h"
-#include <cstdint>
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
