@@ -7,6 +7,7 @@
 #include "IMQTT_Client.h"
 #include "DefaultLogger.h"
 #include "Telemetry.h"
+#include <cstdint>
 
 // Library includes.
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -234,7 +235,7 @@ class ThingsBoardSized {
             return false;
         }
         m_client.set_server(host, port);
-        return Connect_To_Host(access_token, Helper::stringIsNullorEmpty(client_id) ? access_token : client_id, Helper::stringIsNullorEmpty(password) ? nullptr : password);
+        return Connect_To_Host(access_token, Helper::String_IsNull_Or_Empty(client_id) ? access_token : client_id, Helper::String_IsNull_Or_Empty(password) ? nullptr : password);
     }
 
     /// @copydoc IMQTT_Client::disconnect
@@ -344,7 +345,7 @@ class ThingsBoardSized {
         }
 
         uint16_t current_send_buffer_size = m_client.get_send_buffer_size();
-        size_t const json_size = strlen(json);
+        auto const json_size = strlen(json);
 
         if (current_send_buffer_size < json_size) {
             Logger::printfln(INVALID_BUFFER_SIZE, current_send_buffer_size, json_size);
@@ -422,7 +423,7 @@ class ThingsBoardSized {
     bool Claim_Request(char const * secret_key, size_t const & duration_ms) {
         StaticJsonDocument<JSON_OBJECT_SIZE(2)> request_buffer;
 
-        if (!Helper::stringIsNullorEmpty(secret_key)) {
+        if (!Helper::String_IsNull_Or_Empty(secret_key)) {
             request_buffer[SECRET_KEY] = secret_key;
         }
         request_buffer[DURATION_KEY] = duration_ms;
@@ -560,7 +561,7 @@ class ThingsBoardSized {
             return false;
         }
         BufferingPrint buffered_print(m_client, Get_Buffering_Size());
-        size_t const bytes_serialized = serializeJson(source, buffered_print);
+        auto const bytes_serialized = serializeJson(source, buffered_print);
         if (bytes_serialized < json_size) {
             Logger::printfln(UNABLE_TO_SERIALIZE_JSON);
             return false;
@@ -679,7 +680,7 @@ class ThingsBoardSized {
     template<size_t MaxKeyValuePairAmount, typename InputIterator>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
     bool Send_Data_Array(InputIterator const & first, InputIterator const & last, bool telemetry) {
-        size_t const size = Helper::distance(first, last);
+        auto const size = Helper::distance(first, last);
 #if THINGSBOARD_ENABLE_DYNAMIC
         // char const * are stored as only a pointer inside the JsonDocument --> zero copy, meaning the size for the strings is 0 bytes.
         // Data structure size, therefore only depends on the amount of key value pairs passed.
@@ -720,7 +721,7 @@ class ThingsBoardSized {
     /// @param topic Previously subscribed topic, we got the response over
     /// @param payload Payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    void On_MQTT_Message(char * topic, uint8_t * payload, unsigned int length) {
+    void On_MQTT_Message(char * topic, uint8_t * payload, uint32_t length) {
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(RECEIVE_MESSAGE, length, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -762,12 +763,12 @@ class ThingsBoardSized {
 
         // Calculate size with the total amount of commas, always denotes the end of a key-value pair besides for the last element in an array or in an object where the comma is not permitted,
         // therfore we have to add the space for another key-value pair for all the occurences of thoose symbols as well
-        size_t const size = Helper::getOccurences(payload, ',', length) + Helper::getOccurences(payload, '{', length) + Helper::getOccurences(payload, '[', length);
+        auto const size = Helper::Calculate_Symbol_Occurences(payload, ',', length) + Helper::Calculate_Symbol_Occurences(payload, '{', length) + Helper::Calculate_Symbol_Occurences(payload, '[', length);
 #if THINGSBOARD_ENABLE_DYNAMIC
         // Buffer that we deserialize is writeable and not read only and therefore stored as a pointer inside the JsonDocument --> zero copy, meaning the size for the received payload is 0 bytes.
         // Data structure size, therefore only depends on the amount of key value pairs received.
         // See https://arduinojson.org/v6/assistant/ for more information on the needed size for the JsonDocument
-        size_t const document_size = JSON_OBJECT_SIZE(size);
+        auto const document_size = JSON_OBJECT_SIZE(size);
         if (m_max_response_size != 0U && document_size > m_max_response_size) {
             Logger::printfln(MAXIMUM_RESPONSE_EXCEEDED, document_size, m_max_response_size);
             return;
@@ -784,7 +785,7 @@ class ThingsBoardSized {
             Logger::printfln(TOO_MANY_JSON_FIELDS, size, "MaxResponse", MaxResponse);
             return;
         }
-        size_t const document_size = JSON_OBJECT_SIZE(MaxResponse);
+        auto const document_size = JSON_OBJECT_SIZE(MaxResponse);
         StaticJsonDocument<document_size> json_buffer;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_DEBUG
@@ -824,7 +825,7 @@ class ThingsBoardSized {
     }
 
 #if !THINGSBOARD_ENABLE_STL
-    static void On_Static_MQTT_Message(char * topic, uint8_t * payload, unsigned int length) {
+    static void On_Static_MQTT_Message(char * topic, uint8_t * payload, uint32_t length) {
         if (m_subscribedInstance == nullptr) {
             return;
         }

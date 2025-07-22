@@ -47,7 +47,7 @@ class Provision : public IAPI_Implementation {
         char const * provision_device_key = callback.Get_Device_Key();
         char const * provision_device_secret = callback.Get_Device_Secret();
 
-        if (Helper::stringIsNullorEmpty(provision_device_key) || Helper::stringIsNullorEmpty(provision_device_secret)) {
+        if (Helper::String_IsNull_Or_Empty(provision_device_key) || Helper::String_IsNull_Or_Empty(provision_device_secret)) {
             return false;
         }
         else if (!Provision_Subscribe(callback)) {
@@ -66,25 +66,25 @@ class Provision : public IAPI_Implementation {
         // Deciding which underlying provisioning method is restricted, by the Provision_Callback class.
         // Meaning only the key-value pairs that are needed for the given provisioning method are set,
         // resulting in the rest not being sent and therefore the provisioning request having the correct formatting
-        if (!Helper::stringIsNullorEmpty(device_name)) {
+        if (!Helper::String_IsNull_Or_Empty(device_name)) {
             request_buffer[DEVICE_NAME_KEY] = device_name;
         }
-        if (!Helper::stringIsNullorEmpty(access_token)) {
+        if (!Helper::String_IsNull_Or_Empty(access_token)) {
             request_buffer[PROV_TOKEN] = access_token;
         }
-        if (!Helper::stringIsNullorEmpty(cred_username)) {
+        if (!Helper::String_IsNull_Or_Empty(cred_username)) {
             request_buffer[PROV_CRED_USERNAME] = cred_username;
         }
-        if (!Helper::stringIsNullorEmpty(cred_password)) {
+        if (!Helper::String_IsNull_Or_Empty(cred_password)) {
             request_buffer[PROV_CRED_PASSWORD] = cred_password;
         }
-        if (!Helper::stringIsNullorEmpty(cred_client_id)) {
+        if (!Helper::String_IsNull_Or_Empty(cred_client_id)) {
             request_buffer[PROV_CRED_CLIENT_ID] = cred_client_id;
         }
-        if (!Helper::stringIsNullorEmpty(hash)) {
+        if (!Helper::String_IsNull_Or_Empty(hash)) {
             request_buffer[PROV_CRED_HASH] = hash;
         }
-        if (!Helper::stringIsNullorEmpty(credentials_type)) {
+        if (!Helper::String_IsNull_Or_Empty(credentials_type)) {
             request_buffer[PROV_CRED_TYPE_KEY] = credentials_type;
         }
         request_buffer[PROV_DEVICE_KEY] = provision_device_key;
@@ -97,7 +97,7 @@ class Provision : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, uint32_t length) override {
         // Nothing to do
     }
 

@@ -9,16 +9,16 @@
 
 
 /// @brief Custom std::array or std::vector implementation that contains a partial vector-like interface implementation.
-/// Automatically changes internal implementation to use the heap or stack depending on if THINGSBOARD_ENABLE_DYNAMIC is set or not
+/// Internal implementation is changed at compile-time to either use the heap if THINGSBOARD_ENABLE_DYNAMIC is set or the stack otherwise
 /// @note Allows to use the exact same method calls independent on if the custom Container implementation or std::vector is used.
 /// Support for the vector-like interface is achieved through a simple index that keeps count of the elements that have been instantiated with actual values by the push or insert method.
 /// Iterator based support is achieved through returning a pointer, which can be automatically used the same as an iterator implementation tagged as std::random_iterator_tag.
-/// This allows to use the most efficient implementation of standard algorithms, while keeping the implementation as simple as possible.
+/// This allows to use the most efficient implementation of standard algorithms, while keeping the actual internal implementation as simple as possible.
 /// 
 /// The elements are stored contiguously, which means that elements can be accessed not only through iterators, but also using offsets to regular pointers to elements.
-/// This means that a pointer to an element of a vector may be passed to any function that expects a pointer to an element of an array
+/// This means that a pointer to an element of a container may be passed to any function that expects a pointer to an element of a c-array
 /// @tparam T The type of the elements in the underlying data container. Must be both CopyAssignable (have a copy assignment operator, for the push_back operation)
-/// as well as Default-Constructible (have a default constructor, for the construction of the intial state of the underlying data container)
+/// as well as be Default-Constructible (have a default constructor, for the construction of the intial state of the underlying data container)
 #if THINGSBOARD_ENABLE_DYNAMIC
 template <typename T>
 #else 
@@ -81,10 +81,10 @@ class Container {
 
     /// @brief Accesses the begin and end iterator of the given data container and forwards the call to the iterator based constructor.
     /// @tparam Iterable_Container Class that contains the actual data we want to copy into our internal data container,
-    /// requires access to a begin() and end() method, that point to the first element and one past the last element we want to copy respectively.
-    /// Both methods need to return an InputIterator, allows for using / passing either std::vector or std::array.
+    /// requires access to a cbegin() and cend() method, that point to the first element and one past the last element we want to copy respectively.
+    /// Both methods need to return atleast an InputIterator, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
-    /// @param container Data container with begin() and end() method that we want to copy fully into our underlying data container
+    /// @param container Data container with cbegin() and cend() method that we want to copy fully into our underlying data container
     template<typename Iterable_Container>
     Container(Iterable_Container const & container)
       : Container(container.cbegin(), container.cend())
@@ -130,17 +130,17 @@ class Container {
     /// @brief Returns an iterator to the first element of the underlying data container.
     /// If the array is empty, the returned iterator will be equal to end()
     /// @return Iterator pointing to the first element of the underlying data container
-    pointer begin() {
+    iterator begin() {
         return m_elements;
     }
 
     /// @copydoc Container::begin
-    const_pointer begin() const {
+    const_iterator begin() const {
         return m_elements;
     }
 
     /// @copydoc Container::begin
-    const_pointer cbegin() const {
+    const_iterator cbegin() const {
         return begin();
     }
 
@@ -174,22 +174,24 @@ class Container {
 
     /// @brief Returns a iterator to one-past-the-last element of the underlying data container
     /// @return Iterator pointing to one-past-the-last element of the underlying data container
-    pointer end() {
+    iterator end() {
         return m_elements + m_size;
     }
 
     /// @copydoc Container::end
-    const_pointer end() const {
+    const_iterator end() const {
         return m_elements + m_size;
     }
 
     /// @copydoc Container::end
-    const_pointer cend() const {
+    const_iterator cend() const {
         return end();
     }
 
     /// @brief Appends the given element at the end of the underlying data container
-    /// @note If the interal data structure is full already then this method will assert and stop the application.
+    /// @note If the Container was compiled with THINGSBOARD_ENABLE_DYNAMIC set,
+    /// then the method will simply increase the capacity exponentially if it is full.
+    /// Otherwise if the interal data structure is full this method will assert and stop the application.
     /// Because if we do not we could cause an out of bounds write, which could possibly overwrite other memory.
     /// Causing hard to debug issues, therefore this behaviour is not allowed in the first place
     /// @param element Element that should be inserted at the end
@@ -204,9 +206,11 @@ class Container {
 
     /// @brief Copies all elements from the given start to exclusively the given end iterator into the underlying data container.
     /// The copying is started from the position before the given iterator (position - 1)
-    /// @note If the initally allocated Capacity is not big enough to hold all elements, then this method will assert and stop the application.
-    /// It will also assert if the position before the iterator (position - 1) is outside the range of this container,
-    /// meaning if we are using an iterator to another container or if we passed an invalid iterator that would cause invalid memory access if dereferenced
+    /// @note If the position before the iterator (position - 1) is outside the range of this container the method will assert,
+    /// meaning if we are using an iterator to another container or if we passed an invalid iterator that would cause invalid memory access if dereferenced.
+    /// Additionally, if the Container was compiled with THINGSBOARD_ENABLE_DYNAMIC set,
+    /// then the method will simply increase the capacity exponentially if it is full.
+    /// Otherwise if the initally allocated Capacity is not big enough to hold all elements, this method will assert and stop the application
     /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator

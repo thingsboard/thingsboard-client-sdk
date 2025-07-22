@@ -60,7 +60,7 @@ class Server_Side_RPC : public IAPI_Implementation {
     template<typename InputIterator>
     bool RPC_Subscribe(InputIterator const & first, InputIterator const & last) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
-        size_t const size = Helper::distance(first, last);
+        auto const size = Helper::distance(first, last);
         if (m_rpc_callbacks.size() + size > m_rpc_callbacks.capacity()) {
             Logger::printfln(MAX_SUBSCRIPTIONS_EXCEEDED, SERVER_SIDE_RPC_SUBSCRIPTIONS, MAX_SUBSCRIPTIONS_TEMPLATE_NAME);
             return false;
@@ -107,7 +107,7 @@ class Server_Side_RPC : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, uint32_t length) override {
         // Nothing to do
     }
 
@@ -123,14 +123,14 @@ class Server_Side_RPC : public IAPI_Implementation {
 #if THINGSBOARD_ENABLE_STL
         auto it = std::find_if(m_rpc_callbacks.begin(), m_rpc_callbacks.end(), [&method_name](RPC_Callback const & rpc) {
             char const * subscribedMethodName = rpc.Get_Name();
-            return (!Helper::stringIsNullorEmpty(subscribedMethodName) && strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) == 0);
+            return (!Helper::String_IsNull_Or_Empty(subscribedMethodName) && strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) == 0);
         });
         if (it != m_rpc_callbacks.end()) {
             auto & rpc = *it;
 #else
         for (auto const & rpc : m_rpc_callbacks) {
             char const * subscribedMethodName = rpc.Get_Name();
-            if (Helper::stringIsNullorEmpty(subscribedMethodName) || strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) != 0) {
+            if (Helper::String_IsNull_Or_Empty(subscribedMethodName) || strncmp(subscribedMethodName, method_name, strlen(subscribedMethodName)) != 0) {
               continue;
             }
 #endif // THINGSBOARD_ENABLE_STL
@@ -146,7 +146,7 @@ class Server_Side_RPC : public IAPI_Implementation {
 
             JsonVariantConst const param = data[RPC_PARAMS_KEY];
 #if THINGSBOARD_ENABLE_DYNAMIC
-            size_t const & rpc_response_size = rpc.Get_Response_Size();
+            auto const & rpc_response_size = rpc.Get_Response_Size();
             TBJsonDocument json_buffer(rpc_response_size);
 #else
             size_t constexpr rpc_response_size = MaxRPC;
@@ -165,8 +165,8 @@ class Server_Side_RPC : public IAPI_Implementation {
                 return;
             }
 
-            size_t const request_id = Helper::parseRequestId(RPC_REQUEST_TOPIC, topic);
-            char responseTopic[Helper::detectSize(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
+            auto const request_id = Helper::Split_Topic_Into_Request_ID(topic, strlen(RPC_REQUEST_TOPIC));
+            char responseTopic[Helper::Calculate_Print_Size(RPC_SEND_RESPONSE_TOPIC, request_id)] = {};
             (void)snprintf(responseTopic, sizeof(responseTopic), RPC_SEND_RESPONSE_TOPIC, request_id);
             (void)m_send_json_callback.Call_Callback(responseTopic, json_buffer, Helper::Measure_Json(json_buffer));
             return;

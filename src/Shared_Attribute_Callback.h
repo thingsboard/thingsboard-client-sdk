@@ -13,7 +13,8 @@
 /// Documentation about the specific use of shared attribute update  in ThingsBoard can be found here https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server
 #if !THINGSBOARD_ENABLE_DYNAMIC
 /// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with this instance of the class, allows to use an array on the stack in the background.
-/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower, if not some of the requested keys may be lost, default = DEFAULT_ATTRIBUTES_AMOUNT (5)
+/// Be aware though the size set in this template and the size passed to the ThingsBoard MaxAttributes template need to be the same or the value in this class lower,
+/// if not some of the requested keys may be lost, default = DEFAULT_ATTRIBUTES_AMOUNT (1)
 template <size_t MaxAttributes = DEFAULT_ATTRIBUTES_AMOUNT>
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
 class Shared_Attribute_Callback : public Callback<void, JsonObjectConst const &>  {

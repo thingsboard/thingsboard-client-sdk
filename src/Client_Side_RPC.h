@@ -26,12 +26,11 @@ char constexpr RPC_EMPTY_PARAMS_VALUE[] = "{}";
 template <typename Logger = DefaultLogger>
 #else
 /// @tparam MaxSubscriptions Maximum amount of simultaneous client side rpc requests.
-/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = DEFAULT_SUBSCRIPTION_AMOUNT (1)
-/// @tparam MaxRequestRPC Maximum amount of key-value pairs that will ever be sent as parameters to the requests client side rpc method, allows to use a StaticJsonDocument on the stack in the background.
-/// Is expected to only request client side rpc requests, that do not additionally send any parameters. If we attempt to send parameters, we have to adjust the size accordingly.
-/// Default value is big enough to hold no parameters, but simply the default method name and params key needed for the request, if additional parameters are sent with the request the size has to be increased by one for each key-value pair.
-/// See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size and divide the result by 16 and add 2 to receive the required MaxRequestRPC value, default = DEFAULT_Request_RPC_AMOUNT (2)
-template<size_t MaxSubscriptions = DEFAULT_SUBSCRIPTION_AMOUNT, size_t MaxRequestRPC = DEFAULT_Request_RPC_AMOUNT, typename Logger = DefaultLogger>
+/// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allocate the internal memory on the stack instead of the heap, default = DEFAULT_SUBSCRIPTION_AMOUNT (1)
+/// @tparam MaxRequestRPC Maximum amount of key-value pairs that will ever be sent as parameters to the requested client side rpc method, allows to allocate the internal memory on the stack instead of the heap.
+/// Default value is big enough only call client side rpc methods with no parameters. Being a value of 2 to hold the default method name and params key needed for a well-formed request.
+/// If additional parameters are ever sent with a request the size has to be increased by one for each value in the JsonArray sent as a parameter, default = DEFAULT_REQUEST_RPC_AMOUNT (2)
+template<size_t MaxSubscriptions = DEFAULT_SUBSCRIPTION_AMOUNT, size_t MaxRequestRPC = DEFAULT_REQUEST_RPC_AMOUNT, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class Client_Side_RPC : public IAPI_Implementation {
   public:
@@ -40,17 +39,20 @@ class Client_Side_RPC : public IAPI_Implementation {
 
     ~Client_Side_RPC() override = default;
 
-    /// @brief Requests one client-side RPC callback,
-    /// that will be called if a response from the server for the method with the given name is received.
-    /// Because the client-side RPC request is a single event subscription, meaning we only ever receive a response to our request once,
-    /// we automatically unsubscribe and delete the internal allocated data for the request as soon as the response has been received and handled by the subscribed callback.
+    /// @brief Requests the response from one client-side rpc method, which will call the passed callback.
+    /// If a response from the server for the executed client-side rpc method was received
+    /// @note Because the client-side rpc request is a single event subscription, meaning we only ever receive one response for one request,
+    /// the request is automatically unsubscribde and the internally allocated data for the request deleted as soon as the response has been received and handled by the subscribed callback.
     /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
-    /// @param callback Callback method that will be called
-    /// @return Whether requesting the given callback was successful or not
+    /// @param callback Callback method that will be called when the response from the server for the executed client-side rpc method has been received
+    /// @return Whether sending the request to the cloud was successfull. Is non-blocking and therefore a true value returned by this method does not guarantee a response will ever be received.
+    /// If wanted by the user the optional timeout callback and timeout time in the callback instance can be configured,
+    /// which will inform the user by calling the timeout callback, if no response has been received by the server in the expected time.
+    /// If a response has been received the normal callback with the response from the executed client-side rpc method will be called instead
     bool RPC_Request(RPC_Request_Callback const & callback) {
         char const * method_name = callback.Get_Name();
 
-        if (Helper::stringIsNullorEmpty(method_name)) {
+        if (Helper::String_IsNull_Or_Empty(method_name)) {
             Logger::printfln(CLIENT_RPC_METHOD_NULL);
             return false;
         }
@@ -100,7 +102,7 @@ class Client_Side_RPC : public IAPI_Implementation {
         registered_callback->Set_Request_ID(++request_id);
         registered_callback->Start_Timeout_Timer();
 
-        char topic[Helper::detectSize(RPC_SEND_REQUEST_TOPIC, request_id)] = {};
+        char topic[Helper::Calculate_Print_Size(RPC_SEND_REQUEST_TOPIC, request_id)] = {};
         (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, request_id);
         return m_send_json_callback.Call_Callback(topic, request_buffer, Helper::Measure_Json(request_buffer));
     }
@@ -109,12 +111,12 @@ class Client_Side_RPC : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, uint32_t length) override {
         // Nothing to do
     }
 
     void Process_Json_Response(char const * topic, JsonDocument const & data) override {
-        size_t const request_id = Helper::parseRequestId(RPC_RESPONSE_TOPIC, topic);
+        auto const request_id = Helper::Split_Topic_Into_Request_ID(topic, strlen(RPC_RESPONSE_TOPIC));
 
 #if THINGSBOARD_ENABLE_STL
         auto it = std::find_if(m_rpc_request_callbacks.begin(), m_rpc_request_callbacks.end(), [&request_id](RPC_Request_Callback & rpc_request) {
@@ -187,12 +189,10 @@ class Client_Side_RPC : public IAPI_Implementation {
     using Callback_Container = Container<RPC_Request_Callback, MaxSubscriptions>;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
-    /// @brief Subscribes to the client-side RPC response topic,
-    /// that will be called if a reponse from the server for the method with the given name is received.
-    /// See https://thingsboard.io/docs/user-guide/rpc/#client-side-rpc for more information
-    /// @param callback Callback method that will be called
+    /// @brief Subscribes to the client-side rpc response topic
+    /// @param callback Callback method that will be called when the response from the server for the executed client-side rpc method has been received
     /// @param registered_callback Editable pointer to a reference of the local version that was copied from the passed callback
-    /// @return Whether requesting the given callback was successful or not
+    /// @return Whether subcribing to the client-side rpc response topic, was successful or not
     bool RPC_Request_Subscribe(RPC_Request_Callback const & callback, RPC_Request_Callback * & registered_callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_rpc_request_callbacks.size() + 1 > m_rpc_request_callbacks.capacity()) {
@@ -209,9 +209,8 @@ class Client_Side_RPC : public IAPI_Implementation {
         return true;
     }
 
-    /// @brief Unsubscribes all client-side RPC request callbacks
-    /// @return Whether unsubcribing the previously subscribed callbacks
-    /// and from the client-side RPC response topic, was successful or not
+    /// @brief Unsubscribes all client-side rpc request callbacks
+    /// @return Whether unsubcribing to the client-side rpc response topic, was successful or not
     bool RPC_Request_Unsubscribe() {
         (void)Resubscribe_Permanent_Subscriptions();
         return m_unsubscribe_topic_callback.Call_Callback(RPC_RESPONSE_SUBSCRIBE_TOPIC);

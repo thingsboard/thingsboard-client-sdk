@@ -115,7 +115,7 @@ class ThingsBoardHttpSized {
             return false;
         }
 
-        char path[Helper::detectSize(topic, m_token)] = {};
+        char path[Helper::Calculate_Print_Size(topic, m_token)] = {};
         (void)snprintf(path, sizeof(path), topic, m_token);
         return Post_Message(path, json);
     }
@@ -322,7 +322,7 @@ class ThingsBoardHttpSized {
     template<size_t MaxKeyValuePairAmount, typename InputIterator>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
     bool Send_Data_Array(InputIterator const & first, InputIterator const & last, bool telemetry) {
-        size_t const size = Helper::distance(first, last);
+        auto const size = Helper::distance(first, last);
 #if THINGSBOARD_ENABLE_DYNAMIC
         TBJsonDocument json_buffer(JSON_OBJECT_SIZE(size));
 #else

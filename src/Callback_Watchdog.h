@@ -17,24 +17,24 @@ constexpr char WATCHDOG_TIMER_NAME[] = "watchdog_timer";
 #endif // THINGSBOARD_USE_ESP_TIMER
 
 
-/// @brief Wrapper class which allows to start a timer and if it is not stopped in the given time then the callback that was passed will be called,
-/// which informs the user of the failure to stop the timer in time, meaning a timeout has occured.
-/// The class wraps around either the Arduino timer class from Arduino (https://github.com/contrem/arduino-timer) or the offical ESP Timer implementation from Espressif (https://github.com/espressif/esp-idf/tree/master/examples/system/esp_timer), the latter takes precendence if it exists.
-/// This is done because it uses FreeRTOS to start the actual timer in the background, which removes the need for a Hardware Timer with Interrupts but still achieve the advantage of accurate timings and no need for active polling.
-/// For all other use cases where the esp timer does not exists we instead use the Arduino timer as a fallback, because is is a simple software timer with active polling that works on all Arduino based devices,
-/// because it simply uses the millis() method per default but can be configured over template arguments to use other methods that return the current time.
-/// The class instance is meant to be started with once() which will then call the registered callback after the timeout has passed.
-/// if the detach() method has not been called yet.
-/// This results in behaviour similair to a esp task watchdog but without as high of an accuracy and without restarting the device,
+/// @brief Wrapper class which allows to start a timer and if it is not stopped in the given time then the internally subscribed callback will be called,
+/// which informs the user of the failure to stop the timer in time, meaning a timeout has occured
+/// @note The class wraps around either the Arduino timer class from Arduino (https://github.com/contrem/arduino-timer) or the offical ESP Timer implementation from Espressif (https://github.com/espressif/esp-idf/tree/master/examples/system/esp_timer), the latter takes precendence if it exists.
+/// This is done because it uses FreeRTOS to start the actual timer in the background, which removes the need for a Hardware Timer with Interrupts as well as the need for active polling, while still achieve the advantage of accurate timings.
+/// For all other use cases where the ESP timer does not exists we instead use the Arduino timer as a fallback, because is is a simple software timer with active polling that works on all Arduino based devices.
+/// Tt simply uses the millis() method per default but can be configured over template arguments to use other methods that return the current time.
+///
+/// The class instance is meant to be started with once() which will then call the registered callback after the timeout has passed, if the detach() method has not been called yet.
+/// This results in behaviour similair to an ESP task watchdog but without as high of an accuracy and without immediately restarting the device when triggered,
 /// allowing to let it fail and handle the error case silently by the user in the callback method.
-/// Documentation about the specific use and caviates of the ESP Timer implementation can be found here https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
+/// Documentation about the specific uses and caviates of the ESP Timer implementation can be found here https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
 class Callback_Watchdog : public Callback<void> {
   public:
     /// @brief Constructs empty timeout timer callback, will result in never being called. Internals are simply default constructed as nullptr
     Callback_Watchdog() = default;
 
-    /// @brief Constructs callback, will be called if the timeout time passes without detach() being called
-    /// @param callback Callback method that will be called as soon as the internal software timers have processed that the given timeout time passed
+    /// @brief Constructs callback, will be called if the timeout time passes without detach() being called beforehand
+    /// @param callback Callback method that will be called as soon as the internal software timers have processed that the given timeout time passed without detach() being called beforehand
     explicit Callback_Watchdog(function callback)
       : Callback(callback)
 #if THINGSBOARD_USE_ESP_TIMER
@@ -76,9 +76,12 @@ class Callback_Watchdog : public Callback<void> {
     }
 
 #if !THINGSBOARD_USE_ESP_TIMER
-    /// @brief Internally checks if the time already passed, has to be done because we are using a simple software timer.
-    /// Indirectly called from the interal processing loop of this library, so we expect the user to recently often call the library loop() function.
-    /// In the worst case the actuall call of the callback might be massively delayed compared to the original timer time
+    /// @brief Internally checks if the time already passed, has to be done because we are using a simple software timer
+    /// @note Indirectly called from the interal processing loop of this library, so we expect the user to relatively often call the internal library loop() function.
+    /// In the worst case the actual call of the callback method might be massively delayed compared to the original given timeout time.
+    ///
+    /// This is the case if the timeout occured but we just updated the internal time before, that timeout will then only be registered on the next update call.
+    /// Meaning if we call the internal library loop() function every 500 milliseconds it might be delayed by that time in the worst case.
     void update() {
         m_oneshot_timer.tick<void>();
     }
@@ -87,8 +90,8 @@ class Callback_Watchdog : public Callback<void> {
   private:
 #if THINGSBOARD_USE_ESP_TIMER
     /// @brief Creates and initally configures the timer, has to be done once before either esp_timer_start_once or esp_timer_stop is called
-    /// It can not be created in the constructor, because that would possibly be called before we have executed the main app code, meaning the esp timer base is not initalized yet.
-    /// This would result in an invalid configuration which would cause crashes when used in combination with once() or detach()
+    /// @note Can not be created in the constructor, because that would possibly be called before we have executed the main app code, meaning the esp timer base is not initalized yet.
+    /// This would result in an invalid configuration and therefore cause crashes when calling once() or detach()
     void create_timer() {
         // Timer has already been created previously there is no need to create it again
         if (m_oneshot_timer != nullptr) {
@@ -110,11 +113,9 @@ class Callback_Watchdog : public Callback<void> {
     }
 #endif // THINGSBOARD_USE_ESP_TIMER
 
-    /// @brief Static callback used to call the initally subscribed callback, if the internal watchdog has not been reset in time with detach()
 #if THINGSBOARD_USE_ESP_TIMER
     static void
 #else
-    /// @return Whether we want to simply reset the internal time and start the timer once again, always false because we only use oneshot timers internally
     static  bool
 #endif // THINGSBOARD_USE_ESP_TIMER
     oneshot_timer_callback(void *arg) {

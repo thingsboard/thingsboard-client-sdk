@@ -22,7 +22,7 @@ using Container = std::vector<T>;
 
 /// @brief General purpose safe callback wrapper. Expects either c-style or c++ style function pointer,
 /// depending on if the C++ STL has been implemented on the given device or not.
-/// Simply wraps that function pointer and before calling it ensures it actually exists
+/// Simply wraps that function pointer and before calling it ensures it is valid
 /// @tparam return_typ Type the given callback method should return
 /// @tparam argument_types Types the given callback method should receive
 template<typename return_typ, typename... argument_types>
@@ -40,21 +40,21 @@ class Callback {
 
     /// @brief Constructor
     /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types.
-    /// If nullptr is passed the callback will never be called and return with a defaulted instance of the requested return variable
+    /// If nullptr is passed the callback will never be called and instead return with a defaulted instance of the requested return variable
     explicit Callback(function callback)
       : m_callback(callback)
     {
         // Nothing to do
     }
 
-    /// @brief Virtual default destructor, created to ensure that if a pointer to this class is used and deleted, we will also call the derived base class destructor.
-    /// Deleting a base class destructor that does not have a virtual destructor is undefined behaviour, because the derived class destructor originally instantiated with new is never called.
+    /// @brief Virtual default destructor, created to ensure that if a pointer to this class is used and deleted, we will also call the derived base class destructor
+    /// @note Deleting a base class destructor that does not have a virtual destructor is undefined behaviour, because the derived class destructor originally instantiated with new is never called.
     /// This can cause potential memory leaks, because derived classes can not clean up their internal members as expected and instead simply leak them
     virtual ~Callback() = default;
 
-    /// @brief Calls the callback that was subscribed, when this class instance was initally created.
-    /// If the default constructor was used or a nullptr was passed instead of a valid function pointer,
-    /// this method will check beforehand and simply return with a defaulted instance of the requested return variable
+    /// @brief Calls the callback that was subscribed, when this class instance was initally created
+    /// @note If the default constructor was used or a nullptr was passed instead of a valid function pointer,
+    /// this method will simply return a defaulted instance of the requested return variable instead
     /// @param ...arguments Optional additional arguments that are simply formwarded to the subscribed callback if it exists
     /// @return Argument returned by the previously subscribed callback or if none or nullptr is subscribed
     /// we instead return a defaulted instance of the requested return variable

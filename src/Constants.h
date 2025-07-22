@@ -10,12 +10,13 @@
 #include <ArduinoJson.h>
 #endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 
+
 uint8_t constexpr DEFAULT_ENDPOINT_AMOUNT = 7U;
 uint8_t constexpr DEFAULT_RESPONSE_AMOUNT = 8U;
 uint8_t constexpr DEFAULT_SUBSCRIPTION_AMOUNT = 1U;
 uint8_t constexpr DEFAULT_ATTRIBUTES_AMOUNT = 1U;
 uint8_t constexpr DEFAULT_RPC_AMOUNT = 0U;
-uint8_t constexpr DEFAULT_Request_RPC_AMOUNT = 2U;
+uint8_t constexpr DEFAULT_REQUEST_RPC_AMOUNT = 2U;
 uint8_t constexpr DEFAULT_PAYLOAD_SIZE = 64U;
 uint16_t constexpr DEFAULT_MAX_STACK_SIZE = 1024U;
 #if THINGSBOARD_ENABLE_STREAM_UTILS

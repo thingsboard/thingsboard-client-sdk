@@ -17,7 +17,7 @@
 /// - Solve issues with using std::function callbacks for non ESP boards
 /// - Seperats the underlying Heap buffer previously used for both outgoing and incoming messages into two seperate buffers
 /// - Multiple other minor bufixes and features
-/// Since v0.15.0 only the ThingsBoard fork of the PubSubClient can be used, because splitting the Heap buffer into two resulted in api breaking changes
+/// Since v0.15.0 only the ThingsBoard fork of the PubSubClient can be used, because splitting the Heap buffer into a input and output buffer resulted in breaking API changes
 class Arduino_MQTT_Client : public IMQTT_Client {
   public:
     /// @brief Constructs a IMQTT_Client implementation without a network client, meaning it has to be added later with the set_client() method

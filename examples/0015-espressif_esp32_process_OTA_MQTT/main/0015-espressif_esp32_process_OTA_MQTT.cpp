@@ -51,14 +51,16 @@ constexpr uint16_t THINGSBOARD_PORT = 1883U;
 
 // Maximum size packets will ever be sent or received by the underlying MQTT client,
 // if the size is to small messages might not be sent or received messages will be discarded.
-// The Espressif_MQTT_Client, currently has an issue with the underlying library used, where it is not possible
-// to change the buffer size once the client has been initalized, meaning the buffer size can only be set before calling connect(),
-// for the first time. Therefore when using the OTA update mechanism it is required to increase the buffer size to the size of the received firmware packets
+constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 256U;
+constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 256U;
+
+// The Espressif_MQTT_Client, previously had an issue with the underlying library used, where it was not possible
+// to change the buffer size once the client had been initalized, meaning the buffer size could only be set before calling connect(),
+// for the first time. Therefore when using the OTA update mechanism it was required to increase the buffer size to the size of the received firmware packets
 // and a little bit more for the topic we received the message on.
-// This has to be done at least until the issue https://github.com/espressif/esp-mqtt/issues/267 has been fixed in the esp-mqtt client,
-// or if an older version of the esp-mqtt client is used that does not include the possible fixes to the aforementioned issue yet.
-constexpr uint16_t MAX_MESSAGE_SEND_SIZE = FIRMWARE_PACKET_SIZE + 50U;
-constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = FIRMWARE_PACKET_SIZE + 50U;
+// This still has to be done if the fix from https://github.com/espressif/esp-mqtt/issues/267 is not yet included in the used version of the esp-mqtt client, because an an older version is used
+//constexpr uint16_t MAX_MESSAGE_SEND_SIZE = FIRMWARE_PACKET_SIZE + 50U;
+//constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = FIRMWARE_PACKET_SIZE + 50U;
 
 #if ENCRYPTED
 // See https://comodosslstore.com/resources/what-is-a-root-ca-certificate-and-how-do-i-download-it/
@@ -150,7 +152,7 @@ void otaSDToFlashTask(void* pvParameter) {
         fseek(ota_bin_file, 0, SEEK_SET);
         esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
         while (data.remaining_size > 0) {
-            size_t const size = data.remaining_size <= FIRMWARE_PACKET_SIZE ? data.remaining_size : FIRMWARE_PACKET_SIZE;
+            auto const size = data.remaining_size <= FIRMWARE_PACKET_SIZE ? data.remaining_size : FIRMWARE_PACKET_SIZE;
             fread(data.data, size, 1, ota_bin_file);
             error = esp_ota_write(update_handle, data.data, size);
             if (data.remaining_size <= FIRMWARE_PACKET_SIZE) {

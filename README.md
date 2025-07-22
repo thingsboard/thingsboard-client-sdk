@@ -373,7 +373,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, uint32_t length) override {
         // Nothing to do
     }
 

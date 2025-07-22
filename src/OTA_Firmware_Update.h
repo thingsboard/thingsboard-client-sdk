@@ -178,11 +178,9 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return API_Process_Type::RAW;
     }
 
-    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
-        size_t const & request_id = m_fw_callback.Get_Request_ID();
-        char response_topic[Helper::detectSize(FIRMWARE_RESPONSE_TOPIC, request_id)] = {};
-        (void)snprintf(response_topic, sizeof(response_topic), FIRMWARE_RESPONSE_TOPIC, request_id);
-        size_t const chunk = Helper::parseRequestId(response_topic, topic);
+    void Process_Response(char const * topic, uint8_t * payload, uint32_t length) override {
+        auto const & request_id = m_fw_callback.Get_Request_ID();
+        auto const chunk = Helper::Split_Topic_Into_Request_ID(topic, Helper::Calculate_Print_Size(FIRMWARE_RESPONSE_TOPIC, request_id));
         m_ota.Process_Firmware_Packet(chunk, payload, length);
     }
 
@@ -235,7 +233,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         char const * current_fw_title = callback.Get_Firmware_Title();
         char const * current_fw_version = callback.Get_Firmware_Version();
 
-        if (Helper::stringIsNullorEmpty(current_fw_title) || Helper::stringIsNullorEmpty(current_fw_version)) {
+        if (Helper::String_IsNull_Or_Empty(current_fw_title) || Helper::String_IsNull_Or_Empty(current_fw_version)) {
             return false;
         }
         else if (!Firmware_Send_Info(current_fw_title, current_fw_version)) {
@@ -286,10 +284,10 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         uint16_t const & chunk_size = m_fw_callback.Get_Chunk_Size();
 
         // Convert the interger size into a readable string
-        char size[Helper::detectSize(NUMBER_PRINTF, chunk_size)] = {};
+        char size[Helper::Calculate_Print_Size(NUMBER_PRINTF, chunk_size)] = {};
         (void)snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
 
-        char topic[Helper::detectSize(FIRMWARE_REQUEST_TOPIC, request_id, request_chunck)] = {};
+        char topic[Helper::Calculate_Print_Size(FIRMWARE_REQUEST_TOPIC, request_id, request_chunck)] = {};
         (void)snprintf(topic, sizeof(topic), FIRMWARE_REQUEST_TOPIC, request_id, request_chunck);
         return m_send_json_string_callback.Call_Callback(topic, size);
     }
@@ -316,7 +314,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         char const * fw_version = data[FW_VER_KEY];
         char const * fw_checksum = data[FW_CHKS_KEY];
         char const * fw_algorithm = data[FW_CHKS_ALGO_KEY];
-        size_t const fw_size = data[FW_SIZE_KEY];
+        auto const fw_size = data[FW_SIZE_KEY];
 
         char const * curr_fw_title = m_fw_callback.Get_Firmware_Title();
         char const * curr_fw_version = m_fw_callback.Get_Firmware_Version();

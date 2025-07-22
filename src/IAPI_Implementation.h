@@ -39,31 +39,34 @@ class IAPI_Implementation {
     /// @copydoc Callback::~Callback
     virtual ~IAPI_Implementation() {}
 
-    /// @brief Returns the way the server response should be processed.
-    /// Only ever uses one at the time, because the response is either unserialized data which we need to process as such (OTA Firmware Update)
-    /// or actually JSON which needs to be serialized (everything else)
-    /// @return How the API implementation should be passed the response
+    /// @brief Returns the way the server response should be processed
+    /// @note Response can only ever be process using one option, because the response is either unserialized data,
+    /// which we need to process as such (OTA Firmware Update) or actually JSON which needs to be serialized (everything else)
+    /// @return How the API implementation processes the server response
     virtual API_Process_Type Get_Process_Type() const = 0;
 
     /// @brief Process callback that will be called upon response arrival
-    /// and is responsible for handling the payload before serialization and calling the appropriate previously subscribed callbacks
-    /// @param topic Previously subscribed topic, we got the response over
-    /// @param payload Payload that was sent over the cloud and received over the given topic
+    /// @note Responsible for handling the payload before serialization.
+    /// If the response only wants to be handled after serialization Process_Json_Response should contain the implementation instead and Get_Process_Type should return API_Process_Type::JSON
+    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over
+    /// @param payload Non owning pointer to the payload that was sent over the cloud and received over the given topic
     /// @param length Total length of the received payload
-    virtual void Process_Response(char const * topic, uint8_t * payload, unsigned int length) = 0;
+    virtual void Process_Response(char const * topic, uint8_t * payload, uint32_t length) = 0;
 
     /// @brief Process callback that will be called upon response arrival
-    /// and is responsible for handling the alredy serialized payload and calling the appropriate previously subscribed callbacks
-    /// @param topic Previously subscribed topic, we got the response over
+    /// @note Responsible for handling the alredy serialized payload.
+    /// If the response only wants to be handled before serialization Process_Response should contain the implementation instead and Get_Process_Type should return API_Process_Type::RAW
+    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     virtual void Process_Json_Response(char const * topic, JsonDocument const & data) = 0;
 
     /// @brief Compares received response topic and the topic this api implementation handles responses on,
-    /// messages from all other topics are ignored and only messages from topics that match are handled.
-    /// For the comparsion we either compare the full expected string with the null termination,
+    /// messages from all other topics are ignored and only messages from topics that match are handled
+    /// @note For the comparsion we either compare the full expected string with null termination,
     /// if the response topic does not include additional parameters, example being shared attribute update (v1/devices/me/attributes).
     /// Or we compare only before the null termination for topics that include additional parameters in the response.
     /// Like for example the original request id in the response of the attribute request (v1/devices/me/attributes/response/1)
+    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over
     /// @return Whether the received response topic matches the topic this api implementation handles responses on
     virtual bool Is_Response_Topic_Matching(char const * topic) const = 0;
 
@@ -78,21 +81,20 @@ class IAPI_Implementation {
     virtual bool Resubscribe_Permanent_Subscriptions() = 0;
 
 #if !THINGSBOARD_USE_ESP_TIMER
-    /// @brief Internal loop method to update inernal timers for API calls that can timeout.
-    /// Only exists on boards that can not use the ESP Timer, because that one uses the FreeRTOS timer in the background instead
+    /// @brief Internal loop method to update inernal timers for API calls that can timeout
+    /// @note Only exists on boards that can not use the ESP Timer, because that one uses the FreeRTOS timer in the background instead
     /// and therefore does not require calling a loop method
     virtual void loop() = 0;
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
-    /// @brief Method that allows to construct internal objects, after the required callback member methods have been set already.
-    /// Required for API Implementations that subscribe further API calls, because immediately calling in the constructor can lead,
-    /// to attempted subscriptions before the m_subscribe_api_callback is actually subscribed. Therefore we have to call methods like that,
+    /// @brief Method that allows to construct internal objects, after the required callback member methods have been set already
+    /// @note Required for API Implementations that subscribe further API calls, because immediately calling in the constructor can lead,
+    /// to attempted subscriptions before the client callbacks are actually subscribed. Therefore we have to call methods like that,
     /// in this method instead, because it ensures all member methods are instantiated already
     virtual void Initialize() = 0;
 
-    /// @brief Sets the underlying callbacks that are required for the different API Implementation to communicate with the cloud.
-    /// Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding
-    /// as a user ist not recommended, unless you know what you are doing
+    /// @brief Sets the underlying callbacks that are required for the different API Implementation to communicate with the cloud
+    /// @note Directly set by the used ThingsBoard client to its internal methods, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param subscribe_api_callback Method which allows to subscribe additional API endpoints, points to Subscribe_API_Implementation per default
     /// @param send_json_callback Method which allows to send arbitrary JSON payload, points to Send_Json per default
     /// @param send_json_string_callback Method which allows to send arbitrary JSON string payload, points to Send_Json_String per default

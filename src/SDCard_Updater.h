@@ -42,7 +42,7 @@ class SDCard_Updater : public IUpdater {
             Logger::printfln(OPEN_FILE_FAILED, m_path);
             return 0;
         }
-        size_t const bytes_written = fwrite(payload, 1, total_bytes, file);
+        auto const bytes_written = fwrite(payload, 1, total_bytes, file);
         fclose(file);
         return bytes_written;
     }

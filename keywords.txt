@@ -101,8 +101,8 @@ reset   KEYWORD2
 end KEYWORD2
 Get_Attribute_Key   KEYWORD2
 Set_Attribute_Key   KEYWORD2
-detectSize  KEYWORD2
-getOccurences   KEYWORD2
+Calculate_Print_Size  KEYWORD2
+Calculate_Symbol_Occurences   KEYWORD2
 Measure_Json    KEYWORD2
 
 #######################################
