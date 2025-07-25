@@ -233,11 +233,7 @@ class Container {
 #else
         assert(m_size < Capacity);
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-#if THINGSBOARD_ENABLE_CXX20
-        if constexpr (is_destructible()) {
-#else
         if (is_destructible()) {
-#endif // THINGSBOARD_ENABLE_CXX20
             m_elements[m_size].~T();
         }
         m_elements[m_size] = element;
@@ -268,11 +264,7 @@ class Container {
 #if THINGSBOARD_ENABLE_DYNAMIC
             increase_capacity();
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-#if THINGSBOARD_ENABLE_CXX20
-        if constexpr (is_destructible()) {
-#else
-        if (is_destructible()) {
-#endif // THINGSBOARD_ENABLE_CXX20
+            if (is_destructible()) {
                 (*position).~T();
             }
             *position = *it;
@@ -294,20 +286,12 @@ class Container {
         size_type const index = Helper::distance(cbegin(), position);
         // Move all elements after the index one position to the left
         for (size_type i = index; i <= m_size; ++i) {
-#if THINGSBOARD_ENABLE_CXX20
-            if constexpr (is_destructible()) {
-#else
             if (is_destructible()) {
-#endif // THINGSBOARD_ENABLE_CXX20
                 m_elements[i].~T();
                 m_elements[i] = m_elements[i + 1];
             }
         }
-#if THINGSBOARD_ENABLE_CXX20
-        if constexpr (is_destructible()) {
-#else
         if (is_destructible()) {
-#endif // THINGSBOARD_ENABLE_CXX20
             m_elements[m_size].~T();
         }
         // Decrease the size of the array to remove the last element, because either it was moved one index to the left or was the element we wanted to delete anyway
@@ -351,11 +335,7 @@ class Container {
     /// @brief Wheter the object that this Container holds has a Destructor or not
     /// @note Is used to know if the destructor has to be called, before the element is overwritten.
     /// Otherwise we might potentially overwrite pointer addresses and therefore leak memory
-#if THINGSBOARD_ENABLE_CXX20
-    constexpr bool is_destructible() const {
-#else
     bool is_destructible() const {
-#endif // THINGSBOARD_ENABLE_CXX20
 #if THINGSBOARD_ENABLE_STL
         return std::is_destructible<T>::value;
 #else

@@ -74,7 +74,7 @@ class Callback_Watchdog : public Callback<void> {
     /// Also ensures that the timer is detached and stopped before it is deleted, because that is required for the timer to actually be deleted
     Callback_Watchdog & operator=(Callback_Watchdog const & other) {
         if (&other != this) {
-            Set_Callback(other.m_callback);
+            Callback::operator=(other);
             detach();
             (void)esp_timer_delete(m_oneshot_timer);
             m_oneshot_timer = nullptr;
