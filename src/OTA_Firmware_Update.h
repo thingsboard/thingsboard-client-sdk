@@ -96,20 +96,24 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 
     ~OTA_Firmware_Update() override = default;
 
-    /// @brief Checks if firmware settings are assigned to the connected device and if they are attempts to use those settings to start a firmware update.
+    /// @brief Requests the current assigned firmware information on the connected device
+    /// @note Once the response to the request has been received the update will be started automatically, if the given firmware is not already installed.
+    /// This functionality is achieved by requesting the shared attributes connected with firmware OTA updates of the device from the server,
+    /// if those attributes then signify that a different firmware version is assigned on the cloud than the one flashed onto the device currently the firmware update process will start immediately.
+    /// Furthermore calls to this method will also inform the cloud about the current firmware version and title contained in the callback argument.
+    /// This means explicitly sending these telemetry values to the cloud is not required and can simply be done by calling Start_Firmware_Update again on reboot.
     /// Will only be checked once and if there is no firmware assigned or if the assigned firmware is already installed this method will not update.
-    /// This firmware status is only checked once, meaning to recheck the status either call this method again or use the Subscribe_Firmware_Update method.
-    /// to be automatically informed and start the update if firmware has been assigned and it is not already installed.
+    /// To recheck the status either call this method again or use the Subscribe_Firmware_Update method instead,
+    /// to be automatically informed and start the update if new firmware has been assigned in the cloud that should be installed.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param callback Callback method that will be called
-    /// @return Whether subscribing the given callback was successful or not
+    /// @return Whether requesting the firmware shared attributes was successfull or not
     bool Start_Firmware_Update(OTA_Update_Callback const & callback) {
         if (!Prepare_Firmware_Settings(callback))  {
             Logger::printfln(RESETTING_FAILED);
             return false;
         }
 
-        // Request the firmware information
         constexpr char const * array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
 #if THINGSBOARD_ENABLE_STL
         Request_Callback_Value const fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), callback.Get_Timeout(), std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
@@ -119,27 +123,31 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return m_fw_attribute_request.Shared_Attributes_Request(fw_request_callback);
     }
 
-    /// @brief Stops the currently ongoing firmware update, calls the subscribed user finish callback with a failure if any update was stopped.
+    /// @brief Stops any currently ongoing firmware update
+    /// @note Results in the subscribed user finish callback being called with a failure if any ongoing update was actually stopped.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     void Stop_Firmware_Update() {
         m_ota.Stop_Firmware_Update();
     }
 
-    /// @brief Subscribes to any changes of the assigned firmware information on the connected device,
-    /// meaning once we subscribed if we register any changes we will start the update if the given firmware is not already installed.
+    /// @brief Subscribes to any changes of the assigned firmware information on the connected device
+    /// @note Once subscribed if any changes are registered the update will be started automatically, if the given firmware is not already installed.
+    /// This functionality is achieved by subscribing to changes to the shared attributes connected with firmware OTA updates of the device,
+    /// if those attributes then are changed on the server, by assigning a different firmware on the server to the device, the internal method will be notified and immediately start the firmware update process.
+    /// Furthermore calls to this method will also inform the cloud about the current firmware version and title contained in the callback argument.
+    /// This means explicitly sending these telemetry values to the cloud is not required and can simply be done by calling Subscribe_Firmware_Update again on reboot.
     /// Unlike Start_Firmware_Update this method only registers changes to the firmware information,
     /// meaning if the change occured while this device was asleep or turned off we will not update,
     /// to achieve that, it is instead recommended to call the Start_Firmware_Update method when the device has started once to check for that edge case.
     /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
     /// @param callback Callback method that will be called
-    /// @return Whether subscribing the given callback was successful or not
+    /// @return Whether requesting to subscribe to changes to the firmware shared attributes was successfull or not
     bool Subscribe_Firmware_Update(OTA_Update_Callback const & callback) {
         if (!Prepare_Firmware_Settings(callback))  {
             Logger::printfln(RESETTING_FAILED);
             return false;
         }
 
-        // Subscribes to changes of the firmware information
         char const * array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
 #if THINGSBOARD_ENABLE_STL
         Update_Callback_Value const fw_update_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
@@ -147,31 +155,6 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         Update_Callback_Value const fw_update_callback(OTA_Firmware_Update::onStaticFirmwareReceived, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
         return m_fw_attribute_update.Shared_Attributes_Subscribe(fw_update_callback);
-    }
-
-    /// @brief Sends the given firmware title and firmware version to the cloud.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param current_fw_title Current device firmware title
-    /// @param current_fw_version Current device firmware version
-    /// @return Whether sending the current device firmware information was successful or not
-    bool Firmware_Send_Info(char const * current_fw_title, char const * current_fw_version) {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> current_firmware_info;
-        current_firmware_info[CURR_FW_TITLE_KEY] = current_fw_title;
-        current_firmware_info[CURR_FW_VER_KEY] = current_fw_version;
-        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, current_firmware_info, Helper::Measure_Json(current_firmware_info));
-    }
-
-    /// @brief Sends the given firmware state to the cloud.
-    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
-    /// @param current_fw_state Current firmware download state
-    /// @param fw_error Firmware error message that describes the current firmware state,
-    /// simply do not enter a value and the default value will be used which overwrites the firmware error messages, default = ""
-    /// @return Whether sending the current firmware download state was successful or not
-    bool Firmware_Send_State(char const * current_fw_state, char const * fw_error = "") {
-        StaticJsonDocument<JSON_OBJECT_SIZE(2)> current_firmware_state;
-        current_firmware_state[FW_ERROR_KEY] = fw_error;
-        current_firmware_state[FW_STATE_KEY] = current_fw_state;
-        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, current_firmware_state, Helper::Measure_Json(current_firmware_state));
     }
 
     API_Process_Type Get_Process_Type() const override {
@@ -225,10 +208,35 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     }
 
   private:
+    /// @brief Sends the given firmware title and firmware version to the cloud.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
+    /// @param current_fw_title Current device firmware title
+    /// @param current_fw_version Current device firmware version
+    /// @return Whether sending the current device firmware information was successful or not
+    bool Firmware_Send_Info(char const * current_fw_title, char const * current_fw_version) {
+        StaticJsonDocument<JSON_OBJECT_SIZE(2U)> current_firmware_info;
+        current_firmware_info[CURR_FW_TITLE_KEY] = current_fw_title;
+        current_firmware_info[CURR_FW_VER_KEY] = current_fw_version;
+        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, current_firmware_info, Helper::Measure_Json(current_firmware_info));
+    }
+
+    /// @brief Sends the given firmware state to the cloud.
+    /// See https://thingsboard.io/docs/user-guide/ota-updates/ for more information
+    /// @param current_fw_state Current firmware download state
+    /// @param fw_error Firmware error message that describes the current firmware state,
+    /// simply do not enter a value and the default value will be used which overwrites the firmware error messages, default = ""
+    /// @return Whether sending the current firmware download state was successful or not
+    bool Firmware_Send_State(char const * current_fw_state, char const * fw_error = "") {
+        StaticJsonDocument<JSON_OBJECT_SIZE(2U)> current_firmware_state;
+        current_firmware_state[FW_ERROR_KEY] = fw_error;
+        current_firmware_state[FW_STATE_KEY] = current_fw_state;
+        return m_send_json_callback.Call_Callback(TELEMETRY_TOPIC, current_firmware_state, Helper::Measure_Json(current_firmware_state));
+    }
+
     /// @brief Checks the included information in the callback,
-    /// and attempts to sends the current device firmware information to the cloud
+    /// and attempts to send the current device firmware information to the cloud and configures the internal request ID to receive chunks from
     /// @param callback Callback method that will be called
-    /// @return Whether checking and sending the current device firmware information was successful or not
+    /// @return Whether preparing the internal members and communicating information to the server for the firmware update process was successfull or not
     bool Prepare_Firmware_Settings(OTA_Update_Callback const & callback) {
         char const * current_fw_title = callback.Get_Firmware_Title();
         char const * current_fw_version = callback.Get_Firmware_Version();
@@ -259,8 +267,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return true;
     }
 
-    /// @brief Unsubscribes from the firmware response topic and clears any memory associated with the firmware update,
-    /// should not be called before actually fully completing the firmware update.
+    /// @brief Unsubscribes from the firmware response topic and clears any memory associated with the firmware update
+    /// @note Should not be called before actually fully completing the firmware update
     /// @return Whether unsubscribing from the firmware response topic was successful or not
     bool Firmware_OTA_Unsubscribe() {
         // Buffer size has been set to another value before the update,
@@ -279,11 +287,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
     /// @param request_chunck Chunk index that should be requested from the server
     /// @return Whether publishing the message was successful or not
     bool Publish_Chunk_Request(size_t const & request_id, size_t const & request_chunck) {
-        // Calculate the number of chuncks we need to request,
-        // in order to download the complete firmware binary
         uint16_t const & chunk_size = m_fw_callback.Get_Chunk_Size();
 
-        // Convert the interger size into a readable string
         char size[Helper::Calculate_Print_Size(NUMBER_PRINTF, chunk_size)] = {};
         (void)snprintf(size, sizeof(size), NUMBER_PRINTF, chunk_size);
 
@@ -292,8 +297,8 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return m_send_json_string_callback.Call_Callback(topic, size);
     }
 
-    /// @brief Handler if the firmware shared attribute request times out without getting a response.
-    /// Is used to signal that the update could not be started, because the current firmware information could not be fetched
+    /// @brief Callback handle if the firmware shared attribute request times out without getting a response
+    /// @note Is used to signal that the update could not be started, because the current firmware information could not be fetched
     void Request_Timeout() {
         Logger::printfln(NO_FW_REQUEST_RESPONSE);
         Firmware_Send_State(FW_STATE_FAILED, NO_FW_REQUEST_RESPONSE);
@@ -326,14 +331,14 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         }
         // If firmware version and title is the same, we do not initiate an update, because we expect the type of binary to be the same one we are currently using
         // and therefore updating would be useless as we have already updated previously
-        else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0 && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0) {
+        else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) == 0U && strncmp(curr_fw_version, fw_version, strlen(curr_fw_version)) == 0U) {
             Firmware_Send_State(FW_STATE_UPDATED);
             return;
         }
         // If firmware title is not the same, we do not initiate an update, because we expect the binary to be for another type of device
         // and downloading it on this device could possibly cause hardware issues or even destroy the device
-        else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0) {
-            char message[strlen(FW_NOT_FOR_US) + strlen(fw_title) + strlen(curr_fw_title) + 3] = {};
+        else if (strncmp(curr_fw_title, fw_title, strlen(curr_fw_title)) != 0U) {
+            char message[strlen(FW_NOT_FOR_US) + strlen(fw_title) + strlen(curr_fw_title) + 3U] = {};
             (void)snprintf(message, sizeof(message), FW_NOT_FOR_US, fw_title, curr_fw_title);
             Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
@@ -342,20 +347,20 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 
         mbedtls_md_type_t fw_checksum_algorithm = mbedtls_md_type_t{};
 
-        if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, strlen(CHECKSUM_AGORITM_MD5)) == 0) {
+        if (strncmp(CHECKSUM_AGORITM_MD5, fw_algorithm, strlen(CHECKSUM_AGORITM_MD5)) == 0U) {
             fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_MD5;
         }
-        else if (strncmp(CHECKSUM_AGORITM_SHA256, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA256)) == 0) {
+        else if (strncmp(CHECKSUM_AGORITM_SHA256, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA256)) == 0U) {
             fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA256;
         }
-        else if (strncmp(CHECKSUM_AGORITM_SHA384, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA384)) == 0) {
+        else if (strncmp(CHECKSUM_AGORITM_SHA384, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA384)) == 0U) {
             fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA384;
         }
-        else if (strncmp(CHECKSUM_AGORITM_SHA512, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA512)) == 0) {
+        else if (strncmp(CHECKSUM_AGORITM_SHA512, fw_algorithm, strlen(CHECKSUM_AGORITM_SHA512)) == 0U) {
             fw_checksum_algorithm = mbedtls_md_type_t::MBEDTLS_MD_SHA512;
         }
         else {
-            char message[strlen(FW_CHKS_ALGO_NOT_SUPPORTED) + strlen(fw_algorithm) + 2] = {};
+            char message[strlen(FW_CHKS_ALGO_NOT_SUPPORTED) + strlen(fw_algorithm) + 2U] = {};
             (void)snprintf(message, sizeof(message), FW_CHKS_ALGO_NOT_SUPPORTED, fw_algorithm);
             Logger::printfln(message);
             Firmware_Send_State(FW_STATE_FAILED, message);
@@ -372,21 +377,19 @@ class OTA_Firmware_Update : public IAPI_Implementation {
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(PAGE_BREAK);
         Logger::printfln(NEW_FW);
-        char firmware[strlen(FROM_TOO) + strlen(curr_fw_version) + strlen(fw_version) + 3] = {};
+        char firmware[strlen(FROM_TOO) + strlen(curr_fw_version) + strlen(fw_version) + 3U] = {};
         (void)snprintf(firmware, sizeof(firmware), FROM_TOO, curr_fw_version, fw_version);
         Logger::printfln(firmware);
         Logger::printfln(DOWNLOADING_FW);
 #endif // THINGSBOARD_ENABLE_DEBUG
 
-        // Calculate the number of chuncks we need to request,
-        // in order to download the complete firmware binary
         const uint16_t& chunk_size = m_fw_callback.Get_Chunk_Size();
 
-        // Get the previous buffer size and cache it so the previous settings can be restored.
+        // Get the previous buffer size and cache it so the previous settings can be restored after the update has finished.
         m_previous_buffer_size = m_get_receive_size_callback.Call_Callback();
         m_changed_buffer_size = m_previous_buffer_size < (chunk_size + 50U);
 
-        // Increase size of receive buffer
+        // Increase size of receive buffer according to the actual chunk size required for the OTA update to work correctly.
         if (m_changed_buffer_size && !m_set_buffer_size_callback.Call_Callback(chunk_size + 50U, m_get_send_size_callback.Call_Callback())) {
             Logger::printfln(NOT_ENOUGH_RAM);
             Firmware_Send_State(FW_STATE_FAILED, NOT_ENOUGH_RAM);

@@ -38,6 +38,16 @@ class HashGenerator {
     /// @brief Constructor
     HashGenerator(void) = default;
 
+    /// @brief Deleted copy constructor
+    /// @note Copying an active HashGenerator is not possible and there are no settings or configuration to copy. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    HashGenerator(HashGenerator const & other) = delete;
+
+    /// @brief Deleted copy assignment operator
+    /// @note Copying an active HashGenerator is not possible and there are no settings or configuration to copy. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    void operator=(HashGenerator const & other) = delete;
+
     /// @brief Destructor
     ~HashGenerator(void);
 
@@ -47,7 +57,8 @@ class HashGenerator {
     bool start(mbedtls_md_type_t const & type);
 
     /// @brief Update the current hash value with new data
-    /// @param data Non owning pointer to the data that should be added to generate the hash
+    /// @param data Non owning pointer to the data that should be added to generate the hash.
+    /// Does not need to kept alive as the update function copies the data by writing it into the hash function storage
     /// @param length Length of data entered
     /// @return Whether updating the hash for the given bytes was successful or not
     bool update(uint8_t const * data, size_t const & length);

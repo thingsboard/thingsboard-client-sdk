@@ -24,7 +24,8 @@ class Helper {
     /// or if an error occured while creating the string a negative number is returned instead. This value is then simply incremented by 1 and returned.
     /// Additionally to ensure no negative number is ever returned even if an error occured an assert is called beforehand to ensure the size value is bigger than 0
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the snprintf method, allowing any arbitrary amount of combinations without having to rely on va_list
-    /// @param format Non owning pointer to the formatting message that the given arguments will be inserted into
+    /// @param format Non owning pointer to the formatting message that the given arguments will be inserted into.
+    /// Does not need to be kept alive, because the formatting message is only used for the scope of the method itself
     /// @param ...args Arguments that will be forwarded into the snprintf method see https://cplusplus.com/reference/cstdio/snprintf/ for more information
     /// @return Amount of bytes in characters, needed for the formatted string with the given arguments inserted, to be displayed completly including null termination
     template<typename... Args>
@@ -35,7 +36,8 @@ class Helper {
     }
 
     /// @brief Returns the amount of occurences of the given smybol in the given byte payload
-    /// @param bytes Non owning pointer to the byte payload that we want to check the symbol for
+    /// @param bytes Non owning pointer to the byte payload that we want to check the symbol for.
+    /// Does not need to be kept alive, because the byte payload is only used for the scope of the method itself
     /// @param symbol Symbol we want to search for
     /// @param length Length of the byte payload, meaning if we reach the given length and have not found any occurence of the symbol we return 0.
     /// Ensure to never pass a length that is longer than the actualy payload, because this will cause this method to read outside of the bounds of the buffer
@@ -53,7 +55,8 @@ class Helper {
     /// so that the correct request can be informed that a response has been received.
     /// To achieve this the function removes the not needed part of the received topic string, which is everything before the request id
     /// and then simply call the atoi function on the remaning topic string.
-    /// @param received_topic Non owning pointer to the received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id)
+    /// @param received_topic Non owning pointer to the received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id).
+    /// Does not need to be kept alive, because the received topic is only used for the scope of the method itself
     /// @param end_position Number indicating the amount of characters that have to be incremented to reach the position where the $request_id lies in the received topic.
     /// Most of the time it can simply be the value returned by calling strlen() on the base version of the topic. So for example on (v1/devices/me/rpc/response/) instead of the received topic (v1/devices/me/rpc/response/42)
     /// @return Converted integral request id if possible or 0 if parsing as an integer failed

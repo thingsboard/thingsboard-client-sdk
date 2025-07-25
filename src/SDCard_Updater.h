@@ -22,6 +22,16 @@ class SDCard_Updater : public IUpdater {
         // Nothing to do
     }
 
+    /// @brief Deleted copy constructor
+    /// @note Copying an active Updater writing to the same path, makes no sense as it would overwrite file contents. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    SDCard_Updater(SDCard_Updater const & other) = delete;
+
+    /// @brief Deleted copy assignment operator
+    /// @note Copying an active Updater writing to the same path, makes no sense as it would overwrite file contents. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    void operator=(SDCard_Updater const & other) = delete;
+
     ~SDCard_Updater() override {
         reset();
     }

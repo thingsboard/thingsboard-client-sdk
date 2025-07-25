@@ -25,6 +25,16 @@ class Espressif_Updater : public IUpdater {
   public:
     Espressif_Updater() = default;
 
+    /// @brief Deleted copy constructor
+    /// @note Copying an active Updater is not possible and there are no settings or configuration to copy. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    Espressif_Updater(Espressif_Updater const & other) = delete;
+
+    /// @brief Deleted copy assignment operator
+    /// @note Copying an active Updater is not possible and there are no settings or configuration to copy. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    void operator=(Espressif_Updater const & other) = delete;
+
     ~Espressif_Updater() override {
         reset();
     }

@@ -14,7 +14,7 @@ void Arduino_MQTT_Client::set_client(Client & transport_client) {
     m_mqtt_client.setClient(transport_client);
 }
 
-void Arduino_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) {
+void Arduino_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) {
     m_mqtt_client.setCallback(callback);
 }
 
@@ -26,11 +26,11 @@ bool Arduino_MQTT_Client::set_buffer_size(uint16_t receive_buffer_size, uint16_t
     return m_mqtt_client.setBufferSize(receive_buffer_size, send_buffer_size);
 }
 
-uint16_t Arduino_MQTT_Client::get_receive_buffer_size() {
+uint16_t Arduino_MQTT_Client::get_receive_buffer_size() const {
     return m_mqtt_client.getReceiveBufferSize();
 }
 
-uint16_t Arduino_MQTT_Client::get_send_buffer_size() {
+uint16_t Arduino_MQTT_Client::get_send_buffer_size() const {
     return m_mqtt_client.getSendBufferSize();
 }
 
@@ -78,11 +78,11 @@ bool Arduino_MQTT_Client::connected() {
     return m_mqtt_client.connected();
 }
 
-MQTT_Connection_State Arduino_MQTT_Client::get_connection_state() {
+MQTT_Connection_State Arduino_MQTT_Client::get_connection_state() const {
     return m_connection_state;
 }
 
-MQTT_Connection_Error Arduino_MQTT_Client::get_last_connection_error() {
+MQTT_Connection_Error Arduino_MQTT_Client::get_last_connection_error() const {
     return m_last_connection_error;
 }
 

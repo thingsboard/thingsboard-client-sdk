@@ -139,7 +139,6 @@ Espressif_Updater<> updater;
 #endif // ESP8266
 
 // Statuses for updating
-bool currentFWSent = false;
 bool updateRequestSent = false;
 
 
@@ -233,10 +232,6 @@ void loop() {
       Serial.println("Failed to connect");
       return;
     }
-  }
-
-  if (!currentFWSent) {
-    currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
   }
 
   if (!updateRequestSent) {

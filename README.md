@@ -530,11 +530,11 @@ class Custom_HTTP_Client : public IHTTP_Client {
     }
 
 #if THINGSBOARD_ENABLE_STL
-    std::string get_response_body() override {
+    std::string get_response_body() const override {
         return std::string();
     }
 #else
-    String get_response_body() override {
+    String get_response_body() const override {
         return String();
     }
 
@@ -575,7 +575,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
   public:
     ~Custom_MQTT_Client() override = default;
 
-    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override {
+    void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) override {
         // Nothing to do
     }
 
@@ -587,7 +587,11 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return true;
     }
 
-    uint16_t get_buffer_size() override {
+    uint16_t get_receive_buffer_size() const override {
+        return 0U;
+    }
+
+    uint16_t get_send_buffer_size() const override {
         return 0U;
     }
 

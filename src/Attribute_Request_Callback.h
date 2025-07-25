@@ -65,18 +65,16 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
 
     ~Attribute_Request_Callback() override = default;
 
-    /// @brief Gets the unique request identifier that is connected to the original request,
-    /// and will be later used to verifiy which Attribute_Request_Callback
-    /// is connected to which received client-side or shared attribute response
+    /// @brief Gets the unique request identifier that is connected to the original request
+    /// @note Will be later used to verifiy which @ref Attribute_Request_Callback is connected to which received client-side or shared attributes.
     /// @return Unique identifier connected to the requested client-side or shared attribute response
     size_t const & Get_Request_ID() const {
         return m_request_id;
     }
 
-    /// @brief Sets the unique request identifier that is connected to the original request,
-    /// and will be later used to verifiy which Attribute_Request_Callback
-    /// is connected to which received client-side or shared attributes
-    /// @note Not meant for external use, because the value is overwritten by internal method calls anyway once the class instance has been passed as a parameter anyway.
+    /// @brief Sets the unique request identifier that is connected to the original request
+    /// @note Will be later used to verifiy which @ref Attribute_Request_Callback is connected to which received client-side or shared attributes.
+    /// Not meant for external use, because the value is overwritten by internal method calls anyway once the class instance has been passed as a parameter anyway.
     /// This is the case because only the internal methods knows the current request id that this callback will be attached too
     /// @param request_id Unqiue identifier of the request for client-side or shared attributes
     void Set_Request_ID(size_t const & request_id) {
@@ -85,8 +83,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
 
     /// @brief Gets the response key of the json array key-value pair,
     /// that we expect the client-side or shared attribute payload json data to be contained in
-    /// @return Json array key that the data is saved into,
-    /// "client" for client-side attributes and "shared" for shared scope attributes
+    /// @return JSON array key that the data is saved into, "client" for client-side attributes and "shared" for shared scope attributes
     char const * Get_Attribute_Key() const {
         return m_attribute_key;
     }

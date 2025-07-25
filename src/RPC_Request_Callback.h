@@ -26,15 +26,15 @@ class RPC_Request_Callback : public Callback<void, JsonDocument const &> {
 
     ~RPC_Request_Callback() override = default;
 
-    /// @brief Gets the unique request identifier that is connected to the original request,
-    /// and will be later used to verifiy which RPC_Request_Callback
-    /// is connected to which received client-side RPC response
+    /// @brief Gets the unique request identifier that is connected to the original request
+    /// @note Will be later used to verifiy which @ref RPC_Request_Callback is connected to which received client-side RPC response
     /// @return Unique identifier connected to the request for client side rpc
     size_t const & Get_Request_ID() const;
 
-    /// @brief Sets the unique request identifier that is connected to the original request,
-    /// and will be later used to verifiy which RPC_Request_Callback
-    /// is connected to which received client-side RPC response
+    /// @brief Sets the unique request identifier that is connected to the original request
+    /// @note Will be later used to verifiy which @ref RPC_Request_Callback is connected to which received client-side RPC response
+    /// Not meant for external use, because the value is overwritten by internal method calls anyway once the class instance has been passed as a parameter anyway.
+    /// This is the case because only the internal methods knows the current request id that this callback will be attached too
     /// @param request_id Unique identifier connected to the request for client side rpc
     void Set_Request_ID(size_t const & request_id);
 

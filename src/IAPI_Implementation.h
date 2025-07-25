@@ -48,15 +48,18 @@ class IAPI_Implementation {
     /// @brief Process callback that will be called upon response arrival
     /// @note Responsible for handling the payload before serialization.
     /// If the response only wants to be handled after serialization Process_Json_Response should contain the implementation instead and Get_Process_Type should return API_Process_Type::JSON
-    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over
-    /// @param payload Non owning pointer to the payload that was sent over the cloud and received over the given topic
+    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over.
+    /// Does not need to be kept alive, because the topic is only used for the scope of the method itself
+    /// @param payload Non owning pointer to the payload that was sent over the cloud and received over the given topic.
+    /// Does not need to be kept alive, because the byte payload is only used for the scope of the method itself
     /// @param length Total length of the received payload
     virtual void Process_Response(char const * topic, uint8_t * payload, uint32_t length) = 0;
 
     /// @brief Process callback that will be called upon response arrival
     /// @note Responsible for handling the alredy serialized payload.
     /// If the response only wants to be handled before serialization Process_Response should contain the implementation instead and Get_Process_Type should return API_Process_Type::RAW
-    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over
+    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over.
+    /// Does not need to be kept alive, because the topic is only used for the scope of the method itself
     /// @param data Payload sent by the server over our given topic, that contains our key value pairs
     virtual void Process_Json_Response(char const * topic, JsonDocument const & data) = 0;
 
@@ -66,7 +69,8 @@ class IAPI_Implementation {
     /// if the response topic does not include additional parameters, example being shared attribute update (v1/devices/me/attributes).
     /// Or we compare only before the null termination for topics that include additional parameters in the response.
     /// Like for example the original request id in the response of the attribute request (v1/devices/me/attributes/response/1)
-    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over
+    /// @param topic Non owning pointer to the previously subscribed topic, we got the response over.
+    /// Does not need to be kept alive, because the topic is only used for the scope of the method itself
     /// @return Whether the received response topic matches the topic this api implementation handles responses on
     virtual bool Is_Response_Topic_Matching(char const * topic) const = 0;
 

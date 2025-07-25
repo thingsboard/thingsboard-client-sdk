@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 
-/// @brief Possible states the MQTT broker connection can be in. Intermediate states connecting and disconnecting, are for the @ref Espressif_MQTT_Client which is non blocking.
+/// @brief Possible states the MQTT broker connection can be in
+/// @note Intermediate states connecting and disconnecting, are for the @ref Espressif_MQTT_Client which is non blocking.
 /// Meaning calling disconnect will not immediately disconnect from the cloud but instead require a while. In comparsion @ref Arduino_MQTT_Client is blocking, meaning we block until we disconnected or connected
 enum class MQTT_Connection_State : uint8_t {
     DISCONNECTED, ///< Not yet connected or force disconnected from the MQTT broker. Loosing connection unexpectedly results in the ERROR state instead

@@ -41,14 +41,24 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         (void)esp_mqtt_client_destroy(m_mqtt_client);
     }
 
+    /// @brief Deleted copy constructor
+    /// @note Copying an active MQTT connection is not possible and simply copying the configuration and settings is not very useful. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    Espressif_MQTT_Client(Espressif_MQTT_Client const & other) = delete;
+
+    /// @brief Deleted copy assignment operator
+    /// @note Copying an active MQTT connection is not possible and simply copying the configuration and settings is not very useful. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    void operator=(Espressif_MQTT_Client const & other) = delete;
+
     /// @brief Configures the server certificate, which allows to connect to the MQTT broker over a secure TLS / SSL conenction instead of the default unencrypted channel
-    /// @note The argument expects to be a non-owning pointer because it is neither copied nor freed by the underlying client. Additionally it has to be kept alive by the user for the runtime of the system.
-    /// Encryption is recommended if relevant data is sent or if the client receives and handles Remote Procedure Calls or Shared Attribute Update Callbacks from the server,
+    /// @note Encryption is recommended if relevant data is sent or if the client receives and handles Remote Procedure Calls or Shared Attribute Update Callbacks from the server,
     /// because using an unencrpyted connection, will allow 3rd parties to listen to the communication and impersonate the server sending payloads which might influence the device in unexpected ways.
     /// However if Over the Air udpates are enabled secure communication should definetly be enabled, because if that is not done a 3rd party might impersonate the server sending a malicious payload,
     /// which is then flashed onto the device instead of the real firmware. Which depeding on the payload might even be able to destroy the device or make it otherwise unusable.
     /// See https://stackoverflow.blog/2020/12/14/security-considerations-for-ota-software-updates-for-iot-gateway-devices/ for more information on the aforementioned security risk
-    /// @param server_certificate_pem Non-owning pointer to a null-terminated string containg the root certificate in PEM format, of the server we are attempting to send to and receive MQTT data from
+    /// @param server_certificate_pem Non owning pointer to a null-terminated string containg the root certificate in PEM format, of the server we are attempting to send to and receive MQTT data from.
+    /// Additionally it has to be kept alive by the user for the runtime of the MQTT client connection
     /// @return Whether changing the internal server certificate was successful or not
     bool set_server_certificate(char const * server_certificate_pem) {
       // Because PEM format is expected for the server certificate we do not need to set the certificate_len,
@@ -62,13 +72,13 @@ class Espressif_MQTT_Client : public IMQTT_Client {
     }
 
     /// @brief Configures a bundle of root certificates for verification and enables the MQTT broker to use certificate bundles, which allows for connecting to the MQTT broker over a secure TLS / SSL connection with any website associated with the root certificates in the bundle.
-    /// @note The bundle argument expects to be a non-owning pointer because it is neither copied nor freed by the underlying client. Additionally it has to be kept alive by the user for the runtime of the system.
-    /// Instead of providing a single server certificate, this then allows providing a collection of root certificates. If nullptr is passed as the x509_bundle it will simply use the default root certificate bundle instead, which contains the full Mozilla root certificate bundle (130 certificates).
+    /// @note Instead of providing a single server certificate, this then allows providing a collection of root certificates. If nullptr is passed as the x509_bundle it will simply use the default root certificate bundle instead, which contains the full Mozilla root certificate bundle (130 certificates).
     /// It is recommended to use menuconfig to configure the default certificate bundle, which will then read those certificates from the embedded application. Use CONFIG_MBEDTLS_DEFAULT_CERTIFICATE_BUNDLE to filter which certificates to include from the default bundle,
     /// or use CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH to specify the path of additional certificates which should be embedded into the bundle
     /// See https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/protocols/esp_crt_bundle.html for more information on ESP x509 Certificate Bundles
-    /// @param x509_bundle Optional non-owning pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from, overrides the default certificate bundle previously configured with menuconfig.
-    /// In most use cases the bundle should be set through menuconfig and this method called without any argument, because the passed bundle argument needs to be sorted by subject name since binary search is used to find certificates. Therefore simply pass nullptr if the default root certificate bundle or bundle defined in menuconfig should be used instead, default = nullptr
+    /// @param x509_bundle Optional non owning pointer to single or beginning of array of root certificates in DER format, of the servers we are attempting to send to and receive MQTT data from, overrides the default certificate bundle previously configured with menuconfig.
+    /// In most use cases the bundle should be set through menuconfig and this method called without any argument, because the passed bundle argument needs to be sorted by subject name since binary search is used to find certificates. Therefore simply pass nullptr if the default root certificate bundle or bundle defined in menuconfig should be used instead.
+    /// Additionally it has to be kept alive by the user for the runtime of the MQTT client connection, default = nullptr
     /// @param bundle_size Optional total size of bundle with all certificates in bytes, only used if the x509 bundle is a valid pointer and when a ESP IDF version before version 4.4.2 is used, default = 0
     /// @return Whether changing the internal server certificate was successful or not
     bool set_server_crt_bundle(uint8_t const * x509_bundle = nullptr, size_t const & bundle_size = 0U) {
@@ -199,7 +209,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         m_enqueue_messages = enqueue_messages;
     }
 
-    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override {
+    void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) override {
         m_received_data_callback.Set_Callback(callback);
     }
 
@@ -218,7 +228,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         return update_configuration();
     }
 
-    uint16_t get_receive_buffer_size() override {
+    uint16_t get_receive_buffer_size() const override {
 #if ESP_IDF_VERSION_MAJOR < 5
         return m_mqtt_configuration.buffer_size;
 #else
@@ -226,7 +236,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 #endif // ESP_IDF_VERSION_MAJOR < 5
     }
 
-    uint16_t get_send_buffer_size() override {
+    uint16_t get_send_buffer_size() const override {
 #if ESP_IDF_VERSION_MAJOR < 5
         return m_mqtt_configuration.out_buffer_size;
 #else
@@ -318,11 +328,11 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         return m_connection_state == MQTT_Connection_State::CONNECTED;
     }
 
-    MQTT_Connection_State get_connection_state() override {
+    MQTT_Connection_State get_connection_state() const override {
         return m_connection_state;
     }
 
-    MQTT_Connection_Error get_last_connection_error() override {
+    MQTT_Connection_Error get_last_connection_error() const override {
         return m_last_connection_error;
     }
 
@@ -471,7 +481,7 @@ private:
         instance->mqtt_event_handler(base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
     }
 
-    Callback<void, char *, uint8_t *, unsigned int>              m_received_data_callback = {};            // Callback that will be called as soon as the mqtt client receives any data
+    Callback<void, char *, uint8_t *, uint32_t>                  m_received_data_callback = {};            // Callback that will be called as soon as the mqtt client receives any data
     Callback<void>                                               m_connected_callback = {};                // Callback that will be called as soon as the mqtt client has connected
     Callback<void, MQTT_Connection_State, MQTT_Connection_Error> m_connection_state_changed_callback = {}; // Callback that will be called as soon as the mqtt client connection changes
     MQTT_Connection_State                                        m_connection_state = {};                  // Current connection state to the MQTT broker

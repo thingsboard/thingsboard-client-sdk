@@ -119,7 +119,6 @@ SDCard_Updater<> updater(UPDAT_FILE_PATH);
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;
 // Statuses for updating
-bool currentFWSent = false;
 bool updateRequestSent = false;
 
 struct binary_data_t {
@@ -277,10 +276,6 @@ extern "C" void app_main() {
 
         while (!tb.connected()) {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-
-        if (!currentFWSent) {
-            currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
         }
 
         if (!updateRequestSent) {

@@ -35,15 +35,15 @@ class Arduino_MQTT_Client : public IMQTT_Client {
     /// but the actual type of connection does not matter (Ethernet or WiFi)
     void set_client(Client & transport_client);
 
-    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override;
+    void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) override;
 
     void set_connect_callback(Callback<void>::function callback) override;
 
     bool set_buffer_size(uint16_t receive_buffer_size, uint16_t send_buffer_size) override;
 
-    uint16_t get_receive_buffer_size() override;
+    uint16_t get_receive_buffer_size() const override;
 
-    uint16_t get_send_buffer_size() override;
+    uint16_t get_send_buffer_size() const override;
 
     void set_server(char const * domain, uint16_t port) override;
 
@@ -61,9 +61,9 @@ class Arduino_MQTT_Client : public IMQTT_Client {
 
     bool connected() override;
 
-    MQTT_Connection_State get_connection_state() override;
+    MQTT_Connection_State get_connection_state() const override;
 
-    MQTT_Connection_Error get_last_connection_error() override;
+    MQTT_Connection_Error get_last_connection_error() const override;
 
     void subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override;
 

@@ -40,6 +40,38 @@ class Container {
 #if THINGSBOARD_ENABLE_DYNAMIC
     /// @brief Constructor
     Container() = default;
+
+    /// @brief Destructor
+    ~Container() {
+        delete[] m_elements;
+    }
+
+    /// @brief Custom copy constructor
+    /// @note Custom implementation is created, because this class has a custom destructor.
+    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to deep copy the object instead
+    /// @param other Other instance we want to deep copy from
+    Container(Container const & other)
+        : m_elements{}
+        , m_capacity{other.m_capacity}
+        , m_size{0U} {
+        m_elements = new T[m_capacity]{};
+        assign(other);
+    }
+
+    /// @brief Custom copy assignment operator
+    /// @note Custom implementation is created, because this class has a custom destructor.
+    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to deep copy the object instead.
+    /// @param other Other instance we want to deep copy from
+    void operator=(Container const & other) {
+        if (&other != this) {
+            delete[] m_elements;
+            m_elements = new T[other.m_capacity]{};
+            m_capacity = other.m_capacity;
+            m_size = 0U;
+            assign(other);
+        }
+        return *this;
+    }
 #else
     /// @brief Default constructor, simply initalizes the underlying c-style array with the necessary capacity.
     /// That capacity always has to be bigger than 0, because initalizing a 0 length c-style array can cause certain compilers to produce errors
@@ -89,7 +121,7 @@ class Container {
     Container(Iterable_Container const & container)
       : Container(container.cbegin(), container.cend())
     {
-        // Nothing to do.
+        // Nothing to do
     }
 
     /// @copydoc Container::Container(InputIterator const &, InputIterator const &)
@@ -201,7 +233,15 @@ class Container {
 #else
         assert(m_size < Capacity);
 #endif // THINGSBOARD_ENABLE_DYNAMIC
-        m_elements[m_size++] = element;
+#if THINGSBOARD_ENABLE_CXX20
+        if constexpr (std::is_destructible<T>::value) {
+#else
+        if (std::is_destructible<T>::value) {
+#endif // THINGSBOARD_ENABLE_CXX20
+            m_elements[m_size].~T();
+        }
+        m_elements[m_size] = element;
+        m_size++;
     }
 
     /// @brief Copies all elements from the given start to exclusively the given end iterator into the underlying data container.
@@ -228,6 +268,13 @@ class Container {
 #if THINGSBOARD_ENABLE_DYNAMIC
             increase_capacity();
 #endif // THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_CXX20
+            if constexpr (std::is_destructible<T>::value) {
+#else
+            if (std::is_destructible<T>::value) {
+#endif // THINGSBOARD_ENABLE_CXX20
+                (*it).~T();
+            }
             *position = *it;
             (void)++m_size;
         }
@@ -247,7 +294,21 @@ class Container {
         size_type const index = Helper::distance(cbegin(), position);
         // Move all elements after the index one position to the left
         for (size_type i = index; i <= m_size; ++i) {
-            m_elements[i] = m_elements[i + 1];
+#if THINGSBOARD_ENABLE_CXX20
+            if constexpr (std::is_destructible<T>::value) {
+#else
+            if (std::is_destructible<T>::value) {
+#endif // THINGSBOARD_ENABLE_CXX20
+                m_elements[i].~T();
+                m_elements[i] = m_elements[i + 1];
+            }
+        }
+#if THINGSBOARD_ENABLE_CXX20
+        if constexpr (std::is_destructible<T>::value) {
+#else
+        if (std::is_destructible<T>::value) {
+#endif // THINGSBOARD_ENABLE_CXX20
+            m_elements[m_size].~T();
         }
         // Decrease the size of the array to remove the last element, because either it was moved one index to the left or was the element we wanted to delete anyway
         (void)--m_size;

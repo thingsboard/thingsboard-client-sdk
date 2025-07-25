@@ -53,6 +53,24 @@ class Callback_Watchdog : public Callback<void> {
         (void)esp_timer_delete(m_oneshot_timer);
         m_oneshot_timer = nullptr;
     }
+
+    /// @brief Custom copy constructor
+    /// @note Custom implementation is created, because this class has a custom destructor.
+    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to not copy the object instead.
+    /// This works because the internal timer object is created once it is required anyway and there are no actual important configurations or other member variables to copy
+    /// @param other Other instance is simply ignored
+    Callback_Watchdog(Callback_Watchdog const & other) {
+        // Nothing to do
+    }
+
+    /// @brief Custom copy assignment operator
+    /// @note Custom implementation is created, because this class has a custom destructor.
+    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to not copy the object instead.
+    /// This works because the internal timer object is created once it is required anyway and there are no actual important configurations or other member variables to copy
+    /// @param other Other instance is simply ignored
+    void operator=(Callback_Watchdog const & other) {
+        // Nothing to do
+    }
 #endif // THINGSBOARD_USE_ESP_TIMER
 
     /// @brief Starts the watchdog timer once for the given timeout
