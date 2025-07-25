@@ -62,7 +62,7 @@ class Container {
     /// @note Custom implementation is created, because this class has a custom destructor.
     /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to deep copy the object instead.
     /// @param other Other instance we want to deep copy from
-    void operator=(Container const & other) {
+    Container & operator=(Container const & other) {
         if (&other != this) {
             delete[] m_elements;
             m_elements = new T[other.m_capacity]{};
@@ -234,9 +234,9 @@ class Container {
         assert(m_size < Capacity);
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_CXX20
-        if constexpr (std::is_destructible<T>::value) {
+        if constexpr (is_destructible()) {
 #else
-        if (std::is_destructible<T>::value) {
+        if (is_destructible()) {
 #endif // THINGSBOARD_ENABLE_CXX20
             m_elements[m_size].~T();
         }
@@ -269,11 +269,11 @@ class Container {
             increase_capacity();
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 #if THINGSBOARD_ENABLE_CXX20
-            if constexpr (std::is_destructible<T>::value) {
+        if constexpr (is_destructible()) {
 #else
-            if (std::is_destructible<T>::value) {
+        if (is_destructible()) {
 #endif // THINGSBOARD_ENABLE_CXX20
-                (*it).~T();
+                (*position).~T();
             }
             *position = *it;
             (void)++m_size;
@@ -295,18 +295,18 @@ class Container {
         // Move all elements after the index one position to the left
         for (size_type i = index; i <= m_size; ++i) {
 #if THINGSBOARD_ENABLE_CXX20
-            if constexpr (std::is_destructible<T>::value) {
+            if constexpr (is_destructible()) {
 #else
-            if (std::is_destructible<T>::value) {
+            if (is_destructible()) {
 #endif // THINGSBOARD_ENABLE_CXX20
                 m_elements[i].~T();
                 m_elements[i] = m_elements[i + 1];
             }
         }
 #if THINGSBOARD_ENABLE_CXX20
-        if constexpr (std::is_destructible<T>::value) {
+        if constexpr (is_destructible()) {
 #else
-        if (std::is_destructible<T>::value) {
+        if (is_destructible()) {
 #endif // THINGSBOARD_ENABLE_CXX20
             m_elements[m_size].~T();
         }
@@ -348,6 +348,22 @@ class Container {
     }
 
   private:
+    /// @brief Wheter the object that this Container holds has a Destructor or not
+    /// @note Is used to know if the destructor has to be called, before the element is overwritten.
+    /// Otherwise we might potentially overwrite pointer addresses and therefore leak memory
+#if THINGSBOARD_ENABLE_CXX20
+    constexpr bool is_destructible() const {
+#else
+    bool is_destructible() const {
+#endif // THINGSBOARD_ENABLE_CXX20
+#if THINGSBOARD_ENABLE_STL
+        return std::is_destructible<T>::value;
+#else
+        // Workaround for ArduinoJson version after 6.21.0, to still be able to access internal enable_if and is_floating_point declarations, previously accessible with ARDUINOJSON_NAMESPACE
+        return ArduinoJson::ARDUINOJSON_VERSION_NAMESPACE::detail::is_class<T>::value;
+#endif // THINGSBOARD_ENABLE_CXX20
+    }
+
     void assert_iterator_in_range(const_iterator position) {
         assert(cbegin() >= position);
         assert(position < cend());

@@ -254,7 +254,7 @@ class OTA_Handler {
     /// Does not need to kept alive, because the function copies the data into the outgoing MQTT buffer to inform the server of the update state as well as into the Logger implementation
     void Handle_Failure(OTA_Failure_Response failure_response, char const * error_message)  {
         if (m_retries <= 0) {
-            Abort_Firmware_Update();
+            Abort_Firmware_Update(error_message);
             return;
         }
 
@@ -270,7 +270,7 @@ class OTA_Handler {
                 Request_First_Firmware_Packet();
                 break;
             case OTA_Failure_Response::RETRY_NOTHING:
-                Abort_Firmware_Update();
+                Abort_Firmware_Update(error_message);
                 break;
         }
     }

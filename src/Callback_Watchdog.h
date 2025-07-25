@@ -56,20 +56,30 @@ class Callback_Watchdog : public Callback<void> {
 
     /// @brief Custom copy constructor
     /// @note Custom implementation is created, because this class has a custom destructor.
-    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to not copy the object instead.
-    /// This works because the internal timer object is created once it is required anyway and there are no actual important configurations or other member variables to copy
-    /// @param other Other instance is simply ignored
-    Callback_Watchdog(Callback_Watchdog const & other) {
+    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to not copy the esp timer object instead.
+    /// This works because the internal timer object is created once it is required anyway and the other important configurations or other member variables are copied
+    /// @param other Other instance we copy the callback configuration from
+    Callback_Watchdog(Callback_Watchdog const & other)
+        : Callback(other)
+        , m_oneshot_timer(nullptr) {
         // Nothing to do
     }
 
     /// @brief Custom copy assignment operator
     /// @note Custom implementation is created, because this class has a custom destructor.
-    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to not copy the object instead.
-    /// This works because the internal timer object is created once it is required anyway and there are no actual important configurations or other member variables to copy
-    /// @param other Other instance is simply ignored
-    void operator=(Callback_Watchdog const & other) {
-        // Nothing to do
+    /// Therefore to ensure two instance do not delete the same object in the destructor because of shallow copy, this constructor is adjusted to not copy the esp timer object instead.
+    /// This works because the internal timer object is created once it is required anyway and the other important configurations or other member variables are copied
+    /// @param other Other instance we copy the callback configuration from
+    /// @return Adjusted instance with the newly copied state, previous esp timer object is deleted if there already was one and.
+    /// Also ensures that the timer is detached and stopped before it is deleted, because that is required for the timer to actually be deleted
+    Callback_Watchdog & operator=(Callback_Watchdog const & other) {
+        if (&other != this) {
+            Set_Callback(other.m_callback);
+            detach();
+            (void)esp_timer_delete(m_oneshot_timer);
+            m_oneshot_timer = nullptr;
+        }
+        return *this;
     }
 #endif // THINGSBOARD_USE_ESP_TIMER
 
