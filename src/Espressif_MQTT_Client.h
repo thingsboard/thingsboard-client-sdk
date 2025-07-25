@@ -228,7 +228,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         return update_configuration();
     }
 
-    uint16_t get_receive_buffer_size() const override {
+    uint16_t get_receive_buffer_size() override {
 #if ESP_IDF_VERSION_MAJOR < 5
         return m_mqtt_configuration.buffer_size;
 #else
@@ -236,7 +236,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
 #endif // ESP_IDF_VERSION_MAJOR < 5
     }
 
-    uint16_t get_send_buffer_size() const override {
+    uint16_t get_send_buffer_size() override {
 #if ESP_IDF_VERSION_MAJOR < 5
         return m_mqtt_configuration.out_buffer_size;
 #else

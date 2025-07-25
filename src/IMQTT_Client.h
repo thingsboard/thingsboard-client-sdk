@@ -64,11 +64,11 @@ class IMQTT_Client {
 
     /// @brief Gets the previously set size of the internal buffer size meant for incoming MQTT data
     /// @return Internal size of the buffer
-    virtual uint16_t get_receive_buffer_size() const = 0;
+    virtual uint16_t get_receive_buffer_size() = 0;
 
     /// @brief Gets the previously set size of the internal buffer size meant for outgoing MQTT data
     /// @return Internal size of the buffer
-    virtual uint16_t get_send_buffer_size() const = 0;
+    virtual uint16_t get_send_buffer_size() = 0;
 
     /// @brief Configures the server and port that the client should connect with over MQTT
     /// @note Should be called atleast once before calling connect() so the target server and port to connect too have been configured

@@ -26,11 +26,11 @@ bool Arduino_MQTT_Client::set_buffer_size(uint16_t receive_buffer_size, uint16_t
     return m_mqtt_client.setBufferSize(receive_buffer_size, send_buffer_size);
 }
 
-uint16_t Arduino_MQTT_Client::get_receive_buffer_size() const {
+uint16_t Arduino_MQTT_Client::get_receive_buffer_size() {
     return m_mqtt_client.getReceiveBufferSize();
 }
 
-uint16_t Arduino_MQTT_Client::get_send_buffer_size() const {
+uint16_t Arduino_MQTT_Client::get_send_buffer_size() {
     return m_mqtt_client.getSendBufferSize();
 }
 

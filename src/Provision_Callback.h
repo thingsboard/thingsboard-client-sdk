@@ -112,40 +112,49 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     void Set_Device_Access_Token(char const * access_token);
 
     /// @brief Gets the basic MQTT credentials username, that will be used by the provisioned device
-    /// @return Basic MQTT credentials username
+    /// @return Non owning pointer to the basic MQTT credentials username.
+    /// Owned by the user that passed it originally in the constructor or with the @ref Set_Credentials_Username method
     char const * Get_Credentials_Username() const;
 
     /// @brief Sets the basic MQTT credentials username, that will be used by the provisioned device
-    /// @param username Basic MQTT credentials username
+    /// @param username Non owning pointer to the basic MQTT credentials username.
+    /// Additionally it has to be kept alive by the user until the @ref Provision_Request method has been called with this instance as the argument, because that method copies the data into the outgoing MQTT buffer to create the provision request
     void Set_Credentials_Username(char const * username);
 
     /// @brief Gets the basic MQTT credentials password, that will be used by the provisioned device
-    /// @return Basic MQTT credentials password
+    /// @return Non owning pointer to the basic MQTT credentials password
+    /// Owned by the user that passed it originally in the constructor or with the @ref Set_Credentials_Password method
     char const * Get_Credentials_Password() const;
 
     /// @brief Sets the basic MQTT credentials password, that will be used by the provisioned device
-    /// @param password Basic MQTT credentials password
+    /// @param password Non owning pointer to the basic MQTT credentials password.
+    /// Additionally it has to be kept alive by the user until the @ref Provision_Request method has been called with this instance as the argument, because that method copies the data into the outgoing MQTT buffer to create the provision request
     void Set_Credentials_Password(char const * password);
 
-    /// @brief Gets the basic MQTT credentials client_id, that will be used by the provisioned device
-    /// @return Basic MQTT credentials client_id
+    /// @brief Gets the basic MQTT credentials client ID, that will be used by the provisioned device
+    /// @return Non owning pointer to the basic MQTT credentials client ID.
+    /// Owned by the user that passed it originally in the constructor or with the @ref Set_Credentials_Client_ID method
     char const * Get_Credentials_Client_ID() const;
 
-    /// @brief Sets the basic MQTT credentials client_id, that will be used by the provisioned device
-    /// @param client_id Basic MQTT credentials client_id
+    /// @brief Sets the basic MQTT credentials client ID, that will be used by the provisioned device
+    /// @param client_id Non owning pointer to the basic MQTT credentials client ID.
+    /// Additionally it has to be kept alive by the user until the @ref Provision_Request method has been called with this instance as the argument, because that method copies the data into the outgoing MQTT buffer to create the provision request
     void Set_Credentials_Client_ID(char const * client_id);
 
     /// @brief Gets the public X.509 certificate hash, that will be used by the provisioned device
-    /// @return Public X.509 certificate hash
+    /// @return Non owning pointer to the public X.509 certificate hash.
+    /// Owned by the user that passed it originally in the constructor or with the @ref Set_Certificate_Hash method
     char const * Get_Certificate_Hash() const;
 
     /// @brief Sets the public X.509 certificate hash, that will be used by the provisioned device
-    /// @param hash Public X.509 certificate hash
+    /// @param hash Non owning pointer to the public X.509 certificate hash.
+    /// Additionally it has to be kept alive by the user until the @ref Provision_Request method has been called with this instance as the argument, because that method copies the data into the outgoing MQTT buffer to create the provision request
     void Set_Certificate_Hash(char const * hash);
 
     /// @brief Gets the string containing the used credentials type that decides which provisioning method is actually used,
-    /// by the Provision_Callback and therefore decides what response we will receive from the server
-    /// @return String containing the used credentials type
+    /// by the @ref Provision_Callback and therefore decides what response we will receive from the server
+    /// @return Owning pointer to th string containing the used credentials type.
+    /// Simply points to a compile time string constant saved into static memory
     char const * Get_Credentials_Type() const;
 
     /// @brief Gets the amount of microseconds until we expect to have received a response
@@ -153,6 +162,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     uint64_t const & Get_Timeout() const;
 
     /// @brief Sets the amount of microseconds until we expect to have received a response
+    /// @note The value of 0, means the timeout timer is never started and therefore the timeout callback never called
     /// @param timeout_microseconds Timeout time until timeout callback is called
     void Set_Timeout(uint64_t const & timeout_microseconds);
 
@@ -162,14 +172,16 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
     /// @brief Starts the internal timeout timer if we actually received a configured valid timeout time and a valid callback.
-    /// Is called as soon as the request is actually sent
+    /// @note The timeout time is valid if it is not 0 and the callback is valid if it is not a nullptr.
+    /// Is not mean to be called explicitly by the user, because it is instead called when necessary by internal methods that handle the class instance
     void Start_Timeout_Timer();
 
-    /// @brief Stops the internal timeout timer, is called as soon as an answer is received from the cloud
-    /// if it isn't we call the previously subscribed callback instead
+    /// @brief Stops the internal timeout timer, is called as soon as an answer is received from the cloud.
+    /// If this method is not called in time the initally subscribed callback will be used to inform the user of the timeout instead
+    /// @note Is not mean to be called explicitly by the user, because it is instead called when necessary by internal methods that handle the class instance
     void Stop_Timeout_Timer();
 
-    /// @brief Sets the callback method that will be called upon request timeout (did not receive a response in the given timeout time)
+    /// @brief Sets the callback method that will be called upon request timeout (did not receive a response from the cloud in the given timeout time)
     /// @param timeout_callback Callback function that will be called
     void Set_Timeout_Callback(Callback_Watchdog::function timeout_callback);
 

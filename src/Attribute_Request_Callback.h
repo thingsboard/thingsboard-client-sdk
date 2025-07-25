@@ -132,7 +132,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     }
 
     /// @brief Sets the amount of microseconds until we expect to have received a response
-    /// @note The default value of 0, means the timeout timer is never started and therefore the timeout callback never called
+    /// @note The value of 0, means the timeout timer is never started and therefore the timeout callback never called
     /// @param timeout_microseconds Timeout time until timeout callback is called
     void Set_Timeout(uint64_t const & timeout_microseconds) {
         m_timeout_microseconds = timeout_microseconds;
@@ -156,7 +156,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     }
 
     /// @brief Stops the internal timeout timer, is called as soon as an answer is received from the cloud.
-    /// If this method is not called in time the initally subscribed callback will be used to inform the user of the timeout instead.
+    /// If this method is not called in time the initally subscribed callback will be used to inform the user of the timeout instead
     /// @note Is not mean to be called explicitly by the user, because it is instead called when necessary by internal methods that handle the class instance
     void Stop_Timeout_Timer() {
         m_timeout_callback.detach();

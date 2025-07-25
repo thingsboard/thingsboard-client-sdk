@@ -36,10 +36,10 @@ int Arduino_HTTP_Client::get(char const * url_path) {
 }
 
 #if THINGSBOARD_ENABLE_STL
-std::string Arduino_HTTP_Client::get_response_body() const {
+std::string Arduino_HTTP_Client::get_response_body() {
     return m_http_client.responseBody().c_str();
 #else
-String Arduino_HTTP_Client::get_response_body() const {
+String Arduino_HTTP_Client::get_response_body() {
     return m_http_client.responseBody();
 #endif // THINGSBOARD_ENABLE_STL
 }

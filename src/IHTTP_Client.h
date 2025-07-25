@@ -69,9 +69,9 @@ class IHTTP_Client {
     /// should be called after calling get_response_status_code() and ensuring the request was successful
     /// @return Response body of a request
 #if THINGSBOARD_ENABLE_STL
-    virtual std::string get_response_body() const = 0;
+    virtual std::string get_response_body() = 0;
 #else
-    virtual String get_response_body() const = 0;
+    virtual String get_response_body() = 0;
 #endif // THINGSBOARD_ENABLE_STL
 };
 
