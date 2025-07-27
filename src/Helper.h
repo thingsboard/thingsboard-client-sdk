@@ -69,6 +69,7 @@ class Helper {
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
     /// @param source Source containing our json key-value pairs that we want to measure the resulting size of the serializeJson call for
     /// @return Total size required for the string that would be produced by serializeJson + 1 byte for the string null terminator
+    template <typename TSource>
     static size_t Measure_Json(TSource const & source) {
         return measureJson(source) + 1U;
     }
