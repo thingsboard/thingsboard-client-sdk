@@ -61,7 +61,8 @@ class Callback_Watchdog : public Callback<void> {
     /// @param other Other instance we copy the callback configuration from
     Callback_Watchdog(Callback_Watchdog const & other)
         : Callback(other)
-        , m_oneshot_timer(nullptr) {
+        , m_oneshot_timer(nullptr)
+    {
         // Nothing to do
     }
 

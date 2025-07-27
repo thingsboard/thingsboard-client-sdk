@@ -14,13 +14,15 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     RPC_Callback() = default;
 
-    /// @brief Constructs callback, will be called upon server-side RPC request arrival with the given method name
-    /// @param method_name Name we expect to be sent via. server-side RPC so that this method callback will be called
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
-    /// and should enter data into the JsonDocument, can be empty if the RPC widget does not expect any response.
+    /// @brief Constructs callback that will be called upon server-side RPC request arrival with the given method name
+    /// @param method_name Non owning pointer to the name we expect to be sent with the server-side RPC request so that this method callback will be executed.
+    /// Additionally it has to be kept alive by the user for the lifetime of this server-side RPC callback, otherwise the callback method will never be called
+    /// @param callback callback method that will be called upon data arrival with the given data that was received.
+    /// If nullptr is passed the callback will never be called and instead return with a defaulted instance of the requested return variable.
+    /// Sometimes the server-side RPC requests expectes a response that should be sent to the server, but can be empty if that is not the case as well.
     /// See https://arduinojson.org/v6/api/jsondocument/ for more information on how to enter data into a JsonDocument
 #if THINGSBOARD_ENABLE_DYNAMIC
-    /// @param response_size Internal size the JsonDocument should be able to hold to contain the response to the server side RPC call.
+    /// @param response_size Internal size the JsonDocument should be able to hold to contain the response to the server-side RPC request.
     /// Use JSON_OBJECT_SIZE() and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size, default = DEFAULT_RPC_AMOUNT (0)
     RPC_Callback(char const * method_name, function callback, size_t const & response_size = JSON_OBJECT_SIZE(DEFAULT_RPC_AMOUNT))
 #else
@@ -37,28 +39,30 @@ class RPC_Callback : public Callback<void, JsonVariantConst const &, JsonDocumen
 
     ~RPC_Callback() override = default;
 
-    /// @brief Gets the poiner to the underlying name we expect to be sent via. server-side RPC so that this method callback will be called
-    /// @return Pointer to the passed method name
+    /// @brief Gets the name we expect to be sent with the server-side RPC request so that this method callback will be executed
+    /// @return Non owning pointer to the name we expect to be sent with the server-side RPC request.
+    /// Owned by the user that passed it originally in the constructor or with the @ref Set_Name method
     char const * Get_Name() const {
         return m_method_name;
     }
 
-    /// @brief Sets the poiner to the underlying name we expect to be sent via. server-side RPC so that this method callback will be called
-    /// @param method_name Pointer to the passed method name
+    /// @brief Sets the name we expect to be sent with the server-side RPC request so that this method callback will be executed
+    /// @param method_name Non owning pointer to the name we expect to be sent with the server-side RPC request.
+    /// Additionally it has to be kept alive by the user for the lifetime of this server-side RPC callback, otherwise the callback method will never be called
     void Set_Name(char const * method_name) {
         m_method_name = method_name;
     }
 
 #if THINGSBOARD_ENABLE_DYNAMIC
-    /// @brief Gets the internal size the JsonDocument needs to have to contain the response to the server side RPC call.
-    /// @return Internal JsonDocument size
+    /// @brief Gets the internal size the JsonDocument should be able to hold to contain the response to the server-side RPC request
+    /// @return Maximum internal size of the JsonDocument 
     size_t const & Get_Response_Size() const {
         return m_response_size;
     }
 
-    /// @brief Sets the internal size the JsonDocument needs to have to contain the response to the server side RPC call.
-    /// Use JSON_OBJECT_SIZE() and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size
-    /// @param response_size Internal JsonDocument size
+    /// @brief Sets the internal size the JsonDocument needs to have to contain the response to the server side RPC request
+    /// @note Use JSON_OBJECT_SIZE() and pass the amount of key value pair to calculate the estimated size. See https://arduinojson.org/v6/assistant/ for more information on how to estimate the required size
+    /// @param response_size Maximum internal size of the JsonDocument 
     void Set_Response_Size(size_t const & response_size) {
         m_response_size = response_size;
     }

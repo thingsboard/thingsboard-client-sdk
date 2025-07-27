@@ -18,9 +18,9 @@ char constexpr SHARED_ATTRIBUTE_UPDATE_SUBSCRIPTIONS[] = "shared attribute updat
 #if THINGSBOARD_ENABLE_DYNAMIC
 template <typename Logger = DefaultLogger>
 #else
-/// @tparam MaxSubscriptions Maximum amount of simultaneous server side rpc subscriptions.
+/// @tparam MaxSubscriptions Maximum amount of simultaneous shared attribute update subscriptions.
 /// Once the maximum amount has been reached it is not possible to increase the size, this is done because it allows to allcoate the memory on the stack instead of the heap, default = DEFAULT_SUBSCRIPTION_AMOUNT (1)
-/// @tparam MaxAttributes Maximum amount of attributes that will ever be requested with the Shared_Attribute_Callback, allows to use an array on the stack in the background, default = DEFAULT_ATTRIBUTES_AMOUNT (1)
+/// @tparam MaxAttributes Maximum amount of attributes that will ever be subscribed with one @ref Shared_Attribute_Callback, allows to use an array on the stack in the background, default = DEFAULT_ATTRIBUTES_AMOUNT (1)
 template<size_t MaxSubscriptions = DEFAULT_SUBSCRIPTION_AMOUNT, size_t MaxAttributes = DEFAULT_ATTRIBUTES_AMOUNT, typename Logger = DefaultLogger>
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 class Shared_Attribute_Update : public IAPI_Implementation {
@@ -38,9 +38,8 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 
     ~Shared_Attribute_Update() override = default;
 
-    /// @brief Subscribes multiple shared attribute callbacks,
-    /// that will be called if the key-value pair from the server for the given shared attributes is received.
-    /// Can be called even if we are currently not connected to the cloud,
+    /// @brief Subscribes shared attribute callbacks, that will be called if an update for the containing shared attributes is received
+    /// @note Can be called even if we are currently not connected to the cloud,
     /// this is the case because the only interaction that requires an active connection is the subscription of the topic that we receive the response on
     /// and that subscription is also done automatically by the library once the device has established a connection to the cloud.
     /// Therefore this method can simply be called once at startup before a connection has been established
@@ -67,9 +66,8 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         return true;
     }
 
-    /// @brief Subscribe one shared attribute callback,
-    /// that will be called if the key-value pair from the server for the given shared attributes is received.
-    /// Can be called even if we are currently not connected to the cloud,
+    /// @brief Subscribes a shared attribute callback, that will be called if an update for the containing shared attributes is received
+    /// @note Can be called even if we are currently not connected to the cloud,
     /// this is the case because the only interaction that requires an active connection is the subscription of the topic that we receive the response on
     /// and that subscription is also done automatically by the library once the device has established a connection to the cloud.
     /// Therefore this method can simply be called once at startup before a connection has been established
@@ -91,7 +89,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 
     /// @brief Unsubcribes all shared attribute callbacks.
     /// See https://thingsboard.io/docs/reference/mqtt-api/#subscribe-to-attribute-updates-from-the-server for more information
-    /// @return Whether unsubcribing all the previously subscribed callbacks
+    /// @return Whether unsubscribing all the previously subscribed callbacks
     /// and from the attribute topic, was successful or not
     bool Shared_Attributes_Unsubscribe() {
         m_shared_attribute_update_callbacks.clear();
@@ -128,7 +126,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
 #else
         for (auto const & shared_attribute : m_shared_attribute_update_callbacks) {
             if (shared_attribute.Get_Attributes().empty()) {
-                // No specifc keys were subscribed so we call the callback anyway, assumed to be subscribed to any update
+                // No specifc keys were subscribed so we call the callback anyway, assumed to be subscribed to every shared attribute update
                 shared_attribute.Call_Callback(object);
                 continue;
             }
@@ -139,16 +137,16 @@ class Shared_Attribute_Update : public IAPI_Implementation {
                 if (Helper::String_IsNull_Or_Empty(att)) {
                     continue;
                 }
-                // Check if the request contained any of our requested keys and
-                // break early if the key was requested from this callback.
+                // Check if the shared attribute update contains any of our subscribed keys and break early if they do,
+                // because we want to receive every update that chagned atleast one of our subscribed keys
                 if (object.containsKey(att)) {
                     requested_att = att;
                     break;
                 }
             }
 
-            // Check if this callback did not request any keys that were in this response,
-            // if there were not we simply continue with the next subscribed callback.
+            // Check if the shared attribute update contained any of our subscribed keys.
+            // Do not inform the callback if it did not
             if (requested_att == nullptr) {
                 continue;
             }
@@ -183,7 +181,7 @@ class Shared_Attribute_Update : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
         m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
     }

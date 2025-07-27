@@ -4,7 +4,7 @@
 // Local include.
 #include "Configuration.h"
 
-//#if THINGSBOARD_USE_ESP_PARTITION
+#if THINGSBOARD_USE_ESP_PARTITION
 
 // Local include.
 #include "IUpdater.h"

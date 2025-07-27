@@ -44,13 +44,14 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// to copy every element in between thoose iterators, in the same order as in the original data container.
     /// The last option is a copy constructor where we pass another container and all the values of that container will be copied into our buffer
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the container constructor and therefore allow to use every overloaded constructor without having to explicitly implement them
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
+    /// @param callback Callback method that will be called upon data arrival with the given data that was received.
+    /// If nullptr is passed the callback will never be called and instead return with a defaulted instance of the requested return variable
     /// @param timeout_microseconds Optional amount of microseconds until a response should have been received from the server, counted from the moment the request is sent.
     /// If a response is not received in the timeout time, the timeout callback method will be called to inform the user that the request has failed.
     /// If the value is 0 the timer will not be started and therefore never call the timeout callback method, default = 0
     /// @param timeout_callback Optional callback method that will be called upon request timeout (did not receive a response in the given timeout time). Can happen if the requested method does not exist on the cloud,
     /// or if the connection could not be established. A nullptr means even if a timeout occured the callback is simply ignored and the user not informed, default = nullptr
-    /// @param ...args Arguments that will be forwarded into the overloaded Container constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
+    /// @param ...args Attributes to requests, that will be forwarded into the overloaded Container constructor see https://en.cppreference.com/w/cpp/container/vector/vector for more information
     template<typename... Args>
     Attribute_Request_Callback(function callback, uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr, Args const &... args)
       : Callback(callback)
@@ -66,7 +67,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     ~Attribute_Request_Callback() override = default;
 
     /// @brief Gets the unique request identifier that is connected to the original request
-    /// @note Will be later used to verifiy which @ref Attribute_Request_Callback is connected to which received client-side or shared attributes.
+    /// @note Will be later used to verifiy which @ref Attribute_Request_Callback is connected to which received client-side or shared attributes
     /// @return Unique identifier connected to the requested client-side or shared attribute response
     size_t const & Get_Request_ID() const {
         return m_request_id;
@@ -118,8 +119,8 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
     /// and to the end of the data container (last element + 1)
     /// and then every element between those iteratos will be copied, in the same order as in the original data container.
     /// The last option is a copy assign method where we pass a container and all values of that container will be copied into our buffer
-    /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the vector assign method and therefore allow to use every overloaded vector assign without having to implement them
-    /// @param ...args Arguments that will be forwarded into the overloaded container assign method see https://en.cppreference.com/w/cpp/container/vector/assign for more information
+    /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the Container assign method and therefore allow to use every overloaded Container assign without having to implement them
+    /// @param ...args Attributes to requests, that will be forwarded into the overloaded Container assign method see https://en.cppreference.com/w/cpp/container/vector/assign for more information
     template<typename... Args>
     void Set_Attributes(Args const &... args) {
         m_attributes.assign(args...);

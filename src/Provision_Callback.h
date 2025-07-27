@@ -21,7 +21,7 @@ class Provision_Callback : public Callback<void, JsonDocument const &> {
     /// @brief Constructs empty callback, will result in never being called. Internals are simply default constructed as nullptr
     Provision_Callback() = default;
 
-    /// @brief Constructs callback that will be fired upon a provision request arrival, where the requested credentials were sent by the cloud and received by the client
+    /// @brief Constructs callback that will be called upon a provision request arrival, where the requested credentials were sent by the cloud and received by the client
     /// @note The requested credentials are one of the possible MQTT provisioning strategies either Access Token, Device Access Token, Basic MQTT Credentials or X509 Certificate.
     /// Access Token and Device Access Token are nearly identically, meaning they both consists of a Key and Secret that is used to identify the Device Profile to use,
     /// as well as the unqiue name that should be assigned to the device. The only difference is that for Access Token strategy,

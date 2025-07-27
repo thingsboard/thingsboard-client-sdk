@@ -21,11 +21,15 @@
 /// For Espressif IDF however the default MQTT Client is the esp-mqtt (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html) component.
 /// The aforementioned recommendations are already implemented in the library and can can simply be used and included when using the library, for Arduino the Arduino_MQTT_Client can simply be included
 /// and for Espressif IDF the Espressif_MQTT_Client can simply be included, the implementations have been tested and should be compatible when used in conjunction with the ThingsBoard client.
-/// Furthermore when using Arduino it is possible to enable support for THINGSBOARD_ENABLE_STREAM_UTILS by importing the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) in the project.
+/// Alternatively when using Arduino it is possible to enable support for THINGSBOARD_ENABLE_STREAM_UTILS by importing the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) in the project.
 /// This feature allows to improve the underlying data streams by directly writing the data into the MQTT Client instead of into an output buffer,
 /// but writing each byte one by one, would be too slow, therefore the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library is used to buffer those calls into bigger packets.
 /// This allows sending data that is very big without requiring to allocate that much memory, because it is sent in smaller packets.
 /// To support this feature, however this interface needs to additionally implement the Print interface, because that is required by the wrapper class BufferingPrint, which only exists on Arduino
+/// This then allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
+/// can theoretically set the value as big as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes.
+/// This will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal send buffer size,
+/// which needs more time than sending a message directly but has the advantage of requiring less memory
 #if THINGSBOARD_ENABLE_STREAM_UTILS
 class IMQTT_Client : public Print {
 #else
@@ -57,8 +61,15 @@ class IMQTT_Client {
     /// @param send_buffer_size Maximum amount of data that can be sent via MQTT at once,
     /// expected behaviour is that, if we attempt to send data that is bigger, it will simply not be sent and a message is printed to the console instead.
     /// Should be big enough to hold the biggest request that is expected to be ever sent by the device at once.
-    /// Alternatively it is possible if THINGSBOARD_ENABLE_STREAM_UTILS is enabled, requires using the Arduino framework and simply installing StreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library,
-    /// to only set the value of this paramter to the same value as the buffering_size passed to the ThingsBoard constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes
+    /// Alternatively when using Arduino it is possible to enable support for THINGSBOARD_ENABLE_STREAM_UTILS by importing the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) in the project.
+    /// This feature allows to improve the underlying data streams by directly writing the data into the MQTT Client instead of into an output buffer,
+    /// but writing each byte one by one, would be too slow, therefore the ArduinoStreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library is used to buffer those calls into bigger packets.
+    /// This allows sending data that is very big without requiring to allocate that much memory, because it is sent in smaller packets.
+    /// To support this feature, however this interface needs to additionally implement the Print interface, because that is required by the wrapper class BufferingPrint, which only exists on Arduino
+    /// This then allows to send arbitrary size payloads if that is done the internal buffer of the MQTT Client implementation
+    /// can theoretically set the value as big as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes.
+    /// This will mean though that all messages are sent over the StreamUtils library as long as they are bigger than the internal send buffer size,
+    /// which needs more time than sending a message directly but has the advantage of requiring less memory
     /// @return Whether allocating the needed memory for the given buffer sizes was successful or not
     virtual bool set_buffer_size(uint16_t receive_buffer_size, uint16_t send_buffer_size) = 0;
 
@@ -85,11 +96,11 @@ class IMQTT_Client {
 
     /// @brief Connects to the previously with set_server configured server instance and port with the given credentials
     /// @param client_id Non owning pointer to client identification code, that allows to differentiate which MQTT device is sending the traffic to the MQTT broker.
-    /// Does not need to kept alive as the function copies the data into the outgoing MQTT buffer to start the connection
+    /// Additionally it has to be kept alive by the user for the runtime of the MQTT client connection
     /// @param user_name Non owning pointer to client username that is used to authenticate, who is connecting over MQTT.
-    /// Does not need to kept alive as the function copies the data into the outgoing MQTT buffer to start the connection
+    /// Additionally it has to be kept alive by the user for the runtime of the MQTT client connection
     /// @param password Non owning pointer to client password that is used to authenticate, who is connecting over MQTT.
-    /// Does not need to kept alive as the function copies the data into the outgoing MQTT buffer to start the connection
+    /// Additionally it has to be kept alive by the user for the runtime of the MQTT client connection
     /// @return Whether the client could establish the connection successfully or not
     virtual bool connect(char const * client_id, char const * user_name, char const * password) = 0;
 

@@ -16,6 +16,9 @@ constexpr char OPEN_FILE_FAILED[] = "Failed to open file (%s), ensure path is co
 template <typename Logger = DefaultLogger>
 class SDCard_Updater : public IUpdater {
   public:
+    /// @brief Constructor
+    /// @param file_path Non owning pointer to the file path the binary firmware data should be written into.
+    /// Additionally it has to be kept alive by the user for the runtime of the OTA Update process
     SDCard_Updater(char const * file_path)
       : m_path(file_path)
     {

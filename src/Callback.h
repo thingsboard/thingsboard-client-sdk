@@ -39,7 +39,7 @@ class Callback {
     Callback() = default;
 
     /// @brief Constructor
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given arguemnt types.
+    /// @param callback Callback method that will be called upon data arrival with the given data that was received.
     /// If nullptr is passed the callback will never be called and instead return with a defaulted instance of the requested return variable
     explicit Callback(function callback)
       : m_callback(callback)
@@ -65,9 +65,9 @@ class Callback {
         return m_callback(arguments...);
     }
 
-    /// @brief Sets the callback method that will be called upon data arrival with the given data that was received serialized into the given argument types,
-    /// used to change the callback initally passed or to set the callback if it was not passed as an argument initally
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into the given argument types
+    /// @brief Sets the callback method that will be called upon data arrival with the given data that was received.
+    /// If nullptr is passed the callback will never be called and instead return with a defaulted instance of the requested return variable
+    /// @param callback callback method that will be called upon data arrival with the given data that was received
     void Set_Callback(function callback) {
         m_callback = callback;
     }

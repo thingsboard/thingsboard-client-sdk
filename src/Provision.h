@@ -32,17 +32,18 @@ class Provision : public IAPI_Implementation {
 
     ~Provision() override = default;
 
-    /// @brief Sends provisioning request for a new device, meaning we want to create a device that we can then connect over,
-    /// where the given provision device key / secret decide which device profile is used to create the given device with.
+    /// @brief Requests othe provisioning of a new device, which will call the passed callback.
+    /// If the credentials from the server for the requested provisioned device have been received
+    /// @note The configured provision device key / secret decide which device profile is used to create the device from.
     /// Optionally a device name can be passed or be left empty (cloud will use a random string as the name instead).
-    /// The cloud then sends back json data containing our credentials, that will call the given callback, if creating the device was successful.
-    /// The data contained in that callbackcan then be used to disconnect and reconnect to the ThingsBoard server as our newly created device.
-    /// that will be called if a response from the server for the method with the given name is received.
-    /// Because the provision request is a single event subscription, meaning we only ever receive a response to our request once,
-    /// we automatically unsubscribe and delete the internal allocated data for the request as soon as the response has been received and handled by the subscribed callback.
+    /// The data contained in that callback, being the device credentials, can then be used to disconnect and reconnect to the ThingsBoard server as our newly created device.
+    /// Because the provisiong request is a single event subscription, meaning we only ever receive one response for one request,
+    /// the request is automatically unsubscribde and the internally allocated data for the request deleted as soon as the response has been received and handled by the subscribed callback.
     /// See https://thingsboard.io/docs/user-guide/device-provisioning/ for more information
-    /// @param callback Callback method that will be called upon data arrival with the given data that was received serialized into a JsonDocument
-    /// @return Whether sending the provisioning request was successful or not
+    /// @param callback Callback method that will be called when the requested provision response has been received
+    /// @return Whether sending the request to the cloud was successfull. Is non-blocking and therefore a true value returned by this method does not guarantee a response will ever be received.
+    /// If wanted by the user the optional timeout callback and timeout time in the callback instance can be configured,
+    /// which will inform the user by calling the timeout callback, if no response has been received by the server in the expected time
     bool Provision_Request(Provision_Callback const & callback) {
         char const * provision_device_key = callback.Get_Device_Key();
         char const * provision_device_secret = callback.Get_Device_Secret();
@@ -90,7 +91,7 @@ class Provision : public IAPI_Implementation {
         request_buffer[PROV_DEVICE_KEY] = provision_device_key;
         request_buffer[PROV_DEVICE_SECRET_KEY] = provision_device_secret;
         m_provision_callback.Start_Timeout_Timer();
-        return m_send_json_callback.Call_Callback(PROV_REQUEST_TOPIC, request_buffer, Helper::Measure_Json(request_buffer));
+        return m_send_json_callback.Call_Callback(PROV_REQUEST_TOPIC, request_buffer);
     }
 
     API_Process_Type Get_Process_Type() const override {
@@ -104,7 +105,7 @@ class Provision : public IAPI_Implementation {
     void Process_Json_Response(char const * topic, JsonDocument const & data) override {
         m_provision_callback.Stop_Timeout_Timer();
         m_provision_callback.Call_Callback(data);
-        // Unsubscribe from the provision response topic,
+        // Unsubscribe from the provision response topic.
         // Will be resubscribed if another request is sent anyway
         (void)Provision_Unsubscribe();
     }
@@ -132,30 +133,28 @@ class Provision : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_send_json_callback.Set_Callback(send_json_callback);
     }
 
 private:
-    /// @brief Subscribes one provision callback,
-    /// that will be called if a provision response from the server is received
-    /// @param callback Callback method that will be called
-    /// @return Whether requesting the given callback was successful or not
+    /// @brief Subscribes to provision response topic
+    /// @param callback Callback method that will be called when the requested provisioning response has been received
+    /// @return Whether subscribing to the provision response topic, was successful or not
     bool Provision_Subscribe(Provision_Callback const & callback) {
         m_provision_callback = callback;
         return true;
     }
 
-    /// @brief Unsubcribes the provision callback
-    /// @return Whether unsubcribing the previously subscribed callback
-    /// and from the provision response topic, was successful or not
+    /// @brief Unsubscribes the provision response callback
+    /// @return Whether unsubscribing from the provision response topic, was successful or not
     bool Provision_Unsubscribe() {
         return Resubscribe_Permanent_Subscriptions();
     }
 
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};         // Send json document callback
+    Callback<bool, char const * const, JsonDocument const &> m_send_json_callback = {};         // Send json document callback
 
-    Provision_Callback                                                       m_provision_callback = {};         // Provision response callback
+    Provision_Callback                                       m_provision_callback = {};         // Provision response callback
 };
 
 #endif // Provision_h

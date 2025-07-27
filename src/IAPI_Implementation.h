@@ -75,7 +75,7 @@ class IAPI_Implementation {
     virtual bool Is_Response_Topic_Matching(char const * topic) const = 0;
 
     /// @brief Unsubcribes all callbacks, to clear up any ongoing subscriptions and stop receiving information over the previously subscribed topic
-    /// @return Whether unsubcribing all the previously subscribed callbacks
+    /// @return Whether unsubscribing all the previously subscribed callbacks
     /// and from the previously subscribed topic, was successful or not
     virtual bool Unsubscribe() = 0;
 
@@ -108,7 +108,7 @@ class IAPI_Implementation {
     /// @param get_send_size_callback Method which allows to get the current underlying send size of the buffer, points to m_client.get_send_buffer_size per default
     /// @param set_buffer_size_callback Method which allows to set the current underlying size of the buffer, points to m_client.set_buffer_size per default
     /// @param get_request_id_callback Method which allows to get the current request id as a mutable reference, points to getRequestID per default
-    virtual void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) = 0;
+    virtual void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) = 0;
 };
 
 #endif // IAPI_Implementation_h

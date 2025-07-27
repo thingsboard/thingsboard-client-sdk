@@ -62,8 +62,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// @param callback Callback method that will be called when the requested client-side attributes has been received
     /// @return Whether sending the request to the cloud was successfull. Is non-blocking and therefore a true value returned by this method does not guarantee a response will ever be received.
     /// If wanted by the user the optional timeout callback and timeout time in the callback instance can be configured,
-    /// which will inform the user by calling the timeout callback, if no response has been received by the server in the expected time.
-    /// If a response has been received the normal callback with the response from the executed client-side rpc method will be called instead
+    /// which will inform the user by calling the timeout callback, if no response has been received by the server in the expected time
     bool Client_Attributes_Request(Callback_Value const & callback) {
         return Attributes_Request(callback, CLIENT_REQUEST_KEYS, CLIENT_RESPONSE_KEY);
     }
@@ -76,8 +75,7 @@ class Attribute_Request : public IAPI_Implementation {
     /// @param callback Callback method that will be called when the requested client-side attributes has been received
     /// @return Whether sending the request to the cloud was successfull. Is non-blocking and therefore a true value returned by this method does not guarantee a response will ever be received.
     /// If wanted by the user the optional timeout callback and timeout time in the callback instance can be configured,
-    /// which will inform the user by calling the timeout callback, if no response has been received by the server in the expected time.
-    /// If a response has been received the normal callback with the response from the executed client-side rpc method will be called instead
+    /// which will inform the user by calling the timeout callback, if no response has been received by the server in the expected time
     bool Shared_Attributes_Request(Callback_Value const & callback) {
         return Attributes_Request(callback, SHARED_REQUEST_KEY, SHARED_RESPONSE_KEY);
     }
@@ -164,7 +162,7 @@ class Attribute_Request : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         m_send_json_callback.Set_Callback(send_json_callback);
         m_subscribe_topic_callback.Set_Callback(subscribe_topic_callback);
         m_unsubscribe_topic_callback.Set_Callback(unsubscribe_topic_callback);
@@ -253,13 +251,13 @@ class Attribute_Request : public IAPI_Implementation {
 
         char topic[Helper::Calculate_Print_Size(ATTRIBUTE_REQUEST_TOPIC, request_id)] = {};
         (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, request_id);
-        return m_send_json_callback.Call_Callback(topic, request_buffer, Helper::Measure_Json(request_buffer));
+        return m_send_json_callback.Call_Callback(topic, request_buffer);
     }
 
     /// @brief Subscribes to attribute response topic
     /// @param callback Callback method that will be called when the requested client-side attributes has been received
     /// @param registered_callback Editable pointer to a reference of the local version that was copied from the passed callback
-    /// @return Whether subcribing to the attribute response topic, was successful or not
+    /// @return Whether subscribing to the attribute response topic, was successful or not
     bool Attributes_Request_Subscribe(Callback_Value const & callback, Callback_Value * & registered_callback) {
 #if !THINGSBOARD_ENABLE_DYNAMIC
         if (m_attribute_request_callbacks.size() + 1 > m_attribute_request_callbacks.capacity()) {
@@ -277,17 +275,17 @@ class Attribute_Request : public IAPI_Implementation {
     }
 
     /// @brief Unsubscribes all client-side or shared attributes request callbacks
-    /// @return Whether unsubcribing from the attribute response topic, was successful or not
+    /// @return Whether unsubscribing from the attribute response topic, was successful or not
     bool Attributes_Request_Unsubscribe() {
         (void)Resubscribe_Permanent_Subscriptions();
         return m_unsubscribe_topic_callback.Call_Callback(ATTRIBUTE_RESPONSE_SUBSCRIBE_TOPIC);
     }
 
-    Callback<bool, char const * const, JsonDocument const &, size_t const &> m_send_json_callback = {};          // Send json document callback
-    Callback<bool, char const * const>                                       m_subscribe_topic_callback = {};    // Subscribe mqtt topic client callback
-    Callback<bool, char const * const>                                       m_unsubscribe_topic_callback = {};  // Unubscribe mqtt topic client callback
-    Callback<size_t *>                                                       m_get_request_id_callback = {};     // Get internal request id callback
-    Callback_Container                                                       m_attribute_request_callbacks = {}; // Client-side or shared attribute request callback vector
+    Callback<bool, char const * const, JsonDocument const &> m_send_json_callback = {};          // Send json document callback
+    Callback<bool, char const * const>                       m_subscribe_topic_callback = {};    // Subscribe mqtt topic client callback
+    Callback<bool, char const * const>                       m_unsubscribe_topic_callback = {};  // Unubscribe mqtt topic client callback
+    Callback<size_t *>                                       m_get_request_id_callback = {};     // Get internal request id callback
+    Callback_Container                                       m_attribute_request_callbacks = {}; // Client-side or shared attribute request callback vector
 };
 
 #endif // Attribute_Request_h
