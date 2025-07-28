@@ -33,11 +33,11 @@ class DefaultLogger {
             return printf(LOG_MESSAGE_FORMAT, format);
         }
         else {
-            auto const size = Helper::Calculate_Print_Size(format, args...);
+            auto const size = static_cast<int>(Helper::Calculate_Print_Size(format, args...));
             char arguments[size] = {};
             auto const written_characters = snprintf(arguments, size, format, args...);
             // Written characters is expected to be one less, because of the null termination character
-            bool const result = (written_characters == (size - 1));
+            bool const result = (written_characters == size - 1U);
             return printf(LOG_MESSAGE_FORMAT, result ? arguments : FAILED_MESSAGE);
         }
     }
