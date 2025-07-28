@@ -114,11 +114,12 @@ class OTA_Firmware_Update : public IAPI_Implementation {
             return false;
         }
 
+        auto & request_timeout = m_fw_callback.Get_Request_Timeout();
         constexpr char const * array[OTA_ATTRIBUTE_KEYS_AMOUNT] = {FW_CHKS_KEY, FW_CHKS_ALGO_KEY, FW_SIZE_KEY, FW_TITLE_KEY, FW_VER_KEY};
 #if THINGSBOARD_ENABLE_STL
-        Request_Callback_Value const fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), callback.Get_Timeout(), std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
+        Request_Callback_Value const fw_request_callback(std::bind(&OTA_Firmware_Update::Firmware_Shared_Attribute_Received, this, std::placeholders::_1), request_timeout.Get_Timeout(), std::bind(&OTA_Firmware_Update::Request_Timeout, this), array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #else
-        Request_Callback_Value const fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, callback.Get_Timeout(), OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
+        Request_Callback_Value const fw_request_callback(OTA_Firmware_Update::onStaticFirmwareReceived, request_timeout.Get_Timeout(), OTA_Firmware_Update::onStaticRequestTimeout, array + 0U, array + OTA_ATTRIBUTE_KEYS_AMOUNT);
 #endif // THINGSBOARD_ENABLE_STL
         return m_fw_attribute_request.Shared_Attributes_Request(fw_request_callback);
     }

@@ -304,7 +304,8 @@ class OTA_Handler {
 
     /// @brief Callback that will be called if we did not receive the firmware chunk response in the given timeout time
     void Handle_Request_Timeout()  {
-        uint64_t const & timeout = m_fw_callback->Get_Timeout();
+        auto const & request_timeout = m_fw_callback->Get_Request_Timeout();
+        uint64_t const & timeout = request_timeout.Get_Timeout();
         char message[Helper::Calculate_Print_Size(CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout)] = {};
         (void)snprintf(message, sizeof(message), CHUNK_REQUEST_TIMED_OUT, m_requested_chunks, timeout);
         Logger::printfln(message);
