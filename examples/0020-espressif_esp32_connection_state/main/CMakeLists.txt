@@ -13,6 +13,7 @@ set(srcs
     ../../../src/Provision_Callback.cpp
     ../../../src/RPC_Request_Callback.cpp
     ../../../src/Telemetry.cpp
+    ../../../src/Timeoutable_Request.cpp
 )
 
 idf_component_register(
