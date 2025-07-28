@@ -436,9 +436,6 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         return m_subscribedInstance->Firmware_OTA_Unsubscribe();
     }
 
-    // Used API Implementation cannot call a instanced method when message arrives on subscribed topic.
-    // Only free-standing function is allowed.
-    // To be able to forward event to an instance, rather than to a function, this pointer exists.
     static OTA_Firmware_Update                                               *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 

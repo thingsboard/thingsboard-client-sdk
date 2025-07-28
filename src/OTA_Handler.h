@@ -65,9 +65,10 @@ class OTA_Handler {
       , m_total_chunks(0U)
       , m_requested_chunks(0U)
       , m_retries(0U)
-      , m_watchdog(std::bind(&OTA_Handler::Handle_Request_Timeout, this))
     {
-        // Nothing to do
+#if !THINGSBOARD_ENABLE_STL
+        m_subscribedInstance = nullptr;
+#endif // !THINGSBOARD_ENABLE_STL
     }
 
     /// @brief Starts the firmware update with requesting the first firmware packet and initalizes the underlying needed components
@@ -76,13 +77,18 @@ class OTA_Handler {
     /// @param fw_checksum Non owning pointer to the string representation of the complete firmware binary checksum, should be the same as the checksum calculated from the actually written data in the end.
     /// Does not need to be kept alive, because the string data is copied into a local member variable
     /// @param fw_checksum_algorithm Algorithm type used to hash the firmware binary
-    void Start_Firmware_Update(OTA_Update_Callback const & fw_callback, size_t const & fw_size, char const * fw_checksum, mbedtls_md_type_t const & fw_checksum_algorithm) {
+    void Start_Firmware_Update(OTA_Update_Callback & fw_callback, size_t const & fw_size, char const * fw_checksum, mbedtls_md_type_t const & fw_checksum_algorithm) {
         m_fw_callback = &fw_callback;
         m_fw_size = fw_size;
         m_total_chunks = (m_fw_size / m_fw_callback->Get_Chunk_Size()) + 1U;
         (void)strncpy(m_fw_checksum, fw_checksum, sizeof(m_fw_checksum));
         m_fw_checksum_algorithm = fw_checksum_algorithm;
-        m_fw_updater = m_fw_callback->Get_Updater();
+        auto & request_timeout = m_fw_callback->Get_Request_Timeout();
+#if THINGSBOARD_ENABLE_STL
+        request_timeout.Set_Timeout_Callback(std::bind(&OTA_Handler::Handle_Request_Timeout, this));
+#else
+        request_timeout.Set_Timeout_Callback(OTA_Handler::Static_Handle_Request_Timeout);
+#endif // THINGSBOARD_ENABLE_STL
         Request_First_Firmware_Packet();
         (void)m_send_fw_state_callback.Call_Callback(FW_STATE_DOWNLOADING, "");
     }
@@ -91,8 +97,10 @@ class OTA_Handler {
     /// @note Be aware the written partition is not erased so the already written binary firmware data still remains in the flash partition,
     /// shouldn't really matter, because if we start the update process again the partition will be overwritten anyway and a partially written firmware will not be bootable
     void Stop_Firmware_Update()  {
-        m_watchdog.detach();
-        m_fw_updater->reset();
+        auto & request_timeout = m_fw_callback->Get_Request_Timeout();
+        request_timeout.Stop_Timeout_Timer();
+        auto fw_updater = m_fw_callback->Get_Updater();
+        fw_updater->reset();
         Logger::printfln(FW_UPDATE_ABORTED);
         Handle_Failure(OTA_Failure_Response::RETRY_NOTHING, FW_UPDATE_ABORTED);
         m_fw_callback = nullptr;
@@ -116,17 +124,19 @@ class OTA_Handler {
             return;
         }
 
-        m_watchdog.detach();
+        auto & request_timeout = m_fw_callback->Get_Request_Timeout();
+        request_timeout.Stop_Timeout_Timer();
     #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(FW_CHUNK, current_chunk, total_bytes);
     #endif // THINGSBOARD_ENABLE_DEBUG
 
-        if (current_chunk == 0U && !m_fw_updater->begin(m_fw_size)) {
+        auto fw_updater = m_fw_callback->Get_Updater();
+        if (current_chunk == 0U && !fw_updater->begin(m_fw_size)) {
             Logger::printfln(ERROR_UPDATE_BEGIN);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_BEGIN);
         }
 
-        auto const written_bytes = m_fw_updater->write(payload, total_bytes);
+        auto const written_bytes = fw_updater->write(payload, total_bytes);
         if (written_bytes != total_bytes) {
             char message[Helper::Calculate_Print_Size(ERROR_UPDATE_WRITE, written_bytes, total_bytes)] = {};
             (void)snprintf(message, sizeof(message), ERROR_UPDATE_WRITE, written_bytes, total_bytes);
@@ -156,7 +166,8 @@ class OTA_Handler {
     /// @brief Used to update the watchdog timer which uses a simple software time in the background. Ensure to call recently often for higher precision.
     /// Meaning the timer is actually triggered closer to the specified waiting time
     void update() {
-        m_watchdog.update();
+        auto & request_timeout = m_fw_callback->Get_Request_Timeout();
+        request_timeout.Update_Timeout_Timer();
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 
@@ -189,8 +200,10 @@ class OTA_Handler {
         Reset_Retries();
         // Hash start result is ignored, because it can only fail if the input parameters are invalid
         (void)m_hash.start(m_fw_checksum_algorithm);
-        m_watchdog.detach();
-        m_fw_updater->reset();
+        auto & request_timeout = m_fw_callback->Get_Request_Timeout();
+        request_timeout.Stop_Timeout_Timer();
+        auto fw_updater = m_fw_callback->Get_Updater();
+        fw_updater->reset();
         Request_Next_Firmware_Packet();
     }
 
@@ -207,11 +220,12 @@ class OTA_Handler {
             Logger::printfln(UNABLE_TO_REQUEST_CHUNCKS);
         }
 
-        // Watchdog gets started no matter if publishing request was successful or not in hopes,
+        // Request timeout gets started no matter if publishing previous request was successful or not in hopes,
         // that after the given timeout the callback calls this method again and can then publish the request successfully.
         // This works because the request fails most of the time, because the internet connection might have been temporarily disconnected.
         // Therefore waiting a while and then retrying, means we might be reconnected again
-        m_watchdog.once(m_fw_callback->Get_Timeout());
+        auto & request_timeout = m_fw_callback->Get_Request_Timeout();
+        request_timeout.Start_Timeout_Timer();
     }
 
     /// @brief Completes the firmware update process, called after having received all firmware binary data chunks
@@ -233,7 +247,8 @@ class OTA_Handler {
         Logger::printfln(CHECKSUM_VERIFICATION_SUCCESS);
     #endif // THINGSBOARD_ENABLE_DEBUG
 
-        if (!m_fw_updater->end()) {
+        auto fw_updater = m_fw_callback->Get_Updater();
+        if (!fw_updater->end()) {
             Logger::printfln(ERROR_UPDATE_END);
             return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_END);
         }
@@ -296,19 +311,32 @@ class OTA_Handler {
         Handle_Failure(OTA_Failure_Response::RETRY_CHUNK, message);
     }
 
-    const OTA_Update_Callback                              *m_fw_callback = {};                      // Callback method that contains configuration information, about the over the air update
+#if !THINGSBOARD_ENABLE_STL
+    static bool Static_Handle_Request_Timeout() {
+        if (m_subscribedInstance == nullptr) {
+            return false;
+        }
+        return m_subscribedInstance->Handle_Request_Timeout();
+    }
+
+    static OTA_Handler *m_subscribedInstance;
+#endif // !THINGSBOARD_ENABLE_STL
+
+    OTA_Update_Callback                                    *m_fw_callback = {};                            // Callback method that contains configuration information, about the over the air update
     Callback<bool, size_t const &, size_t const &>         m_publish_callback = {};                  // Callback that is used to request the firmware chunk of the firmware binary with the given chunk number
     Callback<bool, char const * const, char const * const> m_send_fw_state_callback = {};            // Callback that is used to send information about the current state of the over the air update
     Callback<bool>                                         m_finish_callback = {};                   // Callback that is called once the update has been finished and the user should be informed of the failure or success of the over the air update
     size_t                                                 m_fw_size = {};                           // Total size of the firmware binary we will receive. Allows for a binary size of up to theoretically 4 GB
     char                                                   m_fw_checksum[MAX_STRING_HASH_SIZE] = {}; // Checksum of the complete firmware binary, should be the same as the actually written data in the end
     mbedtls_md_type_t                                      m_fw_checksum_algorithm = {};             // Algorithm type used to hash the firmware binary
-    IUpdater                                               *m_fw_updater = {};                       // Interface implementation that writes received firmware binary data onto the given device
     HashGenerator                                          m_hash = {};                              // Class instance that allows to generate a hash from received firmware binary data
     size_t                                                 m_total_chunks = {};                      // Total amount of chunks that need to be received to get the complete firmware binary
     size_t                                                 m_requested_chunks = {};                  // Amount of successfully requested and received firmware binary chunks
     uint8_t                                                m_retries = {};                           // Amount of request retries we attempt for each chunk, increasing makes the connection more stable
-    Callback_Watchdog                                      m_watchdog = {};                          // Class instances that allows to timeout if we do not receive a response for a requested chunk in the given time
 };
+
+#if !THINGSBOARD_ENABLE_STL
+OTA_Handler *OTA_Handler::m_subscribedInstance = nullptr;
+#endif
 
 #endif // OTA_Handler_h

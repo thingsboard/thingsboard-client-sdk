@@ -79,10 +79,6 @@ void OTA_Update_Callback::Set_Chunk_Size(uint16_t chunk_size) {
     m_chunk_size = chunk_size;
 }
 
-uint64_t const & OTA_Update_Callback::Get_Timeout() const {
-    return m_timeout_microseconds;
-}
-
-void OTA_Update_Callback::Set_Timeout(const uint64_t & timeout_microseconds) {
-    m_timeout_microseconds = timeout_microseconds;
+Timeoutable_Request & OTA_Update_Callback::Get_Request_Timeout() {
+    return m_request_timeout;
 }

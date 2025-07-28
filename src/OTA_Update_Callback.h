@@ -3,9 +3,8 @@
 
 // Local includes.
 #include "Callback.h"
-
-// Local includes.
 #include "IUpdater.h"
+#include "Timeoutable_Request.h"
 
 
 // OTA default values.
@@ -150,13 +149,11 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     /// @param chunk_size Size of each single chunk to be downloaded
     void Set_Chunk_Size(uint16_t chunk_size);
 
-    /// @brief Gets the time in microseconds we wait until we declare a single chunk we attempted to download as a failure, because it timed out
-    /// @return Timeout time until we expect a response from the server
-    uint64_t const & Get_Timeout() const;
-
-    /// @brief Sets the time in microseconds we wait until we declare a single chunk we attempted to download as a failure, because it timed out
-    /// @param timeout_microseconds Timeout time until we expect a response from the server
-    void Set_Timeout(uint64_t const & timeout_microseconds);
+    /// @brief Gets the request timeout callback
+    /// @note Will be called when no response to the request was received in the expected amount of time, causing the internal watchdog to time out.
+    /// To achieve this behaviour the internal timer can be started and stopped, and simply calls the subscribed callback if the timer is not stopped before it times out
+    /// @return Request timeout callback
+    Timeoutable_Request & Get_Request_Timeout();
 
   private:
     char const                                     *m_current_fw_title = {};        // Current firmware title of device
@@ -167,7 +164,7 @@ class OTA_Update_Callback : public Callback<void, bool const &> {
     Callback<void>                                 m_update_starting_callback = {}; // Callback called when update is about to start (moment before topic subscription)
     uint8_t                                        m_chunk_retries = {};            // Maximum amount of retries for a single chunk to be downloaded and flashed successfully
     uint16_t                                       m_chunk_size = {};               // Size of chunks the firmware data will be split into
-    uint64_t                                       m_timeout_microseconds = {};     // How long we wait for each chunck to arrive before declaring it as failed
+    Timeoutable_Request                            m_request_timeout = {};          // Handles callback that will be called if request times out
 };
 
 #endif // OTA_Update_Callback_h

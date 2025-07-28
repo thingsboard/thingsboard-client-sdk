@@ -90,7 +90,8 @@ class Provision : public IAPI_Implementation {
         }
         request_buffer[PROV_DEVICE_KEY] = provision_device_key;
         request_buffer[PROV_DEVICE_SECRET_KEY] = provision_device_secret;
-        m_provision_callback.Start_Timeout_Timer();
+        auto & request_callback = m_provision_callback->Get_Request_Timeout();
+        request_callback.Start_Timeout_Timer();
         return m_send_json_callback.Call_Callback(PROV_REQUEST_TOPIC, request_buffer);
     }
 
@@ -103,7 +104,8 @@ class Provision : public IAPI_Implementation {
     }
 
     void Process_Json_Response(char const * topic, JsonDocument const & data) override {
-        m_provision_callback.Stop_Timeout_Timer();
+        auto & request_callback = m_provision_callback->Get_Request_Timeout();
+        request_callback.Stop_Timeout_Timer();
         m_provision_callback.Call_Callback(data);
         // Unsubscribe from the provision response topic.
         // Will be resubscribed if another request is sent anyway
@@ -125,7 +127,8 @@ class Provision : public IAPI_Implementation {
 
 #if !THINGSBOARD_USE_ESP_TIMER
     void loop() override {
-        m_provision_callback.Update_Timeout_Timer();
+        auto & request_callback = m_provision_callback->Get_Request_Timeout();
+        request_callback.Update_Timeout_Timer();
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
 

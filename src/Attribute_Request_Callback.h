@@ -2,7 +2,7 @@
 #define Attribute_Request_Callback_h
 
 // Local includes.
-#include "Callback_Watchdog.h"
+#include "Timeoutable_Request.h"
 #if !THINGSBOARD_ENABLE_DYNAMIC
 #include "Constants.h"
 #endif // !THINGSBOARD_ENABLE_DYNAMIC
@@ -58,8 +58,7 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
       , m_attributes(args...)
       , m_request_id(0U)
       , m_attribute_key(nullptr)
-      , m_timeout_microseconds(timeout_microseconds)
-      , m_timeout_callback(timeout_callback)
+      , m_request_timeout(timeout_microseconds, timeout_callback)
     {
         // Nothing to do
     }
@@ -126,55 +125,19 @@ class Attribute_Request_Callback : public Callback<void, JsonObjectConst const &
         m_attributes.assign(args...);
     }
 
-    /// @brief Gets the amount of microseconds until we expect to have received a response
-    /// @return Timeout time until timeout callback is called
-    uint64_t const & Get_Timeout() const {
-        return m_timeout_microseconds;
-    }
-
-    /// @brief Sets the amount of microseconds until we expect to have received a response
-    /// @note The value of 0, means the timeout timer is never started and therefore the timeout callback never called
-    /// @param timeout_microseconds Timeout time until timeout callback is called
-    void Set_Timeout(uint64_t const & timeout_microseconds) {
-        m_timeout_microseconds = timeout_microseconds;
-    }
-
-#if !THINGSBOARD_USE_ESP_TIMER
-    /// @brief Updates the internal timeout timer
-    void Update_Timeout_Timer() {
-        m_timeout_callback.update();
-    }
-#endif // !THINGSBOARD_USE_ESP_TIMER
-
-    /// @brief Starts the internal timeout timer if we actually received a configured valid timeout time and a valid callback.
-    /// @note The timeout time is valid if it is not 0 and the callback is valid if it is not a nullptr.
-    /// Is not mean to be called explicitly by the user, because it is instead called when necessary by internal methods that handle the class instance
-    void Start_Timeout_Timer() {
-        if (m_timeout_microseconds == 0U) {
-            return;
-        }
-        m_timeout_callback.once(m_timeout_microseconds);
-    }
-
-    /// @brief Stops the internal timeout timer, is called as soon as an answer is received from the cloud.
-    /// If this method is not called in time the initally subscribed callback will be used to inform the user of the timeout instead
-    /// @note Is not mean to be called explicitly by the user, because it is instead called when necessary by internal methods that handle the class instance
-    void Stop_Timeout_Timer() {
-        m_timeout_callback.detach();
-    }
-
-    /// @brief Sets the callback method that will be called upon request timeout (did not receive a response from the cloud in the given timeout time)
-    /// @param timeout_callback Callback function that will be called
-    void Set_Timeout_Callback(Callback_Watchdog::function timeout_callback) {
-        m_timeout_callback.Set_Callback(timeout_callback);
+    /// @brief Gets the request timeout callback
+    /// @note Will be called when no response to the request was received in the expected amount of time, causing the internal watchdog to time out.
+    /// To achieve this behaviour the internal timer can be started and stopped, and simply calls the subscribed callback if the timer is not stopped before it times out
+    /// @return Request timeout callback
+    Timeoutable_Request & Get_Request_Timeout() {
+        return m_request_timeout;
     }
 
   private:
-    CString_Container m_attributes = {};           // Attribute we want to request
-    size_t            m_request_id = {};           // Id the request was called with
-    char const        *m_attribute_key = {};       // Attribute key that we wil receive the response on ("client" or "shared")
-    uint64_t          m_timeout_microseconds = {}; // Timeout time until we expect response to request
-    Callback_Watchdog m_timeout_callback = {};     // Handles callback that will be called if request times out
+    CString_Container   m_attributes = {};      // Attribute we want to request
+    size_t              m_request_id = {};      // Id the request was called with
+    char const          *m_attribute_key = {};  // Attribute key that we wil receive the response on ("client" or "shared")
+    Timeoutable_Request m_request_timeout = {}; // Handles callback that will be called if request times out
 };
 
 #endif // Attribute_Request_Callback_h

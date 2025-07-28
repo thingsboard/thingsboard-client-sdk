@@ -953,9 +953,6 @@ class ThingsBoardSized {
         return m_subscribedInstance->Set_Buffer_Size(receive_buffer_size, send_buffer_size);
     }
 
-    // PubSub client cannot call a instanced method when message arrives on subscribed topic.
-    // Only free-standing function is allowed.
-    // To be able to forward event to an instance, rather than to a function, this pointer exists.
     static ThingsBoardSized *m_subscribedInstance;
 #endif // !THINGSBOARD_ENABLE_STL
 

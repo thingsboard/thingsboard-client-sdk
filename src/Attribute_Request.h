@@ -4,6 +4,7 @@
 // Local includes.
 #include "Attribute_Request_Callback.h"
 #include "IAPI_Implementation.h"
+#include "Timeoutable_Request.h"
 
 
 // Attribute request API topics.
@@ -92,6 +93,7 @@ class Attribute_Request : public IAPI_Implementation {
         auto const request_id = Helper::Split_Topic_Into_Request_ID(topic, strlen(ATTRIBUTE_RESPONSE_TOPIC));
         JsonObjectConst object = data.template as<JsonObjectConst>();
 
+        Timeoutable_Request * request_callback = nullptr;
 #if THINGSBOARD_ENABLE_STL
         auto it = std::find_if(m_attribute_request_callbacks.begin(), m_attribute_request_callbacks.end(), [&request_id](Callback_Value & attribute_request) {
             return attribute_request.Get_Request_ID() == request_id;
@@ -118,7 +120,8 @@ class Attribute_Request : public IAPI_Implementation {
                 object = object[attribute_response_key];
             }
 
-            attribute_request.Stop_Timeout_Timer();
+            request_callback = &attribute_request.Get_Request_Timeout();
+            request_callback->Stop_Timeout_Timer();
             attribute_request.Call_Callback(object);
 
             delete_callback:
@@ -153,7 +156,8 @@ class Attribute_Request : public IAPI_Implementation {
 #if !THINGSBOARD_USE_ESP_TIMER
     void loop() override {
         for (auto & attribute_request : m_attribute_request_callbacks) {
-            attribute_request.Update_Timeout_Timer();
+            auto & request_callback = attribute_request.Get_Request_Timeout();
+            request_callback.Update_Timeout_Timer();
         }
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
@@ -247,7 +251,8 @@ class Attribute_Request : public IAPI_Implementation {
 
         registered_callback->Set_Request_ID(++request_id);
         registered_callback->Set_Attribute_Key(attribute_response_key);
-        registered_callback->Start_Timeout_Timer();
+        auto & request_callback = registered_callback->Get_Request_Timeout();
+        request_callback.Start_Timeout_Timer();
 
         char topic[Helper::Calculate_Print_Size(ATTRIBUTE_REQUEST_TOPIC, request_id)] = {};
         (void)snprintf(topic, sizeof(topic), ATTRIBUTE_REQUEST_TOPIC, request_id);

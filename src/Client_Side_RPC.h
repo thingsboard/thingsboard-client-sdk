@@ -99,7 +99,8 @@ class Client_Side_RPC : public IAPI_Implementation {
         auto & request_id = *p_request_id;
 
         registered_callback->Set_Request_ID(++request_id);
-        registered_callback->Start_Timeout_Timer();
+        auto & request_callback = registered_callback->Get_Request_Timeout();
+        request_callback.Start_Timeout_Timer();
 
         char topic[Helper::Calculate_Print_Size(RPC_SEND_REQUEST_TOPIC, request_id)] = {};
         (void)snprintf(topic, sizeof(topic), RPC_SEND_REQUEST_TOPIC, request_id);
@@ -165,7 +166,8 @@ class Client_Side_RPC : public IAPI_Implementation {
 #if !THINGSBOARD_USE_ESP_TIMER
     void loop() override {
         for (auto & rpc_request : m_rpc_request_callbacks) {
-            rpc_request.Update_Timeout_Timer();
+            auto & request_callback = rpc_request.Get_Request_Timeout();
+            request_callback.Update_Timeout_Timer();
         }
     }
 #endif // !THINGSBOARD_USE_ESP_TIMER
