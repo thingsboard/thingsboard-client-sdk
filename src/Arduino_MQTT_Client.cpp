@@ -14,7 +14,7 @@ void Arduino_MQTT_Client::set_client(Client & transport_client) {
     m_mqtt_client.setClient(transport_client);
 }
 
-void Arduino_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) {
+void Arduino_MQTT_Client::set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) {
     m_mqtt_client.setCallback(callback);
 }
 

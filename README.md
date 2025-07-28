@@ -575,7 +575,7 @@ class Custom_MQTT_Client : public IMQTT_Client {
   public:
     ~Custom_MQTT_Client() override = default;
 
-    void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) override {
+    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override {
         // Nothing to do
     }
 

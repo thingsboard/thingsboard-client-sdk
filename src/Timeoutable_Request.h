@@ -9,9 +9,6 @@
 /// in the expected amount of time and the internal watchdog times out
 class Timeoutable_Request {
   public:
-    /// @brief Constructs empty callback, will result in never starting a timer and therefore result in never being called
-    Timeoutable_Request() = default;
-
     /// @brief Constructs request timeout callback
     /// @note Will be called when no response to the request was received in the expected amount of time, causing the internal watchdog to time out.
     /// To achieve this behaviour the internal timer can be started and stopped, and simply calls the subscribed callback if the timer is not stopped before it times out

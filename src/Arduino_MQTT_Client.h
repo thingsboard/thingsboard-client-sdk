@@ -35,7 +35,7 @@ class Arduino_MQTT_Client : public IMQTT_Client {
     /// but the actual type of connection does not matter (Ethernet or WiFi)
     void set_client(Client & transport_client);
 
-    void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) override;
+    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override;
 
     void set_connect_callback(Callback<void>::function callback) override;
 

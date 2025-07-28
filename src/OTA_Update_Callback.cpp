@@ -6,11 +6,12 @@ OTA_Update_Callback::OTA_Update_Callback(char const * current_fw_title, char con
   , m_current_fw_title(current_fw_title)
   , m_current_fw_version(current_fw_version)
   , m_updater(updater)
+  , m_request_id(0U)
   , m_progress_callback(progress_callback)
   , m_update_starting_callback(update_starting_callback)
   , m_chunk_retries(chunk_retries)
   , m_chunk_size(chunk_size)
-  , m_timeout_microseconds(timeout_microseconds)
+  , m_request_timeout(timeout_microseconds)
 {
     // Nothing to do
 }

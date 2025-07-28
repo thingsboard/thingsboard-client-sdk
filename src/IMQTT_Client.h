@@ -44,7 +44,7 @@ class IMQTT_Client {
     /// as well as the payload data and the size of that payload data. Directly set by the used ThingsBoard client to its internal methods,
     /// therefore calling again and overriding as a user ist not recommended, unless you know what you are doing
     /// @param callback Method that should be called on received MQTT response
-    virtual void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) = 0;
+    virtual void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) = 0;
 
     /// @brief Sets the callback that is called, if we have successfully established a connection with the MQTT broker
     /// @note Directly set by the used ThingsBoard client to its internal method, therefore calling again and overriding as a user ist not recommended, unless you know what you are doing.

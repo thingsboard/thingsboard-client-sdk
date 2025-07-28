@@ -771,7 +771,7 @@ class ThingsBoardSized {
     /// @param json Non owning pointer to the received payload.
     /// Needs to be kept alive for the runtime of the method. Owned by the MQTT client implementation that called this callback method
     /// @param length Total length of the received payload
-    void On_MQTT_Message(char * topic, uint8_t * payload, uint32_t length) {
+    void On_MQTT_Message(char * topic, uint8_t * payload, unsigned int length) {
 #if THINGSBOARD_ENABLE_DEBUG
         Logger::printfln(RECEIVE_MESSAGE, length, topic);
 #endif // THINGSBOARD_ENABLE_DEBUG
@@ -876,7 +876,7 @@ class ThingsBoardSized {
     }
 
 #if !THINGSBOARD_ENABLE_STL
-    static void On_Static_MQTT_Message(char * topic, uint8_t * payload, uint32_t length) {
+    static void On_Static_MQTT_Message(char * topic, uint8_t * payload, unsigned int length) {
         if (m_subscribedInstance == nullptr) {
             return;
         }

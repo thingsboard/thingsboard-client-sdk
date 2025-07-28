@@ -209,7 +209,7 @@ class Espressif_MQTT_Client : public IMQTT_Client {
         m_enqueue_messages = enqueue_messages;
     }
 
-    void set_data_callback(Callback<void, char *, uint8_t *, uint32_t>::function callback) override {
+    void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override {
         m_received_data_callback.Set_Callback(callback);
     }
 
@@ -481,7 +481,7 @@ private:
         instance->mqtt_event_handler(base, static_cast<esp_mqtt_event_id_t>(event_id), event_data);
     }
 
-    Callback<void, char *, uint8_t *, uint32_t>                  m_received_data_callback = {};            // Callback that will be called as soon as the mqtt client receives any data
+    Callback<void, char *, uint8_t *, unsigned int>              m_received_data_callback = {};            // Callback that will be called as soon as the mqtt client receives any data
     Callback<void>                                               m_connected_callback = {};                // Callback that will be called as soon as the mqtt client has connected
     Callback<void, MQTT_Connection_State, MQTT_Connection_Error> m_connection_state_changed_callback = {}; // Callback that will be called as soon as the mqtt client connection changes
     MQTT_Connection_State                                        m_connection_state = {};                  // Current connection state to the MQTT broker
