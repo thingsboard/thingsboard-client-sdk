@@ -132,7 +132,8 @@ class Client_Side_RPC : public IAPI_Implementation {
                 continue;
             }
 #endif // THINGSBOARD_ENABLE_STL
-            rpc_request.Stop_Timeout_Timer();
+            auto & request_timeout = rpc_request.Get_Request_Timeout();
+            request_timeout.Stop_Timeout_Timer();
             rpc_request.Call_Callback(data);
 
             // Delete callback because the changes have been requested and the callback is no longer needed
