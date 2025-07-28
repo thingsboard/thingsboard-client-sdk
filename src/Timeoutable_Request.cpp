@@ -1,7 +1,7 @@
 // Header include.
 #include "Timeoutable_Request.h"
 
-Timeoutable_Request::Timeoutable_Request(uint64_t const & timeout_microseconds = 0U, Callback_Watchdog::function timeout_callback = nullptr)
+Timeoutable_Request::Timeoutable_Request(uint64_t const & timeout_microseconds, Callback_Watchdog::function timeout_callback)
   : m_timeout_microseconds(timeout_microseconds)
   , m_timeout_callback(timeout_callback)
 {
