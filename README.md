@@ -12,6 +12,8 @@
 [![ESP8266 actions status](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/esp8266-compile.yml/badge.svg)](https://github.com/thingsboard/thingsboard-client-sdk/actions/workflows/esp8266-compile.yml)
 ![GitHub stars](https://img.shields.io/github/stars/thingsboard/thingsboard-client-sdk?style=social)
 
+[![Join our Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/mJxDjAM3PF)
+
 This library provides access to the ThingsBoard platform over the `MQTT` or `HTTP(S)` protocols.
 
 ## Examples
@@ -694,6 +696,8 @@ ThingsBoardSized<32, Default_Response_Amount, CustomLogger> tb(mqttClient, 128, 
 ## Have a question or proposal?
 
 You are welcome in our [issues](https://github.com/thingsboard/thingsboard-client-sdk/issues) and [Q&A forum](https://groups.google.com/forum/#!forum/thingsboard).
+
+[![Join our Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/mJxDjAM3PF)
 
 ## License
 
