@@ -5,23 +5,25 @@
 #include "Configuration.h"
 
 // Library includes.
+#include <stdint.h>
 #if THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 #include <ArduinoJson.h>
 #endif // THINGSBOARD_ENABLE_PSRAM || THINGSBOARD_ENABLE_DYNAMIC
 
-#define Default_Endpoints_Amount 7
-#define Default_Response_Amount 8
-#define Default_Subscriptions_Amount 1
-#define Default_Attributes_Amount 1
-#define Default_RPC_Amount 0
-#define Default_Request_RPC_Amount 2
-#define Default_Payload_Size 64
-#define Default_Max_Stack_Size 1024
+
+uint8_t constexpr DEFAULT_ENDPOINT_AMOUNT = 7U;
+uint8_t constexpr DEFAULT_RESPONSE_AMOUNT = 8U;
+uint8_t constexpr DEFAULT_SUBSCRIPTION_AMOUNT = 1U;
+uint8_t constexpr DEFAULT_ATTRIBUTES_AMOUNT = 1U;
+uint8_t constexpr DEFAULT_RPC_AMOUNT = 0U;
+uint8_t constexpr DEFAULT_REQUEST_RPC_AMOUNT = 2U;
+uint8_t constexpr DEFAULT_PAYLOAD_SIZE = 64U;
+uint16_t constexpr DEFAULT_MAX_STACK_SIZE = 1024U;
 #if THINGSBOARD_ENABLE_STREAM_UTILS
-#define Default_Buffering_Size 64
+uint8_t constexpr DEFAULT_BUFFERING_SIZE = 64U;
 #endif // THINGSBOARD_ENABLE_STREAM_UTILS
 #if THINGSBOARD_ENABLE_DYNAMIC
-#define Default_Max_Response_Size 0
+uint8_t constexpr DEFAULT_MAX_RESPONSE_SIZE = 0U;
 #endif // THINGSBOARD_ENABLE_DYNAMIC
 
 

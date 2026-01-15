@@ -6,11 +6,12 @@ OTA_Update_Callback::OTA_Update_Callback(char const * current_fw_title, char con
   , m_current_fw_title(current_fw_title)
   , m_current_fw_version(current_fw_version)
   , m_updater(updater)
+  , m_request_id(0U)
   , m_progress_callback(progress_callback)
   , m_update_starting_callback(update_starting_callback)
   , m_chunk_retries(chunk_retries)
   , m_chunk_size(chunk_size)
-  , m_timeout_microseconds(timeout_microseconds)
+  , m_request_timeout(timeout_microseconds)
 {
     // Nothing to do
 }
@@ -79,10 +80,6 @@ void OTA_Update_Callback::Set_Chunk_Size(uint16_t chunk_size) {
     m_chunk_size = chunk_size;
 }
 
-uint64_t const & OTA_Update_Callback::Get_Timeout() const {
-    return m_timeout_microseconds;
-}
-
-void OTA_Update_Callback::Set_Timeout(const uint64_t & timeout_microseconds) {
-    m_timeout_microseconds = timeout_microseconds;
+Timeoutable_Request & OTA_Update_Callback::Get_Request_Timeout() {
+    return m_request_timeout;
 }

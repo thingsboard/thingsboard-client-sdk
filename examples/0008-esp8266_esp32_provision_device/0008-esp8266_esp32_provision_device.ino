@@ -121,7 +121,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &prov
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, apis);
 
 uint32_t previous_processing_time = 0U;
 
@@ -273,8 +273,8 @@ void loop() {
       }
     } else {
       Serial.println("Sending telemetry...");
-      tb.sendTelemetryData(TEMPERATURE_KEY, 22);
-      tb.sendTelemetryData(HUMIDITY_KEY, 42.5);
+      tb.Send_Telemetry_Data(TEMPERATURE_KEY, 22);
+      tb.Send_Telemetry_Data(HUMIDITY_KEY, 42.5);
     }
   }
 

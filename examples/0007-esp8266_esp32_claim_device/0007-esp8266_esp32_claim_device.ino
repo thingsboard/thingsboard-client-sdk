@@ -200,7 +200,7 @@ void loop() {
       claimingRequestSecretKey;
 #endif
     Serial.printf("Sending claiming request with password (%s) being (%u) characters long and a timeout of (%lu)ms\n", secretKey.c_str(), secretKey.length(), CLAIMING_REQUEST_DURATION_MS);
-    claimingRequestSent = tb.Claim_Request(secretKey.c_str(), CLAIMING_REQUEST_DURATION_MS);
+    claimingRequestSent = tb.Claim_Request(CLAIMING_REQUEST_DURATION_MS, secretKey.c_str());
   }
 
   tb.loop();

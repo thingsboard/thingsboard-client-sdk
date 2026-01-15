@@ -4,7 +4,7 @@
 // Library include.
 #include <stdio.h>
 
-HashGenerator::~HashGenerator(void) {
+HashGenerator::~HashGenerator() {
     free();
 }
 
@@ -25,17 +25,17 @@ bool HashGenerator::update(uint8_t const * data, size_t const & length) {
     return mbedtls_md_update(&m_ctx, data, length) == 0;
 }
 
-bool HashGenerator::finish(char * hash_string) {
+HashGenerator::HashString HashGenerator::finish() {
     unsigned char byte_hash[m_size] = {};
-    bool const success = mbedtls_md_finish(&m_ctx, byte_hash) == 0;
-    if (!success) {
-        return success;
+    HashString hash_string = {};
+    if (mbedtls_md_finish(&m_ctx, byte_hash) != 0) {
+        return hash_string;
     }
+
     for (size_t i = 0; i < m_size; ++i) {
-        sprintf(hash_string + (i * 2), "%02x", byte_hash[i]);
+        sprintf(hash_string.hash + (i * 2), "%02x", byte_hash[i]);
     }
-    hash_string[m_size * 2] = '\0';
-    return success;
+    return hash_string;
 }
 
 void HashGenerator::free() {

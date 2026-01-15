@@ -97,7 +97,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &shared_update
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, apis);
 
 // Status for successfully connecting to the given WiFi
 bool wifi_connected = false;
@@ -146,7 +146,15 @@ void InitWiFi() {
 /// @param data Data containing the shared attributes that were changed and their current value
 void processSharedAttributeUpdate(const JsonObjectConst &data) {
     for (auto it = data.begin(); it != data.end(); ++it) {
-        ESP_LOGI("MAIN", "Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
+        if (it->value().is<const char *>()) {
+            ESP_LOGI("MAIN", "Key: %s, Value: %s", it->key().c_str(), it->value().as<const char*>());
+        }
+        else if (it->value().is<int>()) {
+            ESP_LOGI("MAIN", "Key: %s, Value: %d", it->key().c_str(), it->value().as<int>());
+        }
+        else {
+            ESP_LOGI("MAIN", "Key: %s", it->key().c_str());
+        }
     }
 
     const size_t jsonSize = Helper::Measure_Json(data);
@@ -181,6 +189,10 @@ extern "C" void app_main(void) {
 
         if (!tb.connected()) {
             tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT);
+        }
+
+        while (!tb.connected()) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
         if (!subscribed) {

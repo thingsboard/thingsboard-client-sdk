@@ -137,7 +137,19 @@ Arduino_MQTT_Client mqttClient(espClient);
 // Initialize used apis
 const std::array<IAPI_Implementation*, 0U> apis = {};
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
+#if THINGSBOARD_ENABLE_DYNAMIC
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, DEFAULT_BUFFERING_SIZE, DEFAULT_MAX_RESPONSE_SIZE, apis.cbegin(), apis.cend());
+#else
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, DEFAULT_MAX_RESPONSE_SIZE, apis.cbegin(), apis.cend());
+#endif
+#else
+#if THINGSBOARD_ENABLE_STREAM_UTILS
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, DEFAULT_BUFFERING_SIZE, apis.cbegin(), apis.cend());
+#else
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, apis.cbegin(), apis.cend());
+#endif
+#endif
 #endif
 
 
@@ -207,10 +219,10 @@ void loop() {
   // See https://thingsboard.io/docs/reference/http-api/#telemetry-upload-api
   // for more details
   Serial.println("Sending temperature data...");
-  tb.sendTelemetryData(TEMPERATURE_KEY, random(10, 31));
+  tb.Send_Telemetry_Data(TEMPERATURE_KEY, random(10, 31));
 
   Serial.println("Sending humidity data...");
-  tb.sendTelemetryData(HUMIDITY_KEY, random(40, 90));
+  tb.Send_Telemetry_Data(HUMIDITY_KEY, random(40, 90));
 
 #if !USING_HTTPS
   tb.loop();

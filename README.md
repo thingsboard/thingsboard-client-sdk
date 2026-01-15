@@ -173,7 +173,7 @@ All internal methods call attempt to utilize the stack as far as possible and co
 
 ### Too much data fields must be serialized
 
-The `sendAttributes` and `sendTelemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) this requires the `MaxKeyValuePairAmount` template argument to be passed in the method template list. If more key-value pairs are sent than specified, the `"Serial Monitor"` window will get a respective log showing an error:
+The `Send_Attributes` and `Send_Telemetry` methods, use the [`StaticJsonDocument`](https://arduinojson.org/v6/api/staticjsondocument/) this requires the `MaxKeyValuePairAmount` template argument to be passed in the method template list. If more key-value pairs are sent than specified, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
 [TB] Unable to serialize key-value json
@@ -216,7 +216,7 @@ Alternatively to remove the need for the `MaxResponse`template argument in the c
 The possible event subscription classes that are passed to internal methods, use arrays which reside on the stack those require the `MaxSubscriptions` template argument to be passed in the constructor template list. The default value is 1, if the method call attempts to subscribe more than that many events in total, the `"Serial Monitor"` window will get a respective log showing an error:
 
 ```
-[TB] Too many shared attribute update subscriptions, increase MaxSubscriptions or unsubscribe
+[TB] Too many (shared attribute update) subscriptions, increase (MaxSubscriptions) or unsubscribe"
 ```
 
 Important is that both server-side RPC and request attribute values are temporary, meaning once the request has been received it is deleted, and it is therefore possible to subscribe another event again. However, all other subscriptions like client-side RPC or attribute update subscription are permanent meaning once the event has been subscribed we can only unsubscribe all events to make more room.
@@ -369,11 +369,13 @@ For that a `class` needs to inherit the `API_Implemenatation` class and `overrid
 
 class Custom_API_Implementation : public IAPI_Implementation {
   public:
+    ~Custom_API_Implementation() override = default;
+
     API_Process_Type Get_Process_Type() override {
         return API_Process_Type::JSON;
     }
 
-    void Process_Response(char const * topic, uint8_t * payload, unsigned int length) override {
+    void Process_Response(char const * topic, uint8_t * payload, uint32_t length) override {
         // Nothing to do
     }
 
@@ -381,7 +383,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         // Nothing to do
     }
 
-    bool Compare_Response_Topic(char const * topic) const override {
+    bool Is_Response_Topic_Matching(char const * topic) const override {
         return true;
     }
 
@@ -389,7 +391,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         return true;
     }
 
-    bool Resubscribe_Topic() override {
+    bool Resubscribe_Permanent_Subscriptions() override {
         return true;
     }
 
@@ -403,7 +405,7 @@ class Custom_API_Implementation : public IAPI_Implementation {
         // Nothing to do
     }
 
-    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &, size_t const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
+    void Set_Client_Callbacks(Callback<void, IAPI_Implementation &>::function subscribe_api_callback, Callback<bool, char const * const, JsonDocument const &>::function send_json_callback, Callback<bool, char const * const, char const * const>::function send_json_string_callback, Callback<bool, char const * const>::function subscribe_topic_callback, Callback<bool, char const * const>::function unsubscribe_topic_callback, Callback<uint16_t>::function get_receive_size_callback, Callback<uint16_t>::function get_send_size_callback, Callback<bool, uint16_t, uint16_t>::function set_buffer_size_callback, Callback<size_t *>::function get_request_id_callback) override {
         // Nothing to do
     }
 };
@@ -454,6 +456,10 @@ For that a `class` needs to inherit the `IUpdater` interface and `override` the 
 
 class Custom_Updater : public IUpdater {
   public:
+    ~Custom_Updater() override {
+        reset();
+    }
+
     bool begin(size_t const & firmware_size) override {
         return true;
     }
@@ -499,6 +505,8 @@ For that a `class` needs to inherit the `IHTTP_Client` interface and `override` 
 
 class Custom_HTTP_Client : public IHTTP_Client {
   public:
+    ~Custom_HTTP_Client() override = default;
+
     void set_keep_alive(bool keep_alive) override {
         // Nothing to do
     }
@@ -567,6 +575,8 @@ For that a `class` needs to inherit the `IMQTT_Client` interface and `override` 
 
 class Custom_MQTT_Client : public IMQTT_Client {
   public:
+    ~Custom_MQTT_Client() override = default;
+
     void set_data_callback(Callback<void, char *, uint8_t *, unsigned int>::function callback) override {
         // Nothing to do
     }
@@ -579,7 +589,11 @@ class Custom_MQTT_Client : public IMQTT_Client {
         return true;
     }
 
-    uint16_t get_buffer_size() override {
+    uint16_t get_receive_buffer_size() override {
+        return 0U;
+    }
+
+    uint16_t get_send_buffer_size() override {
         return 0U;
     }
 
@@ -613,6 +627,18 @@ class Custom_MQTT_Client : public IMQTT_Client {
 
     bool connected() override {
         return true;
+    }
+
+    MQTT_Connection_State get_connection_state() override {
+        return MQTT_Connection_State::DISCONNECTED;
+    }
+
+    MQTT_Connection_Error get_last_connection_error() override {
+        return MQTT_Connection_Error::NONE;
+    }
+
+    void subscribe_connection_state_changed_callback(Callback<void, MQTT_Connection_State, MQTT_Connection_Error>::function callback) override;
+        // Nothing to do
     }
 
 #if THINGSBOARD_ENABLE_STREAM_UTILS
@@ -690,7 +716,7 @@ Arduino_MQTT_Client mqttClient(espClient);
 // ThingsBoard tb(mqttClient);
 
 // The SDK setup with 128 bytes for JSON payload and 32 fields for JSON object
-ThingsBoardSized<32, Default_Response_Amount, CustomLogger> tb(mqttClient, 128, 128);
+ThingsBoardSized<32, DEFAULT_RESPONSE_AMOUNT, CustomLogger> tb(mqttClient, 128, 128);
 ```
 
 ## Have a question or proposal?

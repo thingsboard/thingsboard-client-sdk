@@ -48,7 +48,7 @@ jobs:
                 source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install ESP32 platform dependencies
         if: matrix.board.platform-name == 'esp32:esp32'
@@ -77,7 +77,7 @@ jobs:
 
       - name: Save memory usage change report as artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ${{ env.SKETCHES_REPORTS_NAME }}
@@ -90,7 +90,7 @@ jobs:
     steps:
       # This step is needed to get the size data produced by the build jobs
       - name: Download sketches reports artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.SKETCHES_REPORTS_NAME }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}/${{ env.SKETCHES_REPORTS_NAME }}
