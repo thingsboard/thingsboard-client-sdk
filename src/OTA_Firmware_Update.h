@@ -13,7 +13,7 @@ uint8_t constexpr OTA_ATTRIBUTE_KEYS_AMOUNT = 5U;
 char constexpr NO_FW_REQUEST_RESPONSE[] = "Did not receive requested shared attribute firmware keys. Ensure keys exist and device is connected";
 // Firmware topics.
 char constexpr FIRMWARE_RESPONSE_TOPIC[] = "v2/fw/response/%u/chunk/";
-char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/+";
+char constexpr FIRMWARE_RESPONSE_SUBSCRIBE_TOPIC[] = "v2/fw/response/+/chunk/+";
 char constexpr FIRMWARE_REQUEST_TOPIC[] = "v2/fw/request/%u/chunk/%u";
 // Firmware data keys.
 char constexpr CURR_FW_TITLE_KEY[] = "current_fw_title";
