@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 
-/// @brief Possible responses to error states the OTA update might fall into,
-/// allows to react to certain issues in the most appropriate way, because some of them require us to restart the complete update,
+/// @brief Possible responses to error states the OTA update might fall into
+/// @note Allows to react to certain issues in the most appropriate way, because some of them require us to restart the complete update,
 /// whereas other issues can be solved if we simply attempt to refetch the current chunk
 enum class OTA_Failure_Response : uint8_t {
     RETRY_CHUNK, ///< Fetching the current chunk failed somehow, but we can still continue the update we just have to refetch the current chunk, mainly occurs from timeouts with requesting the chunks

@@ -9,79 +9,73 @@
 #if THINGSBOARD_ENABLE_STL
 #include <iterator>
 #endif // THINGSBOARD_ENABLE_STL
+#include <stdint.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
 
-/// @brief Static helper class that includes some uniliterally used functionalities in multiple places, especially the ThingsBoardHttp and ThingsBoard implementations
+/// @brief Static helper class that includes some functionalities used in multiple places throughout the library, especially the ThingsBoardHttp and ThingsBoard implementations
 class Helper {
   public:
-    /// @brief Returns the total amount of bytes needed to store the formatted string that will be created if the given format string and the arguments are passed to snprintf.
+    /// @brief Returns the total amount of bytes needed to store the formatted string with null termination, that will be created if the given format string and the arguments are passed to snprintf
+    /// @note This is achieved by using the snprintf without a buffer that the string should be copied into and with the buffer size of 0.
+    /// This works because the result returned by snprintf is what would have been written if the passed buffer would have been large enough not counting null character,
+    /// or if an error occured while creating the string a negative number is returned instead. This value is then simply incremented by 1 and returned.
+    /// Additionally to ensure no negative number is ever returned even if an error occured an assert is called beforehand to ensure the size value is bigger than 0
     /// @tparam ...Args Holds the multiple arguments that will simply be forwarded to the snprintf method, allowing any arbitrary amount of combinations without having to rely on va_list
-    /// @param format Formatting message that the given arguments will be inserted into
+    /// @param format Non owning pointer to the formatting message that the given arguments will be inserted into.
+    /// Does not need to be kept alive, because the formatting message is only used for the scope of the method itself
     /// @param ...args Arguments that will be forwarded into the snprintf method see https://cplusplus.com/reference/cstdio/snprintf/ for more information
-    /// @return Amount of bytes in characters, needed for the formatted string with the given arguments inserted, to be displayed completly
+    /// @return Amount of bytes in characters, needed for the formatted string with the given arguments inserted, to be displayed completly including null termination
     template<typename... Args>
-    static int detectSize(char const * format, Args const &... args) {
-        // Result is what would have been written if the passed buffer would have been large enough not counting null character,
-        // or if an error occured while creating the string a negative number is returned instead. To ensure this will not crash the system
-        // when creating an array with negative size we assert beforehand with a clear error message.
+    static size_t Calculate_Print_Size(char const * format, Args const &... args) {
         const int result = snprintf(nullptr, 0U, format, args...) + 1U;
-        assert(result >= 0);
-        return result;
+        assert(result > 0);
+        return static_cast<size_t>(result);
     }
 
     /// @brief Returns the amount of occurences of the given smybol in the given byte payload
-    /// @param bytes Byte payload that we want to check the symbol for
+    /// @param bytes Non owning pointer to the byte payload that we want to check the symbol for.
+    /// Does not need to be kept alive, because the byte payload is only used for the scope of the method itself
     /// @param symbol Symbol we want to search for
     /// @param length Length of the byte payload, meaning if we reach the given length and have not found any occurence of the symbol we return 0.
     /// Ensure to never pass a length that is longer than the actualy payload, because this will cause this method to read outside of the bounds of the buffer
     /// @return Amount of occurences of the given symbol
-    static size_t getOccurences(uint8_t const * bytes, char symbol, unsigned int length);
+    static size_t Calculate_Symbol_Occurences(uint8_t const * bytes, char symbol, uint32_t length);
 
     /// @brief Returns wheter the given string is either a nullptr or is an empty string,
     /// meaning it only contains a null terminator and no other characters
-    /// @param str String that we want to check for emptiness
+    /// @param str Non owning poitner to the string that we want to check for emptiness
     /// @return Wheter the given string is a nullptr or empty
-    static bool stringIsNullorEmpty(char const * str);
+    static bool String_IsNull_Or_Empty(char const * str);
 
-    /// @brief Returns the portion of the received topic after the base topic as an integer.
-    /// Should contain the request id that the original request was sent with
-    /// Is used to know which received response is connected to which inital request
-    /// @param base_topic Base portion of the topic that does not contain any parameters (v1/devices/me/attributes/response/)
-    /// @param received_topic Received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id)
+    /// @brief Splits the topic at the given position and extracts the request id parameter from the remaining string
+    /// @note Should contain the request id that the original request was sent with. Is used to know which received response is connected to which inital request,
+    /// so that the correct request can be informed that a response has been received.
+    /// To achieve this the function removes the not needed part of the received topic string, which is everything before the request id
+    /// and then simply call the atoi function on the remaning topic string.
+    /// @param received_topic Non owning pointer to the received topic that contains the base topic as well as the request id parameter (v1/devices/me/rpc/response/$request_id).
+    /// Does not need to be kept alive, because the received topic is only used for the scope of the method itself
+    /// @param end_position Number indicating the amount of characters that have to be incremented to reach the position where the $request_id lies in the received topic.
+    /// Most of the time it can simply be the value returned by calling strlen() on the base version of the topic. So for example on (v1/devices/me/rpc/response/) instead of the received topic (v1/devices/me/rpc/response/42)
     /// @return Converted integral request id if possible or 0 if parsing as an integer failed
-    static size_t parseRequestId(char const * base_topic, char const * received_topic);
+    static size_t Split_Topic_Into_Request_ID(char const * received_topic, size_t const & end_position);
 
     /// @brief Calculates the total size of the string the serializeJson method would produce including the null end terminator.
-    /// Be aware that null terminator will later not be serialied in the serializeJson() call,
+    /// @note Be aware that null terminator will later not be serialized in the serializeJson method,
     /// meaning the returned written amount of bytes is the return value of this method - 1.
     /// See https://arduinojson.org/v6/api/json/measurejson/ for more information on the underlying method used
     /// @tparam TSource Source class that should be used to serialize the json that is sent to the server
-    /// @param source Data source containing our json key value pairs we want to measure
+    /// @param source Source containing our json key-value pairs that we want to measure the resulting size of the serializeJson call for
     /// @return Total size required for the string that would be produced by serializeJson + 1 byte for the string null terminator
     template <typename TSource>
     static size_t Measure_Json(TSource const & source) {
-        return measureJson(source) + 1;
-    }
-
-    /// @brief Removes the element with the given index, which allows to use data containers that do not have a random-access iterator.
-    /// The user is also cautioned that this function only erases the element, and that if the element is itself a pointer,
-    /// the pointed-to memory is not touched in any way. Managing the pointer is the user's responsibility.
-    /// @tparam DataContainer Class which allows to pass any arbitrary data container that contains the erase() method
-    /// @tparam InputIterator Class that points to the iterator position that should be erased
-    /// in the given data container, allows for using / passing either std::vector or std::array.
-    /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
-    /// @param container Data container holding the elements we want to remove an element from
-    /// @param index Iterator position we want to remove the element at
-    template<typename DataContainer, typename InputIterator>
-    static void remove(DataContainer & container, InputIterator const & iterator) {
-        container.erase(iterator);
+        return measureJson(source) + 1U;
     }
 
     /// @brief Calculates the distance between two iterators
-    /// @tparam InputIterator Class that points to the begin and end iterator
+    /// @tparam InputIterator Class that allows for forward incrementable access to data
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param first Iterator pointing to the first element in the data container

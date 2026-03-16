@@ -113,7 +113,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
+    char message[Helper::Calculate_Print_Size(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
     snprintf(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
@@ -144,7 +144,7 @@ void loop() {
   // for more details
   Telemetry* begin = data;
   Telemetry* end = data + TELEMETRY_SIZE;
-  tb.sendTelemetry<TELEMETRY_SIZE>(begin, end);
+  tb.Send_Telemetry<TELEMETRY_SIZE>(begin, end);
 
   Serial.println("Sending attributes data...");
 
@@ -168,7 +168,7 @@ void loop() {
   // for more details
   begin = attributes;
   end = attributes + ATTRIBUTES_SIZE;
-  tb.sendAttributes<ATTRIBUTES_SIZE>(begin, end);
+  tb.Send_Attributes<ATTRIBUTES_SIZE>(begin, end);
 
   tb.loop();
 }

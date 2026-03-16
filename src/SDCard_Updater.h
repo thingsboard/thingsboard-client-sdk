@@ -16,10 +16,27 @@ constexpr char OPEN_FILE_FAILED[] = "Failed to open file (%s), ensure path is co
 template <typename Logger = DefaultLogger>
 class SDCard_Updater : public IUpdater {
   public:
+    /// @brief Constructor
+    /// @param file_path Non owning pointer to the file path the binary firmware data should be written into.
+    /// Additionally it has to be kept alive by the user for the runtime of the OTA Update process
     SDCard_Updater(char const * file_path)
       : m_path(file_path)
     {
         // Nothing to do
+    }
+
+    /// @brief Deleted copy constructor
+    /// @note Copying an active Updater writing to the same path, makes no sense as it would overwrite file contents. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    SDCard_Updater(SDCard_Updater const & other) = delete;
+
+    /// @brief Deleted copy assignment operator
+    /// @note Copying an active Updater writing to the same path, makes no sense as it would overwrite file contents. Therefore copying is disabled alltogether
+    /// @param other Other instance we disallow copying from
+    void operator=(SDCard_Updater const & other) = delete;
+
+    ~SDCard_Updater() override {
+        reset();
     }
 
     bool begin(size_t const & firmware_size) override {
@@ -38,7 +55,7 @@ class SDCard_Updater : public IUpdater {
             Logger::printfln(OPEN_FILE_FAILED, m_path);
             return 0;
         }
-        size_t const bytes_written = fwrite(payload, 1, total_bytes, file);
+        auto const bytes_written = fwrite(payload, 1, total_bytes, file);
         fclose(file);
         return bytes_written;
     }

@@ -6,6 +6,10 @@
 // Library include.
 #include <Updater.h>
 
+Arduino_ESP8266_Updater::~Arduino_ESP8266_Updater() {
+    reset();
+}
+
 bool Arduino_ESP8266_Updater::begin(size_t const & firmware_size) {
     return Update.begin(firmware_size);
 }

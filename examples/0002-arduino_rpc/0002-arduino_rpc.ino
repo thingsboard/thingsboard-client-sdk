@@ -58,7 +58,7 @@ IAPI_Implementation* apis[1U] = {
   &rpc
 };
 // Initialize ThingsBoard instance with the maximum needed buffer sizes
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis + 0U, apis + 1U);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, apis + 0U, apis + 1U);
 
 
 // Statuses for subscribing to rpc
@@ -182,7 +182,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
+    char message[Helper::Calculate_Print_Size(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
     snprintf(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {

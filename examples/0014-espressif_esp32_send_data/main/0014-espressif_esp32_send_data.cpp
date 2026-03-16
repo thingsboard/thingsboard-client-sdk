@@ -156,8 +156,12 @@ extern "C" void app_main() {
             tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT);
         }
 
-        tb.sendTelemetryData(TEMPERATURE_KEY, esp_random());
-        tb.sendTelemetryData(HUMIDITY_KEY, esp_random());
+        while (!tb.connected()) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+
+        tb.Send_Telemetry_Data(TEMPERATURE_KEY, esp_random());
+        tb.Send_Telemetry_Data(HUMIDITY_KEY, esp_random());
 
         tb.loop();
 

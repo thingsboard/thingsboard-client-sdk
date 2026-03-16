@@ -128,7 +128,7 @@ const std::array<IAPI_Implementation*, 1U> apis = {
     &ota
 };
 // Initialize ThingsBoard instance with the maximum needed buffer size
-ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, Default_Max_Stack_Size, apis);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE, DEFAULT_MAX_STACK_SIZE, apis);
 // Initalize the Updater client instance used to flash binary to flash memory
 #ifdef ESP8266
 Arduino_ESP8266_Updater updater;
@@ -139,7 +139,6 @@ Espressif_Updater<> updater;
 #endif // ESP8266
 
 // Statuses for updating
-bool currentFWSent = false;
 bool updateRequestSent = false;
 
 
@@ -233,10 +232,6 @@ void loop() {
       Serial.println("Failed to connect");
       return;
     }
-  }
-
-  if (!currentFWSent) {
-    currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
   }
 
   if (!updateRequestSent) {

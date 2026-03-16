@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
     - name: Build send data example on v5.1
@@ -54,3 +54,9 @@ jobs:
         esp_idf_version: v5.1
         target: esp32
         path: 'examples/0018-espressif_esp32_provision_device'
+    - name: Build process connection state example on v5.1
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.1
+        target: esp32
+        path: 'examples/0020-espressif_esp32_connection_state'

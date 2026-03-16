@@ -42,7 +42,7 @@ The remaining features have to be implemented by hand with the `sendGetRequest`
 | `0000-arduino_send_telemetry`                     | Send telemetry data from an Arduino board.                       | Arduino                           |
 | `0001-arduino_send_batch`                         | Send batch telemetry data from an Arduino board.                 | Arduino                           |
 | `0002-arduino_rpc`                                | Handle RPC commands on Arduino.                                  | Arduino                           |
-| `0003-esp8266_esp32_send_data`                    | Send data from an ESP8266 or ESP32 board using Arduino platform. | ESP8266/ESP32 (Arduino)           |
+| `0003-esp8266_esp32_send_data`                    | Send telemetry data from an ESP8266 or ESP32 board using Arduino platform. | ESP8266/ESP32 (Arduino) |
 | `0004-arduino-sim900_send_telemetry`              | Send telemetry using Arduino with SIM900 module.                 | Arduino (SIM900)                  |
 | `0005-arduino-sim900_send_telemetry_http`         | Send telemetry over HTTP using Arduino with SIM900.              | Arduino (SIM900)                  |
 | `0006-esp8266_esp32_process_shared_attribute_update` | Process shared attribute updates on ESP8266/ESP32.            | ESP8266/ESP32 (Arduino)           |
@@ -58,5 +58,7 @@ The remaining features have to be implemented by hand with the `sendGetRequest`
 | `0016-espressif_esp32_rpc`                        | Handle RPC on ESP32 using ESP-IDF.                               | ESP32 (ESP-IDF)                   |
 | `0017-espressif_esp32_process_shared_attribute_update` | Process shared attribute updates on ESP32 using ESP-IDF.    | ESP32 (ESP-IDF)                   |
 | `0018-espressif_esp32_provision_device`           | Device provisioning on ESP32 using ESP-IDF.                      | ESP32 (ESP-IDF)                   |
+| `0019-esp8266_esp32_send_attributes`              | Send attribute data from ESP8266 or ESP32 board using Arduino platform. | ESP8266/ESP32 (Arduino)    |
+| `0020-espressif_esp32_provision_device`           | Detecting and reacting to state changes in underlying MQTT connection on ESP32 using ESP-IDF. | ESP32 (ESP-IDF)                   |
 
 Each folder contains a `README.md` file with more information about the example. Please refer to the specific `README.md` in each folder for more detailed guidance.

@@ -133,7 +133,7 @@ void loop() {
   if (!tb.connected()) {
     // Reconnect to the ThingsBoard server,
     // if a connection was disrupted or has not yet been established
-    char message[Helper::detectSize(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
+    char message[Helper::Calculate_Print_Size(CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN)];
     snprintf(message, sizeof(message), CONNECTING_MSG, THINGSBOARD_SERVER, TOKEN);
     Serial.println(message);
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
@@ -146,10 +146,10 @@ void loop() {
   // See https://thingsboard.io/docs/reference/http-api/#telemetry-upload-api
   // for more details
   Serial.println("Sending temperature data...");
-  tb.sendTelemetryData(TEMPERATURE_KEY, random(10, 31));
+  tb.Send_Telemetry_Data(TEMPERATURE_KEY, random(10, 31));
 
   Serial.println("Sending humidity data...");
-  tb.sendTelemetryData(HUMIDITY_KEY, random(40, 90));
+  tb.Send_Telemetry_Data(HUMIDITY_KEY, random(40, 90));
 
   tb.loop();
 }
