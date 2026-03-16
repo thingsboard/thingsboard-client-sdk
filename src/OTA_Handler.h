@@ -254,7 +254,9 @@ class OTA_Handler {
     void Handle_Failure(OTA_Failure_Response const & failure_response, char const * error_message)  {
         if (m_retries <= 0) {
             (void)m_send_fw_state_callback.Call_Callback(FW_STATE_FAILED, error_message);
-            m_fw_callback->Call_Callback(false);
+            if (m_fw_callback != nullptr) {
+                m_fw_callback->Call_Callback(false);
+            }
             (void)m_finish_callback.Call_Callback();
             return;
         }
@@ -272,7 +274,9 @@ class OTA_Handler {
                 break;
             case OTA_Failure_Response::RETRY_NOTHING:
                 (void)m_send_fw_state_callback.Call_Callback(FW_STATE_FAILED, error_message);
-                m_fw_callback->Call_Callback(false);
+                if (m_fw_callback != nullptr) {
+                    m_fw_callback->Call_Callback(false);
+                }
                 (void)m_finish_callback.Call_Callback();
                 break;
             default:
