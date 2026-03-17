@@ -161,16 +161,24 @@ class Array {
     /// of the given data container, allows for using / passing either std::vector or std::array.
     /// See https://en.cppreference.com/w/cpp/iterator/input_iterator for more information on the requirements of the iterator
     /// @param position Iterator pointing to the element, that should be removed from the underlying data container
-    template<typename InputIterator>
-    void erase(InputIterator const & position) {
+    template <typename InputIterator>
+    void erase(InputIterator const& position)
+    {
         size_t const index = Helper::distance(begin(), position);
-        // Check if the given index is bigger or equal than the actual amount of elements if it is we can not erase that element because it does not exist
-        if (index < m_size) {
-            // Move all elements after the index one position to the left
-            for (size_t i = index; i < m_size - 1; ++i) {
-                m_elements[i] = m_elements[i + 1];
+    
+        // Check if the given index is within the valid range
+        if (index < m_size)
+        {
+            // Only shift elements if the erased element is not the last one AND Capacity > 1
+            if (1 < Capacity)
+            {
+                // Move elements after the index one position to the left
+                for (size_t i = index; i < m_size - 1; ++i)
+                {
+                    m_elements[i] = m_elements[i + 1];
+                }
             }
-            // Decrease the size of the vector to remove the last element, because either it was moved one index to the left or was the element we wanted to delete
+            // Decrease the size to remove the element
             m_size--;
         }
     }
