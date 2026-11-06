@@ -51,7 +51,7 @@ class IMQTT_Client {
     /// expected behaviour is that, if we attempt to send data that is bigger, it will simply not be sent and a message is printed to the console instead.
     /// Should be big enough to hold the biggest request that is expected to be ever sent by the device at once.
     /// Alternatively it is possible if THINGSBOARD_ENABLE_STREAM_UTILS is enabled, requires using the Arduino framework and simply installing StreamUtils (https://github.com/bblanchon/ArduinoStreamUtils) library,
-    /// to only set the value of this paramter to the same value as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes
+    /// to only set the value of this parameter to the same value as the buffering_size passed to the constructor + enough memory to hold the topic and MQTT Header ~= 20 bytes
     /// @return Whether allocating the needed memory for the given buffer sizes was successful or not
     virtual bool set_buffer_size(uint16_t receive_buffer_size, uint16_t send_buffer_size) = 0;
 
